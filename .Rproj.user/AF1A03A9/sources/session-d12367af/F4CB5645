@@ -1,0 +1,26 @@
+{
+    "id": "F4CB5645",
+    "path": "N:/Mi unidad/git/SDG15_indicators/scripts/R_01_instalar-librerias.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1711776828606.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "52,36",
+        "scrollLine": "41"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1711631642,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1711631642,
+    "read_only": false,
+    "read_only_alternatives": []
+}
