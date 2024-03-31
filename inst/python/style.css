@@ -1,0 +1,63 @@
+/* style.css */
+
+/* Customize the page background color */
+body {
+    background-color: #b4c971;
+  }
+  
+  /* Style the title */
+  h1 {
+    color: #333333;
+    font-size: 36px;
+    text-align: center;
+  }
+  
+  /* Style the quote */
+  blockquote {
+    font-style: italic;
+    font-size: 20px;
+    color: #666666;
+    text-align: center;
+    margin: 20px 0;
+  }
+  
+  /* Style the sidebar */
+  .sidebar .sidebar-content {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
+  }
+  
+  /* Style the sidebar titles */
+  .sidebar h1,
+  .sidebar h2 {
+    color: #333333;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  /* Style the sidebar links */
+  .sidebar a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  /* Style the main content */
+  .main-content {
+    padding: 20px;
+  }
+  
+  /* Style the image columns */
+  .image-column {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Style the image within the columns */
+  .image-column img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+  

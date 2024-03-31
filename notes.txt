@@ -1,0 +1,46 @@
+# For versioning: https://kbroman.org/pkg_primer/pages/minimal.html
+
+# For  https://ourcodingclub.github.io/tutorials/writing-r-package/
+# Namespace : https://bookdown.dongzhuoer.com/hadley/r-pkgs/namespace
+
+## For libaries: https://stackoverflow.com/questions/73866363/r-how-to-properly-include-libraries-in-my-package
+# https://stackoverflow.com/questions/22565024/how-to-properly-include-dependencies-in-r-package
+
+# Paths app:
+# path_error
+# gitPath
+  rootPath <- '/data/temp/'; dir.create(rootPath)
+    ### 0 Initials  ----- 
+  options(shiny.maxRequestSize = 250 * 1024^2)
+  options(scipen=999)
+
+gitPath <- '/home/shiny/connecting-landscapes'
+rootPath <- '/data/temp/'; dir.create(rootPath)
+path_error <- '/var/log/shiny-server/'
+
+load(paste0(gitPath, '/docs/per_uper_crs_df.RData'))  
+source(paste0(gitPath, '/R/cola_tools.R'))
+hs2rs_file <- paste0(gitPath, '/docs/HS_size5_nd_squared.tif')
+showcasePath <<- paste0(gitPath, '/showcase/')
+
+
+logFilePath <<- paste0(rootPath, '/logFoldersR.txt')
+#rootPath <- sort(Sys.getenv(c("TEMP", 'TMP')), decreasing=T)[1]
+  
+py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
+
+  
+src <- '/home/shiny/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
+datapath <- tempFolder # datapath = tempFolder
+src <- '/home/shiny/connecting-landscapes/src/s2res.py'
+datapath <- tempFolder # datapath = tempFolder
+	
+src <- '/home/shiny/connecting-landscapes/src/create_source_points.py'
+src <- '/home/shiny/connecting-landscapes/src/create_cdmat.py'
+src <- '/home/shiny/connecting-landscapes/src/lcc.py'
+src <- '/home/shiny/connecting-landscapes/src/prioritize_core_conn.py'
+src <- '/home/shiny/connecting-landscapes/src/lcc_hdf5_v7.py'
+
+## delete temp h5
+h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
+	
