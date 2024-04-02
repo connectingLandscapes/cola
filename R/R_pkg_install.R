@@ -91,7 +91,8 @@ commonErrors <- function(envName = 'cola', libs2Install){
   }
 }
 
-setup_cola <- function(force = FALSE){
+setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE,
+                       libs2Install =  cola_params$libs2Install){
   
   ## Step 1 --- Install reticulate ----------------------------------------------
   cat(sep = '', '  Step 1/',nSteps, ': Installing & checking miniconda\n')
@@ -417,3 +418,4 @@ setup_cola <- function(force = FALSE){
 # devtools::install_github('gonzalezivan90/cola')
 # library(cola)
 # setup_cola(force = FALSE)
+# remove.packages('cola')
