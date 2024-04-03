@@ -31,11 +31,12 @@ cola_params <- list(
 # }
 
 ## Errors
-commonErrors <- function(envName = 'cola', libs2Install){
+commonErrors <- function(envName = cola_params$envName, 
+                         libs2Install = cola_params$libs2Install){
   
   cat(sep = '', 
       ' We found some errors. Running `', envName, '::setup_cola()` should help you to configure the package.\n',
-      ' Please refer to https://github.com/gonzalezivan90/cola/blob/main/known-issues.md for more details') 
+      ' Please refer to https://github.com/gonzalezivan90/cola/blob/main/known-issues.md for more details\n') 
   
   if (!require(reticulate)){
     cat("  1. `reticulate` package is not installed. Try `install.packages('reticulate')` \n")
@@ -47,8 +48,8 @@ commonErrors <- function(envName = 'cola', libs2Install){
     
     if (is.null(miniPath)){
       cat("  2. `miniconda` software is not installed. Try `reticulate::install_miniconda()`\n")  
-    
-      } else {
+      
+    } else {
       
       ## Miniconda available. Next check
       avEnv <- tryCatch(reticulate::conda_list(), error = function (e) NULL)
@@ -67,13 +68,24 @@ commonErrors <- function(envName = 'cola', libs2Install){
             
             ## No installed
             noInsLibs <- libs2Install[!libs2Install %in% avLibs$package]
-            # noInsLibs <- libs2Install[3:6]
+            
             if(length(noInsLibs) != 0){
               cat(sep = '', "  4. Some python libraries aren't installed. Try `reticulate::py_install(envname = '", envName, 
                   "', channel = 'conda-forge', packages = c('", 
                   paste0(noInsLibs, collapse= "', '"), "'))`") 
             } else {
-              cat(sep = '', "  5. More problems (none yet, 4 tests passed)... to be completed '") 
+              
+              ## All libs installed
+              
+              (pyCola <- Sys.getenv('COLA_MINICONDA_PATH'))
+              (pathCola <- Sys.getenv('COLA_SCRIPTS_PATH'))
+              
+              if( dir.exists(pyCola) & file.exists(pathCola)){
+                
+                cat(sep = '', "  5. Can't connect to python scripts'") 
+              } else {
+                cat(sep = '', "   -- All dpendencies and requirements installed. Look for futher details in the repository documentation'") 
+              }
             }
           }
         }
@@ -110,13 +122,16 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     }
     
   } else {
+    loadLib <- tryCatch(library(reticulate), error = function(e) NULL)
+    if( is.null(loadLib) ) {
+      commonErrors()
+    }
     cat(sep = '', '    `reticulate` installed already!\n')
-    library(reticulate)
   }
   
   
   ## Step 2 - Install miniconda ----------------------------------------------
-
+  
   cat (sep = '', '  +Step 2/',nSteps, ' Installing & checking miniconda\n')
   
   # (sys <- reticulate::import("sys", convert = TRUE))
@@ -129,15 +144,23 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     
     #.onLoad(libname = 'reticulate', pkgname = envName)
     user_permission <- utils::askYesNo("Install miniconda? downloads 80MB and takes some minutes")
-      if (isTRUE(user_permission)) {
-        reticulate::install_miniconda()
-      } else {
-        message("You should run `reticulate::install_miniconda()` before using this package")
-      }
+    if (isTRUE(user_permission)) {
+      reticulate::install_miniconda()
+    } else {
+      message("You should run `reticulate::install_miniconda()` before using this package")
+    }
     
   } else {
     cat(sep = '', '    miniconda found at ', miniPath, '!\n')
   }
+  
+  
+  ## Check if miniconda exists
+  (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
+  if ( is.null(miniPath) & dir.exists(miniPath) ){
+    commonErrors()
+  }
+  
   
   
   # (pyConf <- reticulate::py_config())
@@ -176,7 +199,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
           }
           # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.8" "--quiet" "-c" "conda-forge"
         } else {
-          message('You should run `conda_create("conda")` before using this package')
+          message(paste0('You should run `conda_create("', envName,'")` before using this package'))
           stop()
         }
       } else {
@@ -186,7 +209,11 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     }
   }
   
+  ## List conda after instaling
   condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL)
+  if (is.null(condaLists)){
+    commonErrors()
+  }
   
   ## Confirm env name
   (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
@@ -223,7 +250,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
           if (is.null(pyCola)){
             envPath2Add <- dirname(dirname(possiblePy))
             cat (sep = '', '    The `', envName ,'` was found but in a different path.\n',
-               '    Try to run in your miniconda shell:\n         conda config --append envs_dirs ', envPath2Add, ' \n')
+                 '    Try to run in your miniconda shell:\n         conda config --append envs_dirs ', envPath2Add, ' \n')
           }
         }
       }
@@ -234,6 +261,8 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   (pyColaVersion <- tryCatch(system( test_pyCola , intern = TRUE), error = function(e) NULL))
   if( is.null(pyColaVersion)){
     message('We can´t check python version.')
+    ## List conda after instaling
+    commonErrors()
     stop()
   } else {
     cat(sep = '', '    The python version is ', pyColaVersion, '\n')
@@ -248,8 +277,8 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   # This step does not work -- creating cola with more arguments
   # reticulate::conda_create( envname = 'cola',forge = TRUE, channel = "conda-forge",
   #  packages = c( 'pandas',  'cython', 'geopandas', 'numba' ) )
-    
-
+  
+  
   ## Step4. Install packages ----------------------------------------------
   cat (sep = '', '  +Step 4/',nSteps, ' Installing conda modules\n')
   
@@ -295,22 +324,15 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     cat(sep = '', "   Some python libraries aren't installed. Try `reticulate::py_install(envname = '", envName, 
         "', channel = 'conda-forge', packages = c('", 
         paste0(noInsLibs, collapse= "', '"), "')`") 
+    commonErrors()
+    stop()
   } else {
     cat (sep = '', '    All required modules installed!\n')
   }
   
   
   cat (sep = '', '  +Step 5/',nSteps, ' Setting up local variables\n')
-  
   # reticulate::py_available()
-  
-  ## Using cola python as default
-  reticulate::use_python(pyCola)
-  
-  ## Setting cola python as environmental variable
-  #Sys.getenv()
-  Sys.setenv("COLA_MINICONDA_PATH" = pyCola)
-  
   
   ## Connecting lib paths
   (welcomepy <- system.file("python/welcome.py", package = "cola"))
@@ -328,103 +350,48 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     #libP <- .libPaths()
     #cola_scripts_path <- file.path(libP, 'cola/python')
     (cola_scripts_path <- dirname(welcomepy))
-    if ( dir.exists(cola_scripts_path) ){
-      Sys.setenv("COLA_SCRIPTS_PATH" = pyCola)
+    
+    timeMark <- gsub('[[:punct:]]| ', '', 
+                     format(as.POSIXct(Sys.time(), tz="CET"), 
+                            tz="America/Bogota",usetz=TRUE))
+    
+    pyScript <- system.file("python/s2res.py", package = "cola")
+    if ( any(grep(' ', pyScript)) ){
+      welcomepy <- paste0('"', pyScript, '"')
+    }
+    
+    outTest <- paste0(tempfile(), timeMark, '.tif')
+    (test_suit2res <- paste0(pyCola, ' ', # Python
+                             pyScript, ' ', # script
+                             system.file("tif/sampleTif.tif", package = "cola"), ' ', #in [1]
+                             outTest, #out
+                             ' 0 1 100', # min max scale-max
+                             ' 1 -9999 None')) # shape nodata proj
+    # cat(test_suit2res)
+    intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
+    
+    if ( dir.exists(cola_scripts_path) & file.exists(outTest)){
+      
+      ## Using cola python as default
+      reticulate::use_python(pyCola)
+      
+      ## Setting cola python as environmental variable
+      #Sys.getenv()
+      Sys.setenv("COLA_MINICONDA_PATH" = pyCola)
+      Sys.setenv("COLA_SCRIPTS_PATH" = cola_scripts_path)
+      
       cat (sep = '', '    Ready to connect landscapes!\n')
       
+    } else {
+      cat (sep = '', "    -- Final test didn't run\n")
+      commonErrors()
+      stop()
     }
   }
-  ## 
-  # reticulate::py_run_file( system.file("python/welcome.py", package = envName))
-  # reticulate::use_python(pyCola)
-  
-  
-  # (test_cmd1 <- paste( pyCola, ' -c "import os; print(os.getcwd())')); system( test_cmd2 )
-  # (test_cmd2 <- paste0( pyCola, ' -V')); system( test_cmd2 )
-  
-  
-  
-  ## Step6. For debugging ----------------------------------------------
-  
-
-  if (FALSE){
-    
-    # tempPy <- paste0(tempfile(), '.py')
-    # tempPyFun <- paste0(tempfile(), '.py')
-    # download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/welcome.py', destfile = tempPy)
-    # download.file('https://raw.githubusercontent.com/gonzalezivan90/connectscape/main/cola_functions.py', destfile = 'cola_functions.py')
-    # readLines(tempPy)
-    (test_cmd <- paste( pyCola, tempPy))
-    system( test_cmd )
-    
-    (test_cmd2 <- paste( pyCola, ' -c "import ', 
-                         paste0(
-                           gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install), 
-                           collapse = ', '), '"'))
-    
-    (test_cmd2 <- paste( pyCola, ' -c "import os; print(os.getcwd())'))
-    system( test_cmd2 )
-    (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
-    system( test_cmd3 )
-    
-    # StepX. Get Git package
-    # devtools:::install_github("gonzalezivan90/cola")## Select option 3: NONE
-    # remove.packages( "cola" )
-    # list.files("C:/Users/Admin/Documents/R/win-library/4.0/", recursive = TRUE)
-    # C:\Users\Admin\Documents\R\win-library\4.0\cola no py files here
-    # .libPaths()
-  }
-  ## Step7. Errors ----------------------------------------------
-  
-  # https://github.com/rstudio/reticulate/issues/838
-  
-  
-  ## Error Warning 3: Cannot find header.dxf (GDAL_DATA is not defined)
-  # https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
-  
-  ## >   tryB <- tryCatch(system( tryBcmd ), error = function (e) e)
-  # Traceback (most recent call last):
-  #   File "C:/Users/Admin/Documents/R/win-library/4.0/cola/python/welcome.py", line 1, in <module>
-  #   import osgeo
-  # File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\cola\lib\site-packages\osgeo\__init__.py", line 21, in <module>
-  #   _gdal = swig_import_helper()
-  # File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\cola\lib\site-packages\osgeo\__init__.py", line 17, in swig_import_helper
-  # _mod = imp.load_module('_gdal', fp, pathname, description)
-  # File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\cola\lib\imp.py", line 242, in load_module
-  # return load_dynamic(name, filename, file)
-  # File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\cola\lib\imp.py", line 342, in load_dynamic
-  # return _load(spec)
-  # ImportError: DLL load failed while importing _gdal: No se encontrÃ³ el proceso especificado.
-  
-  
-  # Error. 
-  # > reticulate::py_run_file( system.file("python/welcome.py", package = envName))
-  # Error in py_module_import(module, convert = convert) : 
-  #   ModuleNotFoundError: No module named 'rpytools'
-  
-  
-  ### Error. Required for IG desktop. Error before installing some libs
-  # https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst
-  
-  
-  ## Error -- geopandas takes so long
-  # [1] " --- Installing geopandas"
-  # Collecting package metadata (current_repodata.json): ...working... done
-  # Solving environment: ...working... failed with initial frozen solve. Retrying with flexible solve.
-  # Solving environment: ...working... failed with repodata from current_repodata.json, will retry with next repodata source.
-  
-  ## Error -- problem with rasterio
-  # https://gis.stackexchange.com/questions/417733/unable-to-import-python-rasterio-package-even-though-it-is-installed
-  
-  ## Error -- no name of conda under "conda info --envs"
-  # (base) C:\Users\Admin>conda activate C:\Users\Admin\AppData\Local\r-miniconda\envs\cola # activate unnamed env
-  # conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs
-  #https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a
-  
 }
 
-# C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
 # devtools::install_github('gonzalezivan90/cola') ## option 3: None
 # library(cola)
-# setup_cola(force = FALSE)
-# remove.packages('cola')
+# cola::setup_cola()
+# # # # remove.packages('cola')
+# Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
