@@ -19,16 +19,16 @@ cola_params <- list(
 
 
 ## Install miniconda
-.onLoad <- function(libname = 'reticulate', pkgname = 'cola') {
-  ## ask for miniconda
-  user_permission <- utils::askYesNo("Install miniconda? downloads 50MB and takes time")
-  
-  if (isTRUE(user_permission)) {
-    reticulate::install_miniconda()
-  } else {
-    message("You should run `reticulate::install_miniconda()` before using this package")
-  }
-}
+# .onLoad <- function(libname = 'reticulate', pkgname = 'cola') {
+#   ## ask for miniconda
+#   user_permission <- utils::askYesNo("Install miniconda? downloads 50MB and takes time")
+#   
+#   if (isTRUE(user_permission)) {
+#     reticulate::install_miniconda()
+#   } else {
+#     message("You should run `reticulate::install_miniconda()` before using this package")
+#   }
+# }
 
 ## Errors
 commonErrors <- function(envName = 'cola', libs2Install){
@@ -95,7 +95,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
                        libs2Install =  cola_params$libs2Install){
   
   ## Step 1 --- Install reticulate ----------------------------------------------
-  cat(sep = '', '  Step 1/',nSteps, ': Installing & checking miniconda\n')
+  cat(sep = '', '  +Step 1/',nSteps, ': Installing & checking miniconda\n')
   
   if (!require(reticulate)){
     
@@ -117,7 +117,8 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   
   ## Step 2 - Install miniconda ----------------------------------------------
 
-  cat (sep = '', '  Step 2/',nSteps, ' Installing & checking miniconda\n')
+  cat (sep = '', '  +Step 2/',nSteps, ' Installing & checking miniconda\n')
+  
   # (sys <- reticulate::import("sys", convert = TRUE))
   # (instMiniConda <- tryCatch(reticulate::install_miniconda(force = TRUE), error = function (e) e))
   # (updMiniConda <- tryCatch(reticulate::miniconda_update(path = miniconda_path()), error = function (e) e))
@@ -125,7 +126,15 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
   ## reticulate::miniconda_path() migth return value even if was uninstalled: "C:/Users/Admin/AppData/Local/r-miniconda"
   if ( is.null(miniPath) & dir.exists(miniPath) ){
-    .onLoad(libname = 'reticulate', pkgname = envName)
+    
+    #.onLoad(libname = 'reticulate', pkgname = envName)
+    user_permission <- utils::askYesNo("Install miniconda? downloads 80MB and takes some minutes")
+      if (isTRUE(user_permission)) {
+        reticulate::install_miniconda()
+      } else {
+        message("You should run `reticulate::install_miniconda()` before using this package")
+      }
+    
   } else {
     cat(sep = '', '    miniconda found at ', miniPath, '!\n')
   }
@@ -137,7 +146,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   
   
   # Step3. Install your environment ----------------------------------------------
-  cat (sep = '', '  Step 3/',nSteps, ' Installing & checking conda environment\n')
+  cat (sep = '', '  +Step 3/',nSteps, ' Installing & checking conda environment\n')
   ## Check again
   condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL)
   
@@ -242,7 +251,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     
 
   ## Step4. Install packages ----------------------------------------------
-  cat (sep = '', '  Step 4/',nSteps, ' Installing conda modules\n')
+  cat (sep = '', '  +Step 4/',nSteps, ' Installing conda modules\n')
   
   
   ## list packages
@@ -287,11 +296,11 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
         "', channel = 'conda-forge', packages = c('", 
         paste0(noInsLibs, collapse= "', '"), "')`") 
   } else {
-    cat (sep = '', '  All required modules installed!\n')
+    cat (sep = '', '    All required modules installed!\n')
   }
   
   
-  cat (sep = '', '  Step 5/',nSteps, ' Setting up local variables\n')
+  cat (sep = '', '  +Step 5/',nSteps, ' Setting up local variables\n')
   
   # reticulate::py_available()
   
@@ -318,8 +327,8 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
   if (any(grep('WELCOME ', cmdans))){
     #libP <- .libPaths()
     #cola_scripts_path <- file.path(libP, 'cola/python')
-    cola_scripts_path <- dirname(welcomepy)
-    if (dir.exists(cola_scripts_path)){
+    (cola_scripts_path <- dirname(welcomepy))
+    if ( dir.exists(cola_scripts_path) ){
       Sys.setenv("COLA_SCRIPTS_PATH" = pyCola)
       cat (sep = '', '    Ready to connect landscapes!\n')
       
@@ -415,7 +424,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
 }
 
 # C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
-# devtools::install_github('gonzalezivan90/cola')
+# devtools::install_github('gonzalezivan90/cola') ## option 3: None
 # library(cola)
 # setup_cola(force = FALSE)
 # remove.packages('cola')
