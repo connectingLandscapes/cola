@@ -103,6 +103,9 @@ commonErrors <- function(envName = cola_params$envName,
   }
 }
 
+
+
+
 setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE,
                        libs2Install =  cola_params$libs2Install){
   

@@ -6,6 +6,27 @@
 ## For libaries: https://stackoverflow.com/questions/73866363/r-how-to-properly-include-libraries-in-my-package
 # https://stackoverflow.com/questions/22565024/how-to-properly-include-dependencies-in-r-package
 
+# External data: https://stackoverflow.com/questions/13463103/inst-and-extdata-folders-in-r-packaging
+fpath <- system.file("extdata", "my_raw_data.csv", package="my_package")
+read.csv(file=paste(path.package("my_package"),"/inst/extdata/my_raw_data.csv",sep="")) 
+
+## Python file sin R package
+https://stackoverflow.com/questions/60150956/attaching-python-script-while-building-r-package
+https://stackoverflow.com/questions/13463103/inst-and-extdata-folders-in-r-packaging
+https://stackoverflow.com/questions/60150956/attaching-python-script-while-building-r-package
+
+
+# Writing the package
+https://rstudio4edu.github.io/rstudio4edu-book/data-pkg.html
+https://kbroman.org/pkg_primer/pages/build.html
+https://github.com/kbroman/pkg_primer/tree/gh-pages/example
+https://pkgdown.r-lib.org/
+https://ourcodingclub.github.io/tutorials/writing-r-package/
+
+## GDAL
+https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
+
+
 # Paths app:
 # path_error
 # gitPath
