@@ -13,17 +13,50 @@
  
 ## How to solve each step:
  
- 1. Install reticulate python package
+ 1. Install reticulate R package
   
-  Testing:
+  Testing: `library(reticulate)`
+  Expected answer: No error
+  
+  Known issue: Library not installed
+  Solution: `install.package('reticulate')`. Be sure to have RTools and admin privilegies if some error arrise during the installation.
+  
+  
+  https://github.com/r-lib/remotes/issues/641
+  
+
+ 2. Install cola R package
+  
+  Testing: 
   Expected answer:
   
-  Known issue:
+  Known issue: 
+  devtools::install_github('gonzalezivan90/cola')
+Using GitHub PAT from the git credential store.
+Error: Failed to install 'unknown package' from GitHub:
+  HTTP error 401.
+  Bad credentials
+
+  Rate limit remaining: 55/60
+  Rate limit reset at: 
+  Solution:  
+  
+  https://github.com/r-lib/devtools/issues/1566#issuecomment-320504796 
+  https://github.com/scibrokes/setup-centOS7-DO/issues/3
+  
+  Known issue: 
   Solution:
+
+
+
+  # Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
+  # origLibs <- installed.packages()
+  sapply(.libPaths(), list.files, pattern = 'cola', recursive = FALSE)
+
   
  2. Install miniconda software
   
-  Testing:
+  Testing: 
   Expected answer:
   
   Known issue: cola folder existing but not properly configurated

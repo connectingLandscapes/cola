@@ -8,9 +8,9 @@ instPack <- function(x, devt = FALSE){
 
     if(!lib2inst %in% rnIl) {
       if (!devt){
-        tryCatch(install.packages(lib2inst), function(e) e)
+        install.packages(lib2inst)
       } else {
-        tryCatch( devtools::install_github(y), function(e) e)
+        devtools::install_github(y)
       }
     }
   })
@@ -28,6 +28,10 @@ setup_cola_dss <- function(){
     install.packages("devtools")
   }
   library(devtools)
+  if(!find_rtools()){
+    warning(" No Rtools found. Please installed for your R version")
+  }
+
 
 
   if (!require("remotes")) {
@@ -45,7 +49,7 @@ setup_cola_dss <- function(){
     # debug install order: htmltools >> shiny >> shinyWidgets
 
     'htmlwidgets', 'htmltools', ## Before shiny
-    'magrittr', 'RColorBrewer',
+    'magrittr', 'RColorBrewer', 'viridis',
     'sf', 'terra',
     'rlang', "leaflet", "leaflet.extras",
     'shiny',  ## Before shiny plugins
@@ -54,10 +58,10 @@ setup_cola_dss <- function(){
     'shinyWidgets', 'dashboardthemes',
     "highcharter", 'plotly'))
 
-  if( require('gdalUtils') ){
-    ## Install from Github
-    devtools:::install_github("gearslaboratory/gdalUtils")
-  }
+  # if(!require('gdalUtils') ){
+  #   ## Install from Github
+  #   devtools:::install_github("gearslaboratory/gdalUtils")
+  # }
 
 
   instPack("rstudio/shinydashboard", devt = TRUE)
@@ -66,7 +70,7 @@ setup_cola_dss <- function(){
   instPack("highcharter") ## CRAN
 
   if( require('gdalUtils') ){
-    tryCatch(remotes::install_github("jbkunst/highcharter"))
+    (remotes::install_github("jbkunst/highcharter"))
   }
 
   library(bit) #
@@ -102,5 +106,5 @@ setup_cola_dss <- function(){
   library(terra)
   library(viridis)
 
-  cat("      All libraries required for COLA's DSS installed")
+  cat("    === All libraries required for COLA's DSS installed ===")
 }

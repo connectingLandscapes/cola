@@ -51,7 +51,7 @@ import tables
 import tables as tb
 import time
 
-print('    .... all good until here ')
+#print('    .... all good until here ')
 
 ## Issues here:
 import geopandas as gpd
@@ -63,8 +63,9 @@ from shapely.geometry import shape
 import osgeo
 from rasterio.crs import CRS
 
-print('    .... debug ')
+#print('    .... debug ')
 
-print ("WELCOME -- libraries loaded succesfully")
+
 import cola_functions as cf
-print (" cola_functions loaded!")
+#print (" cola_functions loaded!")
+print ("WELCOME -- libraries loaded succesfully")
