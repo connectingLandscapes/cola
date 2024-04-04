@@ -109,8 +109,12 @@ commonErrors <- function(envName = cola_params$envName,
 
 
 
-setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE,
-                       libs2Install =  cola_params$libs2Install){
+setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE,
+                       libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio', 'pytables', 'pandas',  'cython', 'numba' ,
+                   'networkit', 'fiona', 'shapely', 'geopandas', 'kdepy', 'scikit-image')){
+
+  #envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE, libs2Install =  cola_params$libs2Install
+  
 
   ## Step 1 --- Install reticulate ----------------------------------------------
   cat(sep = '', '  +Step 1/',nSteps, ': Installing & checking reticulate R package\n')
@@ -373,7 +377,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
 
     pyScript <- system.file("python/s2res.py", package = "cola")
     if ( any(grep(' ', pyScript)) ){
-      welcomepy <- paste0('"', pyScript, '"')
+      pyScript <- paste0('"', pyScript, '"')
     }
 
     outTest <- paste0(tempfile(), timeMark, '.tif')
@@ -389,7 +393,7 @@ setup_cola <- function(envName = cola_params$envName, nSteps = cola_params$nStep
     if ( dir.exists(cola_scripts_path) & file.exists(outTest)){
 
       ## Using cola python as default
-      reticulate::use_python(pyCola)
+      tryCatch(reticulate::use_python(pyCola), error = function(e) e)
 
       ## Setting cola python as environmental variable
       #Sys.getenv()
