@@ -12,6 +12,8 @@ It's required to install several components (once). The srtucture of this softwa
 
 Some of the different computers might have particular conditions or requirements for installing all these components, so we made a section where you can find known issues an their potential solution. If you found a new one please share it with us so potential new users can see it.
 
+devtool::find_rtools()
+
 1.  Install cola
 ```{r}
 if (!require(devtools)){
