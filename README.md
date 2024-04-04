@@ -3,10 +3,9 @@
 This package integrates R and Python modules. 
 
 
-
 ## Installing the package
 It's required to install several components (once). The srtucture of this software is:
-- R as the base
+- R as the base. Have you Rtool already? https://cran.r-project.org/bin/windows/Rtools/
 - Python as the engine
 - Miniconda (conda) environment as the package containing all python dependencies
 - R shiny for the dashboard Decision support system.
