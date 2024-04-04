@@ -39,7 +39,7 @@ setup_cola_dss <- function(){
   }
 
 
-  instPack(c(
+  cola::instPack(c(
     # "rgeos", "rgdal", 'raster',
     'markdown', 'rmarkdown',
     'knitr', 'units',
@@ -69,7 +69,7 @@ setup_cola_dss <- function(){
   # remotes::install_version("rjson", "0.2.20")
   instPack("highcharter") ## CRAN
 
-  if( require('gdalUtils') ){
+  if(!require('highcharter') ){
     (remotes::install_github("jbkunst/highcharter"))
   }
 
