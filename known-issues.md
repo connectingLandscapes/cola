@@ -15,7 +15,7 @@
  
  1. Install reticulate R package
   
-  Testing: `library(reticulate)`
+  Testing: `library(reticulate)`  
   Expected answer: No error
   
   Known issue: Library not installed
@@ -56,8 +56,10 @@ Error: Failed to install 'unknown package' from GitHub:
   
  2. Install miniconda software
   
-  Testing: 
-  Expected answer:
+  Testing: `reticulate::conda_list()`
+  Expected answer: Table with local paths to python conda versions
+  `     name                                                  python`
+  `1    base C:\\Users\\USER\\AppData\\Local\\r-miniconda/python.exe`
   
   Known issue: cola folder existing but not properly configurated
   Solution: delete folder and install environment again
@@ -67,8 +69,12 @@ Error: Failed to install 'unknown package' from GitHub:
   
  3. Install cola environment
   
-  Testing:
+  Testing: install_miniconda()
   Expected answer:
+  2         cola         C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe
+
+ 
+
   
   Known issue: cola available but without name
      Error -- no name of conda under "conda info --envs"
