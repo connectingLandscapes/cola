@@ -19,7 +19,7 @@ if (!require(devtools)){
    install.packages('devtools')
 }
 
-devtools::install_github('gonzalezivan90/cola') ## option 3: None
+devtools::install_github('connectingLandscapes/cola') ## option 3: None
 ```
   
 2. Setting up cola requirements:
