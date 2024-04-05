@@ -448,3 +448,4 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
 # save(origLibs, file = 'origLibsBeforeDss.RData')
 # cola::setup_cola_dss()
 # libsafter1 <- installed.packages(); save(libsafter1, file = 'libsafter1.RData')
+# (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
