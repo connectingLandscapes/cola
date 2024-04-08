@@ -196,7 +196,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
   cat (sep = '', '  +Step 3/',nSteps, ' Installing & checking conda environment\n')
   ## Check again
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
-  (ymlFile <- system.file('python_conda_config.yml', package = "cola"))
+  (ymlFile <- system.file('python/python_conda_config.yml', package = "cola"))
 
   if (is.null(condaLists)){
 
@@ -423,22 +423,22 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
 
       ## Setting cola python as environmental variable
       #Sys.getenv()
-      Sys.setenv("COLA_MINICONDA_PATH" = pyCola)
+      Sys.setenv("COLA_PYTHON_PATH" = pyCola)
       Sys.setenv("COLA_SCRIPTS_PATH" = cola_scripts_path)
 
       cat (sep = '', '    === Ready to connect landscapes! ===\n')
 
     } else {
-      # Sys.unsetenv("COLA_SCRIPTS_PATH")
-      # Sys.unsetenv("COLA_MINICONDA_PATH")
-      cat (sep = '', "    -- Final test didn't run\n")
+      Sys.unsetenv("COLA_SCRIPTS_PATH")
+      Sys.unsetenv("COLA_PYTHON_PATH")
+      cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n")
       commonErrors()
       stop()
     }
   }
 }
 
-# devtools::install_github('gonzalezivan90/cola') ## option 3: None
+# devtools::install_github('connectingLandscapes/cola') ## option 3: None
 # library(cola)
 # cola::setup_cola()
 # setup_cola(envName = 'cola2')

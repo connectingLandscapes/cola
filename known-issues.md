@@ -28,7 +28,7 @@
   Testing: `library(reticulate)`  
   Expected answer: No error
   
-  Known issue: Library not installed
+    Known issue: `Library not installed`
   Solution: `install.package('reticulate')`. Be sure to have RTools and admin privilegies if some error arrise during the installation.
   
   
@@ -41,14 +41,14 @@
   Expected answer:
   
   Known issue: 
-  devtools::install_github('gonzalezivan90/cola')
-Using GitHub PAT from the git credential store.
-Error: Failed to install 'unknown package' from GitHub:
-  HTTP error 401.
-  Bad credentials
+   ´devtools::install_github('gonzalezivan90/cola')´
+  ´Using GitHub PAT from the git credential store.´
+  ´Error: Failed to install 'unknown package' from GitHub:´
+  ´HTTP error 401.´
+  ´Bad credentials´
 
-  Rate limit remaining: 55/60
-  Rate limit reset at: 
+  ´Rate limit remaining: 55/60´
+  ´Rate limit reset at:´
   Solution:  
   
   https://github.com/r-lib/devtools/issues/1566#issuecomment-320504796 
@@ -59,8 +59,10 @@ Error: Failed to install 'unknown package' from GitHub:
 
 
 
-  # Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
-  # origLibs <- installed.packages()
+  Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
+  origLibs <- installed.packages()
+  Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
+  origLibs <- installed.packages()
   sapply(.libPaths(), list.files, pattern = 'cola', recursive = FALSE)
 
   
@@ -88,12 +90,12 @@ Error: Failed to install 'unknown package' from GitHub:
   
   Known issue: cola available but without name
   
-  ´Known issue: cola available but without name´
-´Error -- no name of conda under "conda info --envs"´
-´Solution: ´
-´(base) C:\Users\Admin>conda activate C:\Users\Admin\AppData\Local\r-miniconda\envs\cola # activate unnamed env´
-´conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs´
-´https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a´
+´Known issue: cola available but without name´
+     ´Error -- no name of conda under "conda info --envs"´
+  ´Solution: ´
+   ´(base) C:\Users\Admin>conda activate C:\Users\Admin\AppData\Local\r-miniconda\envs\cola # activate unnamed env´
+   ´conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs´
+   ´https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a´
 
 
  4. Install cola environment packages

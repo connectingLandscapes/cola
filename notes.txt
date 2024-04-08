@@ -46,8 +46,19 @@ Cannot find header.dxf (GDAL_DATA is not defined)
 https://gis.stackexchange.com/questions/478160/gdal-warning-when-importing-geopandas
 https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
 
+
+## conda yml
+conda env export > environment_droplet.yml
+conda env create -f environment.yml
+
+
 ## NAMESPACE
 https://github.com/cran/ecochange/blob/3363d4222320625d96b74a1dc82ac0e7f93e832f/NAMESPACE
+
+
+## Git page example
+https://alive-abi.github.io/alive/code.html
+https://github.com/ALIVE-ABI/alive/tree/main
 
 
 ## reticulate Conda options
@@ -65,6 +76,32 @@ https://github.com/cran/ecochange/blob/3363d4222320625d96b74a1dc82ac0e7f93e832f/
 # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
 
 
+
+## GDAL
+https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
+This works>
+>C:\Users\ig299\AppData\Local\r-miniconda\envs\cola\python.exe C:\Users\ig299\AppData\Local\r-miniconda\envs\cola\Scripts\gdal_calc.py --help
+
+https://gis.stackexchange.com/questions/279550/how-to-setup-gdal-calc-py-for-command-line-use-windows
+
+python %CONDA_PREFIX%\Scripts\gdal_calc.py
+There are other GDAL-related scripts available too:
+dir %CONDA_PREFIX%\Scripts\gdal*
+
+
+## CMD
+# C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
+
+## Geopandas GDAL_DATA
+Warning 3: Cannot find header.dxf (GDAL_DATA is not defined)
+Cannot find header.dxf (GDAL_DATA is not defined)
+https://gis.stackexchange.com/questions/478160/gdal-warning-when-importing-geopandas
+https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
+
+
+
+
+##### Shiny PP
 
 ##### Shiny APP
 # Paths app:
