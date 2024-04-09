@@ -54,6 +54,22 @@ cola::cola_dss()
 
 
 
+Downloading GitHub repo connectingLandscapes/cola@HEAD
+These packages have more recent versions available.
+It is recommended to update all of them.
+Which would you like to update?
+
+ 1: All                                    
+ 2: CRAN packages only                     
+ 3: None                              
+
+...
+
+** testing if installed package can be loaded from final location
+*** arch - i386
+*** arch - x64
+** testing if installed package keeps a record of temporary installation path
+* DONE (cola)
 
 Tests:
 - Windows

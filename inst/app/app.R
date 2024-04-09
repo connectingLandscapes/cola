@@ -52,10 +52,10 @@
   (rootPath <- find.package('cola'))
   (dataFolder <- tempdir()); #'/data/temp/'; dir.create(dataFolder)
 
-  #logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
+  logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
   path_error <- '/var/log/shiny-server/'
 
-  # base::source(base::paste0(system.file(package = 'cola', ), '/R/cola_tools.R')) # included
+  source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
   hs2rs_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
 
   # py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
@@ -65,7 +65,6 @@
   devug <<- TRUE
 
   (showcasePath <<- base::paste0(rootPath, '/sampledata')); dir.exists(showcasePath)
-
 
   uper <- cola::uper
   per <- cola::per
@@ -94,6 +93,43 @@
 
 
   # Functions ----
+  ### time stamp -----
+  sessionIDgen <- function(letter = TRUE, sep = ''){
+    tempID <- basename(tempfile())
+    timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
+    sessionID <- paste0( timeMark, sep, tempID )
+    if (letter){
+      sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1),
+                          sep, sessionID)
+    }
+    sessionID
+  }
+
+
+  ## Clean files
+  cleanMemory <- function(logFilePath){
+    dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
+
+    if(file.exists(logFilePath)){
+      logDF <- tryCatch(read.csv(logFilePath), error = function(e) NULL)
+    } else {
+      logDF <- NULL
+    }
+
+    logDF <- rbind(logDF, dfm)
+
+    openFolders <- dir.exists(logDF$Rtmp)
+    sapply(logDF$tempFolder[!openFolders], unlink, recursive = TRUE)
+    logDF <- logDF[dir.exists(logDF$Rtmp), ]
+    write.csv(x = logDF, logFilePath, row.names = FALSE)
+  }
+
+  delFiles <- function(...){
+    invisible(suppressWarnings(
+      tryCatch(file.remove(c(...)),
+               error = function(e) NULL)
+    ))
+  }
 
 
   ## Showcase -----
@@ -3414,7 +3450,7 @@ if (FALSE){
   color: red;
 }'
 
-  ui <-shinydashboard::dashboardPage(
+  ui <- shinydashboard::dashboardPage(
     # useShinyjs(),
     ####  Title ----
     header = shinydashboard::dashboardHeader(
@@ -3498,7 +3534,6 @@ if (FALSE){
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
                             #actionButton("dist_shp", "Load points!"),
-
           ),
 
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
@@ -3569,12 +3604,12 @@ if (FALSE){
                                       tabPanel(
                                         "Home",
                                         includeMarkdown(
-                                          file.path(rootPath, '/docs/md_intro.md')
+                                          system.file(package = 'cola', 'docs/md_intro.md')
                                         )),
                                       tabPanel(
                                         "How it works",
                                         includeMarkdown(
-                                          file.path(rootPath, '/docs/md_use.md')
+                                          system.file(package = 'cola', 'docs/md_use.md')
                                         )),
 
                                       tabPanel(
@@ -3639,7 +3674,7 @@ if (FALSE){
                                       # https://stackoverflow.com/questions/61284247/is-there-a-way-to-display-a-gif-file-in-r-shiny
                                       tabPanel("Showcase",
                                                includeMarkdown(
-                                                 file.path(rootPath, '/docs/md_showcase.md')),
+                                                 system.file(package = 'cola', 'docs/md_showcase.md')),
                                                fluidRow(
                                                  # img(src=file.path(rootPath, 'showcase.gif')
                                                  #     #, align = "left",height='250px',width='500px'
@@ -3900,22 +3935,24 @@ if (FALSE){
 
                                   leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
+
           shinydashboard::tabItem('tab_pdf',
                                   mainPanel(
 
                                     tags$div(
                                       class = "container",
 
-                                      row(
-                                        col(3, textInput("pdfurl", "PDF URL"))
+                                      fluidRow(
+                                        column(3, textInput("pdfurl", "PDF URL"))
                                       ),
-                                      row(
+                                      fluidRow(
                                         #col(6, htmlOutput('pdfviewer')),
-                                        col(6, tags$iframe(style="height:600px; width:100%",
+                                        column(6, tags$iframe(style="height:600px; width:100%",
                                                            #src="http://localhost/ressources/pdf/R-Intro.pdf"
                                                            #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
-                                                           src="pdf.pdf"
-                                        ))
+                                                           src = system.file(package = 'cola', 'docs/pdf.pdf')
+                                                           )
+                                            )
                                       )
                                     )
                                   )
@@ -3983,7 +4020,6 @@ if (FALSE){
                                   ),
                                   # https://shiny.posit.co/r/articles/build/selectize/
                                   leaflet::leafletOutput("ll_coord", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-
           )
 
 

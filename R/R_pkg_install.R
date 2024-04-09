@@ -32,17 +32,17 @@ cola_params <<- list(
 
 ## Errors
 commonErrors <- function(envName = 'cola',
-                         libs2Install = cola_params$libs2Install){
+                         libs2Install = cola::cola_params$libs2Install){
 
   cat(sep = '',
       ' \n We found some errors. Running `', envName, '::setup_cola()` should help you to configure the package.\n',
-      ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic:')
+      ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic: (please wait a moment)')
 
   if (!require(reticulate)){
     cat("  1. `reticulate` package is not installed. Try `install.packages('reticulate')` \n")
 
   } else{
-
+    cat("  1. `reticulate` package installed. Evaluating next step \n")
     ## Reticulate available. Next check
     miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL)
     (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
@@ -51,7 +51,7 @@ commonErrors <- function(envName = 'cola',
       cat("  2. `miniconda` software is not installed. Try `reticulate::install_miniconda()`\n")
 
     } else {
-
+      cat("  2. `miniconda` software installed. Evaluating next step \n")
       ## Miniconda available. Next check
       avEnv <- tryCatch(reticulate::conda_list(), error = function (e) NULL)
       if (is.null(avEnv)){
@@ -63,6 +63,8 @@ commonErrors <- function(envName = 'cola',
             cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
                 envName, "')`\n\t or `conda_create(", envName, ", f = '", system.file('python/python_conda_config.yml', package = "cola"),"')`")
           } else {
+
+            cat("  3. `cola` conda environment installed. Evaluating next step \n")
 
             ## cola available. Next check
             avLibs <- reticulate::py_list_packages(envname = envName)
@@ -78,16 +80,26 @@ commonErrors <- function(envName = 'cola',
                   )
             } else {
 
+              cat("  4. All `cola` conda environment packages installed. Evaluating next step \n")
+
+
               ## All libs installed
 
               (pyCola <- Sys.getenv('COLA_MINICONDA_PATH'))
               (pathCola <- Sys.getenv('COLA_SCRIPTS_PATH'))
 
-              if( dir.exists(pyCola) & file.exists(pathCola)){
+              if( dir.exists(pyCola) & file.exists(pathCola) ){
 
-                cat(sep = '', "  5. Can't connect to python scripts'")
-              } else {
                 cat(sep = '', "   === All dependencies and requirements installed. Look for futher details in the repository documentation ===")
+
+              } else {
+                cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
+                    "by `cola::setup_cola( )` likely because it wasn't able to run the test we designed.\n",
+                    "  `Sys.getenv('COLA_MINICONDA_PATH')` and `Sys.getenv('COLA_SCRIPTS_PATH')` should have the paths to `cola` python and folder path.\n",
+                    "This error usually arises when some libraries can't be used by python. ",
+                    "We solved this by getting the last version of R\nPlease go to:\n\t",
+                    "https://github.com/connectingLandscapes/cola/blob/main/known-issues.md")
+
               }
             }
           }
@@ -113,7 +125,8 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
                        libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio',
                                          'pytables', 'pandas',  'cython', 'numba' ,
                                          'networkit', 'fiona', 'shapely', 'geopandas',
-                                         'kdepy', 'scikit-image', 'kdepy')){
+                                         'kdepy', 'scikit-image', 'kdepy')
+                       ){
 
   #envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE, libs2Install =  cola_params$libs2Install
 
@@ -196,6 +209,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   cat (sep = '', '  +Step 3/',nSteps, ' Installing & checking conda environment\n')
   ## Check again
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
+
   (ymlFile <- system.file('python/python_conda_config.yml', package = "cola"))
 
   if (is.null(condaLists)){
@@ -216,7 +230,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     }
   } else {
     if (class(condaLists) == 'data.frame'){
-      if( ! envName %in% condaLists$name){
+      if( ! envName %in% condaLists$name ){
         user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
         if (isTRUE(user_permission)) {
           if(file.exists(ymlFile) & yml){
@@ -242,7 +256,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
         }
       } else {
         colaexe <- condaLists$python[condaLists$name %in% envName]
-        cat (sep = '', '    `', envName, '` conda environment installed in ', colaexe,'\n')
+        cat (sep = '', '    `', envName, '` conda environment installed in ', colaexe, '\n')
       }
     }
   }
@@ -373,6 +387,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
   ## Installed
   insLibs <- libs2Install[libs2Install %in% avLibs$package]
+
   ## No installed
   noInsLibs <- libs2Install[!libs2Install %in% avLibs$package]
   # noInsLibs <- c('a', 'f')
@@ -385,7 +400,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     commonErrors()
     stop()
   } else {
-    cat (sep = '', '    All required modules installed!\n')
+    cat (sep = '', '    All required conda modules installed!\n')
   }
 
 
@@ -443,10 +458,13 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
       Sys.unsetenv("COLA_PYTHON_PATH")
-      cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n")
+      cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n\t", intCMD)
       commonErrors()
       stop()
     }
+  }  else {
+    cat (sep = '', "    Error: Can't load conda modules.\n\t", cmdans)
+
   }
 }
 
