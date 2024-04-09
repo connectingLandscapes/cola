@@ -4,6 +4,7 @@
 
 {
   library(cola)
+
   library(bit) #
   library(digest)
   library(dplyr)
@@ -49,21 +50,21 @@
   base::options(scipen = 999)
 
   (rootPath <- find.package('cola'))
-  dataFolder <- tempdir(); #'/data/temp/'; dir.create(dataFolder)
+  (dataFolder <- tempdir()); #'/data/temp/'; dir.create(dataFolder)
 
   #logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
-  # path_error <- '/var/log/shiny-server/'
+  path_error <- '/var/log/shiny-server/'
 
   # base::source(base::paste0(system.file(package = 'cola', ), '/R/cola_tools.R')) # included
-  hs2rs_file <- system.file(package = 'cola', 'tif/sampleTif.tif')
+  hs2rs_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
 
   # py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
-  py <- Sys.getenv("COLA_PYTHON_PATH")
+  (py <- Sys.getenv("COLA_PYTHON_PATH"))
   # Sys.getenv("COLA_SCRIPTS_PATH")
 
   devug <<- TRUE
 
-  showcasePath <<- base::paste0(rootPath, '/showcase/')
+  (showcasePath <<- base::paste0(rootPath, '/sampledata')); dir.exists(showcasePath)
 
 
   uper <- cola::uper
@@ -73,8 +74,8 @@
 
 
   # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
-  #   setwd('N:/Mi unidad/IG/server_IG/gedivis')
-  #   #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
+  # sysname           nodename
+  # "Linux" "ip-172-31-12-224"
   # }
 
   allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
@@ -96,20 +97,20 @@
 
 
   ## Showcase -----
-  sh_object <- base::paste0(rootPath, '/R/showcase.RData')
+  sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
 
   if(base::file.exists(sh_object)){
     ss <- base::load(sh_object)
   } else {
 
-    sh_hs <- terra::rast(base::paste0(showcasePath, '/input/HS_res375m.tif'))
-    sh_sr <- terra::rast(base::paste0(showcasePath, '/input/Resistance_res375m.tif'))
-    sh_pt <- sf::st_read(base::paste0(showcasePath, '/input/SourcePoints_50.shp'))
+    sh_hs <- terra::rast(base::paste0(showcasePath, '/HabSui_res375m.tif'))
+    sh_sr <- terra::rast(base::paste0(showcasePath, '/Resistance_res375m.tif'))
+    sh_pt <- sf::st_read(base::paste0(showcasePath, '/SourcePoints_50.shp'))
     #sh_pt <- spTransform(sh_pt, crs = sf::st_crs('EPSG:4326'))
     sh_pt <- sf::st_transform(sh_pt, crs = sf::st_crs('EPSG:4326'))
     sh_pt[, c('ln', 'lt')] <- st_coordinates(sh_pt)
-    sh_crk <- terra::rast(paste0(showcasePath, '/results/CRK_SP50_DT250k_v1.tif'))
-    sh_lcc <- terra::rast(paste0(showcasePath, '/results/LCC_SP50_DT1mln_CSF5CT5.tif'))
+    sh_crk <- terra::rast(paste0(showcasePath, '/CRK_SP50_DT250k_v1.tif'))
+    sh_lcc <- terra::rast(paste0(showcasePath, '/LCC_SP50_DT1mln_CSF5CT5.tif'))
 
 
     sh_hs_pal <-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,

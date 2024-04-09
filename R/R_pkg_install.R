@@ -31,12 +31,12 @@ cola_params <<- list(
 # }
 
 ## Errors
-commonErrors <- function(envName = cola_params$envName,
+commonErrors <- function(envName = 'cola',
                          libs2Install = cola_params$libs2Install){
 
   cat(sep = '',
       ' \n We found some errors. Running `', envName, '::setup_cola()` should help you to configure the package.\n',
-      ' Please refer to https://github.com/gonzalezivan90/cola/blob/main/known-issues.md for more details\n')
+      ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic:')
 
   if (!require(reticulate)){
     cat("  1. `reticulate` package is not installed. Try `install.packages('reticulate')` \n")
@@ -60,8 +60,8 @@ commonErrors <- function(envName = cola_params$envName,
       } else {
         if (class(avEnv) == 'data.frame'){
           if( ! envName %in% avEnv$name){
-            cat(sep = '', "  3. `", envName, "` conda environment not installed. Try `reticulate::conda_create('",
-                envName, "')`\n")
+            cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
+                envName, "')`\n\t or `conda_create(", envName, ", f = '", system.file('python/python_conda_config.yml', package = "cola"),"')`")
           } else {
 
             ## cola available. Next check
@@ -109,7 +109,7 @@ commonErrors <- function(envName = cola_params$envName,
 
 
 
-setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
+setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
                        libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio',
                                          'pytables', 'pandas',  'cython', 'numba' ,
                                          'networkit', 'fiona', 'shapely', 'geopandas',
@@ -202,6 +202,8 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
 
     user_permission <- utils::askYesNo(paste0("Install ´", envName, "´ environment"))
     if (isTRUE(user_permission)) {
+
+      #  conda env create -f environment.yml
       if(file.exists(ymlFile)){
         system.time(conda_create(envName))
       } else {
@@ -308,8 +310,9 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
 
 
   ## Step4. Install packages ----------------------------------------------
-  cat (sep = '', '  +Step 4/',nSteps, ' Installing conda modules\n')
-  # Try3 time to install all the packages
+  cat (sep = '', '  +Step 4/',nSteps, ' Installing & checking conda modules\n')
+
+  # Try 3 times to install all the packages with yml file
   for(i in 1:3){
 
     ## list packages
@@ -331,29 +334,38 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
 
 
   ## Try individually
-  for( l in 1:length(libs2Install)){ # l = 1
-    (lib2inst <- libs2Install[l])
-    if( ! lib2inst %in% avLibs$package ){
-      cat(paste0(' --- Installing `',  libs2Install[l], '` module\n'))
 
-      logPkg <- tryCatch(
-        reticulate::py_install(
-          envname = envName, # python_version = pyCola,
-          channel = "conda-forge", packages = lib2inst),
-        error = function (e) e)
+  ## list packages
+  (avLibs <- reticulate::py_list_packages(envname = envName))
 
-      # reticulate::py_install(envname = envName, channel = "conda-forge", packages = 'numexpr')
-      # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
+  ## Install conda packages
+  (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
 
-      ## If there's a problem installing trought conda-forge, use PIP
-      if( any(!is.null(logPkg)) ){
-        print(lib2inst)
-        logPkg2 <- tryCatch(reticulate::py_install( envname = envName,
-                                                    pip = TRUE,
-                                                    packages = lib2inst),
-                            error = function (e) e)
+  if(length(lib2inst) != 0){
+    for( l in 1:length(libs2Install)){ # l = 1
+      (lib2inst <- libs2Install[l])
+      if( ! lib2inst %in% avLibs$package ){
+        cat(paste0(' --- Installing `',  libs2Install[l], '` module\n'))
+
+        logPkg <- tryCatch(
+          reticulate::py_install(
+            envname = envName, # python_version = pyCola,
+            channel = "conda-forge", packages = lib2inst),
+          error = function (e) e)
+
+        # reticulate::py_install(envname = envName, channel = "conda-forge", packages = 'numexpr')
+        # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
+
+        ## If there's a problem installing trought conda-forge, use PIP
+        if( any(!is.null(logPkg)) ){
+          print(lib2inst)
+          logPkg2 <- tryCatch(reticulate::py_install( envname = envName,
+                                                      pip = TRUE,
+                                                      packages = lib2inst),
+                              error = function (e) e)
+        }
+        avLibs <- reticulate::py_list_packages(envname = envName)
       }
-      avLibs <- reticulate::py_list_packages(envname = envName)
     }
   }
 
@@ -416,7 +428,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE,
     # cat(test_suit2res)
     intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
 
-    if ( dir.exists(cola_scripts_path) & file.exists(outTest)){
+    if ( dir.exists(cola_scripts_path) & file.exists(outTest) ){
 
       ## Using cola python as default
       tryCatch(reticulate::use_python(pyCola), error = function(e) e)
