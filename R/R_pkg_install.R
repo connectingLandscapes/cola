@@ -31,7 +31,7 @@ cola_params <<- list(
 # }
 
 ## Errors
-commonErrors <- function(envName = 'cola',
+diagnose_cola <- function(envName = 'cola',
                          libs2Install = cola::cola_params$libs2Install){
 
   cat(sep = '',
@@ -43,6 +43,7 @@ commonErrors <- function(envName = 'cola',
 
   } else{
     cat("  1. `reticulate` package installed. Evaluating next step \n")
+    library(reticulate)
     ## Reticulate available. Next check
     miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL)
     (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
@@ -149,7 +150,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   } else {
     loadLib <- tryCatch(library(reticulate), error = function(e) NULL)
     if( is.null(loadLib) ) {
-      commonErrors()
+      diagnose_cola()
     }
     cat(sep = '', '    `reticulate` installed already!\n')
   }
@@ -169,6 +170,38 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
 
+  # Fix miniconda / conda bat not found.
+  # https://stackoverflow.com/questions/60974507/error-unable-to-find-conda-binary-is-anaconda-installed
+  if ( dir.exists(miniPath) & is.null(miniBase) ){
+    # "C:/Users/Admin/AppData/Local/r-miniconda/" "C:/Users/Admin/miniconda3/condabin/conda.bat"
+    (newCondaPath <- gsub('//', '/', gsub('\\', '/', fixed = TRUE, file.path(Sys.getenv('HOMEDRIVE'), Sys.getenv('HOMEPATH'), 'miniconda3/condabin/conda.bat'))))
+
+    if( file.exists(newCondaPath) ){
+      options(reticulate.conda_binary = newCondaPath)
+      # options(reticulate.conda_binary = 'C:/Users/Admin/miniconda3/condabin/conda.bat')## Works
+      (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
+    }
+
+    (newCondaPath2 <- file.path(miniPath, 'condabin/conda.bat'))
+    if( file.exists(newCondaPath) & is.null(miniBase) ){
+      options(reticulate.conda_binary = newCondaPath)
+      (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
+    }
+
+    if( is.null(miniBase) ){
+      message(
+        paste0(
+        "   Miniconda is likely to be installed but can't be found. Please try found 'conda' or 'conda.bat' files at:\n",
+        '\t', newCondaPath2, '\n', '\t', newCondaPath , '\n',
+        '   Use R the command `options(reticulate.conda_binary = "C:/path/to/conda.bat")`\n')
+        )
+
+      stop()
+    }
+
+  }
+
+
   ## reticulate::miniconda_path() migth return value even if was uninstalled: "C:/Users/Admin/AppData/Local/r-miniconda"
   if ( is.null(miniBase) ){
 
@@ -180,7 +213,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
       (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
       if ( is.null(miniBase) ){
-        commonErrors()
+        diagnose_cola()
         }
     } else {
       message("You should run `reticulate::install_miniconda()` before using this package")
@@ -195,7 +228,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   ## Check if miniconda exists
   (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
   if ( is.null(miniPath) & dir.exists(miniPath) ){
-    commonErrors()
+    diagnose_cola()
   }
 
 
@@ -285,7 +318,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
   if (is.null(condaLists)){
-    commonErrors()
+    diagnose_cola()
   }
 
   ## Confirm env name
@@ -335,7 +368,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   if( is.null(pyColaVersion)){
     message('We can´t check python version.')
     ## List conda after instaling
-    commonErrors()
+    diagnose_cola()
     stop()
   } else {
     cat(sep = '', '    The python version is ', pyColaVersion, '\n')
@@ -418,7 +451,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     cat(sep = '', "   Some python libraries aren't installed. Try `reticulate::py_install(envname = '", envName,
         "', channel = 'conda-forge', packages = c('",
         paste0(noInsLibs, collapse= "', '"), "')`")
-    commonErrors()
+    diagnose_cola()
     stop()
   } else {
     cat (sep = '', '    All required conda modules installed!\n')
@@ -460,6 +493,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     #          cola_scripts_path,
     #          ' -n cola python -c "import osgeo; import rasterio;import os;import cola_functions as cf;print(os.getcwd()); print(1)"') )
     #
+
+    # https://stackoverflow.com/questions/72142036/best-way-to-activate-my-conda-environment-for-a-python-script-on-a-windows-pc
+    # conda run -n my_env python your_script.py
+    # conda run -p /path/to/my_env python your_script.py
+
 
     (cmdans <- tryCatch(
       system(  paste0('conda run -n ', envName,' python ', welcomepy),
@@ -567,7 +605,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       Sys.unsetenv("COLA_SCRIPTS_PATH")
       Sys.unsetenv("COLA_PYTHON_PATH")
       cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n\t", intCMD)
-      commonErrors()
+      diagnose_cola()
       stop()
     }
   }  else {
@@ -578,6 +616,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 # devtools::install_github('connectingLandscapes/cola') ## option 3: None
 # library(cola)
 # cola::setup_cola()
+# cola::diagnose_cola()
 # setup_cola(envName = 'cola2')
 # # # # remove.packages('cola')
 # Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
