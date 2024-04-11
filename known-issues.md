@@ -200,10 +200,16 @@ Installing the `cola` conda environment packages should be done by the `cola::se
  
   *Testing:* Running `cola::setup_cola()` and `cola::commonErrors()` getting the following messages:
   _Expected answer:_ `All required modules installed!` or `=== All dependencies and requirements installed`
-  _Expected answer:_ 
-  `Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))`
   
-  *Known issue:*
+  *Testing:* Also ypu need to have this two internal variables defines: `Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))`
+  _Expected answer:_
+  `                                        COLA_MINICONDA_PATH                                                      COLA_SCRIPTS_PATH `
+`"C:\Users\USER\AppData\Local\r-miniconda\envs\cola\python.exe"  "C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python"`
+  
+
+  *Known issue:* Some python libraries have not correctly defined internal paths to found other modules. Some errors include something like:
+  `from rasterio._version import gdal_version, get_geos_version, get_proj_version"`
+  `"ImportError: DLL load failed while importing _version`
   _Solution:_
 
 

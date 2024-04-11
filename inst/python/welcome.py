@@ -51,20 +51,21 @@ import tables
 import tables as tb
 import time
 
-#print('    .... all good until here ')
-
-## Issues here:
-import geopandas as gpd
-import rasterio as rio
-
 from skimage.segmentation import watershed
 from shapely.geometry import shape
 
+# print('    .... all good until here ')
+
+## Issues here:
+#print('    .... check point 2')
+
 import osgeo
+from osgeo import gdal
+import geopandas as gpd
+import rasterio as rio
 from rasterio.crs import CRS
 
 #print('    .... debug ')
-
 
 import cola_functions as cf
 #print (" cola_functions loaded!")

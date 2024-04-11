@@ -121,7 +121,7 @@ commonErrors <- function(envName = 'cola',
 
 
 
-setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
+setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
                        libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio',
                                          'pytables', 'pandas',  'cython', 'numba' ,
                                          'networkit', 'fiona', 'shapely', 'geopandas',
@@ -210,7 +210,20 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   ## Check again
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
+  # (ymlFile <- 'N:/Mi unidad/git/cola/inst/python/python_conda_config.yml'); read.delim(ymlFile)
   (ymlFile <- system.file('python/python_conda_config.yml', package = "cola"))
+  ymlTxt <- readLines(ymlFile)
+  ymlTxt <- gsub('name: .+', paste0('name: ', envName), ymlTxt) # Change env name
+  ymlTxt <- gsub('^prefix: .+', paste0('prefix: ', file.path(miniPath, 'envs', envName)), ymlTxt) # Change env path
+
+  # ymlTxt <- gsub('==', 'AAABBBCCC',  ymlTxt)
+  # #ymlTxt <- gsub('WXYZ', '=', gsub('=.+', '', sub('=', 'WXYZ', ymlTxt)) )
+  # ymlTxt <- gsub('AAABBBCCC', '==', ymlTxt)
+
+  # #(newYmlFile <- 'C:/Users/Admin/filea31c573b7531newYml.yml')
+
+  (newYmlFile <- paste0(tempfile(), 'newYml.yml'))  # read.delim(newYmlFile)
+  writeLines(text = ymlTxt, con = newYmlFile)
 
   if (is.null(condaLists)){
 
@@ -218,10 +231,10 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     if (isTRUE(user_permission)) {
 
       #  conda env create -f environment.yml
-      if(file.exists(ymlFile)){
+      if(file.exists(newYmlFile)){
         system.time(conda_create(envName))
       } else {
-        system.time(conda_create(envName, f = ymlFile))
+        system.time(conda_create(envName, f = newYmlFile))
       }
 
     } else {
@@ -233,17 +246,24 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       if( ! envName %in% condaLists$name ){
         user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
         if (isTRUE(user_permission)) {
-          if(file.exists(ymlFile) & yml){
-            instCondEnv <- tryCatch(conda_create(envName, f = ymlFile), error = function(e) e)
+          if( file.exists(newYmlFile) & yml ){
+            # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e) # not using YML file
+            (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
+            tryCatch(system(instCondEnv), error = function(e) e) # not using YML file
+
           } else {
             instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
           }
+
           if ( any(class(instCondEnv) == 'error') & isTRUE(force)){
             envDir <- file.path(miniconda_path(), 'envs', envName)
             if ( dir.exists(envDir) ){
               unlink( envDir, recursive = TRUE, force = TRUE )
-              if(file.exists(ymlFile) & yml){
-                instCondEnv <- tryCatch(conda_create(envName, f = ymlFile), error = function(e) e)
+              if(file.exists(newYmlFile) & yml){
+                # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e)
+                (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
+                tryCatch(system(instCondEnv), error = function(e) e) # not using YML file
+
               } else {
                 instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
               }
@@ -404,13 +424,14 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   }
 
 
-  cat (sep = '', '  +Step 5/',nSteps, ' Setting up local variables\n')
+  ## Step4. Set paths ----------------------------------------------
+  cat (sep = '', '  +Step 5/', nSteps, ' Setting up local variables\n')
   # reticulate::py_available()
 
   ## Connecting lib paths
   (welcomepy <- system.file("python/welcome.py", package = "cola"))
   #(welcomepy <- file.path('N:/My Drive/git/cola/inst/python/welcome.py'))
-  #read.delim(welcomepy)
+  # read.delim(welcomepy)
   if (any(grep(' ', welcomepy))){
     welcomepy <- paste0('"', welcomepy, '"')
   }
@@ -418,6 +439,56 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( pyCola, ' ', welcomepy)); #cat(tryBcmd)
   (cmdans <- tryCatch( system( cmd2test , intern = TRUE), error = function (e) e))
+
+
+  ## Try to solve issues
+
+  # C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Lib\site-packages\osgeo\_gdal.py
+
+  if ( any(grep('ImportError: DLL load failed while importing', cmdans)) ){
+
+    cat (sep = '', "\n    Some errors found when running the scripts.\n\t",
+         "    Adding the following paths to te ENVIROMENTAL PATH:\n"
+    )
+
+    (current_paths <- sort(strsplit(Sys.getenv('PATH'), ';')[[1]]))
+
+    ## Path according to
+    ( gdal_data_path0 <- file.path( dirname(pyCola), "Library/share/gdal") );
+    # "C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/share/gdal"
+
+    if( dir.exists(gdal_data_path0) ){
+      cat (sep = '', "\t + ", (gdal_data_path0), "\n")
+      (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
+                              gsub(fixed = T, "/", "\\", gsub("//", "/", gdal_data_path0))
+      ))
+      # cat(cmd_add_gdal)
+      logA <- tryCatch(system(cmd_add_gdal, intern = TRUE), error = function(e) e)
+      # PS C:\WINDOWS\system32> setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\share\gdal
+      # CORRECTO: se guardó el valor especificado.
+    }
+
+    ## Paths with dll files
+    (gdal_data_paths <- list.files(path = dirname(pyCola), recursive = TRUE, pattern = 'gdal.+dll$', full.names = TRUE))
+    # C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/bin/gdal.dll
+    for(ii in  1:length(gdal_data_path)){ # ii = 1
+      gdal_data_path <- gdal_data_paths[ii]
+      cat (sep = '', "\t + ", dirname(gdal_data_path), "\n")
+      (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
+                              (gsub(fixed = T, "/", "\\", gsub("//", "/", dirname(gdal_data_path)) ))
+      ) )
+      # setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\bin
+      # CORRECTO: se guardó el valor especificado.
+    }
+
+  cat (sep = '', "\n    If any error detected, try to run in the command line (or power shell) as admin the instruction: \n",
+       "\tsetx /m GDAL_DATA C:\\path\\mentioned\\before  -- Use only one BACKSLASH for paths separators\n")
+
+  }
+
+
+  intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
+
 
   if (any(grep('WELCOME ', cmdans))){
     #libP <- .libPaths()
@@ -463,8 +534,7 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       stop()
     }
   }  else {
-    cat (sep = '', "    Error: Can't load conda modules.\n\t", cmdans)
-
+    cat (sep = '\n', "    Error: Can't load conda modules.\n\n\t Here the error: \n\t", cmdans)
   }
 }
 
@@ -478,4 +548,3 @@ setup_cola <- function(envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 # save(origLibs, file = 'origLibsBeforeDss.RData')
 # cola::setup_cola_dss()
 # libsafter1 <- installed.packages(); save(libsafter1, file = 'libsafter1.RData')
-# (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))

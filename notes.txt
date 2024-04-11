@@ -40,6 +40,11 @@ https://stackoverflow.com/questions/33103203/rtools-is-not-being-detected-from-r
 ## CMD
 # C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
 
++ "C:/Users/Admin/miniconda3/condabin/conda.bat" "remove" "--yes" "--name" "cola" "--all"
++ "C:/Users/Admin/miniconda3/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.9" "--quiet" "-c" "conda-forge"
+
+
+
 ## Geopandas GDAL_DATA
 Warning 3: Cannot find header.dxf (GDAL_DATA is not defined)
 Cannot find header.dxf (GDAL_DATA is not defined)
@@ -62,7 +67,8 @@ https://github.com/ALIVE-ABI/alive/tree/main
 
 
 ## reticulate Conda options
-# conda_remove(envname = 'cola')
+# conda_remove(envname = 'cola') # conda remove -n cola --all
+
 
   # reticulate::py_list_packages(envname = 'cola') # dont use
   # reticulate::conda_create vs  py_install vs conda_install
@@ -75,8 +81,8 @@ https://github.com/ALIVE-ABI/alive/tree/main
 # reticulate::py_install(envname = envName, channel = "conda-forge", packages = 'numexpr')
 # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
 
-
-
+## Windows 
+Anaconda Prompt (miniconda3):  %windir%\System32\cmd.exe "/K" C:\Users\Admin\miniconda3\Scripts\activate.bat C:\Users\Admin\miniconda3
 
 ## Wallace ideas
 https://github.com/wallaceEcoMod/wallace
