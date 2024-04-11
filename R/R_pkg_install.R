@@ -247,13 +247,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   ymlTxt <- readLines(ymlFile)
   ymlTxt <- gsub('name: .+', paste0('name: ', envName), ymlTxt) # Change env name
   ymlTxt <- gsub('^prefix: .+', paste0('prefix: ', file.path(miniPath, 'envs', envName)), ymlTxt) # Change env path
-
   # ymlTxt <- gsub('==', 'AAABBBCCC',  ymlTxt)
   # #ymlTxt <- gsub('WXYZ', '=', gsub('=.+', '', sub('=', 'WXYZ', ymlTxt)) )
   # ymlTxt <- gsub('AAABBBCCC', '==', ymlTxt)
-
   # #(newYmlFile <- 'C:/Users/Admin/filea31c573b7531newYml.yml')
-
   (newYmlFile <- paste0(tempfile(), 'newYml.yml'))  # read.delim(newYmlFile)
   writeLines(text = ymlTxt, con = newYmlFile)
 
@@ -378,7 +375,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
 
   ## Step4. Install packages ----------------------------------------------
-  cat (sep = '', '  +Step 4/',nSteps, ' Installing & checking conda modules\n')
+  cat (sep = '', '  +Step 4/', nSteps, ' Installing & checking conda modules\n')
 
   # Try 3 times to install all the packages with yml file
   for(i in 1:3){
@@ -475,7 +472,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
                        pyCola, ' ', welcomepy)); #cat(tryBcmd)
-  (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e))
+  (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e)) ## error is character
 
 
   ## Try to solve issues
@@ -501,9 +498,18 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
     (cmdans <- tryCatch(
       system(  paste0('conda run -n ', envName,' python ', welcomepy),
-                                intern = TRUE ), error = function (e) e))
+               intern = TRUE ), error = function (e) e$message)) # error us simpleError
 
     pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
+
+    if ( any(grep("'conda' not found", cmdans)) ){
+
+      (cmdans <- tryCatch(
+        system(  paste0( reticulate::conda_binary(), ' run -n ', envName,' python ', welcomepy),
+                 intern = TRUE ), error = function (e) e))
+
+      pyCola <- paste0(reticulate::conda_binary(), ' run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
+    }
 
 
   #   (cmd2testA <- paste0( 'conda run -n  '));
@@ -561,7 +567,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   #      "\tsetx /m GDAL_DATA C:\\path\\mentioned\\before  -- Use only one BACKSLASH for paths separators\n")
 
   }
-
 
 
   if (any(grep('WELCOME ', cmdans))){

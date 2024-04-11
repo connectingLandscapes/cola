@@ -233,6 +233,8 @@ and having a message from `cola::setup_cola()` similar to: `The python version i
  ***Solution:*** Delete folder and install environment again. Go to the path `reticulate::miniconda_path()` and check is not empty. Some other paths, depending under which user you installed miniconda (`reticulate::install_miniconda()`) can include: 
   - `C:\Users\USER\AppData\Local\r-miniconda\envs\cola`
   - `C:\Users\USER\miniconda3\envs\cola`
+  
+  [Here a reference](https://stackoverflow.com/questions/60974507/error-unable-to-find-conda-binary-is-anaconda-installed)
 
 
 
