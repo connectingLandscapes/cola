@@ -9,6 +9,7 @@ to resistance values.
 #%%
 # Imports
 import sys
+import osgeo
 import cola_functions as cf
 import numpy as np
 import rasterio as rio

@@ -199,7 +199,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   }
 
 
-
   # (pyConf <- reticulate::py_config())
   # py_discover_config() ##  Python version
   # (pyDiscover <- py_discover_config(use_environment = 'base'))
@@ -242,13 +241,14 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       stop()
     }
   } else {
-    if (class(condaLists) == 'data.frame'){
-      if( ! envName %in% condaLists$name ){
+    if ( class(condaLists) == 'data.frame' ){
+      if( !envName %in% condaLists$name ){
         user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
         if (isTRUE(user_permission)) {
           if( file.exists(newYmlFile) & yml ){
             # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e) # not using YML file
             (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
+            cat('   Creating conda using YML file:', instCondEnv, '\n')
             tryCatch(system(instCondEnv), error = function(e) e) # not using YML file
 
           } else {
@@ -262,6 +262,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
               if(file.exists(newYmlFile) & yml){
                 # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e)
                 (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
+                cat('   Creating conda using YML file:', instCondEnv, '\n')
                 tryCatch(system(instCondEnv), error = function(e) e) # not using YML file
 
               } else {
@@ -430,6 +431,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
   ## Connecting lib paths
   (welcomepy <- system.file("python/welcome.py", package = "cola"))
+  (cola_scripts_path <- dirname(welcomepy))
+
   #(welcomepy <- file.path('N:/My Drive/git/cola/inst/python/welcome.py'))
   # read.delim(welcomepy)
   if (any(grep(' ', welcomepy))){
@@ -437,63 +440,95 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   }
 
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
-  (cmd2test <- paste0( pyCola, ' ', welcomepy)); #cat(tryBcmd)
-  (cmdans <- tryCatch( system( cmd2test , intern = TRUE), error = function (e) e))
+  (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
+                       pyCola, ' ', welcomepy)); #cat(tryBcmd)
+  (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e))
 
 
   ## Try to solve issues
-
   # C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Lib\site-packages\osgeo\_gdal.py
 
   if ( any(grep('ImportError: DLL load failed while importing', cmdans)) ){
 
-    cat (sep = '', "\n    Some errors found when running the scripts.\n\t",
-         "    Adding the following paths to te ENVIROMENTAL PATH:\n"
-    )
+    # https://stackoverflow.com/questions/47246350/conda-activate-not-working
+    # (instGd <- tryCatch(conda_install(envname = envName, packages = c('gdal', 'libgdal')),
+    #                     error = function (e) e))
+    # conda run -n envname python -c "print('Hello!')"
 
-    (current_paths <- sort(strsplit(Sys.getenv('PATH'), ';')[[1]]))
+    # system(
+    #   paste0('conda run --cwd ',
+    #          cola_scripts_path,
+    #          ' -n cola python -c "import osgeo; import rasterio;import os;import cola_functions as cf;print(os.getcwd()); print(1)"') )
+    #
 
-    ## Path according to
-    ( gdal_data_path0 <- file.path( dirname(pyCola), "Library/share/gdal") );
-    # "C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/share/gdal"
+    (cmdans <- tryCatch(
+      system(  paste0('conda run -n ', envName,' python ', welcomepy),
+                                intern = TRUE ), error = function (e) e))
 
-    if( dir.exists(gdal_data_path0) ){
-      cat (sep = '', "\t + ", (gdal_data_path0), "\n")
-      (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
-                              gsub(fixed = T, "/", "\\", gsub("//", "/", gdal_data_path0))
-      ))
-      # cat(cmd_add_gdal)
-      logA <- tryCatch(system(cmd_add_gdal, intern = TRUE), error = function(e) e)
-      # PS C:\WINDOWS\system32> setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\share\gdal
-      # CORRECTO: se guardó el valor especificado.
-    }
+    pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
 
-    ## Paths with dll files
-    (gdal_data_paths <- list.files(path = dirname(pyCola), recursive = TRUE, pattern = 'gdal.+dll$', full.names = TRUE))
-    # C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/bin/gdal.dll
-    for(ii in  1:length(gdal_data_path)){ # ii = 1
-      gdal_data_path <- gdal_data_paths[ii]
-      cat (sep = '', "\t + ", dirname(gdal_data_path), "\n")
-      (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
-                              (gsub(fixed = T, "/", "\\", gsub("//", "/", dirname(gdal_data_path)) ))
-      ) )
-      # setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\bin
-      # CORRECTO: se guardó el valor especificado.
-    }
 
-  cat (sep = '', "\n    If any error detected, try to run in the command line (or power shell) as admin the instruction: \n",
-       "\tsetx /m GDAL_DATA C:\\path\\mentioned\\before  -- Use only one BACKSLASH for paths separators\n")
+  #   (cmd2testA <- paste0( 'conda run -n  '));
+  #   (cmdansA <- tryCatch( system( cmd2testA , intern = TRUE ), error = function (e) e))
+  #
+  #
+  #   (cmd2testA <- paste0( 'conda config --set auto_activate_base true'));
+  #   (cmdansA <- tryCatch( system( cmd2testA , intern = TRUE ), error = function (e) e))
+  #
+  #   (cmd2testB <- paste0( 'activate ', envName));
+  #   (cmdansB <- tryCatch( system( cmd2testB , intern = TRUE ), error = function (e) e))
+  #
+  #   (cmd2test <- paste0( pyCola, ' ', welcomepy));
+  #   (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e))
+  #
+  #   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
+  #     pyCola, ' ', welcomepy)); #cat(tryBcmd)
+  #   (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e))
+  #   (cmd2test <- paste0( 'activate ', envName,' ; ', pyCola, ' ', welcomepy)); #cat(tryBcmd)
+  #   cat (sep = '', "\n    Some errors found when running the scripts.\n\t",
+  #        "    Adding the following paths to te ENVIROMENTAL PATH:\n"
+  #   )
+  #
+  #   (current_paths <- sort(strsplit(Sys.getenv('PATH'), ';')[[1]]))
+  #
+  #   ## Path according to
+  #   ( gdal_data_path0 <- file.path( dirname(pyCola), "Library/share/gdal") );
+  #   # "C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/share/gdal"
+  #
+  #   if( dir.exists(gdal_data_path0) ){
+  #     cat (sep = '', "\t + ", (gdal_data_path0), "\n")
+  #     (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
+  #                             gsub(fixed = T, "/", "\\", gsub("//", "/", gdal_data_path0))
+  #     ))
+  #     # cat(cmd_add_gdal)
+  #     logA <- tryCatch(system(cmd_add_gdal, intern = TRUE), error = function(e) e)
+  #     # PS C:\WINDOWS\system32> setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\share\gdal
+  #     # CORRECTO: se guardó el valor especificado.
+  #   }
+  #
+  #   ## Paths with dll files
+  #   (gdal_data_paths <- list.files(path = dirname(pyCola), recursive = TRUE, pattern = 'gdal.+dll$', full.names = TRUE))
+  #   # C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/Library/bin/gdal.dll
+  #   for(ii in  1:length(gdal_data_path)){ # ii = 1
+  #     gdal_data_path <- gdal_data_paths[ii]
+  #     cat (sep = '', "\t + ", dirname(gdal_data_path), "\n")
+  #     (cmd_add_gdal <- paste0("setx /m GDAL_DATA ",
+  #                             (gsub(fixed = T, "/", "\\", gsub("//", "/", dirname(gdal_data_path)) ))
+  #     ) )
+  #     # setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\bin
+  #     # CORRECTO: se guardó el valor especificado.
+  #   }
+  #
+  # cat (sep = '', "\n    If any error detected, try to run in the command line (or power shell) as admin the instruction: \n",
+  #      "\tsetx /m GDAL_DATA C:\\path\\mentioned\\before  -- Use only one BACKSLASH for paths separators\n")
 
   }
 
-
-  intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
 
 
   if (any(grep('WELCOME ', cmdans))){
     #libP <- .libPaths()
     #cola_scripts_path <- file.path(libP, 'cola/python')
-    (cola_scripts_path <- dirname(welcomepy))
 
     timeMark <- gsub('[[:punct:]]| ', '',
                      format(as.POSIXct(Sys.time(), tz="CET"),
@@ -505,9 +540,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     }
 
     outTest <- paste0(tempfile(), timeMark, '.tif')
+    # pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
+
     (test_suit2res <- paste0(pyCola, ' ', # Python
                              pyScript, ' ', # script
-                             system.file("tif/sampleTif.tif", package = "cola"), ' ', #in [1]
+                             system.file("sampledata/sampleTif.tif", package = "cola"), ' ', #in [1]
                              outTest, #out
                              ' 0 1 100', # min max scale-max
                              ' 1 -9999 None')) # shape nodata proj

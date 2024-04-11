@@ -40,9 +40,11 @@ https://stackoverflow.com/questions/33103203/rtools-is-not-being-detected-from-r
 ## CMD
 # C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
 
+
 + "C:/Users/Admin/miniconda3/condabin/conda.bat" "remove" "--yes" "--name" "cola" "--all"
 + "C:/Users/Admin/miniconda3/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.9" "--quiet" "-c" "conda-forge"
 
+"C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.9" "--quiet" "-c" "conda-forge" 
 
 
 ## Geopandas GDAL_DATA
@@ -51,10 +53,15 @@ Cannot find header.dxf (GDAL_DATA is not defined)
 https://gis.stackexchange.com/questions/478160/gdal-warning-when-importing-geopandas
 https://stackoverflow.com/questions/45883445/how-to-fix-the-enviroment-variable-gdal-data-path-set
 
+import sys
+sys.path
 
 ## conda yml
 conda env export > environment_droplet.yml
 conda env create -f environment.yml
+
+# conda env create -f .\filea31c573b7531newYml.yml
+
 
 
 ## NAMESPACE
@@ -83,6 +90,10 @@ https://github.com/ALIVE-ABI/alive/tree/main
 
 ## Windows 
 Anaconda Prompt (miniconda3):  %windir%\System32\cmd.exe "/K" C:\Users\Admin\miniconda3\Scripts\activate.bat C:\Users\Admin\miniconda3
+
+Anaconda Powershell Prompt (miniconda3): %windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -NoExit -Command "& 'C:\Users\Admin\miniconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\Admin\miniconda3' 
+
+Windows PowerShell: %SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe
 
 ## Wallace ideas
 https://github.com/wallaceEcoMod/wallace

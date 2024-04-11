@@ -4,8 +4,7 @@ print ("---- WD:", os.getcwd())
 
 #from scipy.ndimage import gaussian_filter
 # importance of corridors using standard approach.
-from contextlib import closing
-from itertools import chain
+from contextlib import closingfrom itertools import chain
 from itertools import combinations
 from KDEpy.bw_selection import improved_sheather_jones
 from KDEpy.bw_selection import scotts_rule

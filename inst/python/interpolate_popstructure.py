@@ -7,6 +7,7 @@ Interpolate allelic diversity and heterozygosity
 
 #%%
 # Imports
+import osgeo
 import pandas as pd
 import numpy as np
 import rasterio as rio

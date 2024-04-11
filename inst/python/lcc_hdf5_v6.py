@@ -8,6 +8,7 @@ Created on Thu Oct  5 23:07:42 2023
 #%%
 # IMPORTS
 import sys
+import osgeo
 import cola_functions as cf
 import networkit as nk
 import rasterio as rio

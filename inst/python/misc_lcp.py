@@ -4,6 +4,7 @@ Created on Tue Jul  4 13:29:55 2023
 
 @author: pj276
 """
+import osgeo
 import rasterio as rio
 from rasterio.crs import CRS
 

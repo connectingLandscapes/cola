@@ -28,6 +28,7 @@ plus additional infomartion (e.g. sex)
 #%%
 # IMPORTS
 import sys
+import osgeo
 import rasterio as rio
 from rasterio.crs import CRS
 import cola_functions as cf

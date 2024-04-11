@@ -8,6 +8,7 @@ surface from xy locations.
 
 #%%
 # Imports
+import osgeo
 import networkit as nk
 import networkx as nx
 import rasterio as rio

@@ -12,6 +12,7 @@ template raster/grid.
 """
 #%%
 # IMPORTS
+import osgeo
 import rasterio as rio
 from rasterio.crs import CRS
 from sklearn.model_selection import GridSearchCV

@@ -8,6 +8,7 @@ Script to calculate pairwise cost distance matrix using Networkit.
 #%%
 # IMPORTS
 import sys
+import osgeo
 import cola_functions as cf
 import networkit as nk
 import rasterio as rio

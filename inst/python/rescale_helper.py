@@ -9,6 +9,7 @@ using different parameter sets.
 #%%
 # Imports
 import pandas as pd
+import osgeo
 import sys
 import cola_functions as cf
 import numpy as np

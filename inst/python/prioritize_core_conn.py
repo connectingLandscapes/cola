@@ -18,6 +18,7 @@ corridor as a raster and the stats as a point shapefile.
 import sys
 from scipy import ndimage as ndi
 import numpy as np
+import osgeo
 import rasterio as rio
 from skimage.segmentation import watershed
 from skimage.morphology import binary_erosion

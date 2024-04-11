@@ -7,6 +7,7 @@ Created on Thu Jan 11 14:23:54 2024
 
 import matplotlib.pyplot as plt
 import os
+import osgeo
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 import numpy as np

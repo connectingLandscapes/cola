@@ -12,6 +12,7 @@ point.
 #%%
 # IMPORTS
 import sys
+import osgeo
 import cola_functions as cf
 import networkit as nk
 import rasterio as rio

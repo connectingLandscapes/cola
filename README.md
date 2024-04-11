@@ -4,8 +4,8 @@ This package integrates R and Python modules.
 
 
 ## Installing the package
-It's required to install several components (once). The srtucture of this software is:
-- R as the base. Have you Rtool already? https://cran.r-project.org/bin/windows/Rtools/
+It's required to install several components (once). The structure of this software is:
+- R as the base. Have you Rtools already? https://cran.r-project.org/bin/windows/Rtools/
 - Python as the engine
 - Miniconda (conda) environment as the package containing all python dependencies
 - R shiny for the dashboard Decision support system.
@@ -14,7 +14,8 @@ Some of the different computers might have particular conditions or requirements
 
 devtool::find_rtools()
 
-1.  Install cola
+1.  Install cola R package.
+Consider use the option 3 (None) for installing new packages at the first try. If an error arises, update all of them (option 1)
 ```{r}
 if (!require(devtools)){
    install.packages('devtools')
@@ -22,8 +23,31 @@ if (!require(devtools)){
 
 devtools::install_github('connectingLandscapes/cola') ## option 3: None
 ```
+
+Will shown in console:
+
+```
+Downloading GitHub repo connectingLandscapes/cola@HEAD
+These packages have more recent versions available.
+It is recommended to update all of them.
+Which would you like to update?
+
+ 1: All                                    
+ 2: CRAN packages only                     
+ 3: None                              
+
+...
+
+** testing if installed package can be loaded from final location
+*** arch - i386
+*** arch - x64
+** testing if installed package keeps a record of temporary installation path
+* DONE (cola)
+```
+  
   
 2. Setting up cola requirements:
+This might take several minutes and 
 ```{r}
 library(cola)
 cola::setup_cola()
@@ -54,22 +78,7 @@ cola::cola_dss()
 
 
 
-Downloading GitHub repo connectingLandscapes/cola@HEAD
-These packages have more recent versions available.
-It is recommended to update all of them.
-Which would you like to update?
 
- 1: All                                    
- 2: CRAN packages only                     
- 3: None                              
-
-...
-
-** testing if installed package can be loaded from final location
-*** arch - i386
-*** arch - x64
-** testing if installed package keeps a record of temporary installation path
-* DONE (cola)
 
 Tests:
 - Windows

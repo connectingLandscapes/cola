@@ -197,6 +197,7 @@ Installing the `cola` conda environment packages should be done by the `cola::se
 
 
 ###### 6. Define connections between R and Python
+These errors are common because each computer has a particular configuration. Here some of the solutions we found.
  
   *Testing:* Running `cola::setup_cola()` and `cola::commonErrors()` getting the following messages:
   _Expected answer:_ `All required modules installed!` or `=== All dependencies and requirements installed`
@@ -210,35 +211,20 @@ Installing the `cola` conda environment packages should be done by the `cola::se
   *Known issue:* Some python libraries have not correctly defined internal paths to found other modules. Some errors include something like:
   `from rasterio._version import gdal_version, get_geos_version, get_proj_version"`
   `"ImportError: DLL load failed while importing _version`
-  _Solution:_
-
-
-
-  N:\Mi unidad\git\cola
-Traceback (most recent call last):
-  File "C:/Users/Admin/Documents/R/win-library/4.0/cola/python/welcome.py", line 17, in <module>
-  from rasterio.crs import CRS
-File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\cola\lib\site-packages\rasterio\__init__.py", line 9, in <module>
-  from rasterio._base import gdal_version
-ImportError: DLL load failed while importing _base: No se encontrÃ³ el proceso especificado.
-
-
-
-  +Step 5/5 Setting up local variables
-Warning message:
-In system(cmd2test, intern = TRUE) :
-  running command 'C:\Users\Admin\AppData\Local\r-miniconda\envs\cola/python.exe C:/Users/Admin/Documents/R/win-library/4.0/cola/python/welcome.py' had status 1
   
+  This occurs because even when the correct version of python is installed (step 4), the internal paths and libraries installed in the step 5 are not found.
   
+  _Solution:_ Use the 'base' conda environment instead of 'cola'. For this, we need to: 
+  1. Follow this instruction to activate conda by default in the command line: 
+    As Admin in powershell: set-executionpolicy unrestricted
+  2. Go to `%USERPROFILE%\Miniconda3\Scripts` or something like `C:\Users\Admin\miniconda3\Scripts`, using `cd` command: `cd C:\Users\Admin\miniconda3\Scripts`
+  3. Run `conda --version` to check the version
+  4. Run `conda init powershell` to activate conda
+  5. Run again `cola::setup_cola(envname = 'base')`
   
-  ---
-  > cola::commonErrors()
- 
- We found some errors. Running `cola::setup_cola()` should help you to configure the package.
- Please refer to https://github.com/gonzalezivan90/cola/blob/main/known-issues.md for more details
-   === All dependencies and requirements installed. Look for futher details in the repository documentation ===
-   ---
-   
+
+Bug / issue reporting in cola R package
+https://docs.google.com/forms/d/e/1FAIpQLSdFsM1e02biuauaWE4Svwtu5QMneKU7Ilfa8pAJHiRy3a-KGw/viewform?usp=sf_link
 
   Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))
   origLibs <- installed.packages()
