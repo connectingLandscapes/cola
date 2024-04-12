@@ -274,7 +274,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
         cat('   Creating conda using YML file:', instCondEnv, '\n')
         insCondLog <- tryCatch(system(instCondEnv, intern = TRUE), error = function(e) e) #
         if( any(grep('Could not solve for environment specs', insCondLog)) ){
-          instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
+          insCondLog <- tryCatch(conda_create(envName), error = function(e) e)
         }
       }
 
@@ -293,27 +293,27 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
             (instCondcmd <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
             cat('   Creating conda using YML file:', instCondcmd, '\n')
             insCondLog <- tryCatch(system(instCondcmd, intern = TRUE), error = function(e) e) #
-            if( any(grep('Could not solve for environment specs', insCondLog)) ){
+            if( any( grep('Could not solve for environment specs', insCondLog) ) ){
               insCondLog <- tryCatch(conda_create(envName), error = function(e) e)
             }
           } else {
             cat('   Error found. Trying  conda_create(":', envName, '")\n')
-            instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
+            insCondLog <- tryCatch(conda_create(envName), error = function(e) e)
           }
 
-          if ( any(class(instCondEnv) == 'error') & isTRUE(force)){
+          if ( any( grep('Could not solve for environment specs', insCondLog) ) & isTRUE(force)){
             envDir <- file.path(miniconda_path(), 'envs', envName)
             if ( dir.exists(envDir) ){
               unlink( envDir, recursive = TRUE, force = TRUE )
               if(file.exists(newYmlFile) & yml){
                 # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e)
                 (instCondcmd <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
-                cat('   Creating conda using YML file:', instCondEnv, '\n')
-                instCondEnv <- tryCatch(system(instCondcmd), error = function(e) e) # not using YML file
+                cat('   Creating conda using YML file:', instCondcmd, '\n')
+                insCondLog <- tryCatch(system(instCondcmd), error = function(e) e) # not using YML file
 
               } else {
                 cat('   Error found. Trying  conda_create(":', envName, '")\n')
-                instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
+                insCondLog <- tryCatch(conda_create(envName), error = function(e) e)
               }
             }
           }
