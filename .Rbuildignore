@@ -2,4 +2,4 @@
 ^\.Rproj\.user$
 notebook*
 .ini$
-*desktop.ini$
+desktop.ini
