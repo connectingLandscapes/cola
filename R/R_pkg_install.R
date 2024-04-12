@@ -44,7 +44,7 @@ diagnose_cola <- function(envName = 'cola',
 
   cat(sep = '',
       ' \n We found some errors. Running `', envName, '::setup_cola()` should help you to configure the package.\n',
-      ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic: (please wait a moment)')
+      ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic: (please wait a moment)\n')
 
   if (!require(reticulate)){
     cat("  1. `reticulate` package is not installed. Try `install.packages('reticulate')` \n")
@@ -67,10 +67,10 @@ diagnose_cola <- function(envName = 'cola',
         cat(sep = '', "  3. `", envName, "` conda environment not installed. Try `reticulate::conda_create('",
             envName, "')`\n")
       } else {
-        if (class(avEnv) == 'data.frame'){
-          if( ! envName %in% avEnv$name){
+        if ( class(avEnv) == 'data.frame' ){
+          if( !envName %in% avEnv$name ){
             cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
-                envName, "')`\n\t or `conda_create(", envName, ", f = '", system.file('python/python_conda_config.yml', package = "cola"),"')`")
+                envName, "')`\n\t or in conda CMD `conda env create -f ", system.file('python/python_conda_config.yml', package = "cola"),"`")
           } else {
 
             cat("  3. `cola` conda environment installed. Evaluating next step \n")
@@ -94,17 +94,19 @@ diagnose_cola <- function(envName = 'cola',
 
               ## All libs installed
 
-              (pyCola <- Sys.getenv('COLA_MINICONDA_PATH'))
+              (pyCola <- Sys.getenv('COLA_PYTHON_PATH'))
               (pathCola <- Sys.getenv('COLA_SCRIPTS_PATH'))
 
-              if( dir.exists(pyCola) & file.exists(pathCola) ){
+              (pyCola2check <- gsub(' .+', '', pyCola))
 
-                cat(sep = '', "   === All dependencies and requirements installed. Look for futher details in the repository documentation ===")
+              if( file.exists(pyCola2check) & dir.exists(pathCola) ){
+
+                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation")
 
               } else {
                 cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
                     "by `cola::setup_cola( )` likely because it wasn't able to run the test we designed.\n",
-                    "  `Sys.getenv('COLA_MINICONDA_PATH')` and `Sys.getenv('COLA_SCRIPTS_PATH')` should have the paths to `cola` python and folder path.\n",
+                    "  `Sys.getenv('COLA_PYTHON_PATH')` and `Sys.getenv('COLA_SCRIPTS_PATH')` should have the paths to `cola` python and folder path.\n",
                     "This error usually arises when some libraries can't be used by python. ",
                     "We solved this by getting the last version of R\nPlease go to:\n\t",
                     "https://github.com/connectingLandscapes/cola/blob/main/known-issues.md")
