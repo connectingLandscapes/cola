@@ -634,9 +634,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   }
 }
 
-devtools::install_github('connectingLandscapes/cola') ## option 3: None
-library(cola)
-cola::setup_cola()
+# devtools::install_github('connectingLandscapes/cola') ## option 3: None
+# library(cola)
+# cola::setup_cola()
 # cola::diagnose_cola()
 # setup_cola(envName = 'cola2')
 # # # # remove.packages('cola')
