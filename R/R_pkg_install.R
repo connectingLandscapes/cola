@@ -283,6 +283,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       stop()
     }
   } else {
+
     if ( class(condaLists) == 'data.frame' ){
       if( !envName %in% condaLists$name ){
         user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
@@ -291,9 +292,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
             # instCondEnv <- tryCatch(conda_create(envName, f = newYmlFile), error = function(e) e) #
             (instCondcmd <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
             cat('   Creating conda using YML file:', instCondcmd, '\n')
-            instCondEnv <- tryCatch(system(instCondcmd, intern = TRUE), error = function(e) e) #
+            insCondLog <- tryCatch(system(instCondcmd, intern = TRUE), error = function(e) e) #
             if( any(grep('Could not solve for environment specs', insCondLog)) ){
-              instCondEnv <- tryCatch(conda_create(envName), error = function(e) e)
+              insCondLog <- tryCatch(conda_create(envName), error = function(e) e)
             }
           } else {
             cat('   Error found. Trying  conda_create(":', envName, '")\n')
