@@ -78,6 +78,8 @@
   # }
 
   allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
+  if(FALSE){
+
   validLogs <- unname(
     na.omit(
       sapply(allLogs, simplify = TRUE, function(x){
@@ -90,6 +92,8 @@
         }
       })
     ))
+  }
+  validLogs <- c('x')
 
 
   # Functions ----
@@ -3136,8 +3140,14 @@ server <- function(input, output, session) {
 
   observeEvent(input$read_error, {
     output$outerror  <- renderText({
-      paste0(read.delim(file.path(path_error, input$sel_error),
-                        header = FALSE)[, 1], collapse = '\n')
+      txtPath <- file.path(path_error, input$sel_error)
+      if(file.exists(txtPath)){
+        txt2show <- read.delim(txtPath,header = FALSE)[, 1]
+      }
+      else {
+        txt2show <- 'No files'
+      }
+      paste0(txt2show, collapse = '\n')
     })
 
     #  read.delim('/var/log/shiny-server/cola-shiny-20231011-230516-33145.log', header = FALSE)[, 1]

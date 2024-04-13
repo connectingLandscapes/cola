@@ -18,7 +18,7 @@ cola_dss <- function(launch.browser = TRUE)  {
   dssLocation <- system.file('app', package = "cola")
   #knitcitations::cleanbib()
   #options("citation_format" = "pandoc")
-  #preexisting_objects <- ls(envir = .GlobalEnv)
+  preexisting_objects <- ls(envir = .GlobalEnv)
   on.exit(rm(list = setdiff(ls(envir = .GlobalEnv), preexisting_objects), envir = .GlobalEnv))
   return( shiny::runApp(dssLocation, launch.browser = launch.browser) )
 }
