@@ -13,7 +13,7 @@
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-cola_dss <- function(launch.browser = TRUE) ) {
+cola_dss <- function(launch.browser = TRUE)  {
   #app_path <- system.file("shiny", package = "wallace")
   dssLocation <- system.file('app', package = "cola")
   #knitcitations::cleanbib()
