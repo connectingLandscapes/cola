@@ -40,7 +40,14 @@ cola_params <<- list(
 
 ## Errors
 diagnose_cola <- function(envName = 'cola',
-                         libs2Install = cola::cola_params$libs2Install){
+                         libs2Install = c('gdal', 'h5py', # 'osgeo',
+                                          'numexpr',
+                                          'rasterio', 'pytables',
+                                          'pandas',  'cython', 'numba' ,
+                                          'networkit', 'fiona', 'shapely',
+                                          'geopandas',
+                                          'kdepy', # 'KDEpy',
+                                          'scikit-image')){
 
   cat(sep = '',
       ' \n We found some errors. Running `', envName, '::setup_cola()` should help you to configure the package.\n',
@@ -170,7 +177,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
   ## Step 2 - Install miniconda ----------------------------------------------
 
-  cat (sep = '', '  +Step 2/',nSteps, ' Installing & checking miniconda\n')
+  cat (sep = '', '  +Step 2/', nSteps, ' Installing & checking miniconda\n')
 
   # (sys <- reticulate::import("sys", convert = TRUE))
   # (instMiniConda <- tryCatch(reticulate::install_miniconda(force = TRUE), error = function (e) e))
@@ -249,7 +256,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   # Step3. Install your environment ----------------------------------------------
   cat (sep = '', '  +Step 3/',nSteps, ' Installing & checking conda environment\n')
   ## Check again
-  (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
+  (condaLists <- tryCatch( reticulate::conda_list(), error = function (e) NULL))
 
   # (ymlFile <- 'N:/Mi unidad/git/cola/inst/python/python_conda_config.yml'); read.delim(ymlFile)
   (ymlFile <- system.file('python/python_conda_config.yml', package = "cola"))
@@ -339,7 +346,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
 
   ## Confirm env name
   (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
-  if (is.null(pyCola)){
+  if ( is.null(pyCola) | length(pyCola) == 0 ){
     message(paste0('You should run `conda_create(",', envName ,'")` before using this package'))
     stop()
   } else {
@@ -491,13 +498,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
                        pyCola, ' ', welcomepy)); #cat(tryBcmd)
-  (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e)) ## error is character
+  (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e$message)) ## error is character
 
 
   ## Try to solve issues
   # C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Lib\site-packages\osgeo\_gdal.py
 
-  if ( any(grep('ImportError: DLL load failed while importing', cmdans)) ){
+  if ( any(grep('failed|ImportError: DLL load failed while importing', cmdans)) ){
 
     # https://stackoverflow.com/questions/47246350/conda-activate-not-working
     # (instGd <- tryCatch(conda_install(envname = envName, packages = c('gdal', 'libgdal')),
@@ -619,7 +626,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       tryCatch(reticulate::use_python(pyCola), error = function(e) e)
 
       ## Setting cola python as environmental variable
-      #Sys.getenv()
+      # Sys.getenv()
       Sys.setenv("COLA_PYTHON_PATH" = pyCola)
       Sys.setenv("COLA_SCRIPTS_PATH" = cola_scripts_path)
 

@@ -21,7 +21,11 @@ It's required to install several components (once). The structure of this softwa
 Some of the different computers might have particular conditions or requirements for installing all these components, so we made a section where you can find known issues an their potential solution. If you found a new one please share it with us so potential new users can see it.
 
 
+
   ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/known-issues.md) for potential solutions*** 
+
+------------------
+------------------
 
 #### **1.  Install cola R package.**
 
@@ -83,6 +87,10 @@ No man pages found in package  'cola'
   
   Here, the cola R package is installed. Now we need to set up A) the `conda` environment and B) the shiny the dashboard
 
+
+------------------
+
+
 #####  **2. Setting up cola requirements:**
 
 This might take several minutes and will show the following message once you *get all the steps installed*. But during the first time you will have a longer log. See next section.
@@ -105,10 +113,10 @@ cola::setup_cola()
     === Ready to connect landscapes! ===
 ```
 
-
-If there's the first time installing cola you will see the following messages:
-
 ----------------------
+
+**If there's the first time installing cola you will see the following messages during the different steps:**
+
 
 ```
    +Step 1/5: Installing & checking reticulate R package
@@ -126,7 +134,7 @@ You might need to restart your R session as well. Say "YES".
 
 Also, you might be asked to install a reticulate conda environment. Say "YES".
 
-![Fig. 1c. Compilation message](inst/docs/03_instal_conda_reticulate.png.JPG "Install conda r-reticulate")
+![Fig. 1c. Compilation message](inst/docs/03_instal_conda_reticulate.png "Install conda r-reticulate")
 
 A correct `reticulate` R package installation will show:
 
@@ -136,13 +144,18 @@ A correct `reticulate` R package installation will show:
 ```
 
 ----------------------
+
+
 ```
   +Step 2/5 Installing & checking miniconda
 ```
 
+
 If miniconda is not installed, you will be asked to accept the installation. Say "yes"
 
-![Fig. 2. Miniconda installation](inst/docs/02_question_compilation.JPG "Install miniconda")
+
+![Fig. 2. Miniconda installation](inst/docs/miniconda-02-execute.png "Install miniconda")
+
 
 A correct miniconda installation will show:
 
@@ -156,17 +169,26 @@ A correct miniconda installation will show:
 +Step 3/5 Installing & checking conda environment
 +Step 4/5 Installing & checking conda modules
 ```
+
+
 This steps creates a conda environment, named `cola` by default. You will ask to create the environment. Say "yes"
 
-![Fig. 2. Install cola conda environment](inst/docs/02_question_compilation.JPG "Install miniconda")
+![Fig. 2. Install cola conda environment](inst/docs/question_cola.JPG "Install miniconda")
+
 
 
 It will try several ways in the case some options doesn't works in your machine:
-  1. Install the environment using a YML file. If fails,
-  2. Creating the environment with the required libraries. If fails,
-  3. Create the environment, and then installing each library independently
+
+    -1. Install the environment using a YML file. If fails,
+    
+    -2. Creating the environment with the required libraries. If fails,
+  
+    -3. Create the environment, and then installing each library independently
+  
+  
   
 This step will take some minutes since requires download spatial and specialized packages.
+
 A correct installation should shown a message like:
 
 ```
@@ -210,27 +232,27 @@ If all libraries were installed, the following
 ```
 
 
-#####  **4. Load cola and run some functions:**
+#####  **5. Load cola and run some functions:**
 
 Let's run one of the functions. Habitat suitability to habitat resistance: s2res
 ```
-library(cola)
 cola::cola_dss()
 
-    === All libraries required for COLA's DSS installed ===
->
 ```
 
-6. Uninstall cola:
+
+#####  **5. Load cola and run some functions:**
+
+Let's run one of the functions. Habitat suitability to habitat resistance: s2res
+
 ```
+
+```
+
+
+#####  **6. Uninstall cola **
+
+```
+# Not run
 # remove.packages( "cola" )
 ```
-
-
-
-
-
-Tests:
-- Windows
-- Linux
-

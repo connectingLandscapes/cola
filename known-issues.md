@@ -1,5 +1,4 @@
-# Known issues for `cola` environment
-### Connectivity analysis issues in the installation.
+# Known issues for `cola` installation
 
 As there's many components and libraries involved in this software, your particular machine might present particular configurations that require special attention. Here we recapitulate some of the known issues that you might face. We also provide some solutions for those issues. **Feel free to provide your case and if possible, the solution.**
 
@@ -163,20 +162,15 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   **Known issue:** Getting `Error: Miniconda installation failed [unknown reason]`. This might result from a broken installation, so some files and folders can exists on your machine, but not completed.
   
   ```
-  `> reticulate::install_miniconda( )`
+  > reticulate::install_miniconda( )
   
-  ` running reticulate::install_miniconda( )`
-  ` ** Installing Miniconda -- please wait a moment ...`
-  
-  ` ** Downloading "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" ...`
-  
-  ` trying URL 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe'`
-  
-  ` Content type 'application/octet-stream' length 74687656 bytes (71.2 MB)`
-  
-  ` downloaded 71.2 MB `
-  
-  `Error: Miniconda installation failed [unknown reason]`
+   running reticulate::install_miniconda( )
+   ** Installing Miniconda -- please wait a moment ...
+   ** Downloading "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" ...
+   trying URL 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe'
+   Content type 'application/octet-stream' length 74687656 bytes (71.2 MB)
+   downloaded 71.2 MB 
+  Error: Miniconda installation failed [unknown reason]
   ```
 
 
@@ -320,11 +314,11 @@ These errors are common because each computer has a particular configuration. He
   **Testing:** Also you need to have this two internal variables defines: `Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))`
   
  ***Expected answer:***
- ```  
-                                          COLA_MINICONDA_PATH
+ 
+ ```
+ COLA_MINICONDA_PATH
 "C:\Users\USER\AppData\Local\r-miniconda\envs\cola\python.exe"  
-
-                                                    COLA_SCRIPTS_PATH 
+COLA_SCRIPTS_PATH 
 "C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python"
 ```  
   
@@ -397,7 +391,7 @@ The errors in this section are usually related with some libraries which require
 -------------
 -------------
   
-#### **Submit your issue **
+#### **Submit your issue**
   
 Consider report an issue on GitHub, or submit your case [here](https://docs.google.com/forms/d/e/1FAIpQLSdFsM1e02biuauaWE4Svwtu5QMneKU7Ilfa8pAJHiRy3a-KGw/viewform?usp=sf_link)
 
@@ -407,13 +401,14 @@ Consider report an issue on GitHub, or submit your case [here](https://docs.goog
 
 Command for installing conda in Windows:
 
+***Install cola conda environment*** 
 
-equivalent to 
-cola::setup_cola(envName = 'cola', libs2Install = c('gdal', 'h5py', 'numexpr', 'rasterio', 'pytables', 'pandas', 'cython', 'numba', 'networkit', 'fiona', 'shapely', 'geopandas', 'scikit-image'), nSteps = 5)
-
-
-
- `"C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat" update --yes --name base conda`
+```
+conda create -n cola gdal h5py numexpr rasterio pytables pandas cython numba networkit fiona shapely geopandas scikit-image -c conda-forge
+```
 
 
-
+***List available conda environments***
+```
+conda info --envs
+```
