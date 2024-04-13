@@ -3,7 +3,7 @@
 
 As there's many components and libraries involved in this software, your particular machine might present particular configurations that require special attention. Here we recapitulate some of the known issues that you might face. We also provide some solutions for those issues. **Feel free to provide your case and if possible, the solution.**
 
-We need to evaluate several steps in two stages: ***A) the python conda environment*** and ***B) the R Dashboard:***
+We need to evaluate several steps in two stages: ***A) the python conda environment*** and ***B) the R Dashboard***
 
 
 #### **A. Setting up cola R package and Python conda environment**

@@ -1574,9 +1574,9 @@ server <- function(input, output, session) {
   )
 
   observeEvent(input$table1_cell_edit, {
-    row  <- input$table1_cell_edit$row
+    roww  <- input$table1_cell_edit$row
     clmn <- input$table1_cell_edit$col
-    rv$data[row, clmn] <- input$table1_cell_edit$value
+    rv$data[roww, clmn] <- input$table1_cell_edit$value
   })
 
   observeEvent(input$replacevalues, {

@@ -21,6 +21,8 @@ It's required to install several components (once). The structure of this softwa
 Some of the different computers might have particular conditions or requirements for installing all these components, so we made a section where you can find known issues an their potential solution. If you found a new one please share it with us so potential new users can see it.
 
 
+  ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/known-issues.md) for potential solutions*** 
+
 #### **1.  Install cola R package.**
 
 Consider use the **option 3 (None)** for installing new packages at the first try. If an error arises, update **all of them (option 1)**.
@@ -198,16 +200,19 @@ If all the test passed, this will be the shown:
 Now let's install all the native R libraries to deply the dashboard.
 
 ```
-> cola::setup_cola_dss()
+cola::setup_cola_dss()
+```
 
+If all libraries were installed, the following 
+
+```
     === All libraries required for COLA's DSS installed ===
-
 ```
 
 
 #####  **4. Load cola and run some functions:**
 
-Let's run one of the functions. Habitat sutiatbility to habitat resistance: s2res
+Let's run one of the functions. Habitat suitability to habitat resistance: s2res
 ```
 library(cola)
 cola::cola_dss()

@@ -1,3 +1,16 @@
+
+
+# devtools::install_github('connectingLandscapes/cola') ## option 3: None
+# library(cola)
+# cola::setup_cola()
+# cola::diagnose_cola()
+# # # # remove.packages('cola')
+# Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
+# cola::setup_cola_dss()
+# origLibs <- installed.packages()
+# save(origLibs, file = 'origLibsBeforeDss.RData')
+# cola::setup_cola_dss()
+# libsafter1 <- installed.packages(); save(libsafter1, file = 'libsafter1.RData')
 ## Step7. Errors ----------------------------------------------
 
 # https://github.com/rstudio/reticulate/issues/838
@@ -21,9 +34,9 @@
 # ImportError: DLL load failed while importing _gdal: No se encontrÃ³ el proceso especificado.
 
 
-# Error. 
+# Error.
 # > reticulate::py_run_file( system.file("python/welcome.py", package = envName))
-# Error in py_module_import(module, convert = convert) : 
+# Error in py_module_import(module, convert = convert) :
 #   ModuleNotFoundError: No module named 'rpytools'
 
 
@@ -46,28 +59,29 @@
 #https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a
 
 
-# C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f 
+# C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f
 
-## 
+##
 # reticulate::py_run_file( system.file("python/welcome.py", package = envName))
 
 
 ## Step6. For debugging ----------------------------------------------
 
 
+
 if (FALSE){
-  
+
   (test_cmd <- paste( pyCola, tempPy))
   system( test_cmd )
-  
-  (test_cmd2 <- paste( pyCola, ' -c "import ', 
+
+  (test_cmd2 <- paste( pyCola, ' -c "import ',
                        paste0(
-                         gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install), 
+                         gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install),
                          collapse = ', '), '"'))
-  
+
   (test_cmd2 <- paste( pyCola, ' -c "import os; print(os.getcwd())'))
   system( test_cmd2 )
   (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
   system( test_cmd3 )
-  
+
 }
