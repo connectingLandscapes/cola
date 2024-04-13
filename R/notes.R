@@ -1,15 +1,15 @@
 
-
+# .rs.restartR()
 # # # # remove.packages('cola')
-# devtools::install_github('connectingLandscapes/cola', dependencies = NA) ## option 3: None
+# # devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
 # library(cola)
-# cola::setup_cola()
 # cola::diagnose_cola()
-# Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
-# cola::setup_cola_dss()
- cola::cola_dss()
-
-origLibs <- installed.packages()
+# cola::setup_cola()
+# # Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
+# # cola::setup_cola_dss()
+#  cola::cola_dss()
+#
+# origLibs <- installed.packages()
 # save(origLibs, file = 'origLibsBeforeDss.RData')
 # cola::setup_cola_dss()
 # libsafter1 <- installed.packages(); save(libsafter1, file = 'libsafter1.RData')

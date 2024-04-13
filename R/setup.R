@@ -1,11 +1,7 @@
-#' Parameters for installation
-#'
-#' Convert degrees Fahrenheit temperatures to degrees Celsius
-#' @param F_temp The temperature in degrees Fahrenheit
-#' @return The temperature in degrees Celsius
-#' @examples
-#' temp1 <- F_to_C(50);
-#' temp2 <- F_to_C( c(50, 63, 23) );
+#' @title  Parameters for installation
+#' @description Defines the default cola installation parameters
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 cola_params <<- list(
   ## Environment name
@@ -26,19 +22,18 @@ cola_params <<- list(
 # attach(cola_params)
 
 
-## Install miniconda
-# .onLoad <- function(libname = 'reticulate', pkgname = 'cola') {
-#   ## ask for miniconda
-#   user_permission <- utils::askYesNo("Install miniconda? downloads 50MB and takes time")
-#
-#   if (isTRUE(user_permission)) {
-#     reticulate::install_miniconda()
-#   } else {
-#     message("You should run `reticulate::install_miniconda()` before using this package")
-#   }
-# }
+#' @title Diagnose  \emph{COLA} installation
+#' @description Runs some test assessing the correct cola installation
+#' @param envName The environment name. 'cola' by default
+#' @param libs2Install The name of python libraries
+#' @return NULL. Prints in console five (5) logs regarding different steps
+#' @examples
+#' diagnose_cola()
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#'
+#' @export
 
-## Errors
 diagnose_cola <- function(envName = 'cola',
                          libs2Install = c('gdal', 'h5py', # 'osgeo',
                                           'numexpr',
@@ -137,8 +132,20 @@ diagnose_cola <- function(envName = 'cola',
 }
 
 
-
-
+#' @title Install  \emph{COLA}
+#' @description Installs cola software. Includes `reticulate` R package, miniconda, cola conda environment and libraries,
+#' and defines the ways R and python should interact
+#' @param envName The environment name. 'cola' by default
+#' @param libs2Install The name of python libraries
+#' @param nSteps The name of python libraries
+#' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
+#' @param yml Use YML file to build the conda environment? Default TRUE
+#' @return NULL. Prints in console five (5) logs regarding different steps
+#' @examples
+#' setup_cola()
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
                        libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio',
                                          'pytables', 'pandas',  'cython', 'numba' ,
@@ -611,6 +618,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
     outTest <- paste0(tempfile(), timeMark, '.tif')
     # pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
 
+    # Create test
     (test_suit2res <- paste0(pyCola, ' ', # Python
                              pyScript, ' ', # script
                              system.file("sampledata/sampleTif.tif", package = "cola"), ' ', #in [1]
@@ -618,23 +626,87 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
                              ' 0 1 100', # min max scale-max
                              ' 1 -9999 None')) # shape nodata proj
     # cat(test_suit2res)
+
+    ## Run tests
     intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
 
-    if ( dir.exists(cola_scripts_path) & file.exists(outTest) ){
 
-      ## Using cola python as default
-      tryCatch(reticulate::use_python(pyCola), error = function(e) e)
+    ## Define local paths if test
+    if ( dir.exists(cola_scripts_path) & file.exists(outTest) ){
+      ## Success in testing the system
+
 
       ## Setting cola python as environmental variable
-      # Sys.getenv()
       Sys.setenv("COLA_PYTHON_PATH" = pyCola)
       Sys.setenv("COLA_SCRIPTS_PATH" = cola_scripts_path)
+      options("COLA_PYTHON_PATH" = pyCola)
+      options("COLA_SCRIPTS_PATH" = cola_scripts_path)
+
+      ## Saving paths in .Renviron
+      home <- Sys.getenv("HOME")
+      renv <- file.path(home, ".Renviron")
+
+      if ( file.exists(renv) ) {
+        # Backup original .Renviron before doing anything else here.
+        file.copy(renv, file.path(home, ".Renviron_backup"), overwrite = TRUE)
+      }
+
+      if (!file.exists(renv)) {
+        file.create(renv)
+      }
+
+
+      origRenviron <- readLines(renv)
+      if( any(grep('COLA_PYTHON_PATH', origRenviron)) ){
+
+        ## Readfile
+        con  <- file(renv, open = "r+")
+        lines <- as.character()
+        ii <- 1
+
+        while (TRUE) {
+          line <- readLines(con, n = 1, warn = FALSE)
+          if (length(line) == 0) {
+            break()
+          }
+          lines[ii] <- line
+          ii <- ii + 1
+        }
+
+        # Set EARTHENGINE_PYTHON in .Renviron
+        cola_python_line <- paste0('COLA_PYTHON_PATH="', pyCola, '"')
+        cola_scripts_line <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
+
+        system_vars <- c(lines, cola_python_line, cola_scripts_line)
+
+        writeLines(text = system_vars, con = con)
+
+        on.exit(close(con), add = TRUE)
+        invisible(TRUE)
+
+      } else {
+        Renviron <- origRenviron
+
+        posA <- grep('COLA_PYTHON_PATH', Renviron)
+        posB <- grep('COLA_SCRIPTS_PATH', Renviron)
+
+        (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
+        Renviron[posA] <- paste0('COLA_PYTHON_PATH="', pyCola, '"')
+        (posB <- ifelse(length(posB) == 0, length(Renviron) + 1, posB))
+        Renviron[posB] <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
+        Renviron
+        writeLines(text = Renviron, con = renv)
+      }
+
+      # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
 
       cat (sep = '', '    === Ready to connect landscapes! ===\n')
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
       Sys.unsetenv("COLA_PYTHON_PATH")
+      Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
+      on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
       cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n\t", intCMD)
       diagnose_cola()
       stop()

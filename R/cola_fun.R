@@ -1,3 +1,18 @@
+#' @title Launch \emph{COLA} decision support system (DSS) dashboard
+#' @description This function runs the \emph{cola} dashboard
+#' @param launch.browser Run this app on a new window? Default `TRUE`
+#' @note Please see the official website (\url{https://wallaceecomod.github.io/})
+#' for more details. If you have questions about the application,
+#' please participate in the \href{https://groups.google.com/forum/#!forum/wallaceecomod}{Google Group},
+#' or email the team directly: \email{wallaceEcoMod@@gmail.com}.
+#'
+#' @examples
+#' if(interactive()) {
+#' cola_dss()
+#' }
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 cola_dss <- function(launch.browser = TRUE) ) {
   #app_path <- system.file("shiny", package = "wallace")
   dssLocation <- system.file('app', package = "cola")
@@ -9,13 +24,15 @@ cola_dss <- function(launch.browser = TRUE) ) {
 }
 
 
-#' Run CDPOP model
-#'
-#' Run CDPOP model
-#' @return The temperature in degrees Celsius
+#' @title  Run CDPOP model
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
 #' @examples
-#' temp1 <- F_to_C(50);
-#' temp2 <- F_to_C( c(50, 63, 23) );
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
 runCDPOP <- function(py, datapath = tempFolder){
@@ -50,6 +67,16 @@ runCDPOP <- function(py, datapath = tempFolder){
 }
 
 
+#' @title  Transforms suitability to resistance surface
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 runS2RES <- function(py, src,
                      intif, outtif,
                      param3, param4, param5, param6 = nCores, param7, param8 = 'None'){
@@ -91,6 +118,17 @@ points_shp <- function(py, intif, outshp, param3, param4, param5, param6 = 'None
   return(file = ifelse(file.exists(outshp), outshp, NA))
 }
 
+#' @title  Creates CDmatrix for CDPOP model
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
 cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 = 'None'){
   # param3 = 25000
   # create_cdmat.py
@@ -109,6 +147,16 @@ cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 =
 }
 
 
+#' @title  Create least cost corridors
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 
 lcc_py <- function(py, inshp, intif, outtif, param4, param5,
                    param6, param7 = nCores, param8 = 'None'){
@@ -152,6 +200,17 @@ lcc_py <- function(py, inshp, intif, outtif, param4, param5,
   return(file = ifelse(file.exists(outtif), outtif, NA))
 }
 
+
+#' @title  Create least cost corridors for heavy rasters
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 
 lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
                     param6, param7 = nCores, param8 = 'None', tempFolder = rootPath){
@@ -216,6 +275,16 @@ lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
   return(file = ifelse(file.exists(outtif), outtif, NA))
 }
 
+#' @title  Create cumulative resistance kernels
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#'
 crk_py <- function(py, inshp, intif, outtif, param4,
                    param5, param6, param7 = nCores, param8 = 'None'){
   # [1] source points
@@ -237,7 +306,16 @@ crk_py <- function(py, inshp, intif, outtif, param4,
 }
 
 
-
+#' @title  Runs prioritization
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#'
 pri_py <- function(py, tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshp, outtif,
@@ -305,6 +383,15 @@ pri_py <- function(py, tif, incrk, inlcc,
               shp = ifelse(file.exists(outshp), outshp, NA)) )
 }
 
+#' @title  Runs CDOPOP2
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 
 cdpop_py <- function(py, tif, incrk, inlcc,
                      maskedcsname = paste0(tempfile(), '.tif'),
