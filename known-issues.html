@@ -362,8 +362,9 @@ require special attention. Here we recapitulate some of the known issues
 that you might face. We also provide some solutions for those issues.
 <strong>Feel free to provide your case and if possible, the
 solution.</strong></p>
-<p>We need to evaluate several steps in two stages: A) the python conda
-environment and B) the R Dashboard:</p>
+<p>We need to evaluate several steps in two stages: <strong><em>A) the
+python conda environment</em></strong> and <strong><em>B) the R
+Dashboard:</em></strong></p>
 <div id="a.-setting-up-cola-r-package-and-python-conda-environment" class="section level4">
 <h4><strong>A. Setting up cola R package and Python conda
 environment</strong></h4>
@@ -375,16 +376,20 @@ environment</strong></h4>
 <li>Install <code>cola</code> conda environment packages</li>
 <li>Define connections between R and Python</li>
 </ol>
-<div id="how-to-solve-each-step" class="section level6">
-<h6>How to solve each step:</h6>
+<div id="how-to-solve-each-step" class="section level5">
+<h5>How to solve each step:</h5>
 <p>Running <code>cola::setup_cola()</code> should set up all the
 different steps and print which of them are successfully finished. Both
 <code>cola::setup_cola()</code> and <code>cola::commonErrors()</code>
 functions shown the finished steps. See the latest number in the console
 print and look for that step in the following titles.</p>
 </div>
-<div id="installing-cola-r-package" class="section level5">
-<h5><strong>1. Installing cola R package</strong></h5>
+</div>
+</div>
+<div id="section" class="section level2">
+<h2>————-</h2>
+<div id="installing-cola-r-package" class="section level4">
+<h4><strong>1. Installing cola R package</strong></h4>
 <p>During the instruction
 <code>devtools::install_github(&#39;connectingLandscapes/cola&#39;)</code> or
 after the installation, when <code>library(cola)</code>:</p>
@@ -395,13 +400,11 @@ after the installation, when <code>library(cola)</code>:</p>
 <p><strong>Known issue:</strong> You might see this message when try to
 install <code>cola</code> with the command
 <code>devtools::install_github(&#39;connectingLandscapes/cola&#39;)</code></p>
-<p>The message shown is:
-<code>devtools::install_github(&#39;connectingLandscapes/cola&#39;)</code>
-<code>Using GitHub PAT from the git credential store.</code>
-<code>Error: Failed to install &#39;unknown package&#39; from GitHub:</code>
-<code>HTTP error 401.</code> <code>Bad credentials</code></p>
-<p><code>Rate limit remaining: 55/60</code>
-<code>Rate limit reset at:</code></p>
+<p>The message shown is: ```
+devtools::install_github(‘connectingLandscapes/cola’) Using GitHub PAT
+from the git credential store. Error: Failed to install ‘unknown
+package’ from GitHub: HTTP error 401. Bad credentials</p>
+<p>Rate limit remaining: 55/60 Rate limit reset at: ```</p>
 <p><strong><em>Solution:</em></strong> We found this error in old R
 versions. We solved it installing a new version of R (4.3.3), [rtools
 4.3] (<a href="https://cran.r-project.org/bin/windows/Rtools/" class="uri">https://cran.r-project.org/bin/windows/Rtools/</a>), and
@@ -452,12 +455,15 @@ persist, when closing all the R sessions, check if the library folder
 <code>sapply(.libPaths(), list.files, pattern = &#39;cola&#39;, recursive = FALSE)</code>)
 still have the lock file or folder, and remove it manually.</p>
 </div>
-<div id="install-reticulate-r-package" class="section level5">
-<h5><strong>2. Install reticulate R package</strong></h5>
+</div>
+<div id="section-1" class="section level2">
+<h2>————-</h2>
+<div id="install-reticulate-r-package" class="section level4">
+<h4><strong>2. Install reticulate R package</strong></h4>
 <p>Installing <code>reticulate</code> R package should be done by the
 <code>cola::setup_cola()</code> function. Here some issues detected:</p>
 <p><strong>Testing:</strong> <code>library(reticulate)</code></p>
-<p><strong><em>Expected answer</em></strong> No error</p>
+<p><strong><em>Expected answer:</em></strong> No error</p>
 <hr />
 <p><strong>Known issue:</strong> <code>Library not installed</code>
 after <code>library(reticulate)</code>. This indicates the package is
@@ -468,7 +474,6 @@ during the installation.</p>
 <a href="https://cran.r-project.org/bin/windows/Rtools/">RTools</a> and
 admin privileges if some error arises during the installation. Click on
 R/Rstudio icon &gt; right click &gt; run as administrator.</p>
-</div>
 <div id="install-miniconda-software" class="section level5">
 <h5><strong>3. Install miniconda software</strong></h5>
 <p>Installing <code>miniconda</code> should be done by the
@@ -476,15 +481,17 @@ R/Rstudio icon &gt; right click &gt; run as administrator.</p>
 problems trying to install miniconda, so we encourage not to uninstall
 it once is installed. Here some issues detected:</p>
 <p><strong>Testing:</strong> <code>reticulate::conda_list()</code></p>
-<p><strong><em>Expected answer</em></strong> Table with local paths to
-python (mini) conda versions
-<code>name                                                  python   1    base C:\\Users\\USER\\AppData\\Local\\r-miniconda/python.exe</code></p>
+<p><strong><em>Expected answer:</em></strong> Table with local paths to
+python (mini) conda versions</p>
+<pre><code>        name                                                  python
+        
+ 1    base C:\\Users\\USER\\AppData\\Local\\r-miniconda/python.exe</code></pre>
 <p>Also verify the <code>base</code> python path and was installed
 properly.
 <code>file.exists( subset(reticulate::conda_list(), name == &#39;base&#39;)$python)</code>
 This should result in <code>TRUE</code></p>
 <hr />
-<p><strong>Known issue:</strong> <strong>Known issue:</strong>
+<p><strong>Known issue:</strong>
 <code>Error: Miniconda is already installed at path &quot;C:/Users/Admin/AppData/Local/r-miniconda&quot;.</code></p>
 <p><strong><em>Solution:</em></strong> Run
 <code>reticulate::install_miniconda(force = TRUE)</code></p>
@@ -492,15 +499,21 @@ This should result in <code>TRUE</code></p>
 <p><strong>Known issue:</strong> Getting
 <code>Error: Miniconda installation failed [unknown reason]</code>. This
 might result from a broken installation, so some files and folders can
-exists on your machine, but not completed.
-<code>&gt; reticulate::install_miniconda( )</code></p>
-<p><code>running reticulate::install_miniconda( )</code></p>
-<p><code>** Installing Miniconda -- please wait a moment ...</code></p>
-<p><code>** Downloading &quot;https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe&quot; ...</code></p>
-<p><code>trying URL &#39;https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe&#39;</code></p>
-<p><code>Content type &#39;application/octet-stream&#39; length 74687656 bytes (71.2 MB)</code></p>
-<p><code>downloaded 71.2 MB</code></p>
-<p><code>Error: Miniconda installation failed [unknown reason]</code></p>
+exists on your machine, but not completed.</p>
+<pre><code>`&gt; reticulate::install_miniconda( )`
+
+` running reticulate::install_miniconda( )`
+` ** Installing Miniconda -- please wait a moment ...`
+
+` ** Downloading &quot;https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe&quot; ...`
+
+` trying URL &#39;https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe&#39;`
+
+` Content type &#39;application/octet-stream&#39; length 74687656 bytes (71.2 MB)`
+
+` downloaded 71.2 MB `
+
+`Error: Miniconda installation failed [unknown reason]`</code></pre>
 <p><strong><em>Solution:</em></strong> There’s many reasons. We solved
 the problem by: - Finding the uninstall executable of miniconda
 <code>Uninstall-Miniconda3.exe</code>, typically in the folders given by
@@ -515,14 +528,33 @@ file to uninstall conda - Try
 <code>rminiconda::install_miniconda(name=&#39;cola&#39;)</code>
 <code>py &lt;- rminiconda::find_miniconda_python(&quot;cola&quot;)</code>
 <code>reticulate::use_python(py, required = TRUE)</code></p>
+<hr />
+<p><strong>Known issue:</strong>
+<code>Error: Miniconda is already installed at path &quot;C:/Users/Admin/AppData/Local/r-miniconda&quot;.</code></p>
+<p><strong><em>Solution:</em></strong> Run
+<code>reticulate::install_miniconda(force = TRUE)</code></p>
+<hr />
+<p><strong>Known issue:</strong> Get the message
+<code>Error: Unable to find conda binary. Is Anaconda installed?</code></p>
+<p><strong><em>Solution:</em></strong> Find where <code>conda</code> or
+<code>conda.bat</code> lives. Add that path to the R command
+<code>options(reticulate.conda_binary = &quot;C:/path/to/conda.bat&quot;)</code>,
+or the equivalent. The paths might include:
+<code>C:/Users/Admin/AppData/Local/r-miniconda/condabin/conda.bat</code>
+or <code>C:/Users/Admin/miniconda3/condabin/conda.bat</code> among
+others.</p>
 </div>
+</div>
+</div>
+<div id="section-2" class="section level2">
+<h2>————-</h2>
 <div id="install-cola-conda-environment" class="section level5">
 <h5><strong>4. Install cola conda environment</strong></h5>
-<p>Installing <code>cola</code> conda envronment should be done by the
+<p>Installing <code>cola</code> conda environment should be done by the
 <code>cola::setup_cola()</code> function. Here some issues detected:</p>
-<p><strong>Testing:</strong> <code>reticulate::conda_list()</code>
-<strong><em>Expected answer</em></strong> Finding a <code>cola</code>
-conda environment in the resulting table</p>
+<p><strong>Testing:</strong> <code>reticulate::conda_list()</code></p>
+<p><strong><em>Expected answer:</em></strong> Finding a
+<code>cola</code> conda environment in the resulting table</p>
 <pre><code>          name                                                                       python
 1         base                     C:\\Users\\USER\\AppData\\Local\\r-miniconda/python.exe
 2         cola         C:\\Users\\USER\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe
@@ -531,13 +563,16 @@ conda environment in the resulting table</p>
 <code>The python version is Python 3.9.19</code></p>
 <hr />
 <p><strong>Known issue:</strong> <code>cola</code> folder existing but
-not properly configurated. <strong><em>Solution:</em></strong> Delete
-folder and install environment again. Go to the path
+not properly configurated.</p>
+<p><strong><em>Solution:</em></strong> Delete folder and install
+environment again. Go to the path
 <code>reticulate::miniconda_path()</code> and check is not empty. Some
 other paths, depending under which user you installed miniconda
 (<code>reticulate::install_miniconda()</code>) can include: -
 <code>C:\Users\USER\AppData\Local\r-miniconda\envs\cola</code> -
 <code>C:\Users\USER\miniconda3\envs\cola</code></p>
+<p><a href="https://stackoverflow.com/questions/60974507/error-unable-to-find-conda-binary-is-anaconda-installed">Here
+a reference</a></p>
 <hr />
 <p><strong>Known issue:</strong> <code>cola</code> conda environment
 available but without name. Your conda manager installed the environment
@@ -558,6 +593,9 @@ paths.
 with the equivalent path in your computer.</p>
 <p>Here a <a href="https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a">reference</a></p>
 </div>
+</div>
+<div id="section-3" class="section level2">
+<h2>————-</h2>
 <div id="install-cola-conda-environment-packages" class="section level5">
 <h5><strong>5. Install cola conda environment packages</strong></h5>
 <p>Installing the <code>cola</code> conda environment packages should be
@@ -565,7 +603,7 @@ done by the <code>cola::setup_cola()</code> function. Here some issues
 detected:</p>
 <p><strong>Testing:</strong> Running <code>cola::setup_cola()</code> and
 <code>cola::commonErrors()</code> getting the following messages:</p>
-<p><strong><em>Expected answer</em></strong>
+<p><strong><em>Expected answer:</em></strong>
 <code>All required modules installed!</code> or
 <code>4. All &#39;cola&#39; conda environment packages installed</code></p>
 <hr />
@@ -584,20 +622,26 @@ VisualStudio version for Cython: <code>Collecting networkit</code>
 install the <code>vs_BuildTools.exe</code> file checking the ‘C++ build
 tools’</p>
 </div>
+</div>
+<div id="section-4" class="section level2">
+<h2>————-</h2>
 <div id="define-connections-between-r-and-python" class="section level5">
 <h5><strong>6. Define connections between R and Python</strong></h5>
 <p>These errors are common because each computer has a particular
 configuration. Here some of the solutions we found.</p>
 <p><strong>Testing:</strong> Running <code>cola::setup_cola()</code> and
 <code>cola::commonErrors()</code> getting the following messages:</p>
-<p><strong><em>Expected answer</em></strong>
+<p><strong><em>Expected answer:</em></strong>
 <code>All required modules installed!</code> or
 <code>=== All dependencies and requirements installed</code></p>
 <p><strong>Testing:</strong> Also you need to have this two internal
 variables defines:
 <code>Sys.getenv(c(&#39;COLA_MINICONDA_PATH&#39;, &#39;COLA_SCRIPTS_PATH&#39;))</code></p>
-<p><strong><em>Expected answer</em></strong>
-<code>COLA_MINICONDA_PATH                                                      COLA_SCRIPTS_PATH  &quot;C:\Users\USER\AppData\Local\r-miniconda\envs\cola\python.exe&quot;  &quot;C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python&quot;</code></p>
+<p><strong><em>Expected answer:</em></strong> ```<br />
+COLA_MINICONDA_PATH “C:miniconda.exe”</p>
+<pre><code>                                                COLA_SCRIPTS_PATH </code></pre>
+<p>“C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python”
+```</p>
 <hr />
 <p><strong>Known issue:</strong> Some python libraries have not
 correctly defined internal paths to found other modules. Some errors
@@ -618,44 +662,59 @@ command: <code>cd C:\Users\Admin\miniconda3\Scripts</code> 3. Run
 <code>conda init powershell</code> to activate conda 5. Run again
 <code>cola::setup_cola(envname = &#39;base&#39;)</code></p>
 </div>
+</div>
+<div id="section-5" class="section level2">
+<h2>————-</h2>
 <div id="check-your-local-paths" class="section level5">
 <h5><strong>Check your local paths</strong></h5>
 <p>You can also try this command to see what’s your cola path:</p>
 <p><code>Sys.getenv(c(&#39;COLA_MINICONDA_PATH&#39;, &#39;COLA_SCRIPTS_PATH&#39;))</code></p>
+<p>Those paths must point to two different routes containing the python
+and scripts paths</p>
 </div>
 </div>
+</div>
+<div id="section-6" class="section level1">
+<h1>.</h1>
 <div id="b.-setting-up-cola-r-packages-for-the-dashboard" class="section level4">
 <h4><strong>B. Setting up cola R packages for the
 dashboard</strong></h4>
-<p>The errors in this section are usualli related with some</p>
+<p>The errors in this section are usually related with some libraries
+which require manual installations</p>
 <p><strong>Testing:</strong> Running
 <code>cola::setup_cola_dss()</code></p>
-<p><strong><em>Expected answer</em></strong>
+<p><strong><em>Expected answer:</em></strong>
 <code>=== All libraries required for COLA&#39;s DSS installed ===</code></p>
 <hr />
-<p><strong>Known issue:</strong> Error in library(tidyverse) : there is
-no package called ‘tidyverse’ <strong><em>Solution:</em></strong></p>
+<p><strong>Known issue:</strong>
+<code>Error in library(tidyverse) : there is no package called ‘tidyverse’</code></p>
+<p><strong><em>Solution:</em></strong>
+<code>install.packages(&#39;tidyverse&#39;)</code>. Adapt to the corresponding
+library. First try saying <em>NO</em> to install dependencies that
+requires compilation. If error persists hit <em>YES</em></p>
 <hr />
-<p><strong>Known issue:</strong> Error in loadNamespace(j &lt;- i[[1L]],
-c(lib.loc, .libPaths()), versionCheck = vI[[j]]) : namespace ‘fastmap’
-1.1.0 is already loaded, but &gt;= 1.1.1 is required
-<strong><em>Solution:</em></strong></p>
-<p><strong>Known issue:</strong> <strong><em>Solution:</em></strong></p>
-<pre><code>Warning in install.packages :</code></pre>
-<p>problem copying C:-library\4.1\00LOCK.dll to C:-library\4.1.dll:
-Permission denied Warning in install.packages : restored ‘fastmap’</p>
-<p><strong>Known issue:</strong> <strong><em>Solution:</em></strong></p>
-<p><strong>Known issue:</strong> <strong><em>Solution:</em></strong></p>
-<p><strong>Known issue:</strong> <strong><em>Solution:</em></strong></p>
-<p>Bug / issue reporting in cola R package <a href="https://docs.google.com/forms/d/e/1FAIpQLSdFsM1e02biuauaWE4Svwtu5QMneKU7Ilfa8pAJHiRy3a-KGw/viewform?usp=sf_link" class="uri">https://docs.google.com/forms/d/e/1FAIpQLSdFsM1e02biuauaWE4Svwtu5QMneKU7Ilfa8pAJHiRy3a-KGw/viewform?usp=sf_link</a></p>
+<p><strong>Known issue:</strong> R tries to install a package that
+requires another dependeny. Install that dependency first.
+<code>Error in loadNamespace(j &lt;- i[[1L]], c(lib.loc, .libPaths()), versionCheck = vI[[j]]) :</code>
+<code>namespace &#39;fastmap&#39; 1.1.0 is already loaded, but &gt;= 1.1.1 is required</code></p>
+<p><strong><em>Solution:</em></strong> Restart R. Then install the
+dependency mentioned in the message:
+<code>install.packages(&#39;fastmap&#39;)</code></p>
+<hr />
+<p><strong>Known issue:</strong> Here your contribution!
+<strong><em>Solution:</em></strong> Here your contribution!</p>
 </div>
+<div id="section-7" class="section level2">
+<h2>————-</h2>
+<div id="submit-your-issue" class="section level4">
+<h4><strong>Submit your issue </strong></h4>
+<p>Consider report an issue on GitHub, or submit your case <a href="https://docs.google.com/forms/d/e/1FAIpQLSdFsM1e02biuauaWE4Svwtu5QMneKU7Ilfa8pAJHiRy3a-KGw/viewform?usp=sf_link">here</a></p>
 </div>
-<div id="other-usfeull-comands" class="section level2">
-<h2>Other usfeull comands</h2>
-<blockquote>
-<p>“C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat” update
-–yes –name base conda</p>
-</blockquote>
+<div id="other-usfeull-comands" class="section level4">
+<h4><strong>Other usfeull comands</strong></h4>
+<p>Command for installing conda in Windows:</p>
+<p><code>&quot;C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat&quot; update --yes --name base conda</code></p>
+</div>
 </div>
 </div>
 

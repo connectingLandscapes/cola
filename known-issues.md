@@ -3,7 +3,7 @@
 
 As there's many components and libraries involved in this software, your particular machine might present particular configurations that require special attention. Here we recapitulate some of the known issues that you might face. We also provide some solutions for those issues. **Feel free to provide your case and if possible, the solution.**
 
-We need to evaluate several steps in two stages: A) the python conda environment and B) the R Dashboard:
+We need to evaluate several steps in two stages: ***A) the python conda environment*** and ***B) the R Dashboard:***
 
 
 #### **A. Setting up cola R package and Python conda environment**
@@ -16,16 +16,17 @@ We need to evaluate several steps in two stages: A) the python conda environment
  6. Define connections between R and Python
  
 
-###### How to solve each step:
+##### How to solve each step:
 
 Running `cola::setup_cola()` should set up all the different steps and print which of them are successfully finished. Both `cola::setup_cola()` and `cola::commonErrors()` functions shown the finished steps. See the latest number in the console print and look for that step in the following titles.
 
 
 
 
+-------------
+-------------
 
-
-#####  **1. Installing cola R package**
+####  **1. Installing cola R package**
   During the instruction `devtools::install_github('connectingLandscapes/cola')` or after the installation, when `library(cola)`:
   
   **Testing:** `library(cola)`
@@ -38,14 +39,16 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   **Known issue:** You might see this message when try to install `cola` with the command `devtools::install_github('connectingLandscapes/cola')`
   
   The message shown is:
-  `devtools::install_github('connectingLandscapes/cola')`
-  `Using GitHub PAT from the git credential store.`
-  `Error: Failed to install 'unknown package' from GitHub:`
-  `HTTP error 401.`
-  `Bad credentials`
+  ```
+  devtools::install_github('connectingLandscapes/cola')
+  Using GitHub PAT from the git credential store.
+  Error: Failed to install 'unknown package' from GitHub:
+  HTTP error 401.
+  Bad credentials
 
-  `Rate limit remaining: 55/60`
-  `Rate limit reset at:`
+  Rate limit remaining: 55/60
+  Rate limit reset at:
+  ```
   
   ***Solution:***  We found this error in old R versions. We solved it installing a new version of R (4.3.3), [rtools 4.3]  (https://cran.r-project.org/bin/windows/Rtools/), and devtools 2.4.5
   
@@ -98,9 +101,10 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
     
 
 
+-------------
+-------------
 
-
-#####  **2. Install reticulate R package**
+####  **2. Install reticulate R package**
   
   Installing `reticulate` R package should be done by the `cola::setup_cola()` function. Here some issues detected:
   
@@ -129,8 +133,10 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   **Testing:** `reticulate::conda_list()`
  
  ***Expected answer:*** Table with local paths to python (mini) conda versions
+ 
  ```  
          name                                                  python
+         
   1    base C:\\Users\\USER\\AppData\\Local\\r-miniconda/python.exe
   ```  
   
@@ -155,10 +161,11 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
 
   
   **Known issue:** Getting `Error: Miniconda installation failed [unknown reason]`. This might result from a broken installation, so some files and folders can exists on your machine, but not completed.
+  
+  ```
   `> reticulate::install_miniconda( )`
   
   ` running reticulate::install_miniconda( )`
-  
   ` ** Installing Miniconda -- please wait a moment ...`
   
   ` ** Downloading "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" ...`
@@ -170,6 +177,7 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   ` downloaded 71.2 MB `
   
   `Error: Miniconda installation failed [unknown reason]`
+  ```
 
 
  ***Solution:*** There's many reasons. We solved the problem by:
@@ -207,13 +215,14 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   
 
 -------------
-
+-------------
   
   
 #####  **4. Install cola conda environment**
 Installing `cola` conda environment should be done by the `cola::setup_cola()` function. Here some issues detected:
 
   **Testing:** `reticulate::conda_list()`
+  
  ***Expected answer:*** Finding a `cola` conda environment in the resulting table
 ```  
           name                                                                       python
@@ -230,6 +239,7 @@ and having a message from `cola::setup_cola()` similar to: `The python version i
 
 
   **Known issue:** `cola` folder existing but not properly configurated. 
+  
  ***Solution:*** Delete folder and install environment again. Go to the path `reticulate::miniconda_path()` and check is not empty. Some other paths, depending under which user you installed miniconda (`reticulate::install_miniconda()`) can include: 
   - `C:\Users\USER\AppData\Local\r-miniconda\envs\cola`
   - `C:\Users\USER\miniconda3\envs\cola`
@@ -263,7 +273,8 @@ base                  **  C:\ProgramData\Miniconda3
    Here a [reference](https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a)
 
 
-
+-------------
+-------------
 
 #####  **5. Install cola conda environment packages**
 Installing the `cola` conda environment packages should be done by the `cola::setup_cola()` function. Here some issues detected:
@@ -294,6 +305,9 @@ Installing the `cola` conda environment packages should be done by the `cola::se
   
  ***Solution:*** Follow this [tutorial](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst), install the `vs_BuildTools.exe` file checking the 'C++ build tools'
 
+
+-------------
+-------------
 
 #####  **6. Define connections between R and Python**
 These errors are common because each computer has a particular configuration. Here some of the solutions we found.
@@ -334,6 +348,8 @@ These errors are common because each computer has a particular configuration. He
   
 
 
+-------------
+-------------
 
 #####  **Check your local paths**
  You can also try this command to see what's your cola path: 
@@ -342,7 +358,7 @@ These errors are common because each computer has a particular configuration. He
 
   Those paths must point to two different routes containing the python and scripts paths
 
-# .
+
 #### **B. Setting up cola R packages for the dashboard**
 The errors in this section are usually related with some libraries which require manual installations
 
@@ -369,16 +385,17 @@ The errors in this section are usually related with some libraries which require
   `Error in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()), versionCheck = vI[[j]]) :`
   `namespace 'fastmap' 1.1.0 is already loaded, but >= 1.1.1 is required`
   
- ***Solution:*** Restart R. Then install the dependency mentioned in the message: `install.packages('fastmap')`
+ ***Solution:*** Restart R. Then install the dependency mentioned in the message: `install.packages('fastmap')`. 
     
 -------------
     
-  **Known issue:**
- ***Solution:***
+  **Known issue:** Here your contribution!
+  
+ ***Solution:*** Here your contribution!
   
 
-
-  
+-------------
+-------------
   
 #### **Submit your issue **
   
@@ -390,5 +407,13 @@ Consider report an issue on GitHub, or submit your case [here](https://docs.goog
 
 Command for installing conda in Windows:
 
+
+equivalent to 
+cola::setup_cola(envName = 'cola', libs2Install = c('gdal', 'h5py', 'numexpr', 'rasterio', 'pytables', 'pandas', 'cython', 'numba', 'networkit', 'fiona', 'shapely', 'geopandas', 'scikit-image'), nSteps = 5)
+
+
+
  `"C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat" update --yes --name base conda`
+
+
 

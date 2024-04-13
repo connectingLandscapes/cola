@@ -182,43 +182,34 @@ A correct installation should shown a message like:
   +Step 5/5 Setting up local variables
 ```
 
-During this step
+During this step R will define the ways to interact with the python version and environment. The installation script will find the path to the scripts and identify how your system should call cola python. At the same time, here we load all the required modules to test if were installed correctly, and run a sample analysis to ensure 
+
+If all the test passed, this will be the shown:
 
 ```
-  +Step 2/5 Installing & checking miniconda
-    miniconda found at C:/Users/Admin/AppData/Local/r-miniconda!
-  +Step 3/5 Installing & checking conda environment
-    `cola` conda environment installed in C:\Users\Admin\AppData\Local\r-miniconda\envs\cola/python.exe
-    `cola` conda environment named correctly!
-    The python version is Python 3.9.19
-  +Step 4/5 Installing & checking conda modules
-    All required conda modules installed!
   +Step 5/5 Setting up local variables
     === Ready to connect landscapes! ===
 ```
 
 
 
-equivalent to 
-cola::setup_cola(envName = 'cola', libs2Install = c('gdal', 'h5py', 'numexpr', 'rasterio', 'pytables', 'pandas', 'cython', 'numba', 'networkit', 'fiona', 'shapely', 'geopandas', 'scikit-image'), nSteps = 5)
+#####  **3. Setting up cola dashboard:**
 
+Now let's install all the native R libraries to deply the dashboard.
 
-3. Setting up cola dashboard:
 ```
-cola::setup_cola_dss()
+> cola::setup_cola_dss()
 
     === All libraries required for COLA's DSS installed ===
->
-```
-
-4. Run function:
-```
-cola::setup_cola_dss()
 
 ```
 
-5. Run DSS:
+
+#####  **4. Load cola and run some functions:**
+
+Let's run one of the functions. Habitat sutiatbility to habitat resistance: s2res
 ```
+library(cola)
 cola::cola_dss()
 
     === All libraries required for COLA's DSS installed ===
