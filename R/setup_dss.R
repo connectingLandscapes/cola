@@ -16,7 +16,26 @@ instPack <- function(x, devt = FALSE){
   })
 }
 
-setup_cola_dss <- function(){
+setup_cola_dss <- function(
+    libs2colaDSS = c(
+  # "rgeos", "rgdal", 'raster',
+  'markdown', 'rmarkdown',
+  'knitr', 'units',
+  "reshape2", 'bit', 'digest', 'dplyr',
+  'tidyverse', 'DT', 'ggplot2',
+  # debug install order: htmltools >> shiny >> shinyWidgets
+  'htmlwidgets', 'htmltools', ## Before shiny
+  'magrittr', 'RColorBrewer', 'viridis',
+  ## Spatial
+  'sf', 'terra',
+  'rlang', "leaflet", "leaflet.extras",
+  'gdalUtilities',
+  ## Shiny
+  'shiny',  ## Before shiny plugins
+  "shinydashboard",  "shinycssloaders",
+  'shinydashboardPlus', 'shinyjs',
+  'shinyWidgets', 'dashboardthemes',
+  "highcharter", 'plotly')){
 
   if(Sys.info()["sysname"] == 'Linux'){
     cat('   Consider install the next libraries in Linux console before installing R packages: \n    ',
@@ -39,24 +58,7 @@ setup_cola_dss <- function(){
   }
 
 
-  cola::instPack(c(
-    # "rgeos", "rgdal", 'raster',
-    'markdown', 'rmarkdown',
-    'knitr', 'units',
-    "reshape2", 'bit', 'digest', 'dplyr',
-    'tidyverse', 'DT', 'ggplot2',
-
-    # debug install order: htmltools >> shiny >> shinyWidgets
-
-    'htmlwidgets', 'htmltools', ## Before shiny
-    'magrittr', 'RColorBrewer', 'viridis',
-    'sf', 'terra',
-    'rlang', "leaflet", "leaflet.extras",
-    'shiny',  ## Before shiny plugins
-    "shinydashboard",  "shinycssloaders",
-    'shinydashboardPlus', 'shinyjs',
-    'shinyWidgets', 'dashboardthemes',
-    "highcharter", 'plotly'))
+  cola::instPack(libs2colaDSS )
 
   # if(!require('gdalUtils') ){
   #   ## Install from Github
@@ -77,6 +79,7 @@ setup_cola_dss <- function(){
   library(digest)
   library(dplyr)
   library(ggplot2)
+  library(gdalUtilities)
   library(highcharter)
   library(htmlwidgets)
   library(htmltools)

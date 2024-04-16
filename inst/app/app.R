@@ -9,6 +9,7 @@
   library(digest)
   library(dplyr)
   library(ggplot2)
+  library(gdalUtilities)
   library(highcharter)
   library(htmlwidgets)
   library(htmltools)
@@ -46,17 +47,48 @@
   ## Initials ---
 
   ### 0 Initials  -----
-  base::options(shiny.maxRequestSize = 250 * 1024^2)
+
+  (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
+  (dataFolder <- ifelse( COLA_DATA_PATH == '' & dir.exists(COLA_DATA_PATH),
+                         yes = paste0(tempdir(), '/'), no = COLA_DATA_PATH));
+  # Keep last slash
+  # /data/temp/'; dir.create(dataFolder)
+
   base::options(scipen = 999)
 
-  (rootPath <- find.package('cola'))
-  (dataFolder <- tempdir()); #'/data/temp/'; dir.create(dataFolder)
+  (COLA_DSS_UPL_MB <- as.numeric(Sys.getenv('COLA_DSS_UPL_MB')))
+  COLA_DSS_UPL_MB <- as.numeric(
+    ifelse( is.numeric(COLA_DSS_UPL_MB) & !is.na(COLA_DSS_UPL_MB),
+              yes = COLA_DSS_UPL_MB, no = 250) )
+  base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
 
-  logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
-  path_error <- '/var/log/shiny-server/'
+
+  (COLA_VIZ_THREs_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THREs_PIX')))
+  COLA_VIZ_THREs_PIX <- as.numeric(
+    ifelse( is.numeric(COLA_VIZ_THREs_PIX) & !is.na(COLA_VIZ_THREs_PIX),
+            yes = COLA_VIZ_THREs_PIX, no = 1000000) )
+  base::options('COLA_VIZ_THREs_PIX' = COLA_VIZ_THREs_PIX)
+
+
+  (COLA_VIZ_RES_NCOL <- as.numeric(Sys.getenv('COLA_VIZ_RES_NCOL')))
+  COLA_VIZ_RES_NCOL <- as.numeric(
+    ifelse( is.numeric(COLA_VIZ_RES_NCOL) & !is.na(COLA_VIZ_RES_NCOL),
+            yes = COLA_VIZ_RES_NCOL, no = 1000) )
+  base::options('COLA_VIZ_RES_NCOL' = COLA_VIZ_RES_NCOL)
+
+
+  (COLA_VIZ_RES_NROW <- as.numeric(Sys.getenv('COLA_VIZ_RES_NROW')))
+  COLA_VIZ_RES_NROW <- as.numeric(
+    ifelse( is.numeric(COLA_VIZ_RES_NROW) & !is.na(COLA_VIZ_RES_NROW),
+            yes = COLA_VIZ_RES_NROW, no = 1000) )
+  base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
+
+  (rootPath <- find.package('cola'))
+
 
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
-  hs2rs_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+  (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
+   # file.exists(hs2rs_file)
 
   # py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
   (py <- Sys.getenv("COLA_PYTHON_PATH"))
@@ -66,34 +98,42 @@
 
   (showcasePath <<- base::paste0(rootPath, '/sampledata')); dir.exists(showcasePath)
 
-  uper <- cola::uper
-  per <- cola::per
-  crs_df <- cola::crs_df
-
-
+  uper <- cola::uper ## Unique performance table
+  per <- cola::per ## Performance table
+  crs_df <- cola::crs_df ## CRS available
 
   # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
   # sysname           nodename
   # "Linux" "ip-172-31-12-224"
   # }
 
-  allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
-  if(FALSE){
+  ## Errors -- only forshinyserver
+  {
 
-  validLogs <- unname(
-    na.omit(
-      sapply(allLogs, simplify = TRUE, function(x){
-        # x = allLogs[1]
-        y <- read.delim(file.path(path_error, x))[, 1]
-        if (any(grep('[E|e]rror', y))){
-          return (x)
-        } else {
-          return (NA)
-        }
-      })
-    ))
+    logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
+    path_error <- '/var/log/shiny-server/'
+
+
+    allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
+
+    if(FALSE){
+      cleanMemory(logFilePath)
+
+      validLogs <- unname(
+        na.omit(
+          sapply(allLogs, simplify = TRUE, function(x){
+            # x = allLogs[1]
+            y <- tryCatch(read.delim(file.path(path_error, x))[, 1], error = function(e) NULL)
+            if (any(grep('[E|e]rror', y)) & !is.null(y) ){
+              return (x)
+            } else {
+              return (NA)
+            }
+          })
+        ))
+    }
+    validLogs <- c('x')
   }
-  validLogs <- c('x')
 
 
   # Functions ----
@@ -139,7 +179,7 @@
   ## Showcase -----
   sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
 
-  if(base::file.exists(sh_object)){
+  if( base::file.exists(sh_object) ){
     ss <- base::load(sh_object)
   } else {
 
@@ -351,7 +391,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$ll_map_h2r_click,{
     clk <- input$ll_map_h2r_click; grp <- input$ll_map_h2r_groups; ##
-    3# print(clk)
+    # print(clk)
     print(grp)
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
@@ -433,20 +473,21 @@ server <- function(input, output, session) {
     # rastPath <- '/data/temp/LI2024011611295205file1a5d191fa71355/in_lcc_CQ2024011611304405file1a5d19779aa294.tif'
     # rastPath <- '/home/shiny/preCanopyClass30mCost.tif'
 
-    r <-terra::rast(rastPath)
+    r <- terra::rast(rastPath)
     (totpixels <- terra::ncol(r) * terra::nrow(r))
     #names(r)
     #rasname <- r@pnt@.xData$filenames()
     (resamPath <- gsub(x = rastPath,
                        '.tif$', '_resam.tif'))
-    if(totpixels > 1000000){
+    if(totpixels > options('COLA_VIZ_THREs_PIX')){
       #if(file.exists()){
       if (!file.exists(resamPath)){
 
         gdalUtilities::gdalwarp(srcfile = rastPath,
-                                ts = c(1000, 1000),
+                                ts = c(options('COLA_VIZ_RES_NCOL'), options('COLA_VIZ_RES_NROW')),
                                 dstfile = resamPath)
-        print(' ---- >>>> Resampling to 1000 - 1000')
+        print(paste(' ---- >>>> Resampling to ',
+                    options('COLA_VIZ_RES_NCOL'),' - ', options('COLA_VIZ_RES_NROW')))
       }
       #}
       return(resamPath)
@@ -713,21 +754,18 @@ server <- function(input, output, session) {
       # rv$prishp <- paste0(rv$path, 'out_pri_VL2024011614475305file3f6175e5eb2.shp')
       # rv$pritif <- paste0(rv$path, 'out_pri_VL2024011614475305file3f6175e5eb2.tif')
 
-
       hs_pal_name <-  "viridis"
       sr_pal_name <- "magma"
       tif_pal_name <- "viridis"
       crk_pal_name <- "inferno"
       lcc_pal_name <- "plasma"
-      # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
 
+      # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
       #leaflet::colorNumeric(palette = "magma", reverse = TRUE,
       #                         domain= base::range(sh_sr[], na.rm = TRUE)+ 0.0,
       #                         na.color = "transparent")
 
-
-
-      if((rv$hsready)){
+      if( (rv$hsready) ){
         #pdebug(devug=devug,pre='\n MakeLL - HS\n',sep='\n-','rv$hs_pal','rv$hs_rng')
 
         grps <- c(grps, "Habitat suitability")
@@ -736,15 +774,15 @@ server <- function(input, output, session) {
           rv$hs2s <- resampIfNeeded(rv$hs)
           rv$hs0 <- rv$hs
         }
-        rv$hs2s_sp <-terra::rast(rv$hs2s)
+        rv$hs2s_sp <- terra::rast(rv$hs2s)
         rv$hs_rng2 <- getMxMn(rv$hs2s)+ 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
-        rv$hs_pal2 <-leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
+        rv$hs_pal2 <- leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
                                            domain = rv$hs_rng2 + 0.0,
                                            na.color = "transparent")
 
         # pdebug(devug = devug, sep = '\n-', pre = '-', '(rv$hs)', 'rv$hs2s')
 
-        ll0 <- ll0 %>% addRasterImage(rv$hs2s_sp, colors = rv$hs_pal2,
+        ll0 <- ll0 %>% addRasterImage(x = rv$hs2s_sp, colors = rv$hs_pal2,
                                       opacity = .7,
                                       group = "Habitat suitability", layerId = "HabitatSuitability") %>%
           addLegend(pal =  rv$hs_pal2, values = rv$hs_rng2,
@@ -903,12 +941,7 @@ server <- function(input, output, session) {
         leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
         leaflet::addMeasure( position = "topright",
                              primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                             activeColor = "#3D535D",completedColor = "#7D4479") %>%
-        leaflet.extras::addDrawToolbar(singleFeature = FALSE,
-                                       targetGroup='draw', polylineOptions = T,
-                                       rectangleOptions = T, circleOptions = T,
-                                       markerOptions = T, circleMarkerOptions = F,
-                                       editOptions = leaflet.extras::editToolbarOptions()) %>%
+                             activeColor = "#3D535D",completedColor = "#7D4479")  %>%
         leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
 
 
@@ -975,6 +1008,14 @@ server <- function(input, output, session) {
       output$ll_map_points <- output$ll_map_h2r <- leaflet::renderLeaflet({
         ll
       })
+
+    output$ll_map_edi <- leaflet::renderLeaflet({ ll %>%
+        leaflet.extras::addDrawToolbar(singleFeature = FALSE,
+                                       targetGroup='draw', polylineOptions = T,
+                                       rectangleOptions = T, circleOptions = T,
+                                       markerOptions = T, circleMarkerOptions = F,
+                                       editOptions = leaflet.extras::editToolbarOptions())
+    })
   }
 
   output$ll_map_show <- leaflet::renderLeaflet({ ll_sh })
@@ -1769,7 +1810,7 @@ server <- function(input, output, session) {
         #pdebug(devug=devug,sep='\n',pre='-',"tifpath", "newtifPath", "rv$newtifPath", "rv$hs", "rv$hsready")
 
 
-        rv$hs_sp <-terra::rast(rv$hs)
+        rv$hs_sp <- terra::rast(rv$hs)
         #rng_newtif <- c(newtif@data@min, newtif@data@max)
         rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
 
@@ -1823,20 +1864,24 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log,  # _______
                          '\nCreating resistance surface');updateVTEXT(rv$log) # _______
 
-        hs2rs_file <- runS2RES(py = py, intif = rv$hs, outtif = outs2r,
-                               as.numeric(input$in_surf_3), as.numeric(input$in_surf_4),
-                               as.numeric(input$in_surf_5),
-                               as.numeric(input$in_surf_6), as.numeric(input$in_surf_7))
+        in_surf_7 <- ifelse(input$in_surf_7 == '', yes = NULL, no = input$in_surf_7)
 
-        if(!is.na(hs2rs_file)){
+        hs2rs_file <- s2res_py(# py = py,
+                               intif = rv$hs,
+                               outtif = outs2r,
+                               as.numeric(input$in_surf_3), as.numeric(input$in_surf_4),
+                               as.numeric(input$in_surf_5), as.numeric(input$in_surf_6),
+                               as.numeric(input$in_surf_7))
+
+        if(!is.na(hs2rs_file$file)){
 
           rv$log <- paste0(rv$log,  # _______
                            ' ... DONE');updateVTEXT(rv$log) #
           rv$tifready <- TRUE
-          rv$tif <- hs2rs_file
-          rv$tiforig <- hs2rs_file
+          rv$tif <- hs2rs_file$file
+          rv$tiforig <- hs2rs_file$file
 
-          rv$tif_sp <- hs2rs_tif <-terra::rast(hs2rs_file)
+          rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
           rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
           #rv$tif_rng <- rng_rstif <- minmax(rv$tif_sp)[1:2]
           rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
@@ -1895,15 +1940,17 @@ server <- function(input, output, session) {
     # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
     #            inSurSessID = 'V-2023082911285705_file3112303ea820')
     # input <- list(in_surf_3 = 0, in_surf_4 =100, in_surf_5 = 100, in_surf_6 = 1, in_surf_7 = -9999)
+    # (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
+    # rv <<- list(hs = hs2rs_samp_file)
     output$ll_map_h2r <- leaflet::renderLeaflet({
 
       (inSurSessID <<- sessionIDgen())
-      rv$inSurSessID <<- inSurSessID
+      rv$inSurSessID <- inSurSessID
 
       rv$hsready <- TRUE
-      rv$hs <- hs2rs_file
+      rv$hs <- hs2rs_samp_file
 
-      rv$hs_sp <- hs2rs_tif <-terra::rast(hs2rs_file)
+      rv$hs_sp <- terra::rast(hs2rs_samp_file)
       #rv$hs_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
       rv$hs_rng <- rng_rstif <- getMxMn(rv$hs_sp)[1:2]
 
@@ -1911,13 +1958,17 @@ server <- function(input, output, session) {
       updateTextInput(session, inputId = "in_surf_4", value = rv$hs_rng[2])
 
 
+
       rv$hs_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                    domain = rng_rstif, na.color = "transparent")
 
 
+      # print('XXXX')
+      # print(hs2rs_samp_file)
+      # save(rv, file = 'rv.RData')
       # rv$llmap rv$hsready rv$tifready rv$ptsready #  rv$llmap
-      #rv$llmap <<- rv$llmap %>%
-      #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
+      # rv$llmap <<- rv$llmap %>%
+      # leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
 
       # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = =
       makeLL( )
@@ -1987,7 +2038,7 @@ server <- function(input, output, session) {
         # newtifPath <- "/data/temp/GA2023090812182205file1266634e12b//in_surface_MN2023090812183705file12666abd01f1.tif"
         #pdebug(devug=devug,sep='\n',pre='-',"tifpath", "newtifPath", "rv$newtifPath", "rv$hs", "rv$hsready")
 
-        makeLL()
+        makeLL( )
       }
     })
   })
@@ -2269,7 +2320,7 @@ server <- function(input, output, session) {
                "'SR'", 'rv$in_points_ly','in_points_ly',
                'rv$hs', 'rv$tif')
 
-        points_file <- points_shp(py = py,
+        points_file <- points_py(py = py,
                                   intif = as.character(rv$tif),
                                   out_pts,
                                   as.numeric(input$in_points_4),
@@ -2282,7 +2333,7 @@ server <- function(input, output, session) {
         pdebug(devug=devug,sep='\n',pre='---PTS\n',
                "'HS'", 'rv$in_points_ly','in_points_ly',
                'rv$hs', 'rv$tif')
-        points_file <- points_shp(py = py,
+        points_file <- points_py(py = py,
                                   intif = as.character(rv$hs),
                                   out_pts,
                                   as.numeric(input$in_points_3),
@@ -2297,16 +2348,16 @@ server <- function(input, output, session) {
 
       # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
 
-      if (!file.exists(points_file)){
+      if (!file.exists(points_file$file)){
         rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
       } else {
-        rv$pts <- points_file
+        rv$pts <- points_file$file
         rv$ptsready <- TRUE
 
         output$ll_map_points <- leaflet::renderLeaflet({
 
           #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-          points_shpO <- sf::read_sf(points_file)
+          points_shpO <- sf::read_sf(points_file$file)
           points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
           points_shp$ID <- 1:nrow(points_shp)
           #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
@@ -2514,7 +2565,7 @@ server <- function(input, output, session) {
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
       cdmat_file <- cdmat_py (py = py, inshp = rv$pts, intif = rv$tif,
                               outcsv = outcdmat, param3 = as.numeric(input$in_dist_3), param4 = 1)
-      rv$cdm <- cdmat_file
+      rv$cdm <- cdmat_file$file
       tElapMat <- Sys.time() - tStartMat
       textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
 
@@ -2712,7 +2763,7 @@ server <- function(input, output, session) {
         out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-        out_lcc <- lcc_py (py = py, inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
+        out_lcc <- lcc_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
                            param4 = as.numeric(input$in_lcc_4),
                            param5 = as.numeric(input$in_lcc_5),
                            param6 = as.numeric(input$in_lcc_6),
@@ -2728,17 +2779,17 @@ server <- function(input, output, session) {
 
         pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
 
-        if(!file.exists(out_lcc)){
+        if(!file.exists(out_lcc$file)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
           rv$llmap
         } else {
           rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
 
-          rv$lcc <- out_lcc
+          rv$lcc <- out_lcc$file
           rv$lccready <- TRUE
-          rv$lcc_sp <- out_lcc <-terra::rast(out_lcc)
+          rv$lcc_sp <- terra::rast(out_lcc$file)
 
-          rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp, na.rm = TRUE)
           #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
 
           rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
@@ -2776,7 +2827,7 @@ server <- function(input, output, session) {
         out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-        out_lcc <- lcc_py2 (py = py, tempFolder = tempFolder,
+        out_lcc <- lccHeavy_py(py = py, tempFolder = tempFolder,
                             inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
                             param4 = as.numeric(input$in_lcc_4),
                             param5 = as.numeric(input$in_lcc_5),
@@ -2789,15 +2840,15 @@ server <- function(input, output, session) {
 
         pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
 
-        if(!file.exists(out_lcc)){
+        if(!file.exists(out_lcc$file)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
           rv$llmap
         } else {
           rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
 
-          rv$lcc <- out_lcc
+          rv$lcc <- out_lcc$file
           rv$lccready <- TRUE
-          rv$lcc_sp <- out_lcc <-terra::rast(out_lcc)
+          rv$lcc_sp <- terra::rast(out_lcc$file)
 
           #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
           #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
@@ -2957,7 +3008,7 @@ server <- function(input, output, session) {
       output$ll_map_crk <- leaflet::renderLeaflet({
 
         tStartCrk <- Sys.time()
-        out_crk <- crk_py (py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
+        out_crk <- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
                            param4 = as.numeric(input$in_crk_4),
                            param5 = (input$in_crk_5),
                            param6 = as.numeric(input$in_crk_6),
@@ -2967,9 +3018,9 @@ server <- function(input, output, session) {
         tElapCrk <- Sys.time() - tStartCrk
         textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
 
-        rv$crk <- out_crk
+        rv$crk <- out_crk$file
 
-        if(!file.exists(out_crk)){
+        if(!file.exists(out_crk$file)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
           rv$llmap
 
@@ -2978,11 +3029,11 @@ server <- function(input, output, session) {
 
           # rv$lcc <- out_lcc
           # rv$lcc_sp <- out_lcc <-terra::rast(out_lcc)
-
           # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+
           rv$crkready <- TRUE
-          rv$crk <- out_crk
-          rv$crk_sp <- out_crk <-terra::rast(out_crk); #plot(newtif)
+          rv$crk <- out_crk$file
+          rv$crk_sp <- terra::rast(out_crk$file);
           rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
           #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
 
@@ -3119,21 +3170,6 @@ server <- function(input, output, session) {
 
   ####### > Errors read  ------------------
 
-  allLogs <- list.files(path = path_error,
-                        pattern = 'cola|connec')
-  validLogs <- unname(
-    na.omit(
-      sapply(allLogs, simplify = TRUE, function(x){
-        # x = allLogs[1]
-        y <- read.delim(file.path(path_error, x))[, 1]
-        if (any(grep('[E|e]rror', y))){
-          return (x)
-        } else {
-          return (NA)
-        }
-      })
-    ))
-
   updateSelectizeInput(session, inputId = 'sel_error',
                        choices = validLogs,
                        selected = NA, server = TRUE)
@@ -3229,7 +3265,7 @@ server <- function(input, output, session) {
           if(class(rast2ll) == 'RasterLayer'){
             ptname <- gsub('userinput__|useroutput__', "", outputsRaster[i])
 
-            r_pal <-leaflet::colorNumeric(palette = sample(c('viridis', '
+            r_pal <- leaflet::colorNumeric(palette = sample(c('viridis', '
                                                      magma',
                                                              'inferno',  'plasma'), 1),
                                           reverse = TRUE,
@@ -3606,7 +3642,8 @@ if (FALSE){
 
           # tab_home tab_surface tab_points tab_distance tab_cdpop
           # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal
-          shinydashboard::tabItem('tab_home',
+          shinydashboard::tabItem(
+            'tab_home',
                                   fluidPage(
                                     #includeMarkdown("md_intro.md")
                                     tabsetPanel(
@@ -3721,8 +3758,9 @@ if (FALSE){
             'tab_cdpop',
             fluidPage(
               #includeMarkdown("md_intro.md")
+              h4(' ... Under construction ....'),
+              h4(' Stay tunned for further develompents. We want to provide here the widgets required for running your CDOPOP models'),
               tabsetPanel(
-
                 type = "pills",
                 tabPanel(
                   "Parameters",
@@ -3805,7 +3843,7 @@ if (FALSE){
                                     column(2, textInput("in_surf_4", "Max-grid:", '100')),
                                     column(2, textInput("in_surf_5", "Max-resistance:", '100')),
                                     column(1, textInput("in_surf_6", "Shape:", '1')),
-                                    column(2, textInput("in_surf_7", "No Data:", '-9999')),
+                                    column(2, textInput("in_surf_7", "No Data:", value = '', placeholder = 'NoData value here')),
                                     column(2,
                                            actionButton("h2r", HTML("Get resistance\nsurface"), icon = icon("play")),
                                            downloadButton('tifDwn', 'Download')) ),
@@ -3979,21 +4017,23 @@ if (FALSE){
                                   h2(' Running this locally'),
                                   #h6('    Comming soon ... stay tuned'),
 
-                                  h2(' '),
-                                  fluidRow(
-                                    column(width = 10,
-                                           selectizeInput(width = "100%",
-                                                          "sel_error", "Select log file:",
-                                                          choices = list.files(path = path_error,
-                                                                               pattern = 'cola|connec'
-                                                          )),
-                                    ),
-                                    column(width = 2,
-                                           br(),
-                                           actionButton("read_error", HTML("Read file")))
-                                  ),
+                                  includeMarkdown(system.file(package = 'cola', 'docs/md_cola_install.md'))
 
-                                  verbatimTextOutput("outerror")
+                                  ### For log reading
+                                  # fluidRow(
+                                  #   column(width = 10,
+                                  #          selectizeInput(width = "100%",
+                                  #                         "sel_error", "Select log file:",
+                                  #                         choices = list.files(path = path_error,
+                                  #                                              pattern = 'cola|connec'
+                                  #                         )),
+                                  #   ),
+                                  #   column(width = 2,
+                                  #          br(),
+                                  #          actionButton("read_error", HTML("Read file")))
+                                  # ),
+                                  #
+                                  # verbatimTextOutput("outerror")
 
 
 
@@ -4052,7 +4092,6 @@ if (FALSE){
   (cat('\n\n >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
 
-  cleanMemory(logFilePath)
 }
 
 shinyApp(ui, server)

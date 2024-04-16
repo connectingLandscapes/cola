@@ -35,7 +35,7 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-runCDPOP <- function(py, datapath = tempFolder){
+runCDPOP <- function(Sys.getenv("COLA_PYTHON_PATH"), datapath = tempFolder){
   # outfiles:
   #CDPOP/data/out11684988478/batchrun0mcrun0/grid0.csv [0, 1, ..]
   #CDPOP/data/out11684988478/batchrun0mcrun0/output.csv
@@ -67,6 +67,78 @@ runCDPOP <- function(py, datapath = tempFolder){
 }
 
 
+#' @title  Get NA value from raster layer metadata
+#' @description Extracts the NoData value from raster metadata
+#' @param path File location
+#' @return String with the NA value. No converted to number to avoid characters
+#' @examples
+#' input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+#' guessNoData(input_tif)
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+guessNoData <- function(path){
+  # path = raster path
+  ans <- NA
+  if (require(gdalUtilities) & file.exists(path)){
+    gi <- strsplit(gdalinfo(intif), '\n')[[1]]
+    ndv <- grep('NoData ', gi, value = TRUE)
+    if( any(length(ndv)) ) {
+      (ans <- gsub('.+\\=', '', ndv))
+    }
+  }
+  return(ans)
+}
+
+#' @title  Transforms suitability to resistance surface
+#' @description Run CDPOP model
+#' @param py Python location or executable. The string used in R command line to activate `cola`
+#' conda environment. Might change among computers versions
+#' @param src Python script location
+#' @param intif Path to the Suitability surface raster layer (TIF format)
+#' @param outtif Path to the resulting Surface Resistance (SR) raster layer (TIF format)
+#' @param param3 Suitability grid min value. Numeric value to cutoff the original layer.
+#' @param param4 Suitability grid max value. Numeric value to cutoff the original layer.
+#' @param param5 Maximum resistance value to have the new raster. Min value is set to 1.
+#' @param param6 Shape Parameter. Between 1 and X
+#' @param param7 No data value of suitability raster. Default NULL. To be guessed from metadata if not provided
+#' @param param8 CRS if using ASCII|RSG or other file without projection info. Provide as EPSG or ESRI string e.g. "ESRI:102028"
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+s2res_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+                     src = system.file(package = 'cola', 'python/s2res.py'),
+                     intif, outtif,
+                     param3, param4, param5, param6,
+                     param7 = NULL, param8 = 'None'){
+  # param3 = 0
+  # param4 =  100
+  # param5 = 100
+  # param6 = 1
+  # param7 = -9999
+  # param8 = 'None
+
+  ## Guess NA value if not provided
+  if(is.null(param7)){
+    param7 <- guessNoData(intif)
+  }
+
+  ## Create CMD
+  (cmd_s2res <- paste0(py, ' ', src, ' ', intif, ' ', outtif, ' ',
+                       format(param3, scientific=F), ' ', format(param4, scientific=F),
+                       ' ', format(param5, scientific=F), ' ', format(param6, scientific=F),
+                       ' ', format(param7, scientific=F), ' ', param8))
+
+  intCMD <- tryCatch(system(cmd_s2res, intern = TRUE, ignore.stdout = TRUE),
+                     error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               log =  intCMD) )
+}
+
+
 #' @title  Transforms suitability to resistance surface
 #' @description Run CDPOP model
 #' @param py Python location
@@ -77,35 +149,13 @@ runCDPOP <- function(py, datapath = tempFolder){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-runS2RES <- function(py, src,
-                     intif, outtif,
-                     param3, param4, param5, param6 = nCores, param7, param8 = 'None'){
-  # param3 = 0
-  # param4 =  100
-  # param5 = 100
-  # param6 = 1
-  # param7 = -9999
-
-  src <- '/home/shiny/connecting-landscapes/src/s2res.py'
-  datapath <- tempFolder # datapath = tempFolder
-
-  timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-
-  (cmd_s2res <- paste0(py, ' ', src, ' ', intif, ' ', outtif, ' ',
-                       format(param3, scientific=F), ' ', format(param4, scientific=F),
-                       ' ', format(param5, scientific=F), ' ', format(param6, scientific=F),
-                       ' ', format(param7, scientific=F), ' ', param8))
-
-  intCMD <- tryCatch(system(cmd_s2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-  return(file = ifelse(file.exists(outtif), outtif, NA))
-}
-
-
-points_shp <- function(py, intif, outshp, param3, param4, param5, param6 = 'None'){
+points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                       src = system.file(package = 'cola', 'python/create_source_points.py'),
+                       intif, outshp, param3, param4, param5, param6 = 'None'){
   # param3 = 2
   # param4 =  95
   # param5 = 50
-  src <- '/home/shiny/connecting-landscapes/src/create_source_points.py'
+  #src <- system.file(package = 'cola', 'python/create_source_points.py'
   datapath <- tempFolder # datapath = tempFolder
   (cmd_pts <- paste0(py, ' ', src, ' ', intif, ' ', outshp, ' ',
                      format(param3, scientific=F), ' ',
@@ -114,8 +164,10 @@ points_shp <- function(py, intif, outshp, param3, param4, param5, param6 = 'None
                      param6))
 
   print(cmd_pts)
-  intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-  return(file = ifelse(file.exists(outshp), outshp, NA))
+  intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outshp), outtif, NA),
+               log =  intCMD) )
+
 }
 
 #' @title  Creates CDmatrix for CDPOP model
@@ -129,7 +181,11 @@ points_shp <- function(py, intif, outshp, param3, param4, param5, param6 = 'None
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 = 'None'){
+cdmat_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+                     src = system.file(package = 'cola', 'python/create_cdmat.py'),
+                     inshp, intif, outcsv,
+                     param3, param4,
+                     param5 = 1, param6 = 'None'){
   # param3 = 25000
   # create_cdmat.py
   # [1] source points
@@ -137,13 +193,14 @@ cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 =
   # [3] output file name
   # [4] distance threshold (in cost distance units)
 
-  src <- '/home/shiny/connecting-landscapes/src/create_cdmat.py'
+  # src <- system.file(package = 'cola', 'python/create_cdmat.py')
   (cmd_cdmat <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', format(param3, scientific=F),
                        ' ', param4, ' ', param5))
 
-  intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-  return(file = ifelse(file.exists(outcsv), outcsv, NA))
+  intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outcsv), outtif, NA),
+               log =  intCMD) )
 }
 
 
@@ -158,8 +215,11 @@ cdmat_py <- function(py, inshp, intif, outcsv, param3, param4 = nCores, param5 =
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lcc_py <- function(py, inshp, intif, outtif, param4, param5,
-                   param6, param7 = nCores, param8 = 'None'){
+lcc_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+                   src = system.file(package = 'cola', 'python/lcc.py'),
+                   inshp, intif, outtif,
+                   param4, param5, param6,
+                   param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -168,36 +228,21 @@ lcc_py <- function(py, inshp, intif, outtif, param4, param5,
   # [5] corridor smoothing factor (in number of cells)
   # [6] corridor tolerance (in cost distance units)
 
-  src <- '/home/shiny/connecting-landscapes/src/lcc.py'
+  # if(is.null(param7)){
+  #   param7 <- guessNoData(intif)
+  # }
 
-  if(require('gdalUtilities')){
-    gi <- capture.output(gdalUtilities::gdalinfo(intif))
-    nd0 <- as.numeric(
-      gsub("[^-[:alnum:]]", "",
-           gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)
-           )
-      )
-    )
-    # } else if(require('gdalUtils')){
-    #   gi <- capture.output(gdalUtils::gdalinfo(intif))
-    #   nd0 <- as.numeric(
-    #     gsub("[^-[:alnum:]]", "",
-    #          gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)
-    #          )
-    #     )
-    #   )
-  }
-
-
-  (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
+  (cmd_lcc <- paste0(py, ' ', src, ' ',
+                     inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      format(param6, scientific=F), " ",
                      format(param7, scientific=F), " ",
                      param8))
 
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-  return(file = ifelse(file.exists(outtif), outtif, NA))
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               log =  intCMD) )
 }
 
 
@@ -212,8 +257,12 @@ lcc_py <- function(py, inshp, intif, outtif, param4, param5,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
-                    param6, param7 = nCores, param8 = 'None', tempFolder = rootPath){
+lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                     src = system.file(package = 'cola', 'python/lcc_heavy.py'),
+                     inshp, intif, outtif,
+                     param4, param5, param6,
+                    param7 = as.numeric(options('COLA_NCORES')),
+                    param8 = 'None', tempFolder = rootPath){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -233,29 +282,6 @@ lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
   h5file1 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_A.h5')
   h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
 
-  src <- '/home/shiny/connecting-landscapes/src/lcc_hdf5_v7.py'
-
-  ## get NoData
-
-  if(require('gdalUtilities')){
-    gi <- capture.output(gdalUtilities::gdalinfo(intif))
-    nd0 <- as.numeric(
-      gsub("[^-[:alnum:]]", "",
-           gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)
-           )
-      )
-    )
-    # } else if(require('gdalUtils')){
-    #   gi <- capture.output(gdalUtils::gdalinfo(intif))
-    #   nd0 <- as.numeric(
-    #     gsub("[^-[:alnum:]]", "",
-    #          gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)
-    #          )
-    #     )
-    #   )
-  }
-
-
 
   (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
@@ -269,10 +295,11 @@ lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
   ))
 
   print(cmd_lcc)
-
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
   file.remove(c(h5file1, h5file2))
-  return(file = ifelse(file.exists(outtif), outtif, NA))
+
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               log =  intCMD) )
 }
 
 #' @title  Create cumulative resistance kernels
@@ -285,8 +312,12 @@ lcc_py2 <- function(py, inshp, intif, outtif, param4, param5,
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
-crk_py <- function(py, inshp, intif, outtif, param4,
-                   param5, param6, param7 = nCores, param8 = 'None'){
+crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                src = system.file(package = 'cola', 'python/crk.py'),
+                inshp, intif, outtif,
+                param4, param5, param6,
+                param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
+
   # [1] source points
   # [2] resistance surface
   # [3] output file name
@@ -294,16 +325,16 @@ crk_py <- function(py, inshp, intif, outtif, param4,
   # [5] kernel shape (linear, gaussian)
   # [5] kernel volume
 
-  src <- '/home/shiny/connecting-landscapes/src/crk.py'
   (cmd_crk <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      format(param6, scientific=F), ' ',
                      format(param7, scientific=F), ' ', param8))
 
-  intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-  return(file = ifelse(file.exists(outtif), outtif, NA))
-}
+  intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               log =  intCMD) )
+ }
 
 
 #' @title  Runs prioritization
@@ -316,10 +347,12 @@ crk_py <- function(py, inshp, intif, outtif, param4,
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
-pri_py <- function(py, tif, incrk, inlcc,
+pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                   src = system.file(package = 'cola', 'python/prioritize_core_conn.py')
+                   tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshp, outtif,
-                   param5 = 0.5, param6 = 1000){
+                   param7 = 0.5, param8 = 1000){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -360,7 +393,7 @@ pri_py <- function(py, tif, incrk, inlcc,
   # Corridor tolerance. Should be the same tolerance used in the lcc script
   #corrTol = sys.argv[8]#1000
 
-  src <- '/home/shiny/connecting-landscapes/src/prioritize_core_conn.py'
+  # src <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
 
   # incrk <- '/data/temp/RY2024011519163805file176c0d742621ed/out_crk_IF2024011520212105file176c0d2f0a3994.tif'
   # inlcc <- '/data/temp/RY2024011519163805file176c0d742621ed/out_lcc_GG2024011519164505file176c0d5f4b6267.tif'
@@ -373,14 +406,15 @@ pri_py <- function(py, tif, incrk, inlcc,
                       incrk, ' ', inlcc, ' ',
                       maskedcsname, ' ',
                       outshp, ' ', outtif, ' ',
-                      format(param5, scientific=F), " ",
-                      format(param6, scientific=F)))
+                      format(param7, scientific=F), " ",
+                      format(param8, scientific=F)))
 
 
-  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
+  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   print(intCMD)
   return(list(tif = ifelse(file.exists(outtif), outtif, NA),
-              shp = ifelse(file.exists(outshp), outshp, NA)) )
+              shp = ifelse(file.exists(outshp), outshp, NA),
+              log = intCMD) )
 }
 
 #' @title  Runs CDOPOP2
@@ -393,7 +427,7 @@ pri_py <- function(py, tif, incrk, inlcc,
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 
-cdpop_py <- function(py, tif, incrk, inlcc,
+cdpop_py <- function(Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
                      maskedcsname = paste0(tempfile(), '.tif'),
                      outshp, outtif,
                      param5 = 0.5, param6 = 1000){
@@ -443,7 +477,7 @@ cdpop_py <- function(py, tif, incrk, inlcc,
   # Corridor tolerance. Should be the same tolerance used in the lcc script
   #corrTol = sys.argv[8]#1000
 
-  src <- '/home/shiny/connecting-landscapes/src/prioritize_core_conn.py'
+  src <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
 
 
   (cmd_prio <- paste0(py, ' ',
@@ -456,8 +490,9 @@ cdpop_py <- function(py, tif, incrk, inlcc,
                       format(param6, scientific=F)))
 
 
-  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
+  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   print(intCMD)
   return(list(tif = ifelse(file.exists(outtif), outtif, NA),
-              shp = ifelse(file.exists(outshp), outshp, NA)) )
+              shp = ifelse(file.exists(outshp), outshp, NA),
+              log = intCMD) )
 }

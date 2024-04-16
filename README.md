@@ -1,258 +1,31 @@
-# Connectiviy analysis `cola` 
+# Connectiviy analysis software `cola` 
 
+Connecting landscapes (cola)
 
-### Installation 
 
-This package integrates R and Python modules. 
+![](inst/docs/logoA.jpg "")
 
-It's required to install several components (once). The structure of this software is:
+>> Toolkit Overview
 
-- R as the base. Use the latest available [here](https://cran.r-project.org/bin/windows/base/)
+Increasing loss and fragmentation of habitats has resulted in an urgent need to identify areas for conservation that also maintain and enhance ecological connectivity of protected areas. The Connecting Landscapes (CoLa) toolkit integrates and enhances numerous landscape genetics and habitat connectivity tools (Landguth and Cushman 2010, Landguth et al. 2012) to aid in identifying connectivity conservation priorities and areas of potential human wildlife conflict.
 
-- Have you [Rtools](https://cran.r-project.org/bin/windows/Rtools/) already? `devtools::find_rtools()` must be TRUE
+The toolkit is supported by NASA Biological Diversity & Ecological Conservation program Grant No. 80NSSC21K1942 - Strengthening Natural Resource Management with New Protected Area Connectivity Tools, and was co-developed with the Wildlife Conservation Research Unit (WildCRU) of University of Oxford and the United States Forest Service (USFS) Rocky Mountain Research Station, USFS International Programs.
 
-- Python as the engine for the main scripts
+Primary inputs to the tools include habitat suitability layers or spatially explicit estimates of animal movement potential across different land use types (resistance layers), and population source points. When properly parameterized, the toolkit can generate estimates of population genetic structure, population density, core movement areas, and long-distance dispersal corridors.
 
-- Miniconda (conda) environment as the package containing all python dependencies
+For recent examples of how the individual tools have been used for wildlife research and conservation assessments see Kaszta et al. (2020a), Kaszta et al. (2020b), Zeller et al. (2021), Ash et al. (2023), Makwana et al. (2023).
 
-- R shiny for the dashboard Decision support system.
+>> Contact
 
+Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and suggestions
 
-Some of the different computers might have particular conditions or requirements for installing all these components, so we made a section where you can find known issues an their potential solution. If you found a new one please share it with us so potential new users can see it.
 
+>> Resources
 
+ * For installation go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 
-  ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/known-issues.md) for potential solutions*** 
+ * For installation known-issues go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)
 
-------------------
-------------------
+ * For the functions documentation and examples, go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_colafun.md)
 
-#### **1.  Install cola R package.**
-
-Consider use the **option 3 (None)** for installing new packages at the first try. If an error arises, update **all of them (option 1)**.
-
-```
-if (!require(devtools)){
-   install.packages('devtools')
-}
-devtools::install_github('connectingLandscapes/cola') ## option 3: None
-```
-
-The installation log will shown in console:
-
-```
-Downloading GitHub repo connectingLandscapes/cola@HEAD
-These packages have more recent versions available.
-It is recommended to update all of them.
-Which would you like to update?
-
- 1: All                                    
- 2: CRAN packages only                     
- 3: None                              
-
- ... (more text)
-
--- R CMD build -----------------------------------------------------------------------------------------------------------
-v  checking for file 'C:\tempR\RtmpM1f5us\remotes11c8f5a7145\connectingLandscapes-cola-5abb74a/DESCRIPTION' (378ms)
--  preparing 'cola': (1.8s)
-v  checking DESCRIPTION meta-information ...
--  checking for LF line-endings in source and make files and shell scripts
--  checking for empty or unneeded directories
-     NB: this package now depends on R (>= 3.5.0)
-     WARNING: Added dependency on R >= 3.5.0 because serialized objects in  serialize/load version 3 cannot be read in older versions of R.  File(s) containing such objects: 'cola/data/crs_df.rda'  'cola/data/perfomance-uper_per.rda'  WARNING: Added dependency on R >= 3.5.0 because serialized objects in  serialize/load version 3 cannot be read in older versions of R.  File(s) containing such objects:  'cola/inst/docs/showcase/showcase.RData'
--  building 'cola_0.1.0.tar.gz'
-   
-Installing package into ‘C:/Users/Admin/Documents/R/win-library/4.0’
-(as ‘lib’ is unspecified)
-* installing *source* package 'cola' ...
-** using staged installation
-** R
-** data
-*** moving datasets to lazyload DB
-** inst
-** byte-compile and prepare package for lazy loading
-** help
-No man pages found in package  'cola' 
-*** installing help indices
-** building package indices
-** testing if installed package can be loaded from temporary location
-*** arch - i386
-*** arch - x64
-** testing if installed package can be loaded from final location
-*** arch - i386
-*** arch - x64
-** testing if installed package keeps a record of temporary installation path
-* DONE (cola)
-```
-  
-  Here, the cola R package is installed. Now we need to set up A) the `conda` environment and B) the shiny the dashboard
-
-
-------------------
-
-
-#####  **2. Setting up cola requirements:**
-
-This might take several minutes and will show the following message once you *get all the steps installed*. But during the first time you will have a longer log. See next section.
-
-```
-library(cola)
-cola::setup_cola()
-
-  +Step 1/5: Installing & checking reticulate R package
-    `reticulate` installed already!
-  +Step 2/5 Installing & checking miniconda
-    miniconda found at C:/Users/Admin/AppData/Local/r-miniconda!
-  +Step 3/5 Installing & checking conda environment
-    `cola` conda environment installed in C:\Users\Admin\AppData\Local\r-miniconda\envs\cola/python.exe
-    `cola` conda environment named correctly!
-    The python version is Python 3.9.19
-  +Step 4/5 Installing & checking conda modules
-    All required conda modules installed!
-  +Step 5/5 Setting up local variables
-    === Ready to connect landscapes! ===
-```
-
-----------------------
-
-**If there's the first time installing cola you will see the following messages during the different steps:**
-
-
-```
-   +Step 1/5: Installing & checking reticulate R package
-```
-
-
-If `reticulate` R package doesn't exists, you need to install it. A prompt asking if you want to install packages that requires compilation will appear. If you say "yes" this might take longer. You can also say "No", but it might require update the packages at some point, depending in your current.
-
-![Fig. 1a. Compilation message](inst/docs/01_question_compilation.JPG "Install reticulate")
-
-You might need to restart your R session as well. Say "YES".
-
-![Fig. 1b. Compilation message](inst/docs/02_restart_session.JPG "Restart R session")
-
-
-Also, you might be asked to install a reticulate conda environment. Say "YES".
-
-![Fig. 1c. Compilation message](inst/docs/03_instal_conda_reticulate.png "Install conda r-reticulate")
-
-A correct `reticulate` R package installation will show:
-
-```
-  +Step 1/5: Installing & checking reticulate R package
-    `reticulate` installed already!
-```
-
-----------------------
-
-
-```
-  +Step 2/5 Installing & checking miniconda
-```
-
-
-If miniconda is not installed, you will be asked to accept the installation. Say "yes"
-
-
-![Fig. 2. Miniconda installation](inst/docs/miniconda-02-execute.png "Install miniconda")
-
-
-A correct miniconda installation will show:
-
-```
-  +Step 2/5 Installing & checking miniconda
-    miniconda found at C:/Users/Admin/AppData/Local/r-miniconda!
-```
-
-----------------------
-```
-+Step 3/5 Installing & checking conda environment
-+Step 4/5 Installing & checking conda modules
-```
-
-
-This steps creates a conda environment, named `cola` by default. You will ask to create the environment. Say "yes"
-
-![Fig. 2. Install cola conda environment](inst/docs/question_cola.JPG "Install miniconda")
-
-
-
-It will try several ways in the case some options doesn't works in your machine:
-
-    -1. Install the environment using a YML file. If fails,
-    
-    -2. Creating the environment with the required libraries. If fails,
-  
-    -3. Create the environment, and then installing each library independently
-  
-  
-  
-This step will take some minutes since requires download spatial and specialized packages.
-
-A correct installation should shown a message like:
-
-```
-  +Step 3/5 Installing & checking conda environment
-    `cola` conda environment installed in C:\Users\Admin\AppData\Local\r-miniconda\envs\cola/python.exe
-    `cola` conda environment named correctly!
-    The python version is Python 3.9.19
-  +Step 4/5 Installing & checking conda modules
-    All required conda modules installed!
-```
-
-----------------------
-
-```
-  +Step 5/5 Setting up local variables
-```
-
-During this step R will define the ways to interact with the python version and environment. The installation script will find the path to the scripts and identify how your system should call cola python. At the same time, here we load all the required modules to test if were installed correctly, and run a sample analysis to ensure 
-
-If all the test passed, this will be the shown:
-
-```
-  +Step 5/5 Setting up local variables
-    === Ready to connect landscapes! ===
-```
-
-
-
-#####  **3. Setting up cola dashboard:**
-
-Now let's install all the native R libraries to deply the dashboard.
-
-```
-cola::setup_cola_dss()
-```
-
-If all libraries were installed, the following 
-
-```
-    === All libraries required for COLA's DSS installed ===
-```
-
-
-#####  **5. Load cola and run some functions:**
-
-Let's run one of the functions. Habitat suitability to habitat resistance: s2res
-```
-cola::cola_dss()
-
-```
-
-
-#####  **5. Load cola and run some functions:**
-
-Let's run one of the functions. Habitat suitability to habitat resistance: s2res
-
-```
-
-```
-
-
-#####  **6. Uninstall cola **
-
-```
-# Not run
-# remove.packages( "cola" )
-```
+* Access here the live [Decision support system dashboard (DSS)](http://18.190.126.82:3838/connecting-landscapes/)

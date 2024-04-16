@@ -69,4 +69,4 @@ from rasterio.crs import CRS
 
 import cola_functions as cf
 #print (" cola_functions loaded!")
-print ("WELCOME -- libraries loaded succesfully")
+print ("WELCOME -- libraries loaded successfully")
