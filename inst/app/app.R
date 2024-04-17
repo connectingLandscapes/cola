@@ -50,37 +50,37 @@
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
   (dataFolder <- ifelse( COLA_DATA_PATH == '' & dir.exists(COLA_DATA_PATH),
-                         yes = paste0(tempdir(), '/'), no = COLA_DATA_PATH));
+                         no = paste0(tempdir(), '/'), yes = COLA_DATA_PATH));
   # Keep last slash
   # /data/temp/'; dir.create(dataFolder)
 
   base::options(scipen = 999)
 
   (COLA_DSS_UPL_MB <- as.numeric(Sys.getenv('COLA_DSS_UPL_MB')))
-  COLA_DSS_UPL_MB <- as.numeric(
+  (COLA_DSS_UPL_MB <- as.numeric(
     ifelse( is.numeric(COLA_DSS_UPL_MB) & !is.na(COLA_DSS_UPL_MB),
-              yes = COLA_DSS_UPL_MB, no = 250) )
+              yes = COLA_DSS_UPL_MB, no = 250) ))
   base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
 
 
   (COLA_VIZ_THREs_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THREs_PIX')))
-  COLA_VIZ_THREs_PIX <- as.numeric(
+  (COLA_VIZ_THREs_PIX <- as.numeric(
     ifelse( is.numeric(COLA_VIZ_THREs_PIX) & !is.na(COLA_VIZ_THREs_PIX),
-            yes = COLA_VIZ_THREs_PIX, no = 1000000) )
+            yes = COLA_VIZ_THREs_PIX, no = 1000000) ))
   base::options('COLA_VIZ_THREs_PIX' = COLA_VIZ_THREs_PIX)
 
 
   (COLA_VIZ_RES_NCOL <- as.numeric(Sys.getenv('COLA_VIZ_RES_NCOL')))
-  COLA_VIZ_RES_NCOL <- as.numeric(
+  (COLA_VIZ_RES_NCOL <- as.numeric(
     ifelse( is.numeric(COLA_VIZ_RES_NCOL) & !is.na(COLA_VIZ_RES_NCOL),
-            yes = COLA_VIZ_RES_NCOL, no = 1000) )
+           yes = COLA_VIZ_RES_NCOL, no = 1000) ))
   base::options('COLA_VIZ_RES_NCOL' = COLA_VIZ_RES_NCOL)
 
 
   (COLA_VIZ_RES_NROW <- as.numeric(Sys.getenv('COLA_VIZ_RES_NROW')))
-  COLA_VIZ_RES_NROW <- as.numeric(
+  (COLA_VIZ_RES_NROW <- as.numeric(
     ifelse( is.numeric(COLA_VIZ_RES_NROW) & !is.na(COLA_VIZ_RES_NROW),
-            yes = COLA_VIZ_RES_NROW, no = 1000) )
+            yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
 
   (rootPath <- find.package('cola'))
@@ -132,6 +132,7 @@
           })
         ))
     }
+    ## Temporal variable --- not to use outside the server
     validLogs <- c('x')
   }
 
@@ -266,6 +267,18 @@
     # rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
     #                                      domain = rng_newtif, na.color = "transparent")
   }
+}
+
+## Init B
+{
+  (sessionID <<- sessionIDgen())
+  tempFolder <<- paste0(dataFolder, sessionID, '/')
+  dir.create(tempFolder)
+
+  (cat('\n\n >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
+  (cat(' >>>> tempFolder: ', tempFolder, '\n'))
+  (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
+
 }
 
 
@@ -1957,12 +1970,8 @@ server <- function(input, output, session) {
       updateTextInput(session, inputId = "in_surf_3", value = rv$hs_rng[1])
       updateTextInput(session, inputId = "in_surf_4", value = rv$hs_rng[2])
 
-
-
       rv$hs_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                    domain = rng_rstif, na.color = "transparent")
-
-
       # print('XXXX')
       # print(hs2rs_samp_file)
       # save(rv, file = 'rv.RData')
@@ -4083,16 +4092,6 @@ if (FALSE){
   )
 }
 
-## Init B
-{
-  (sessionID <<- sessionIDgen())
-  tempFolder <<- paste0(dataFolder, sessionID, '/')
-  dir.create(tempFolder)
-
-  (cat('\n\n >>>> tempFolder: ', tempFolder, '\n'))
-  (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
-
-}
 
 shinyApp(ui, server)
 

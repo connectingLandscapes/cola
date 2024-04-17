@@ -35,7 +35,7 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-runCDPOP <- function(Sys.getenv("COLA_PYTHON_PATH"), datapath = tempFolder){
+runCDPOP <- function(py = Sys.getenv("COLA_PYTHON_PATH"), datapath = tempFolder){
   # outfiles:
   #CDPOP/data/out11684988478/batchrun0mcrun0/grid0.csv [0, 1, ..]
   #CDPOP/data/out11684988478/batchrun0mcrun0/output.csv
@@ -109,7 +109,7 @@ guessNoData <- function(path){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-s2res_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      src = system.file(package = 'cola', 'python/s2res.py'),
                      intif, outtif,
                      param3, param4, param5, param6,
@@ -181,7 +181,7 @@ points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-cdmat_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      src = system.file(package = 'cola', 'python/create_cdmat.py'),
                      inshp, intif, outcsv,
                      param3, param4,
@@ -215,7 +215,7 @@ cdmat_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lcc_py <- function(Sys.getenv("COLA_PYTHON_PATH"),
+lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                    src = system.file(package = 'cola', 'python/lcc.py'),
                    inshp, intif, outtif,
                    param4, param5, param6,
@@ -426,8 +426,7 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' runCDPOP( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-
-cdpop_py <- function(Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
+cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
                      maskedcsname = paste0(tempfile(), '.tif'),
                      outshp, outtif,
                      param5 = 0.5, param6 = 1000){
