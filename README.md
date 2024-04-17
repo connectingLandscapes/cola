@@ -1,11 +1,9 @@
-# Connectiviy analysis software `cola` 
-
-Connecting landscapes (cola)
+# Connectiviy analysis software: Connecting landscapes - `cola` 
 
 
-![](inst/docs/logoA.jpg "")
+![.](inst/docs/logoA.jpg "")
 
->> Toolkit Overview
+> Toolkit Overview
 
 Increasing loss and fragmentation of habitats has resulted in an urgent need to identify areas for conservation that also maintain and enhance ecological connectivity of protected areas. The Connecting Landscapes (CoLa) toolkit integrates and enhances numerous landscape genetics and habitat connectivity tools (Landguth and Cushman 2010, Landguth et al. 2012) to aid in identifying connectivity conservation priorities and areas of potential human wildlife conflict.
 
@@ -13,14 +11,14 @@ The toolkit is supported by NASA Biological Diversity & Ecological Conservation 
 
 Primary inputs to the tools include habitat suitability layers or spatially explicit estimates of animal movement potential across different land use types (resistance layers), and population source points. When properly parameterized, the toolkit can generate estimates of population genetic structure, population density, core movement areas, and long-distance dispersal corridors.
 
-For recent examples of how the individual tools have been used for wildlife research and conservation assessments see Kaszta et al. (2020a), Kaszta et al. (2020b), Zeller et al. (2021), Ash et al. (2023), Makwana et al. (2023).
+For recent examples of how the individual tools have been used for wildlife research and conservation assessments see Kaszta *et al.* (2020a), Kaszta *et al*. (2020b), Zeller *et al*. (2021), Ash *et al.* (2023), Makwana *et al.* (2023).
 
->> Contact
+> Contact
 
 Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and suggestions
 
 
->> Resources
+> Resources
 
  * For installation go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 

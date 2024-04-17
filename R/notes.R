@@ -98,3 +98,5 @@ options(ZZZ = 'test')
 'C:/Users/Admin/Documents/R/win-library/4.0/'
 'C:\Users\Admin\Documents\R\win-library\4.0\packrat\resources\init-rprofile.R' init.R
 'C:\Users\Admin\Documents\R\win-library\4.0\usethis\html\ini'
+
+Rprofile.site
