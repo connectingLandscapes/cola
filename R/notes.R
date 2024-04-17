@@ -100,4 +100,3 @@ if (FALSE){
 'C:/Users/Admin/Documents/R/win-library/4.0/usethis/html/ini'
 
 # Rprofile.site
-<-

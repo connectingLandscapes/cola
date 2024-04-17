@@ -108,7 +108,7 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   ```
   
   
- ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. Here the log of the console of the reported case and solution: 
+ ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. If the error persists, restart your R session. Here the log of the console of the reported case and solution: 
  ```
 > devtools::install_github('connectingLandscapes/cola')  # <----- HERE first try 
 Downloading GitHub repo connectingLandscapes/cola@HEAD
@@ -120,10 +120,11 @@ Downloading GitHub repo connectingLandscapes/cola@HEAD
 ✔  checking for ... 
 
 ```
+
 -------------
 -------------
 
-####  **2. Install reticulate R package**
+####  **2. Install `reticulate` R package**
   
   Installing `reticulate` R package should be done by the `cola::setup_cola()` function. Here some issues detected:
   
