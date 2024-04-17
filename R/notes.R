@@ -90,13 +90,14 @@ if (FALSE){
 
 
 
-setwd(Sys.getenv('R_USER'))
-options(ZZZ = 'test')
+# setwd(Sys.getenv('R_USER'))
+# options(ZZZ = 'test')
 
 'C:/Program Files/R/R-4.0.2/etc/Rprofile.site'
 'C:/Program Files/R/R-4.0.2/library/base/R/Rprofile'
 'C:/Users/Admin/Documents/R/win-library/4.0/'
-'C:\Users\Admin\Documents\R\win-library\4.0\packrat\resources\init-rprofile.R' #init.R
-'C:\Users\Admin\Documents\R\win-library\4.0\usethis\html\ini'
+'C:/Users/Admin/Documents/R/win-library/4.0/packrat/resources/init-rprofile.R' #init.R
+'C:/Users/Admin/Documents/R/win-library/4.0/usethis/html/ini'
 
 # Rprofile.site
+<-
