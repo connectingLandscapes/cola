@@ -67,7 +67,7 @@ diagnose_cola <- function(envName = 'cola',
                                           'scikit-image')){
 
   cat(sep = '',
-      ' \n We will lokk for errors. Running `cola::setup_cola()` should help you to configure the package.\n',
+      ' \n We will look for errors. Running `cola::setup_cola()` should help you to configure the package.\n',
       ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic: (please wait a moment)\n')
 
   if (!require(reticulate)){

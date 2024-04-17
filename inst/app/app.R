@@ -102,10 +102,6 @@
   per <- cola::per ## Performance table
   crs_df <- cola::crs_df ## CRS available
 
-  # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
-  # sysname           nodename
-  # "Linux" "ip-172-31-12-224"
-  # }
 
   ## Errors -- only forshinyserver
   {
@@ -1879,12 +1875,15 @@ server <- function(input, output, session) {
 
         in_surf_7 <- ifelse(input$in_surf_7 == '', yes = NULL, no = input$in_surf_7)
 
-        hs2rs_file <- s2res_py(# py = py,
+        hs2rs_file <- s2res_py(py = py,
                                intif = rv$hs,
                                outtif = outs2r,
-                               as.numeric(input$in_surf_3), as.numeric(input$in_surf_4),
-                               as.numeric(input$in_surf_5), as.numeric(input$in_surf_6),
-                               as.numeric(input$in_surf_7))
+                               param3 = as.numeric(input$in_surf_3),
+                               param4 = as.numeric(input$in_surf_4),
+                               param5 = as.numeric(input$in_surf_5),
+                               param6 = as.numeric(input$in_surf_6),
+                               param7 = as.numeric(input$in_surf_7),
+                               param8 = 'None')
 
         if(!is.na(hs2rs_file$file)){
 

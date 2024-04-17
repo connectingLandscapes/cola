@@ -48,13 +48,13 @@ runCDPOP <- function(py = Sys.getenv("COLA_PYTHON_PATH"), datapath = tempFolder)
   #dispcdmat	cdmats/EDcdmatrix16
 
   # python CDPOP.py %userprofile%\dockerdata\CDPOP\data inputvars.csv outAnac1
-  src <- '/home/shiny/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
+  pyscript <- '/home/shiny/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
   datapath <- tempFolder # datapath = tempFolder
   vars <- paste0('invars.csv') # Only file name
   timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
   cdpopPath <- paste0('cdpopout_', timeMarkCDPOP, '__')
   cdpopPath <- 'cdpopout'
-  (cmd <- paste0(py, ' ', src, ' ', datapath, ' ', vars, ' ', cdpopPath))
+  (cmd <- paste0(py, ' ', pyscript, ' ', datapath, ' ', vars, ' ', cdpopPath))
 
   # setwd(tempFolder)
   #file.copy('inputvars.csv', 'in.csv')
@@ -90,11 +90,26 @@ guessNoData <- function(path){
   return(ans)
 }
 
+#' @title  Adapt file path. Change backslash to slash
+#' @description Fix paths so internal console recognize paths. Change backslash to backslash
+#' @param path File location
+#' @return File location String using slash as separator
+#' @examples
+#' newPath <- adaptFilePath('\temp\path\to\file\here.tif')
+#' newPath
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+adaptFilePath <- function(path){
+  # path = "C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python/s2res.py C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/sampledata/sampleTif.tif C:\\Users\\ig299\\AppData\\Local\\Temp\\RtmpwrUyVu/VM2024041715525605file51c6028258//out_surface_JQ2024041715525705file51c260d2c4b.tif 0.06788435 0.9989325 100 1 -9999 None"
+  return ( gsub(fixed = TRUE, '\\', '/', path) )
+}
+
 #' @title  Transforms suitability to resistance surface
 #' @description Run CDPOP model
 #' @param py Python location or executable. The string used in R command line to activate `cola`
 #' conda environment. Might change among computers versions
-#' @param src Python script location
+#' @param pyscript Python script location
 #' @param intif Path to the Suitability surface raster layer (TIF format)
 #' @param outtif Path to the resulting Surface Resistance (SR) raster layer (TIF format)
 #' @param param3 Suitability grid min value. Numeric value to cutoff the original layer.
@@ -110,7 +125,7 @@ guessNoData <- function(path){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                     src = system.file(package = 'cola', 'python/s2res.py'),
+                     pyscript = system.file(package = 'cola', 'python/s2res.py'),
                      intif, outtif,
                      param3, param4, param5, param6,
                      param7 = NULL, param8 = 'None'){
@@ -127,12 +142,19 @@ s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   ## Create CMD
-  (cmd_s2res <- paste0(py, ' ', src, ' ', intif, ' ', outtif, ' ',
-                       format(param3, scientific=F), ' ', format(param4, scientific=F),
-                       ' ', format(param5, scientific=F), ' ', format(param6, scientific=F),
-                       ' ', format(param7, scientific=F), ' ', param8))
+  (cmd_s2res <- paste0(py, ' ', pyscript, ' ',
+                       intif, ' ', outtif, ' ',
+                       format(param3, scientific=F), ' ',
+                       format(param4, scientific=F), ' ',
+                       format(param5, scientific=F), ' ',
+                       format(param6, scientific=F), ' ',
+                       format(param7, scientific=F), ' ',
+                       param8))
 
-  intCMD <- tryCatch(system(cmd_s2res, intern = TRUE, ignore.stdout = TRUE),
+  cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
+
+  intCMD <- tryCatch(system( cmd_s2res ,
+    intern = TRUE, ignore.stdout = TRUE),
                      error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                log =  intCMD) )
@@ -150,20 +172,21 @@ s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                       src = system.file(package = 'cola', 'python/create_source_points.py'),
+                       pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
                        intif, outshp, param3, param4, param5, param6 = 'None'){
   # param3 = 2
   # param4 =  95
   # param5 = 50
-  #src <- system.file(package = 'cola', 'python/create_source_points.py'
+  #pyscript <- system.file(package = 'cola', 'python/create_source_points.py'
   datapath <- tempFolder # datapath = tempFolder
-  (cmd_pts <- paste0(py, ' ', src, ' ', intif, ' ', outshp, ' ',
+  (cmd_pts <- paste0(py, ' ', pyscript, ' ', intif, ' ', outshp, ' ',
                      format(param3, scientific=F), ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      param6))
 
-  print(cmd_pts)
+  print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outtif, NA),
                log =  intCMD) )
@@ -182,7 +205,7 @@ points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                     src = system.file(package = 'cola', 'python/create_cdmat.py'),
+                     pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
                      inshp, intif, outcsv,
                      param3, param4,
                      param5 = 1, param6 = 'None'){
@@ -193,10 +216,12 @@ cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # [3] output file name
   # [4] distance threshold (in cost distance units)
 
-  # src <- system.file(package = 'cola', 'python/create_cdmat.py')
-  (cmd_cdmat <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outcsv,
+  # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
+  (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', format(param3, scientific=F),
                        ' ', param4, ' ', param5))
+
+  print(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outcsv), outtif, NA),
@@ -216,7 +241,7 @@ cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                   src = system.file(package = 'cola', 'python/lcc.py'),
+                   pyscript = system.file(package = 'cola', 'python/lcc.py'),
                    inshp, intif, outtif,
                    param4, param5, param6,
                    param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
@@ -232,13 +257,16 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   #   param7 <- guessNoData(intif)
   # }
 
-  (cmd_lcc <- paste0(py, ' ', src, ' ',
+  (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
                      inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      format(param6, scientific=F), " ",
                      format(param7, scientific=F), " ",
                      param8))
+
+  print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
@@ -258,7 +286,7 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                     src = system.file(package = 'cola', 'python/lcc_heavy.py'),
+                     pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
                      inshp, intif, outtif,
                      param4, param5, param6,
                     param7 = as.numeric(options('COLA_NCORES')),
@@ -283,7 +311,7 @@ lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
 
 
-  (cmd_lcc <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
+  (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      format(param6, scientific=F), " ",
@@ -294,7 +322,8 @@ lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      '50'
   ))
 
-  print(cmd_lcc)
+  print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
   file.remove(c(h5file1, h5file2))
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -313,7 +342,7 @@ lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
 crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                src = system.file(package = 'cola', 'python/crk.py'),
+                pyscript = system.file(package = 'cola', 'python/crk.py'),
                 inshp, intif, outtif,
                 param4, param5, param6,
                 param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
@@ -325,11 +354,12 @@ crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # [5] kernel shape (linear, gaussian)
   # [5] kernel volume
 
-  (cmd_crk <- paste0(py, ' ', src, ' ', inshp, ' ', intif, ' ', outtif, ' ',
+  (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      format(param6, scientific=F), ' ',
                      format(param7, scientific=F), ' ', param8))
+  print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
@@ -348,7 +378,7 @@ crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
 pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                   src = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
+                   pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
                    tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshp, outtif,
@@ -393,7 +423,7 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # Corridor tolerance. Should be the same tolerance used in the lcc script
   #corrTol = sys.argv[8]#1000
 
-  # src <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
+  # pyscript <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
 
   # incrk <- '/data/temp/RY2024011519163805file176c0d742621ed/out_crk_IF2024011520212105file176c0d2f0a3994.tif'
   # inlcc <- '/data/temp/RY2024011519163805file176c0d742621ed/out_lcc_GG2024011519164505file176c0d5f4b6267.tif'
@@ -401,13 +431,15 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # outtif <- '/data/temp/LA2024011522400305file1a50376cab710d//out_pri_EX2024011522411005file1a5037c8aef66.tif'
 
   (cmd_prio <- paste0(py, ' ',
-                      src, ' ',
+                      pyscript, ' ',
                       tif, ' ',
                       incrk, ' ', inlcc, ' ',
                       maskedcsname, ' ',
                       outshp, ' ', outtif, ' ',
                       format(param7, scientific=F), " ",
                       format(param8, scientific=F)))
+
+  print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
 
 
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -432,7 +464,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
                      param5 = 0.5, param6 = 1000){
 
 
-  #(base) C:\Users\Admin\dockerdata\CDPOP\src>
+  #(base) C:\Users\Admin\dockerdata\CDPOP\pyscript>
   #  python CDPOP.py %userprofile%\dockerdata\CDPOP\data invars.csv outLinux
   ### Should be Y in the column output_unicor
 
@@ -476,17 +508,19 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
   # Corridor tolerance. Should be the same tolerance used in the lcc script
   #corrTol = sys.argv[8]#1000
 
-  src <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
+  pyscript <- system.file(package = 'cola', 'python/prioritize_core_conn.py')
 
 
   (cmd_prio <- paste0(py, ' ',
-                      src, ' ',
+                      pyscript, ' ',
                       tif, ' ',
                       incrk, ' ', inlcc, ' ',
                       maskedcsname, ' ',
                       outshp, ' ', outtif, ' ',
                       format(param5, scientific=F), " ",
                       format(param6, scientific=F)))
+
+  print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
 
 
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
