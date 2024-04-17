@@ -108,13 +108,13 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   ```
   
   
- ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. Here the log of the console of the reported case and solution:
+ ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. Here the log of the console of the reported case and solution: 
  ```
-> devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
+> devtools::install_github('connectingLandscapes/cola')  # <----- HERE first try 
 Downloading GitHub repo connectingLandscapes/cola@HEAD
 Error in utils::download.file(url, path, method = method, quiet = quiet,  : 
   download from 'https://api.github.com/repos/connectingLandscapes/cola/tarball/HEAD' failed
-> devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
+> devtools::install_github('connectingLandscapes/cola') # <----- HERE second try, working, with no changes
 Downloading GitHub repo connectingLandscapes/cola@HEAD
 ── R CMD build ───────────────────────────────────────────────────────────────────────────────────────
 ✔  checking for ... 
