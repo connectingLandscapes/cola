@@ -348,7 +348,7 @@ crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
 pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                   src = system.file(package = 'cola', 'python/prioritize_core_conn.py')
+                   src = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
                    tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshp, outtif,

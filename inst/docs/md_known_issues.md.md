@@ -97,9 +97,29 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   
  ***Solution:*** Try `remove.packages('cola')` to remove previous installations, or checBe sure to close all R sessions that might be using or writing the folder with the libraries. Then, try the command again. If the error persist, when closing all the R sessions, check if the library folder (found them by typing: `.libPaths()` or `sapply(.libPaths(), list.files, pattern = 'cola', recursive = FALSE)`) still have the lock file or folder, and remove it manually.
  
-    
+    -------------
 
 
+ **Known issue:** Can't install the package, probbaly for a interruption in the internet connection or was interrupted by a process in your system. You can get the message: 
+ 
+ ```
+ Error in utils::download.file(url, path, method = method, quiet = quiet,  : 
+  download from 'https://api.github.com/repos/connectingLandscapes/cola/tarball/HEAD' failed
+  ```
+  
+  
+ ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. Here the log of the console of the reported case and solution:
+ ```
+> devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
+Downloading GitHub repo connectingLandscapes/cola@HEAD
+Error in utils::download.file(url, path, method = method, quiet = quiet,  : 
+  download from 'https://api.github.com/repos/connectingLandscapes/cola/tarball/HEAD' failed
+> devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
+Downloading GitHub repo connectingLandscapes/cola@HEAD
+── R CMD build ───────────────────────────────────────────────────────────────────────────────────────
+✔  checking for ... 
+
+```
 -------------
 -------------
 
