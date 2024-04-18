@@ -1873,7 +1873,7 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log,  # _______
                          '\nCreating resistance surface');updateVTEXT(rv$log) # _______
 
-        in_surf_7 <- ifelse(input$in_surf_7 == '', yes = NULL, no = input$in_surf_7)
+        in_surf_7 <- ifelse(input$in_surf_7 == '', yes = -9999, no = input$in_surf_7)
 
         hs2rs_file <- s2res_py(py = py,
                                intif = rv$hs,
@@ -1882,7 +1882,7 @@ server <- function(input, output, session) {
                                param4 = as.numeric(input$in_surf_4),
                                param5 = as.numeric(input$in_surf_5),
                                param6 = as.numeric(input$in_surf_6),
-                               param7 = as.numeric(input$in_surf_7),
+                               param7 = in_surf_7,
                                param8 = 'None')
 
         if(!is.na(hs2rs_file$file)){
@@ -1907,34 +1907,6 @@ server <- function(input, output, session) {
           # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = =
           makeLL( )
 
-          {
-            #
-            # leafsurface <<- rv$llmap %>% removeControl('legendSurface') %>% removeImage('SurfaceResistance')  %>%
-            #   addRasterImage(hs2rs_tif, colors = rsPal, opacity = .7,
-            #                  layerId = 'SurfaceResistance',
-            #                  group = "Surface resistance") %>%
-            #   addLegend(pal =  rsPal, values = hs2rs_tif[], layerId = 'legendSurface',
-            #             position = 'bottomleft',
-            #             title= "Resistance surface"#, opacity = .3
-            #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-            #   )  %>%  leaflet::addLayersControl(
-            #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-            #     overlayGroups = c("Habitat suitability", "Surface resistance"),
-            #     options =  leaflet::layersControlOptions(collapsed = FALSE)
-            #   ) %>% clearBounds() %>%  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-            #
-            # rv$llmap <<- llmap <<- leafsurface
-            # updateLL(leafsurface)
-            # # leafsurface
-            # #llmap
-            # rv$llmap
-
-            # pointssurface <<- leafsurface
-            # output$ll_map_points <- leaflet::renderLeaflet({pointssurface})
-            #
-            # distancesurface <<- leafsurface
-            # output$ll_map_dist <- leaflet::renderLeaflet({distancesurface})
-          }
         } else {
           rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resitance" TIF file')
           updateVTEXT(rv$log)
@@ -2329,11 +2301,11 @@ server <- function(input, output, session) {
                'rv$hs', 'rv$tif')
 
         points_file <- points_py(py = py,
-                                  intif = as.character(rv$tif),
-                                  out_pts,
-                                  as.numeric(input$in_points_4),
-                                  as.numeric(input$in_points_3),
-                                  as.numeric(input$in_points_5))
+                                 intif = as.character(rv$tif),
+                                 outshp = out_pts,
+                                 param3 = as.numeric(input$in_points_4),
+                                 param4 = as.numeric(input$in_points_3),
+                                 param5 = as.numeric(input$in_points_5))
       }
 
       if(in_points_ly == 'HabitatSuitability'){
@@ -2342,11 +2314,11 @@ server <- function(input, output, session) {
                "'HS'", 'rv$in_points_ly','in_points_ly',
                'rv$hs', 'rv$tif')
         points_file <- points_py(py = py,
-                                  intif = as.character(rv$hs),
-                                  out_pts,
-                                  as.numeric(input$in_points_3),
-                                  as.numeric(input$in_points_4),
-                                  as.numeric(input$in_points_5))
+                                 intif = as.character(rv$hs),
+                                 outshp = out_pts,
+                                 param3 = as.numeric(input$in_points_3),
+                                 param4 = as.numeric(input$in_points_4),
+                                 param5 = as.numeric(input$in_points_5))
       }
 
       # inPts <<- switch (in_points_ly,
@@ -2774,8 +2746,7 @@ server <- function(input, output, session) {
         out_lcc <- lcc_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
                            param4 = as.numeric(input$in_lcc_4),
                            param5 = as.numeric(input$in_lcc_5),
-                           param6 = as.numeric(input$in_lcc_6),
-                           param7 = 1)
+                           param6 = as.numeric(input$in_lcc_6))
 
         # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
 
@@ -2836,11 +2807,13 @@ server <- function(input, output, session) {
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
         out_lcc <- lccHeavy_py(py = py, tempFolder = tempFolder,
-                            inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
+                            inshp = rv$pts,
+                            intif = rv$tif,
+                            outtif = out_lcc,
                             param4 = as.numeric(input$in_lcc_4),
                             param5 = as.numeric(input$in_lcc_5),
-                            param6 = as.numeric(input$in_lcc_6),
-                            param7 = 1)
+                            param6 = as.numeric(input$in_lcc_6))
+
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
 
@@ -3019,8 +2992,7 @@ server <- function(input, output, session) {
         out_crk <- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
                            param4 = as.numeric(input$in_crk_4),
                            param5 = (input$in_crk_5),
-                           param6 = as.numeric(input$in_crk_6),
-                           param7 = 1)
+                           param6 = as.numeric(input$in_crk_6))
         #out_crk_no_data <- gdal_nodata
 
         tElapCrk <- Sys.time() - tStartCrk
@@ -3119,6 +3091,8 @@ server <- function(input, output, session) {
                           outtif = out_pri_tif,
                           param5 = as.numeric(input$in_pri_5), # 0.5
                           param6 = as.numeric(input$in_lcc_6))
+        ## missing param7 and 8 by user
+
 
         #out_crk_no_data <- gdal_nodata
 

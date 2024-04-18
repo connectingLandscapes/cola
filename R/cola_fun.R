@@ -172,8 +172,9 @@ s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                       pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
-                       intif, outshp, param3, param4, param5, param6 = 'None'){
+                      pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
+                      intif, outshp,
+                      param3, param4, param5, param6 = 'None'){
   # param3 = 2
   # param4 =  95
   # param5 = 50
@@ -188,7 +189,7 @@ points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
-  return( list(file = ifelse(file.exists(outshp), outtif, NA),
+  return( list(file = ifelse(file.exists(outshp), outshp, NA),
                log =  intCMD) )
 
 }
@@ -224,7 +225,7 @@ cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   print(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
-  return( list(file = ifelse(file.exists(outcsv), outtif, NA),
+  return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
                log =  intCMD) )
 }
 
@@ -244,7 +245,7 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/lcc.py'),
                    inshp, intif, outtif,
                    param4, param5, param6,
-                   param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
+                   param7 = as.numeric(Sys.getenv('COLA_NCORES')), param8 = 'None'){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -289,7 +290,7 @@ lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
                      inshp, intif, outtif,
                      param4, param5, param6,
-                    param7 = as.numeric(options('COLA_NCORES')),
+                    param7 = as.numeric(Sys.getenv('COLA_NCORES')),
                     param8 = 'None', tempFolder = rootPath){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
@@ -345,7 +346,7 @@ crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                 pyscript = system.file(package = 'cola', 'python/crk.py'),
                 inshp, intif, outtif,
                 param4, param5, param6,
-                param7 = as.numeric(options('COLA_NCORES')), param8 = 'None'){
+                param7 = as.numeric(Sys.getenv('COLA_NCORES')), param8 = 'None'){
 
   # [1] source points
   # [2] resistance surface
@@ -382,7 +383,8 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                    tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshp, outtif,
-                   param7 = 0.5, param8 = 1000){
+                   param7 = 0.5,
+                   param8 = 1000){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
