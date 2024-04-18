@@ -767,7 +767,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
         Renviron[pos] <- 'COLA_VIZ_RES_NROW=1000'
 
 
-        cat(Renviron, sep = '\n')
+        #cat(Renviron, sep = '\n')
         writeLines(text = Renviron, con = renv)
 
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))

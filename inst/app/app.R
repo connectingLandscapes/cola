@@ -46,7 +46,12 @@
 {
   ## Initials ---
 
-  ### 0 Initials  -----
+  os <- Sys.info()[c("sysname")]
+  # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
+  #   setwd('N:/Mi unidad/IG/server_IG/gedivis')
+  #   #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
+  # }
+
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
   (dataFolder <- ifelse( COLA_DATA_PATH == '' & dir.exists(COLA_DATA_PATH),
@@ -2755,8 +2760,7 @@ server <- function(input, output, session) {
 
         #rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
 
-
-        pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+        # pdebug(devug=devug,sep='\n',pre='\n \t LCC ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
 
         if(!file.exists(out_lcc$file)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
@@ -2768,12 +2772,13 @@ server <- function(input, output, session) {
           rv$lccready <- TRUE
           rv$lcc_sp <- terra::rast(out_lcc$file)
 
-          rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp, na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
           #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+
 
           rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
                                                          reverse = TRUE,
-                                                         domain = rng_newtif+0.0,
+                                                         domain = rv$lcc_rng+0.0,
                                                          na.color = "transparent")
           makeLL( )
         }
@@ -3089,8 +3094,8 @@ server <- function(input, output, session) {
                           maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
                           outshp = out_pri_shp,
                           outtif = out_pri_tif,
-                          param5 = as.numeric(input$in_pri_5), # 0.5
-                          param6 = as.numeric(input$in_lcc_6))
+                          param7 = as.numeric(input$in_pri_5), # 0.5
+                          param8 = as.numeric(input$in_lcc_6))
         ## missing param7 and 8 by user
 
 
@@ -3283,32 +3288,44 @@ server <- function(input, output, session) {
 
   #
   ####### > Download buttons  ------------------
-
+  # out_crk$file points_file$file out_pri_tif
   {
     output$ptsDwn <- downloadHandler(
-      filename = paste0('points_',
-                        ifelse(!is.null(rv$inPtsSessID), rv$inPtsSessID, rv$sessionID),
+      filename = paste0('points',
+                        #"_",
+                        #ifelse(!is.null(rv$inPtsSessID), rv$inPtsSessID, rv$sessionID),
                         '.zip'),
       content = function(filename) {
         if(!is.null( rv$pts) ){
           # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
           #filename <- paste0('points_', rv$inPointsSessID , '.zip')
-          zip_file <- gsub(tempdir(), '',
-                           file.path(rv$tempFolder , filename))
+          zip_file <- paste0(tempfile(), '_tempPts.zip')
+                                #'',
+                           #file.path(rv$tempFolder ,
+                                     #filename)
+                           #)
           #zip_file <- file.path(tempdir(), filename)
+          print(paste0('Making temp zip file: ', zip_file))
 
           shp_files <- list.files(path = rv$tempFolder,
                                   pattern = "out_simpts_", full.names = TRUE)
+          print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
 
-          # the following zip method works for me in linux but substitute with whatever method working in your OS
-          zip_command <<- paste("zip -j",
-                                zip_file,
-                                paste(shp_files, collapse = " "))
 
-          pdebug(devug=devug,sep='\n',pre='\n---- WritePTS\n',
-                 'filename', 'zip_file') # _____________  , 'zip_command'
+          if (os == 'Windows'){
+            zip(zipfile = zip_file, files = paste0(shp_files), flags = '-r9X')
+          } else {
 
-          system(zip_command)
+            # the following zip method works for me in linux but substitute with whatever method working in your OS
+            zip_command <<- paste("zip -j",
+                                  zip_file,
+                                  paste(shp_files, collapse = " "))
+
+            pdebug(devug=devug,sep='\n',pre='\n---- WritePTS\n',
+                   'filename', 'zip_file') # _____________  , 'zip_command'
+
+            system(zip_command)
+          }
           # copy the zip file to the file argument
           file.copy(zip_file, filename)
           # remove all the files created
@@ -3318,15 +3335,20 @@ server <- function(input, output, session) {
 
 
     output$priDwn <- downloadHandler(
-      filename = paste0('prioritization_',
-                        ifelse(!is.null(rv$inPriSessID), rv$inPriSessID, rv$sessionID),
+      filename = paste0('prioritization',
+                        '',
+                        #ifelse(!is.null(rv$inPriSessID), rv$inPriSessID, rv$sessionID),
                         '.zip'),
       content = function(filename) {
         if(!is.null( rv$pritif ) & !is.null( rv$prishp ) ){
           # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
           #filename <- paste0('points_', rv$inPointsSessID , '.zip')
-          zip_file <- gsub(tempdir(), '',
-                           file.path(rv$tempFolder , filename))
+          # zip_file <- gsub(tempdir(), '',
+          #                  #file.path(rv$tempFolder ,
+          #                            filename)
+          #                  #)
+          zip_file <- paste0(tempfile(), '_tempPrio.zip')
+
           #zip_file <- file.path(tempdir(), filename)
 
 
@@ -3337,16 +3359,20 @@ server <- function(input, output, session) {
           shp_files <- list.files(path = rv$tempFolder,
                                   pattern = rv$inpriSessID, full.names = TRUE)
 
+          if (os == 'Windows'){
+            zip(zipfile = zip_file, shp_files, flags = '-r9X')
+          } else {
 
-          # the following zip method works for me in linux but substitute with whatever method working in your OS
-          zip_command <<- paste("zip -j",
-                                zip_file,
-                                paste(shp_files, collapse = " "))
+            # the following zip method works for me in linux but substitute with whatever method working in your OS
+            zip_command <<- paste("zip -j",
+                                  zip_file,
+                                  paste(shp_files, collapse = " "))
 
-          pdebug(devug=devug,sep='\n',pre='\n---- WritePTI\n',
-                 'filename', 'zip_file') # _____________  , 'zip_command'
+            pdebug(devug=devug,sep='\n',pre='\n---- WritePTI\n',
+                   'filename', 'zip_file') # _____________  , 'zip_command'
 
-          system(zip_command)
+            system(zip_command)
+          }
           # copy the zip file to the file argument
           file.copy(zip_file, filename)
           # remove all the files created
