@@ -68,11 +68,11 @@
   base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
 
 
-  (COLA_VIZ_THREs_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THREs_PIX')))
-  (COLA_VIZ_THREs_PIX <- as.numeric(
-    ifelse( is.numeric(COLA_VIZ_THREs_PIX) & !is.na(COLA_VIZ_THREs_PIX),
-            yes = COLA_VIZ_THREs_PIX, no = 1000000) ))
-  base::options('COLA_VIZ_THREs_PIX' = COLA_VIZ_THREs_PIX)
+  (COLA_VIZ_THRES_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THRES_PIX')))
+  (COLA_VIZ_THRES_PIX <- as.numeric(
+    ifelse( is.numeric(COLA_VIZ_THRES_PIX) & !is.na(COLA_VIZ_THRES_PIX),
+            yes = COLA_VIZ_THRES_PIX, no = 1000000) ))
+  base::options('COLA_VIZ_THRES_PIX' = COLA_VIZ_THRES_PIX)
 
 
   (COLA_VIZ_RES_NCOL <- as.numeric(Sys.getenv('COLA_VIZ_RES_NCOL')))
@@ -493,7 +493,7 @@ server <- function(input, output, session) {
     #rasname <- r@pnt@.xData$filenames()
     (resamPath <- gsub(x = rastPath,
                        '.tif$', '_resam.tif'))
-    if(totpixels > options('COLA_VIZ_THREs_PIX')){
+    if(totpixels > options('COLA_VIZ_THRES_PIX')){
       #if(file.exists()){
       if (!file.exists(resamPath)){
 

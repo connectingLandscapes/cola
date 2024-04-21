@@ -6,6 +6,7 @@
 # cola::diagnose_cola()
 # cola::setup_cola()
 # Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
+# Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THREs_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
 # cola::setup_cola_dss()
 # cola::cola_dss()
 #

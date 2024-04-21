@@ -150,6 +150,7 @@ s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        format(param6, scientific=F), ' ',
                        format(param7, scientific=F), ' ',
                        param8))
+  cat('\n\n\tCMD:')
 
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
 
@@ -185,6 +186,7 @@ points_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      param6))
+  cat('\n\n\tCMD:')
 
   print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
 
@@ -221,6 +223,8 @@ cdmat_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', format(param3, scientific=F),
                        ' ', param4, ' ', param5))
+
+  cat('\n\n\tCMD:')
 
   print(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
 
@@ -265,7 +269,7 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      format(param6, scientific=F), " ",
                      format(param7, scientific=F), " ",
                      param8))
-
+  cat('\n\n\tCMD:')
   print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
 
@@ -322,7 +326,7 @@ lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      h5file2, " ",
                      '50'
   ))
-
+  cat('\n\n\tCMD:')
   print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
   file.remove(c(h5file1, h5file2))
@@ -353,13 +357,18 @@ crk_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # [3] output file name
   # [4] distance threshold (in cost distance units)
   # [5] kernel shape (linear, gaussian)
-  # [5] kernel volume
+  # [6] kernel volume
+  # [7] cores
+  # [8] proj
 
   (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
-                     format(param4, scientific=F), ' ',
-                     format(param5, scientific=F), ' ',
-                     format(param6, scientific=F), ' ',
-                     format(param7, scientific=F), ' ', param8))
+                     format(param4, scientific=F), ' ', # [4] distance threshold
+                     format(param5, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
+                     format(param6, scientific=F), ' ', # [6] kernel volume
+                     format(param7, scientific=F), ' ', # [7] cores
+                     param8) # [8] proj
+   )
+  cat('\n\n\tCMD:')
   print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)

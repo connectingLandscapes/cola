@@ -24,7 +24,7 @@ Some of the different computers might have particular conditions or requirements
 
 
 
-  ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md) for potential solutions*** 
+  ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md) (open in new tab if launched in R/Rstudio/Shiny) for potential solutions*** 
    
 
 ------------------
