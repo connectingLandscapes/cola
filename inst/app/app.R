@@ -3998,14 +3998,15 @@ if (FALSE){
                                     tags$div(
                                       class = "container",
 
-                                      fluidRow(
-                                        column(3, textInput("pdfurl", "PDF URL"))
-                                      ),
+                                      # fluidRow(
+                                      #   column(3, textInput("pdfurl", "PDF URL"))
+                                      # ),
                                       fluidRow(
                                         #col(6, htmlOutput('pdfviewer')),
                                         column(6, tags$iframe(style="height:600px; width:100%",
                                                            #src="http://localhost/ressources/pdf/R-Intro.pdf"
                                                            #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                                           #src = system.file(package = 'cola', 'docs/pdf.pdf')
                                                            src = system.file(package = 'cola', 'docs/pdf.pdf')
                                                            )
                                             )
@@ -4093,40 +4094,3 @@ if (FALSE){
 
 
 shinyApp(ui, server)
-
-# https://rdrr.io/github/jcrodriguez1989/shinyParallel/f/README.md
-#shinyParallel::runApp( ports = c('3838', '3839'), max.sessions = 1, appDir = shinyApp(ui, server))
-
-
-
-
-## LINUX SERVER COPY -------------
-# http://18.190.126.82:3838/cola/
-# sudo cp /home/shiny/connecting-landscapes/R/app.R /srv/shiny-server/cola/app.R
-# cp /home/shiny/connecting-landscapes/R/app.R /srv/shiny-server/cola/app.R
-# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
-
-# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
-# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
-# http://18.190.126.82:3838/connecting-landscapes
-# http://18.190.126.82:3838/connecting-landscapes/?admin
-
-# system('sudo shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change something"; git push')
-# git pull main --rebase --autostash
-# sudo chown -R shiny:shiny .
-# git stash
-# remove before commit, split or lost it
-# git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
-
-
-# https://github.com/settings/tokens/1354187156/regenerate
-
-# git pull connectscape
-# cd /home/shiny/connecting-landscapes/; git pull .
-
-# R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
-# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
-# sudo chown -R shiny:shiny .
-
-# sudo cat /var/log/shiny-server/cola
-# sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R### COLA web app.
