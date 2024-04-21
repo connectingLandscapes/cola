@@ -246,16 +246,7 @@ If all libraries were installed, the following
 ```
 
 
-#####  **5. Load cola and run some functions:**
-
-Let's run one of the functions. Habitat suitability to habitat resistance: s2res
-```
-cola::cola_dss()
-
-```
-
-
-#####  **5. Load cola and run some functions:**
+#####  **4. Load cola and run some functions:**
 
 Let's run one of the functions. Habitat suitability to habitat resistance: s2res
 
@@ -273,11 +264,14 @@ if(file.exists(out_tif)){
 ```
 
 
-#####  **6. Uninstall cola **
+#####  **5. Uninstall cola **
 
 ```
 # Not run
+# reticulate::conda_remove('cola')
 # remove.packages( "cola" )
+
+
 ```
 
 
@@ -311,14 +305,3 @@ There's some parameters we can customize for `cola` performance, in each of the 
  
  This file is reset to the default values every time you run `cola::setup_cola()`.
  
- 
- 
- 
-
-#####  **6. Uninstall cola **
-
-```
-# Not run
-# remove.packages( "cola" )
-```
-
