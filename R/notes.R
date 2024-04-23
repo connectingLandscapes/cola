@@ -109,6 +109,7 @@ if (FALSE){
 # sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
 
 # sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+
 ## orig
 # cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
 # shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
@@ -119,7 +120,8 @@ if (FALSE){
 # http://18.190.126.82:3838/connecting-landscapes/?admin
 # http://18.190.126.82:3838/connecting-landscapes/?admin1
 
-# system('sudo shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push')
+# sudo su shiny; cd /home/shiny/cola; git add . ; git commit -m " "; git push
+# sudo su shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push
 # git pull main --rebase --autostash
 # sudo chown -R shiny:shiny .
 # git stash
