@@ -754,13 +754,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
         Renviron[pos] <- 'COLA_DSS_UPL_MB=250'
 
-        pos <- grep('COLA_VIZ_THREs_PIX', Renviron)
+        pos <- grep('COLA_VIZ_THRES_PIX', Renviron)
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-        Renviron[pos] <- 'COLA_VIZ_THREs_PIX=1000000'
+        Renviron[pos] <- 'COLA_VIZ_THRES_PIX=1000000'
 
-        pos <- grep('COLA_VIZ_RES_NROW', Renviron)
+        pos <- grep('COLA_VIZ_RES_NCOL', Renviron)
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-        Renviron[pos] <- 'COLA_VIZ_RES_NROW=1000'
+        Renviron[pos] <- 'COLA_VIZ_RES_NCOL=1000'
 
         pos <- grep('COLA_VIZ_RES_NROW', Renviron)
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
@@ -775,7 +775,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
 
 
-      cat (sep = '', '    === Ready to connect landscapes! ===\n')
+      cat (sep = '', '    === Ready to connect landscapes! ===\n\t Please restart R to update the new settings')
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
