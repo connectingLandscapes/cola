@@ -290,7 +290,7 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lccHeav_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+lccHeavy_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
                      inshp, intif, outtif,
                      param4, param5, param6,

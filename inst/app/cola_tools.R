@@ -556,19 +556,12 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 
 
 ### time stamp -----
-## Create temporal ID
-sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE){
-  (tempID <- basename(tempfile()))
-  (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
-
-  if( short){
-    (sessionID <- timeMark)
-  } else {
-    (sessionID <- paste0( timeMark, sep, tempID ))
-  }
-
+sessionIDgen <- function(letter = TRUE, sep = ''){
+  tempID <- basename(tempfile())
+  timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
+  sessionID <- paste0( timeMark, sep, tempID )
   if (letter){
-    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1),
+    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1),
                         sep, sessionID)
   }
   sessionID

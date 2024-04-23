@@ -68,11 +68,11 @@
   base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
 
 
-  (COLA_VIZ_THRES_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THRES_PIX')))
-  (COLA_VIZ_THRES_PIX <- as.numeric(
-    ifelse( is.numeric(COLA_VIZ_THRES_PIX) & !is.na(COLA_VIZ_THRES_PIX),
-            yes = COLA_VIZ_THRES_PIX, no = 1000000) ))
-  base::options('COLA_VIZ_THRES_PIX' = COLA_VIZ_THRES_PIX)
+  (COLA_VIZ_THREs_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THREs_PIX')))
+  (COLA_VIZ_THREs_PIX <- as.numeric(
+    ifelse( is.numeric(COLA_VIZ_THREs_PIX) & !is.na(COLA_VIZ_THREs_PIX),
+            yes = COLA_VIZ_THREs_PIX, no = 1000000) ))
+  base::options('COLA_VIZ_THREs_PIX' = COLA_VIZ_THREs_PIX)
 
 
   (COLA_VIZ_RES_NCOL <- as.numeric(Sys.getenv('COLA_VIZ_RES_NCOL')))
@@ -139,19 +139,24 @@
   }
 
 
-  # Functions ----
   ### time stamp -----
-  sessionIDgen <- function(letter = TRUE, sep = ''){
-    tempID <- basename(tempfile())
-    timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-    sessionID <- paste0( timeMark, sep, tempID )
+  ## Create temporal ID
+  sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE){
+    (tempID <- basename(tempfile()))
+    (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
+
+    if( short){
+      (sessionID <- timeMark)
+    } else {
+      (sessionID <- paste0( timeMark, sep, tempID ))
+    }
+
     if (letter){
-      sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1),
+      sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1),
                           sep, sessionID)
     }
     sessionID
   }
-
 
 
   ## Clean files
@@ -498,7 +503,7 @@ server <- function(input, output, session) {
     #rasname <- r@pnt@.xData$filenames()
     (resamPath <- gsub(x = rastPath,
                        '.tif$', '_resam.tif'))
-    if(totpixels > options('COLA_VIZ_THRES_PIX')){
+    if(totpixels > options('COLA_VIZ_THREs_PIX')){
       #if(file.exists()){
       if (!file.exists(resamPath)){
 
@@ -1173,6 +1178,7 @@ server <- function(input, output, session) {
   output$ll_coord <- leaflet::renderLeaflet({ rv$llmap })
   updateLL(rv$llmap)
   updateVTEXT(rv$log) #'Waiting for inputs')
+  params_txt <- list(hs = FALSE, sr = FALSE, pts = FALSE, lcc = FALSE, crk = FALSE)
   params_txt <- updateParamsTEXT(params_txt = params_txt, start = TRUE)
 
 
@@ -1636,7 +1642,7 @@ server <- function(input, output, session) {
 
   output$cdpop_box1 <- output$dist_box1 <- shinydashboard::renderValueBox({
     valueBox( "Not ready", '', #"Ready", icon = icon("thumbs-up", lib = "glyphicon"),
-      color = "red"
+              color = "red"
     )
   })
 
@@ -2582,7 +2588,7 @@ server <- function(input, output, session) {
         output$dist_box1 <- shinydashboard::renderValueBox({
           valueBox("YES", "Matrix: Done",
                    #, icon = icon("thumbs-up", lib = "glyphicon"),
-            color = "green" )
+                   color = "green" )
         })
       }
     }
@@ -2711,7 +2717,7 @@ server <- function(input, output, session) {
         rv$pts <- inShp$layer
         rv$shp <- inShp$shp
         rv$log <- paste0(rv$log, ' -- Shapefile loaded');updateVTEXT(rv$log) # _______
-        params_txt <- updateParamsTEXT(params_txt = params_txt, shp = TRUE)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
         pdebug(devug=devug,sep='\n',pre='---- LOAD SHP LCC\n','rv$ptsready', 'rv$pts', 'rv$inLccSessID') # _____________
 
@@ -3638,6 +3644,8 @@ if (FALSE){
           shinydashboard::menuItem("Connectivity - prioritization",
                                    tabName = "tab_priori", icon = icon("trophy")),
 
+          shinydashboard::menuItem("Compare results", tabName = "tab_compare", icon = icon("clone")),
+
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
           shinydashboard::menuItem("PDF", tabName = "tab_pdf", icon = icon("code-fork")),
           shinydashboard::menuItem("Run locally", tabName = "tab_local", icon = icon("code-fork"))
@@ -3887,8 +3895,8 @@ if (FALSE){
                          ),
                          tags$td(#style = "width: 60%",
                            align = "center",
-                           textInput('name_surf', label = 'New layer name:', value = "HabSui_A",
-                                     width = NULL, placeholder = 'HabSui_A')),
+                           textInput('name_surf', label = 'New layer name:', value = "",
+                                     width = NULL, placeholder = 'NameOfNewLayertoCreate')),
                          tags$td(align = "left",
                                  actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play"))),
                          tags$td(align = "left",
@@ -4111,24 +4119,22 @@ if (FALSE){
           shinydashboard::tabItem(
             tabName = 'tab_pdf',
             mainPanel(
-
               tags$div(
                 class = "container",
-
-                row(
-                  col(3, textInput("pdfurl", "PDF URL"))
+                rowx(
+                  colx(3, textInput("pdfurl", "PDF URL"))
                 ),
-                row(
+                rowx(
                   #col(6, htmlOutput('pdfviewer')),
-                  col(6, tags$iframe(style="height:600px; width:100%",
+                  colx(6, tags$iframe(style="height:600px; width:100%",
                                      #src="http://localhost/ressources/pdf/R-Intro.pdf"
                                      #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
                                      src="pdf.pdf"
-                  ))
+                                     )
+                  )
                 )
               )
             )
-
           ),
 
           ##### UI GENETICS ----
