@@ -303,6 +303,29 @@ def is_float(numString):
     else:
         return False
 
+def is_floatpy3(element: any) -> bool:
+    """
+    From https://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python/20929881#20929881
+    Parameters
+    ----------
+    element : any
+        DESCRIPTION.
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    """
+    #If you expect None to be passed:
+    if element is None: 
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
+
 def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=False, Cshape=0.1, NewMin=0, NewMax=1):
     """
     Rescales numbers using old and new ranges as references. If old value
