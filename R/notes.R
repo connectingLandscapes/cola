@@ -100,3 +100,41 @@ if (FALSE){
 'C:/Users/Admin/Documents/R/win-library/4.0/usethis/html/ini'
 
 # Rprofile.site
+
+
+
+# """""""" ========== -------------------
+#
+# sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
+# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
+
+# sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+## orig
+# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
+# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
+
+# sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/colashiny/connecting-landscapes/. -R
+# shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes ', max.sessions = 20, users.per.session = 10)
+# http://18.190.126.82:3838/connecting-landscapes
+# http://18.190.126.82:3838/connecting-landscapes/?admin
+# http://18.190.126.82:3838/connecting-landscapes/?admin1
+
+# system('sudo shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push')
+# git pull main --rebase --autostash
+# sudo chown -R shiny:shiny .
+# git stash
+# remove before commit, split or lost it
+# git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
+
+
+# https://github.com/settings/tokens/1354187156/regenerate
+
+# git pull connectscape
+# cd /home/shiny/connecting-landscapes/; git pull .
+
+# R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
+# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
+# sudo chown -R shiny:shiny .
+
+# sudo cat /var/log/shiny-server/cola
+# sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R### COLA web app.

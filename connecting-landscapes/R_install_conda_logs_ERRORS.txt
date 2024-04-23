@@ -1,0 +1,884 @@
+# R command:
+> reticulate::py_install(
++   packages = c('networkit', 'networkx', 'rasterio', 'pytables', 
++                'ipykernel', 'pandas', 'geopandas', 'numba', 'scikit-image', 'KDEpy'), 
++   envname = 'colaR3')
+
+# R Console: 
+Using Python: C:/Users/Admin/AppData/Local/r-miniconda/envs/r-reticulate/python.exe
+Creating virtual environment "colaR3" ... Done!
+Installing packages: "pip", "wheel", "setuptools", "numpy"
+Collecting pip
+  Downloading https://files.pythonhosted.org/packages/a4/6d/6463d49a933f547439d6b5b98b46af8742cc03ae83543e4d7688c2420f8b/pip-21.3.1-py3-none-any.whl (1.7MB)
+Collecting wheel
+  Downloading https://files.pythonhosted.org/packages/27/d6/003e593296a85fd6ed616ed962795b2f87709c3eee2bca4f6d0fe55c6d00/wheel-0.37.1-py2.py3-none-any.whl
+Collecting setuptools
+  Downloading https://files.pythonhosted.org/packages/b0/3a/88b210db68e56854d0bcf4b38e165e03be377e13907746f825790f3df5bf/setuptools-59.6.0-py3-none-any.whl (952kB)
+Collecting numpy
+  Downloading https://files.pythonhosted.org/packages/ea/bc/da526221bc111857c7ef39c3af670bbcf5e69c247b0d22e51986f6d0c5c2/numpy-1.19.5-cp36-cp36m-win_amd64.whl (13.2MB)
+Installing collected packages: pip, wheel, setuptools, numpy
+  Found existing installation: pip 18.1
+    Uninstalling pip-18.1:
+      Successfully uninstalled pip-18.1
+  Found existing installation: setuptools 40.6.2
+    Uninstalling setuptools-40.6.2:
+      Successfully uninstalled setuptools-40.6.2
+Successfully installed numpy-1.19.5 pip-21.3.1 setuptools-59.6.0 wheel-0.37.1
+Virtual environment 'colaR3' successfully created.
+Using virtual environment "colaR3" ...
+Collecting networkit
+  Downloading networkit-10.1.tar.gz (5.7 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_ad9585faa82544be9085a79cb3faa424\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_ad9585faa82544be9085a79cb3faa424\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-zdjkz57k'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_ad9585faa82544be9085a79cb3faa424\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_ad9585faa82544be9085a79cb3faa424\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/b1/1f/1a7bf202ca0ea6adb41846f8cd500a93e0386b44a552a9212ab8459ed902/networkit-10.1.tar.gz#sha256=842781097d8d6ee9db2d847d9d7de958e36cf3d4c20bf84db7ae63cae12d7479 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-10.0.tar.gz (5.7 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8ffea62dfa874e0c911b16034c4014d3\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8ffea62dfa874e0c911b16034c4014d3\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2g3brun0'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_8ffea62dfa874e0c911b16034c4014d3\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_8ffea62dfa874e0c911b16034c4014d3\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/06/b7/1aad46f0c2e46c1d3f47f7a0d7e486a9b3bd5bf96bfe895fe7767426686a/networkit-10.0.tar.gz#sha256=6fe69db1178b69305c40836953b6f7731574e211cea53ced52bbc45b9fff2a1d (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-9.1.1.tar.gz (3.3 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bd794bafc8ab4987bc662bfc6309dc43\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bd794bafc8ab4987bc662bfc6309dc43\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-c6qpxak4'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_bd794bafc8ab4987bc662bfc6309dc43\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_bd794bafc8ab4987bc662bfc6309dc43\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/f4/09/04405f6bb926b5a9c9fd0bf9055b43484a828aa356c5cf3ffe4cca40a631/networkit-9.1.1.tar.gz#sha256=3f5eeb5a41ca5157a12fbe215937680e59551109a1c195c51cd153bd09385a55 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-9.0.tar.gz (3.2 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_b72def1fde7e49efb22163b0de2429cc\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_b72def1fde7e49efb22163b0de2429cc\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-iliy2dte'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_b72def1fde7e49efb22163b0de2429cc\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_b72def1fde7e49efb22163b0de2429cc\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/21/57/ded0f4e20fc99b25138237063ad614de75883ac1d66f2b324fbfdc355738/networkit-9.0.tar.gz#sha256=e27872d0d6a8a0a1ba862b0dab6adb4f0046fe6b20d3c47863075d1ee70226d3 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-8.1.tar.gz (3.1 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_a3de2da3d9e446ed873947aed6a25012\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_a3de2da3d9e446ed873947aed6a25012\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-gpfwcyv0'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_a3de2da3d9e446ed873947aed6a25012\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_a3de2da3d9e446ed873947aed6a25012\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/58/7a/4ef04f2b34fc81c5f2a5060b5cb989509f847d8aa6e359899922acffacf8/networkit-8.1.tar.gz#sha256=5ff9e61496259280df4f913b1e37f51ca6f94974c4b9f623851f4d518f5ce0d5 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-8.0.tar.gz (3.0 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_1aa28e3329a04e4fbee9d9d281a9d0b4\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_1aa28e3329a04e4fbee9d9d281a9d0b4\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-utiyzagf'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_1aa28e3329a04e4fbee9d9d281a9d0b4\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_1aa28e3329a04e4fbee9d9d281a9d0b4\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/63/9c/597bf1194e823733561422cb8b34ab1ba096678ee592e5f046bacd9be7f6/networkit-8.0.tar.gz#sha256=36c30e894e835bf93f0aa0fb0b526758234e74318150820911e024ffe5ec1fd2 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-7.1.tar.gz (3.1 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_1be215b330214615a2f5daf94daf0f3a\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_1be215b330214615a2f5daf94daf0f3a\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-fit8lbmw'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_1be215b330214615a2f5daf94daf0f3a\
+  Complete output (5 lines):
+  Traceback (most recent call last):
+    File "<string>", line 1, in <module>
+    File "C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_1be215b330214615a2f5daf94daf0f3a\setup.py", line 7, in <module>
+      from Cython.Build import cythonize
+  ModuleNotFoundError: No module named 'Cython'
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/29/fc/dcc0888eb006c8c27fec37e872920c794421670a9819f1de47fdd62938f1/networkit-7.1.tar.gz#sha256=8609dc7a574a8a82d8880b8b1e3dfdd9c59ad67cd02135628e675c482fe98a96 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-7.0.tar.gz (1.9 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8227b9146122408cb0aab0d0e07963b7\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8227b9146122408cb0aab0d0e07963b7\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-hl4y4kjo'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_8227b9146122408cb0aab0d0e07963b7\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/26/f9/a058af193cd2058c4326519693700eb6a093cc35e47e0a8ef4e122a452fa/networkit-7.0.tar.gz#sha256=eea4b5e565d6990b674e1c7f4d598be9377d57b61d0d82883ecc39edabaf3631 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-6.1.tar.gz (2.0 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_7d3b2891f68d4c2b90953e9a274ebaea\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_7d3b2891f68d4c2b90953e9a274ebaea\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-47r_av5v'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_7d3b2891f68d4c2b90953e9a274ebaea\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/8c/06/b92061bc842f6855ddcaff561ce4ba2ee25810e12e28a898c87dab2266e6/networkit-6.1.tar.gz#sha256=f7fcb50dec66a8253f85c10ff9314100de013c7578d531c81d3f71bc6cf8f093 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-6.0.1.tar.gz (1.8 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_2e359313a65d4628b300d8b58e397b47\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_2e359313a65d4628b300d8b58e397b47\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-lb283y43'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_2e359313a65d4628b300d8b58e397b47\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/5c/00/f7c5c58030a1bbe62066e87b1f7996fe9123f81df0eb5aeef0801915970c/networkit-6.0.1.tar.gz#sha256=9ca21bec3dbc7741750f5a1e8d9c5bf25cbfced94f38f0af294db5238b958a39 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-6.0.tar.gz (1.8 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_0e53ba01b6d545eda96ad158649d0cb9\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_0e53ba01b6d545eda96ad158649d0cb9\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2lpg8lci'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_0e53ba01b6d545eda96ad158649d0cb9\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/3a/41/6e5f745f1de9cfbf149772ac2b7f3776327d048bd0eb241b60f4d530cd51/networkit-6.0.tar.gz#sha256=c9dd49c567ad2ac2969a4cdf7be098d4effa55f28ed799ce1bf981e46b83d631 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-5.0.1.tar.gz (1.2 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_b97a68db9f7f478a9722052f38e79cd5\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_b97a68db9f7f478a9722052f38e79cd5\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-i4wis_bu'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_b97a68db9f7f478a9722052f38e79cd5\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/60/7e/0a72676159f1b5cd7664bc99742f13ecb38e461de7fef8f75cc86c011b68/networkit-5.0.1.tar.gz#sha256=f59c48a7e7895c21635f8134205bcaba08ec3624207c8047ae07ca855f431b39 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-5.0.tar.gz (1.8 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_60bb0cb96c4846d1a3b72ecc46713c4e\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_60bb0cb96c4846d1a3b72ecc46713c4e\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-vts22x1y'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_60bb0cb96c4846d1a3b72ecc46713c4e\
+  Complete output (1 lines):
+  ERROR: NetworKit compilation requires cmake.
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/d4/36/39298b5c1ddccd062505e7e2f9dcb14235ddd158008bda62cdbb907de8e3/networkit-5.0.tar.gz#sha256=4fd9439a155cc569000ec039e13680804d8cc233c6d602c88cf0f63174b2babd (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.6.tar.gz (1.2 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): still running...
+  Preparing metadata (setup.py): still running...
+  Preparing metadata (setup.py): still running...
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2teu1a7n'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_bbb1ed5652414ced8de6bd7c807b6c54\
+  Complete output (461 lines):
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Collecting scipy
+    Downloading scipy-1.5.4-cp36-cp36m-win_amd64.whl (31.2 MB)
+  Requirement already satisfied: numpy>=1.14.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from scipy) (1.19.5)
+  Installing collected packages: scipy
+  Successfully installed scipy-1.5.4
+  Collecting cython
+    Downloading Cython-3.0.9-cp36-cp36m-win_amd64.whl (2.8 MB)
+  Installing collected packages: cython
+  Successfully installed cython-3.0.9
+  Collecting matplotlib
+    Downloading matplotlib-3.3.4-cp36-cp36m-win_amd64.whl (8.5 MB)
+  Collecting python-dateutil>=2.1
+    Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+  Collecting pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.3
+    Downloading pyparsing-3.1.2-py3-none-any.whl (103 kB)
+  Collecting pillow>=6.2.0
+    Downloading Pillow-8.4.0-cp36-cp36m-win_amd64.whl (3.2 MB)
+  Collecting kiwisolver>=1.0.1
+    Downloading kiwisolver-1.3.1-cp36-cp36m-win_amd64.whl (51 kB)
+  Collecting cycler>=0.10
+    Downloading cycler-0.11.0-py3-none-any.whl (6.4 kB)
+  Requirement already satisfied: numpy>=1.15 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from matplotlib) (1.19.5)
+  Collecting six>=1.5
+    Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
+  Installing collected packages: six, python-dateutil, pyparsing, pillow, kiwisolver, cycler, matplotlib
+  Successfully installed cycler-0.11.0 kiwisolver-1.3.1 matplotlib-3.3.4 pillow-8.4.0 pyparsing-3.1.2 python-dateutil-2.9.0.post0 six-1.16.0
+  Collecting pandas
+    Downloading pandas-1.1.5-cp36-cp36m-win_amd64.whl (8.7 MB)
+  Requirement already satisfied: numpy>=1.15.4 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from pandas) (1.19.5)
+  Collecting pytz>=2017.2
+    Downloading pytz-2024.1-py2.py3-none-any.whl (505 kB)
+  Collecting python-dateutil>=2.7.3
+    Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+  Collecting six>=1.5
+    Using cached six-1.16.0-py2.py3-none-any.whl (11 kB)
+  Installing collected packages: six, pytz, python-dateutil, pandas
+  Successfully installed pandas-1.1.5 python-dateutil-2.9.0.post0 pytz-2024.1 six-1.16.0
+  Collecting networkx
+    Downloading networkx-2.5.1-py3-none-any.whl (1.6 MB)
+  Collecting decorator<5,>=4.3
+    Downloading decorator-4.4.2-py2.py3-none-any.whl (9.2 kB)
+  Installing collected packages: decorator, networkx
+  Successfully installed decorator-4.4.2 networkx-2.5.1
+  Collecting tabulate
+    Downloading tabulate-0.8.10-py3-none-any.whl (29 kB)
+  Installing collected packages: tabulate
+  Successfully installed tabulate-0.8.10
+  Collecting seaborn
+    Downloading seaborn-0.11.2-py3-none-any.whl (292 kB)
+  Collecting matplotlib>=2.2
+    Using cached matplotlib-3.3.4-cp36-cp36m-win_amd64.whl (8.5 MB)
+  Collecting scipy>=1.0
+    Using cached scipy-1.5.4-cp36-cp36m-win_amd64.whl (31.2 MB)
+  Collecting pandas>=0.23
+    Using cached pandas-1.1.5-cp36-cp36m-win_amd64.whl (8.7 MB)
+  Requirement already satisfied: numpy>=1.15 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from seaborn) (1.19.5)
+  Collecting python-dateutil>=2.1
+    Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+  Collecting pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.3
+    Using cached pyparsing-3.1.2-py3-none-any.whl (103 kB)
+  Collecting pillow>=6.2.0
+    Using cached Pillow-8.4.0-cp36-cp36m-win_amd64.whl (3.2 MB)
+  Collecting kiwisolver>=1.0.1
+    Using cached kiwisolver-1.3.1-cp36-cp36m-win_amd64.whl (51 kB)
+  Collecting cycler>=0.10
+    Using cached cycler-0.11.0-py3-none-any.whl (6.4 kB)
+  Collecting pytz>=2017.2
+    Using cached pytz-2024.1-py2.py3-none-any.whl (505 kB)
+  Collecting six>=1.5
+    Using cached six-1.16.0-py2.py3-none-any.whl (11 kB)
+  Installing collected packages: six, pytz, python-dateutil, pyparsing, pillow, kiwisolver, cycler, scipy, pandas, matplotlib, seaborn
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  Successfully installed cycler-0.11.0 kiwisolver-1.3.1 matplotlib-3.3.4 pandas-1.1.5 pillow-8.4.0 pyparsing-3.1.2 python-dateutil-2.9.0.post0 pytz-2024.1 scipy-1.5.4 seaborn-0.11.2 six-1.16.0
+  Collecting sklearn
+    Downloading sklearn-0.0.post12.tar.gz (2.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_3034ac81e9634c01bc4452a789f84a46\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_3034ac81e9634c01bc4452a789f84a46\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2nxdbyeo'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_3034ac81e9634c01bc4452a789f84a46\
+    Complete output (15 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/46/1c/395a83ee7b2d2ad7a05b453872053d41449564477c81dc356f720b16eac4/sklearn-0.0.post12.tar.gz#sha256=54cff9e20839b7b202321178228af4d9388bedf78425d9299fd9ee170d68802e (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post11.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_60313c1b53264431b019be1a56d8c65c\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_60313c1b53264431b019be1a56d8c65c\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-tjmecv0t'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_60313c1b53264431b019be1a56d8c65c\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/a4/0b/d1c703256cf293be77b7db44dbef62251fe02a97d0bef981f7120b0b0c0f/sklearn-0.0.post11.tar.gz#sha256=af035c4f0b970b7fc2d3856079aa1aa1032df3d7f65048a9d87114abf13c4629 (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post10.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_4a930bf7ab9b4888b6707c2f22f354d1\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_4a930bf7ab9b4888b6707c2f22f354d1\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-nr6olb6y'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_4a930bf7ab9b4888b6707c2f22f354d1\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/b9/0e/b2a4cfaa9e12b9ca4c71507bc26d2c99d75de172c0088c9835a98cf146ff/sklearn-0.0.post10.tar.gz#sha256=d4cd5a2e64b3caaf82cd5e33c46884dfeec5ebf991710d9faeb4fe81cadb3ba6 (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post9.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_9113b93341ad49cda77fee59838126b3\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_9113b93341ad49cda77fee59838126b3\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-jlqry9d9'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_9113b93341ad49cda77fee59838126b3\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/28/86/207a003339023247fef1bb5bc9f5093140d17294b2f6d15bfcd4885e469e/sklearn-0.0.post9.tar.gz#sha256=1ff5864cf30489ee48a014fe8f4320d7bb59592392a4ef52ae9d7a37942615ac (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post7.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_2560ed7f9f954bfeb017d06a046f2a51\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_2560ed7f9f954bfeb017d06a046f2a51\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-9ncbmp7o'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_2560ed7f9f954bfeb017d06a046f2a51\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/70/ce/81aa643f3c43488c4a1e417e45f696a61e7ac82b57190fad3c310df2c07b/sklearn-0.0.post7.tar.gz#sha256=1c89020b364fdc3aa2839e0ae34e8f0b406669e4b5c2359dda3ac398f9c76874 (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post5.tar.gz (3.7 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_793531196185476ab8fcee58e4f7f8d2\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_793531196185476ab8fcee58e4f7f8d2\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-jy3xh0nb'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_793531196185476ab8fcee58e4f7f8d2\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/7a/93/e0e1b1e98f39dfca7ec9795cb46f6e09e88a2fd5d4a28e4b3d1f618a2aec/sklearn-0.0.post5.tar.gz#sha256=7377c714a03a79bbe9196f435db931fd2a6fa8c68514da7ed3a251fd08c52e2c (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post4.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_1d7aaf86fe974c1ca94134d435f87b84\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_1d7aaf86fe974c1ca94134d435f87b84\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-u6n8mhqi'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_1d7aaf86fe974c1ca94134d435f87b84\
+    Complete output (7 lines):
+    Traceback (most recent call last):
+      File "<string>", line 1, in <module>
+      File "C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_1d7aaf86fe974c1ca94134d435f87b84\setup.py", line 10, in <module>
+        LONG_DESCRIPTION = f.read()
+      File "C:\Users\Admin\AppData\Local\R-MINI~1\envs\R-RETI~1\lib\encodings\cp1252.py", line 23, in decode
+        return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+    UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 7: character maps to <undefined>
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/99/b2/165110013aa66fae6fc13918ad0e9de4801e5f1691d371bf8b63328037e6/sklearn-0.0.post4.tar.gz#sha256=0e81ec9c32d4bb418e7be8f1ec1027d174975502dc84cbc4f4564b4cba31e674 (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.post1.tar.gz (3.6 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'error'
+    ERROR: Command errored out with exit status 1:
+     command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_3cc0857d81c74f65be91eaa1d4cd885b\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-92kfp5ui\\sklearn_3cc0857d81c74f65be91eaa1d4cd885b\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-isie3_mr'
+         cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-92kfp5ui\sklearn_3cc0857d81c74f65be91eaa1d4cd885b\
+    Complete output (18 lines):
+    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+    rather than 'sklearn' for pip commands.
+  
+    Here is how to fix this error in the main use cases:
+    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+    - if the 'sklearn' package is used by one of your dependencies,
+      it would be great if you take some time to track which package uses
+      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+    - as a last resort, set the environment variable
+      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  
+    More information is available at
+    https://github.com/scikit-learn/sklearn-pypi-package
+  
+    If the previous advice does not cover your use case, feel free to report it at
+    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+    ----------------------------------------
+  WARNING: Discarding https://files.pythonhosted.org/packages/db/1e/af4e9cded5093a92e60d4ae7149a02c7427661b2db66c8ea4d34b17864a2/sklearn-0.0.post1.tar.gz#sha256=76b9ed1623775168657b86b5fe966d45752e5c87f528de6240c38923b94147c5 (from https://pypi.org/simple/sklearn/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+    Downloading sklearn-0.0.tar.gz (1.1 kB)
+    Preparing metadata (setup.py): started
+    Preparing metadata (setup.py): finished with status 'done'
+  Collecting scikit-learn
+    Downloading scikit_learn-0.24.2-cp36-cp36m-win_amd64.whl (6.8 MB)
+  Collecting joblib>=0.11
+    Downloading joblib-1.1.1-py2.py3-none-any.whl (309 kB)
+  Collecting threadpoolctl>=2.0.0
+    Downloading threadpoolctl-3.1.0-py3-none-any.whl (14 kB)
+  Requirement already satisfied: numpy>=1.13.3 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from scikit-learn->sklearn) (1.19.5)
+  Collecting scipy>=0.19.1
+    Using cached scipy-1.5.4-cp36-cp36m-win_amd64.whl (31.2 MB)
+  Building wheels for collected packages: sklearn
+    Building wheel for sklearn (setup.py): started
+    Building wheel for sklearn (setup.py): finished with status 'done'
+    Created wheel for sklearn: filename=sklearn-0.0-py2.py3-none-any.whl size=1310 sha256=3aaff032010f881afedfabec8d943ef7137ded1ac54383d800dbd29c69e569de
+    Stored in directory: c:\users\admin\appdata\local\pip\cache\wheels\23\9d\42\5ec745cbbb17517000a53cecc49d6a865450d1f5cb16dc8a9c
+  Successfully built sklearn
+  Installing collected packages: threadpoolctl, scipy, joblib, scikit-learn, sklearn
+  Successfully installed joblib-1.1.1 scikit-learn-0.24.2 scipy-1.5.4 sklearn-0.0 threadpoolctl-3.1.0
+  WARNING: Package(s) not found: ipython
+  Collecting ipython
+    Downloading ipython-7.16.3-py3-none-any.whl (783 kB)
+  Collecting jedi<=0.17.2,>=0.10
+    Downloading jedi-0.17.2-py2.py3-none-any.whl (1.4 MB)
+  Collecting pickleshare
+    Using cached pickleshare-0.7.5-py2.py3-none-any.whl (6.9 kB)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Collecting decorator
+    Using cached decorator-5.1.1-py3-none-any.whl (9.1 kB)
+  Collecting prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0
+    Downloading prompt_toolkit-3.0.36-py3-none-any.whl (386 kB)
+  Collecting colorama
+    Downloading colorama-0.4.5-py2.py3-none-any.whl (16 kB)
+  Collecting traitlets>=4.2
+    Using cached traitlets-4.3.3-py2.py3-none-any.whl (75 kB)
+  Collecting pygments
+    Downloading Pygments-2.14.0-py3-none-any.whl (1.1 MB)
+  Collecting backcall
+    Using cached backcall-0.2.0-py2.py3-none-any.whl (11 kB)
+  Collecting parso<0.8.0,>=0.7.0
+    Downloading parso-0.7.1-py2.py3-none-any.whl (109 kB)
+  Collecting wcwidth
+    Downloading wcwidth-0.2.13-py2.py3-none-any.whl (34 kB)
+  Collecting ipython-genutils
+    Downloading ipython_genutils-0.2.0-py2.py3-none-any.whl (26 kB)
+  Collecting six
+    Using cached six-1.16.0-py2.py3-none-any.whl (11 kB)
+  Installing collected packages: wcwidth, six, parso, ipython-genutils, decorator, traitlets, pygments, prompt-toolkit, pickleshare, jedi, colorama, backcall, ipython
+  Successfully installed backcall-0.2.0 colorama-0.4.5 decorator-5.1.1 ipython-7.16.3 ipython-genutils-0.2.0 jedi-0.17.2 parso-0.7.1 pickleshare-0.7.5 prompt-toolkit-3.0.36 pygments-2.14.0 six-1.16.0 traitlets-4.3.3 wcwidth-0.2.13
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-8, g++-7, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/3c/0d/767c959cc199013e36634128fae5e77815e19d70d10743c94bf97eae3506/networkit-4.6.tar.gz#sha256=1b27864ed3279812705a463ee251eec7bd2453080bd554c150ffbeecedc71d42 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.5.tar.gz (1.0 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_e00a1816548a4463a93a10cb39922a87\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_e00a1816548a4463a93a10cb39922a87\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-gr0bvl3x'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_e00a1816548a4463a93a10cb39922a87\
+  Complete output (21 lines):
+  WARNING: Package(s) not found: ipython
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Requirement already satisfied: ipython in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (7.16.3)
+  Requirement already satisfied: pickleshare in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.7.5)
+  Requirement already satisfied: pygments in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (2.14.0)
+  Requirement already satisfied: jedi<=0.17.2,>=0.10 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.17.2)
+  Requirement already satisfied: colorama in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.4.5)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Requirement already satisfied: decorator in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (5.1.1)
+  Requirement already satisfied: backcall in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.2.0)
+  Requirement already satisfied: traitlets>=4.2 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (4.3.3)
+  Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (3.0.36)
+  Requirement already satisfied: parso<0.8.0,>=0.7.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from jedi<=0.17.2,>=0.10->ipython) (0.7.1)
+  Requirement already satisfied: wcwidth in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython) (0.2.13)
+  Requirement already satisfied: ipython-genutils in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (0.2.0)
+  Requirement already satisfied: six in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (1.16.0)
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-7, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/95/43/e3c62d12375dd1517a5e2b2ab954e6799aa5ad198b7f45f8ca4c3c278ebc/networkit-4.5.tar.gz#sha256=d2f7862970d376da916a4f87bf6d90e080dcbb37ab74a30dc6b3924b3b7b0475 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.4.tar.gz (1.0 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8f6124c949f44192a0bd444563d0e0dd\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_8f6124c949f44192a0bd444563d0e0dd\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-nbmuggpe'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_8f6124c949f44192a0bd444563d0e0dd\
+  Complete output (21 lines):
+  WARNING: Package(s) not found: ipython
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Requirement already satisfied: ipython in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (7.16.3)
+  Requirement already satisfied: jedi<=0.17.2,>=0.10 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.17.2)
+  Requirement already satisfied: backcall in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.2.0)
+  Requirement already satisfied: traitlets>=4.2 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (4.3.3)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (3.0.36)
+  Requirement already satisfied: pygments in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (2.14.0)
+  Requirement already satisfied: decorator in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (5.1.1)
+  Requirement already satisfied: colorama in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.4.5)
+  Requirement already satisfied: pickleshare in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.7.5)
+  Requirement already satisfied: parso<0.8.0,>=0.7.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from jedi<=0.17.2,>=0.10->ipython) (0.7.1)
+  Requirement already satisfied: wcwidth in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython) (0.2.13)
+  Requirement already satisfied: ipython-genutils in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (0.2.0)
+  Requirement already satisfied: six in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (1.16.0)
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-7, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/94/e4/511277686b0d18ff7b704733b7173f1668b74aceac0e452227fce18bf5d6/networkit-4.4.tar.gz#sha256=ab682ef7f222610822bc2c0d91d02bb94b647991ec30a3251d46725efbcf56ab (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.3.tar.gz (992 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_c0c268e9dfd844d2b1040880cebca1c2\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_c0c268e9dfd844d2b1040880cebca1c2\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-rrxqa6ki'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_c0c268e9dfd844d2b1040880cebca1c2\
+  Complete output (21 lines):
+  WARNING: Package(s) not found: ipython
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Requirement already satisfied: ipython in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (7.16.3)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Requirement already satisfied: backcall in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.2.0)
+  Requirement already satisfied: pygments in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (2.14.0)
+  Requirement already satisfied: colorama in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.4.5)
+  Requirement already satisfied: jedi<=0.17.2,>=0.10 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.17.2)
+  Requirement already satisfied: traitlets>=4.2 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (4.3.3)
+  Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (3.0.36)
+  Requirement already satisfied: decorator in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (5.1.1)
+  Requirement already satisfied: pickleshare in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.7.5)
+  Requirement already satisfied: parso<0.8.0,>=0.7.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from jedi<=0.17.2,>=0.10->ipython) (0.7.1)
+  Requirement already satisfied: wcwidth in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython) (0.2.13)
+  Requirement already satisfied: six in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (1.16.0)
+  Requirement already satisfied: ipython-genutils in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (0.2.0)
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-7, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/0a/ff/01f3337b6c842b55ac2a6f0023321fa4f23d26a17540b3e5efe0e9d86c4f/networkit-4.3.tar.gz#sha256=3efe35cb211564b5a2d38be6087fdea1e41ad79039046ac776c2e253f82f6266 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.2.tar.gz (960 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_2ad449c2ff094868bc51b48c35f07119\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_2ad449c2ff094868bc51b48c35f07119\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-3srvb1iv'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_2ad449c2ff094868bc51b48c35f07119\
+  Complete output (21 lines):
+  WARNING: Package(s) not found: ipython
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Requirement already satisfied: ipython in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (7.16.3)
+  Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (3.0.36)
+  Requirement already satisfied: pygments in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (2.14.0)
+  Requirement already satisfied: decorator in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (5.1.1)
+  Requirement already satisfied: colorama in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.4.5)
+  Requirement already satisfied: jedi<=0.17.2,>=0.10 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.17.2)
+  Requirement already satisfied: traitlets>=4.2 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (4.3.3)
+  Requirement already satisfied: pickleshare in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.7.5)
+  Requirement already satisfied: backcall in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.2.0)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Requirement already satisfied: parso<0.8.0,>=0.7.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from jedi<=0.17.2,>=0.10->ipython) (0.7.1)
+  Requirement already satisfied: wcwidth in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython) (0.2.13)
+  Requirement already satisfied: ipython-genutils in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (0.2.0)
+  Requirement already satisfied: six in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (1.16.0)
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/e7/72/e7fab49ee35f0ff138cd9810492c0f15fa8d9e3cdaa9f6094f0b5a3d487a/networkit-4.2.tar.gz#sha256=f8f2de932c92493bcd2c65779bf78968b0ff856bdd6299e6cbab30671926a79b (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.1.1.tar.gz (936 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_d2d9aad8e67d44fdab3ba1e2afd46617\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_d2d9aad8e67d44fdab3ba1e2afd46617\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-exaqbsyw'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_d2d9aad8e67d44fdab3ba1e2afd46617\
+  Complete output (1 lines):
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/6e/b7/534dbe69f3e9980a5f5271aff73a0b4dbf4307fac2d7f9115c3aae58ad4a/networkit-4.1.1.tar.gz#sha256=5c1b2f86dcd6202b73191e7b9bdc592af984a8d441daf0f9f6a0149d0a772420 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.1.tar.gz (929 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_e687383c291d4323a05eab96c521e892\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_e687383c291d4323a05eab96c521e892\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2tr82hjj'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_e687383c291d4323a05eab96c521e892\
+  Complete output (1 lines):
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/9f/a6/ffdad2f1f4ebbed6ec2e8af8c186ca8bb31d8f25a6a1616d42ba154a6d7e/networkit-4.1.tar.gz#sha256=ccd23d2000bcbddb1af2338ece5d5ae7715e9c17720a9fdc3def98add288401b (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.0.1.tar.gz (823 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_85b48bf8389c48bc849be4f0cdd510e1\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_85b48bf8389c48bc849be4f0cdd510e1\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-tlesdu4d'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_85b48bf8389c48bc849be4f0cdd510e1\
+  Complete output (1 lines):
+  ERROR: Please install GCC/g++ 4.8 or later and rerun
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/d1/b4/262dbdbafda59f09650fcc1c6a42c1e788e8c06cfd89c286351b5fda5e80/networkit-4.0.1.tar.gz#sha256=ea29d46f31a544b7fbf22a2564e9ab9a6f2b5756cd1fc038b3557427d8d182c9 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-4.0.tar.gz (800 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_4668793458614b3d89cbaf5f053ba284\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_4668793458614b3d89cbaf5f053ba284\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-fkr3ix8y'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_4668793458614b3d89cbaf5f053ba284\
+  Complete output (1 lines):
+  ERROR: Please install GCC/g++ 4.8 or later and rerun
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/e6/9e/f0a862c78a86b3457787669b4b52017a61fbea159c8c326527e1c2588ed3/networkit-4.0.tar.gz#sha256=9ddf901bee8e85da4abb70b698df3e2590089c177243e54c0c9a71123d86febc (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-3.6.tar.gz (697 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_9288ef89d4d8468b9582106b16debf8c\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_9288ef89d4d8468b9582106b16debf8c\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-9s8tcut9'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_9288ef89d4d8468b9582106b16debf8c\
+  Complete output (1 lines):
+  ERROR: Please install GCC/g++ 4.8 or later and rerun
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/34/44/05e21b3eb6f426c2740a6dd21a060e4582f524f82c1cc6e95d3c4b792576/networkit-3.6.tar.gz#sha256=780783f5cee19c5f4cf23d52d591c7101455aa7bd652d6351ce0275afe97da89 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-3.5.tar.gz (614 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_515fa97c1bcb4095be30dad10121f358\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_515fa97c1bcb4095be30dad10121f358\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-2_pgm_5x'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_515fa97c1bcb4095be30dad10121f358\
+  Complete output (1 lines):
+  ERROR: Please install GCC/g++ 4.8 or later and rerun
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/b0/39/1f3a00d5a410315e00bc85c5f997a7737a1a1eedf2e9b6ed21d55dc7b320/networkit-3.5.tar.gz#sha256=f79bd95f99c58ab646320a396f4a53da7a3eea4209d57703bd82d2a46513e103 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-3.4.1.tar.gz (582 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_029e50245d88405b90e79f0c328234bb\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_029e50245d88405b90e79f0c328234bb\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-3fsqzkyb'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_029e50245d88405b90e79f0c328234bb\
+  Complete output (1 lines):
+  ERROR: Please install GCC/g++ 4.8 or later and rerun
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/3c/d2/2c39ab27bf2753c6cb20233163ad823e7ffdb93653ab48a96b4f943f60a7/networkit-3.4.1.tar.gz#sha256=82e9c93f3621fd48f484dca9fa4353f085d2242bf56fe58a7bffe8f37bf56400 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+  Downloading networkit-0.1.9.1.tar.gz (1.2 MB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'
+  ERROR: Command errored out with exit status 1:
+   command: 'C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_27794e554daf476794bcc2d91cfd0bed\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_27794e554daf476794bcc2d91cfd0bed\\setup.py'"'"';f = getattr(tokenize, '"'"'open'"'"', open)(__file__) if os.path.exists(__file__) else io.StringIO('"'"'from setuptools import setup; setup()'"'"');code = f.read().replace('"'"'\r\n'"'"', '"'"'\n'"'"');f.close();exec(compile(code, __file__, '"'"'exec'"'"'))' egg_info --egg-base 'C:\Users\Admin\AppData\Local\Temp\pip-pip-egg-info-k0dnz5j7'
+       cwd: C:\Users\Admin\AppData\Local\Temp\pip-install-q2renvli\networkit_27794e554daf476794bcc2d91cfd0bed\
+  Complete output (21 lines):
+  WARNING: Package(s) not found: ipython
+  WARNING: pip is being invoked by an old script wrapper. This will fail in a future version of pip.
+  Please see https://github.com/pypa/pip/issues/5599 for advice on fixing the underlying issue.
+  To avoid this problem you can invoke Python with '-m pip' instead of running pip directly.
+  Requirement already satisfied: ipython in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (7.16.3)
+  Requirement already satisfied: colorama in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.4.5)
+  Requirement already satisfied: traitlets>=4.2 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (4.3.3)
+  Requirement already satisfied: backcall in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.2.0)
+  Requirement already satisfied: jedi<=0.17.2,>=0.10 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.17.2)
+  Requirement already satisfied: pickleshare in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (0.7.5)
+  Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (3.0.36)
+  Requirement already satisfied: decorator in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (5.1.1)
+  Requirement already satisfied: setuptools>=18.5 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (59.6.0)
+  Requirement already satisfied: pygments in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from ipython) (2.14.0)
+  Requirement already satisfied: parso<0.8.0,>=0.7.0 in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from jedi<=0.17.2,>=0.10->ipython) (0.7.1)
+  Requirement already satisfied: wcwidth in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython) (0.2.13)
+  Requirement already satisfied: six in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (1.16.0)
+  Requirement already satisfied: ipython-genutils in c:\users\admin\docume~1\virtua~1\colar3\lib\site-packages (from traitlets>=4.2->ipython) (0.2.0)
+  ERROR: Test compilation with the following binary names was unsuccessful: g++, g++-8, g++-7, g++-6.1, g++-6, g++-5.3, g++-5.2, g++-5.1, g++-5, g++-4.9, g++-4.8, clang++, clang++-3.8, clang++-3.7. Make sure you have either g++ (>= 4.8) or clang++ (>= 3.7) properly installed
+  C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\lib\site-packages\setuptools\command\install.py:37: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+    setuptools.SetuptoolsDeprecationWarning,
+  ----------------------------------------
+WARNING: Discarding https://files.pythonhosted.org/packages/72/c8/662d6aded468f8507a55ce84f4ffe4ea0827a6af72a9cad3bd0c24236981/networkit-0.1.9.1.tar.gz#sha256=ceae5052a1896f4120978bbb99ae1685c3edebb64be75b6662f54c49013193a7 (from https://pypi.org/simple/networkit/). Command errored out with exit status 1: python setup.py egg_info Check the logs for full command output.
+ERROR: Could not find a version that satisfies the requirement networkit (from versions: 0.1.9.1, 3.4.1, 3.5, 3.6, 4.0, 4.0.1, 4.1, 4.1.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.0, 5.0.1, 6.0, 6.0.1, 6.1, 7.0, 7.1, 8.0, 8.1, 9.0, 9.1.1, 10.0, 10.1)
+## ERROR -- red letters
+ERROR: No matching distribution found for networkit
+Error: Error installing package(s): "\"networkit\"", "\"networkx\"", "\"rasterio\"", "\"pytables\"", "\"ipykernel\"", "\"pandas\"", "\"geopandas\"", "\"numba\"", "\"scikit-image\"", "\"KDEpy\""
