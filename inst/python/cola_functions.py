@@ -16,6 +16,8 @@ from scipy import sparse
 from scipy.sparse import diags
 from numba import njit, prange
 from scipy.sparse import tril
+from shapely.geometry import MultiPolygon
+import geopandas as gpd
     
 #%%
 def asciiToGeoTiff(infile, outfile, crs=None):
@@ -767,6 +769,24 @@ def read2flt32array(upCRS, rg):
             if profile['count'] > 1:
                 profile['count'] = 1
     return(r, profile)
+
+def groupby_multipoly(df, by, aggfunc="first"):
+    data = df.drop(labels=df.geometry.name, axis=1)
+    aggregated_data = data.groupby(by=by).agg(aggfunc)
+
+    # Process spatial component
+    def merge_geometries(block):
+        return MultiPolygon(block.values)
+
+    g = df.groupby(by=by, group_keys=False)[df.geometry.name].agg(
+        merge_geometries
+    )
+
+    # Aggregate
+    aggregated_geometry = gpd.GeoDataFrame(g, geometry=df.geometry.name, crs=df.crs)
+    # Recombine
+    aggregated = aggregated_geometry.join(aggregated_data)
+    return aggregated
 
 def zoneAdjacency(zones):
     """
