@@ -18,7 +18,6 @@ corridor as a raster and the stats as a point shapefile.
 import sys
 from scipy import ndimage as ndi
 import numpy as np
-import osgeo
 import rasterio as rio
 from skimage.segmentation import watershed
 from skimage.morphology import binary_erosion
@@ -26,6 +25,7 @@ from skimage.measure import regionprops
 from skimage.filters.rank import maximum
 import cola_functions as cf
 import pandas as pd
+from rasterio.features import shapes
 import geopandas as gpd
 import networkit as nk
 import time
@@ -37,34 +37,43 @@ def main() -> None:
 
     # INPUTS
     # Original cost surface
-    ocsFile = sys.argv[1] # r"C:\Users\pj276\Projects\UNICOR_arch\unicor\fix1_nodata-9999\size7.tif"
+    ocsFile = sys.argv[1]
     
     # Path to resistant kernel file (output of crk function)
-    crkFile = sys.argv[2] # r"C:\Users\pj276\Projects\UNICOR_arch\unicor\fix1_nodata-9999\crk100_test6.tif"
+    crkFile = sys.argv[2]
     
     # Path to least cost corridor file (output of lcc function)
-    lccFile = sys.argv[3] # r"C:\Users\pj276\Projects\UNICOR_arch\unicor\fix1_nodata-9999\lcc100_test14.tif"
+    lccFile = sys.argv[3]
     
-    # Output masked cost surface (could be a temp file)
-    maskedcsname = sys.argv[4] # r'C:/Users/pj276/Projects/UNICOR_arch/unicor/fix1_nodata-9999/size7_masked_cs.tif'
+    # Output masked cost surface tiff (could be a temp file)
+    maskedcsname = sys.argv[4]
     
-    # Output shapefile name
-    oshp = sys.argv[5] # r"C:\Users\pj276\Projects\UNICOR_arch\unicor\fix1_nodata-9999\ptzCorr_points.shp"
+    # Output corridor point shapefile name
+    ocorrpoints = sys.argv[5]
+    
+    # Output corridor polygon shapefile name
+    ocorrpoly = sys.argv[6]
  
-    # Output raster name
-    ofile = sys.argv[6] #r"C:\Users\pj276\Projects\UNICOR_arch\unicor\fix1_nodata-9999\ptzCorr.tif"
-
+    # Output high value patches shapefile name
+    hvpatches = sys.argv[7]
+    
+    # Output high value patches tiff name
+    opatchestiff = sys.argv[8]
+    
+    # Output sum of corridors tiff name
+    osumcorr = sys.argv[9]
+    
     # Quantile threshold for identifying high value patches from resistant kernel surface
     # Should be between 0 and 1.
-    q = sys.argv[7] # 0.5
+    q = sys.argv[10] # 0.5
     q = float(q)
     
     # Corridor tolerance. Should be the same tolerance used in the lcc script
-    corrTol = sys.argv[8] # 1000
+    corrTol = sys.argv[11] # 1000
 
     # Convert tolerance to float or integer
     try:
-        if cf.is_float(corrTol):
+        if cf.is_floatpy3(corrTol):
             corrTol = float(corrTol)
         elif corrTol.isdigit():
             corrTol = int(corrTol)
@@ -75,7 +84,7 @@ def main() -> None:
         print('Tolerance value must be either a float or integer')
 
     #%%    
-    # Footprint
+    # Footprint to get patch edge pixels
     fprint = np.ones([3,3]).astype('uint8')
 
     # Read in crk raster
@@ -106,11 +115,33 @@ def main() -> None:
     pAreas = [i.area for i in rprops]
     pMax = [i.intensity_max for i in rprops]
     pMean = [i.intensity_mean for i in rprops]
-    
+    ppCount = [i.num_pixels for i in rprops] 
+    ppSum = [i[0]*i[1] for i in zip(pMean,ppCount)]
     
     # Check if only one patch.
     if npatch1 == 1:
         raise Exception('There is only one patch. You may want to change the threshold for creating patches.')
+    
+    # Convert patches to shapefile
+    # Mask out zeros
+    pmask = markers > 0
+    # Get src for georeference
+    with rio.open(ocsFile) as src:
+        # Set up dictionary to hold geometries
+        results = (
+        {'properties': {'raster_val': v}, 'geometry': s}
+        for i, (s, v) 
+        in enumerate(
+            shapes(markers, mask=pmask, transform=src.transform)))
+        geoms = list(results)
+        # Convert polygons to geodataframe
+        patchShape = gpd.GeoDataFrame.from_features(geoms)
+    # Use groupby function to convert to multipolygon    
+    patchShape = cf.groupby_multipoly(patchShape, by='raster_val')
+    # Append crk sums to gdf
+    ddf = pd.DataFrame({'crksums': ppSum, 'ind': patchShape.index})
+    ddf = ddf.set_index('ind')
+    patchShape = pd.concat([patchShape, ddf], axis=1)
     
     # Get moving window max over corridors
     mx = maximum(lccB.astype('uint8'), fprint)
@@ -214,20 +245,24 @@ def main() -> None:
     
     # Empty list to hold stats
     attList = []
-    for pp in ecc:
+    # Empty list to hold polygons
+    polyList = []
+    for pid, pp in enumerate(ecc):
         # Get first group of cells
         ex1 = np.where(cpecells==pp[0], 1, 0)
         # Get row, column indices where values are > 0
         ex1Inds = np.argwhere(ex1 > 0)
         # Convert row, column to coordinates
-        xCs1, yCs1 = rio.transform.xy(src.transform, ex1Inds[:,0], ex1Inds[:,1])
+        with rio.open(ocsFile) as src:
+            xCs1, yCs1 = rio.transform.xy(src.transform, ex1Inds[:,0], ex1Inds[:,1])
     
         # Get second group of cells
         ex2 = np.where(cpecells==pp[1], 1, 0)
         # Get row, column indices where values are > 0
         ex2Inds = np.argwhere(ex2 > 0)
         # Convert row, column to coordinates
-        xCs2, yCs2 = rio.transform.xy(src.transform, ex2Inds[:,0], ex2Inds[:,1])
+        with rio.open(ocsFile) as src:
+            xCs2, yCs2 = rio.transform.xy(src.transform, ex2Inds[:,0], ex2Inds[:,1])
     
         # Convert to pandas df
         dfCoords1 = pd.DataFrame({'X': xCs1, 'Y': yCs1})
@@ -243,7 +278,7 @@ def main() -> None:
         pdrs = []
         for j in [sources1, sources2]:
             # Calculate cost distance from each source to every
-            # cell in the landscape for 1st set of sources
+            # cell in the landscape for set of sources
             spspDist = nk.distance.SPSP(nkG, j)
             spspDist.run()
             ccArr = spspDist.getDistances(asarray=True)
@@ -279,14 +314,14 @@ def main() -> None:
         # Get corridor strength values overlapping with corridor
         tCorr = np.where(dsp > 0, lcc, 0)
         
-        # Get row, column indices of corridor strength 
-        # array where values are > 0
-        tCStrengthInds = np.argwhere(tCorr > 0)
-        # Convert row, column to coordinates
-        xtCS, ytCS = rio.transform.xy(src.transform, tCStrengthInds[:,0], tCStrengthInds[:,1])
-        # Get mean of coordinates
-        meanxtCS = np.mean(xtCS)
-        meanytCS = np.mean(ytCS)
+        # Corridor props
+        # Label discrete corridors with points (this still doesn't work very well)
+        tCorrBinary = np.where(tCorr > 0, 1, 0)
+        corrMarkers, ncorr1 = ndi.label(tCorrBinary, structure=fprint)
+        cprops = regionprops(corrMarkers, intensity_image=tCorr)
+        centrow, centcol = [i.centroid for i in cprops][np.argmax([i.num_pixels for i in cprops])]
+        with rio.open(ocsFile) as src:
+            centx, centy = rio.transform.xy(src.transform, int(np.round(centrow)), int(np.round(centcol)))
         
         # Get max corridor strength value
         tCorrMax = np.max(tCorr)
@@ -294,7 +329,23 @@ def main() -> None:
         
         # Convert corridor to 0-1
         tCorr = np.where(tCorr > 0, 1, 0)
+        cmask = tCorr == 1
         
+        # Convert to shapefile
+        with rio.open(ocsFile) as src:
+            results = (
+            {'properties': {'raster_val': v}, 'geometry': s}
+            for i, (s, v) 
+            in enumerate(
+                shapes(tCorr, mask=cmask, transform=src.transform)))
+            geoms = list(results)
+            corrShape = gpd.GeoDataFrame.from_features(geoms)
+            corrShape['id'] = pid
+            # Use groupby function to convert to multipolygon    
+            corrShape = groupby_multipoly(corrShape, by='id')
+            # Append to list
+            polyList.append(corrShape)
+
         # Add to running sum
         rsumCorr += tCorr
         
@@ -304,29 +355,43 @@ def main() -> None:
         # Use index values to retrieve patch attributes
         # mean corridor xcoord, mean corridor ycoord, patch id 1, patch id 2, edge id 1, edge id 2, area patch 1, area patch 2, max patch 1, max patch 2, mean patch 1, mean patch 2
         # Add to list
-        attList.append(np.array([meanxtCS,meanytCS,pp[2],pp[3],pp[0],pp[1],pAreas[pl1],pAreas[pl2],pMax[pl1],pMax[pl2],pMean[pl1],pMean[pl2],mcd,meancd,tCorrMax,tCorrMean]))
+        attList.append(np.array([centx,centy,pp[2],pp[3],pp[0],pp[1],pAreas[pl1],pAreas[pl2],pMax[pl1],pMax[pl2],pMean[pl1],pMean[pl2],ppSum[pl1],ppSum[pl2],mcd,meancd,tCorrMax,tCorrMean]))
     
-    # Combine into single array
+    # Combine attributes into single array
     attArray = np.vstack(attList)
     # Shapefile column names
-    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','mincost','meancost','maxstrength','meanstrength']
+    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','psum1','psum2','mincost','meancost','maxstrength','meanstrength']
     # Convert to dataframe
     cAttDf = pd.DataFrame(attArray, columns=column_names)
     # Add corridor quality metric
-    cAttDf['cp1'] = cAttDf.pmax1 * cAttDf.pmax2 * cAttDf.maxstrength * 1/cAttDf.mincost
+    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.maxstrength * 1/cAttDf.mincost
     # Add patch quality metric
-    cAttDf['pp1'] = cAttDf.pmax1 * cAttDf.pmax2
-    # Convert to geodataframe
-    gdf = gpd.GeoDataFrame(cAttDf, geometry=gpd.points_from_xy(cAttDf.xco, cAttDf.yco), crs=src.crs)
+    cAttDf['pp1'] = cAttDf.psum1 * cAttDf.psum2
+ 
+    # Convert attributes to geodataframe of points
+    with rio.open(ocsFile) as src:
+        gdf = gpd.GeoDataFrame(cAttDf, geometry=gpd.points_from_xy(cAttDf.xco, cAttDf.yco), crs=src.crs)
     # Save to file
-    gdf.to_file(oshp)
+    gdf.to_file(ocorrpoints)
 
+    # Concatenate corridor polygons to a single geodataframe
+    bigPoly = pd.concat(polyList)
+    # Add attributes to polygons
+    bigPoly = pd.concat([bigPoly, cAttDf], axis=1)
+    # Write corridor polygons to shapefile
+    bigPoly.to_file(ocorrpoly)
+    
+    # Write high value patches to shapefile
+    patchShape.to_file(hvpatches)
+    
+    # Write high value patches to tiff
+    cf.arrayToGeoTiff(np.expand_dims(markers, axis=0), opatchestiff, profilecs)
+    
     # Add a dimension to the array (the rasterio profile expects
     # a dimension corresponding to number of bands)
-    rsumCorr = np.expand_dims(rsumCorr, axis=0)
-    
-    # Write target corridor to file
-    cf.arrayToGeoTiff(rsumCorr, ofile, profilecs)
+    rsumCorr = np.expand_dims(rsumCorr, axis=0)   
+    # Write sum of corridors to tiff
+    cf.arrayToGeoTiff(rsumCorr, osumcorr, profilecs)
         
     toc = time.perf_counter()
     print(f"Prioritizing corridors and kernels took {toc - tic:0.4f} seconds", flush=True)
