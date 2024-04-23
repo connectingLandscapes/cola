@@ -8,15 +8,14 @@ surface from xy locations.
 
 #%%
 # Imports
-import osgeo
 import networkit as nk
-import networkx as nx
 import rasterio as rio
 from rasterio.crs import CRS
 import numpy as np, time
 from scipy import sparse
 from scipy.sparse import diags
 from numba import njit, prange
+from scipy.sparse import tril
     
 #%%
 def asciiToGeoTiff(infile, outfile, crs=None):
@@ -143,15 +142,12 @@ def connected_adjacency(image, connect, patch_size=(1, 1)):
 def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
     """
     Convert a raster image to a weighted Networkit graph.
-    Uses a Networkx graph as an intermediate.
     Outputs node ids from the full graph (i.e. with no data cells) and
     a dictionary mapping node ids from the full graph to the subset
     graph (i.e. without no data cells)
     
     Parameters
     ----------
-    src : rasterio dataset reader object
-        Rasterio dataset object representing a 2D raster file.
     src_data : numpy array
         Array corresponding to rasterio dataset reader object.
         Should be integer data type.
@@ -176,10 +172,6 @@ def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
         Used to map results using the subset graph back to the full graph.
     """
     tic = time.perf_counter()
-    # Get indices of source points
-    ##cinds = [ds.index(i[1].X,i[1].Y) for i in xys.iterrows()]
-    # Convert to 1D for networkit
-    ##sources = [(i[0]*ds.shape[1])+i[1] for i in cinds]
     # Get array    
     A = src_data
     # Convert to 1D
@@ -190,24 +182,26 @@ def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
     sinds = sparse.find(adj8)
     # Calculate cost weights as average for adjacent cells
     adj8[sinds[0],sinds[1]] = ((A[sinds[0]] + A[sinds[1]])/2)*sinds[2]*cellSize
-    # Convert to graph using networkx utility
-    G8 = nx.from_scipy_sparse_array(adj8)
-    # Set node attributes using cell values 
-    nx.set_node_attributes(G8, dict(zip(range(0,G8.number_of_nodes()), [{'value': i} for i in A])))
-    # Get node values
-    node_values = nx.get_node_attributes(G8, 'value')
-    # Remove no data nodes
-    G8.remove_nodes_from((n for n, w in node_values.items() if w == ndValue))
-    # Get list of original node ids
-    nid = list(G8.nodes)
-    # Convert networkx graph to networkit graph
-    nG = nk.nxadapter.nx2nk(G8, weightAttr='weight')
+    # Get lower triangle in triplet format
+    ro, co, dat = sparse.find(tril(adj8))
+    # Create graph (nodes only)
+    nG = nk.Graph(src_data.size, weighted=True)
+    # Add edges to graph
+    for i,j in enumerate(ro):
+        nG.addEdge(ro[i], co[i], w=dat[i], addMissing=False, checkMultiEdge=False)
+    # Iterate through nodes and remove if nodata
+    for u in nG.iterNodes():
+        if A[u] == -9999:
+            nG.removeNode(u)
+    # Get original node ids
+    nid = [u for u in nG.iterNodes()]
+    # Create mapping from original node ids to node ids
+    # after removing no data
+    idmap = nk.graphtools.getContinuousNodeIds(nG)
+    # Renumber node ids to be continuous
+    nG = nk.graphtools.getCompactedGraph(nG, idmap)
     # Index edges
     nG.indexEdges()
-    # Get mapping from node ids in G8 to node ids in nG
-    # This relies on the fact that networkx preserves nodeids while 
-    # networkit node ids range simply from 0 to N-1
-    idmap = dict((id, u) for (id, u) in zip(G8.nodes(), range(G8.number_of_nodes())))
     toc = time.perf_counter()
     return nG, nid, idmap
     print(f"The process took {toc - tic:0.4f} seconds")
