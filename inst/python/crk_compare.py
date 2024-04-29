@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Apr 23 15:41:27 2024
-Script to calculate crk sums for each raster (potentially within a polygon)
+Script to calculate crk sums for each raster 
 and graph as a barplot. If the first raster is a baseline, compare
 subsequent rasters by calculating % of baseline.
 @author: pj276
 """
+
 #%%
 # IMPORTS
 import sys
@@ -38,6 +39,10 @@ ofig2 = sys.argv[4]
 # from each of the other scenarios. Files are named using this
 # pattern: s1_comp.tif, s2_comp.tif, etc.
 odir = sys.argv[5]
+
+# Set style
+plt.style.use('ggplot')
+#plt.style.use('fivethirtyeight')
 
 #%%
 # Split string to list
