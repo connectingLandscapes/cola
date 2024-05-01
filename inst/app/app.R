@@ -2027,13 +2027,13 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n',pre='---- LOAD SCE LCC\n','rv$sceready', 'rv$sce', 'rv$inEdiSessID') # _____________
 
-        sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-        shp$ID <- 1:nrow(shp)
+      sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      shp$ID <- 1:nrow(shp)
 
-        rv$edi_sp <- sce
+      rv$edi_sp <- sce
 
-        proxy <- leafletProxy("ll_map_edi")
-        proxy %>% leaflet::addPolygons(sce)
+      proxy <- leafletProxy("ll_map_edi")
+      proxy %>% leaflet::addPolygons(sce)
 
       # output$ll_map_edi <- leaflet::renderLeaflet({
       #   makeLL( )
@@ -4006,8 +4006,8 @@ if (FALSE){
                                 tags$tr(
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_surA',  fill = TRUE))
-                                  ))
-                              ),
+                                ))
+                       ),
                      ),
                      textInput('name_sur', label = 'New layer name:', value = "",
                                width = '100%', placeholder = 'NameOfNewLayertoCreate')
@@ -4025,14 +4025,14 @@ if (FALSE){
                        tags$tr(
                          tags$td(style = "width: 25%", align = "center",
                                  br(),
-                     actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play")),
+                                 actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play")),
                          )),
                        tags$tr(
                          tags$td(style = "width: 25%", align = "center",
-                         h6(""),
+                                 h6(""),
                                  downloadButton('tifDwn', 'Download')
                          ))
-                       ),
+                     ),
 
               )
             ),
@@ -4107,8 +4107,8 @@ if (FALSE){
                        style = "width: 100%", align = "left",
                        tags$tr(
                          tags$td(style = "width: 25%", align = "center",
-                           htmlOutput(outputId = 'out_par_ediA',  fill = TRUE)),
-                         ))),
+                                 htmlOutput(outputId = 'out_par_ediA',  fill = TRUE)),
+                       ))),
               column(1, downloadButton('editifDwn', 'Download'))
 
             ),
@@ -4166,7 +4166,7 @@ if (FALSE){
                        column(4, actionButton("dist_py", "Get matrix", icon = icon("play")),
                               downloadButton('csvDwn', 'Download'))
                      )
-                     ),
+              ),
               column(3,
                      fluidRow(
                        #column(9,
@@ -4289,7 +4289,7 @@ if (FALSE){
                                   width = '100%', placeholder = 'Name new layer')),
               # column(4, textInput("in_pri_6", "Corridor tolerance:", '1000')),
               column(1, actionButton("pri", "Prioritize", icon = icon("play")),
-              downloadButton('priDwn', 'Download')),
+                     downloadButton('priDwn', 'Download')),
             ),
 
             leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
@@ -4307,10 +4307,10 @@ if (FALSE){
                 rowx(
                   #col(6, htmlOutput('pdfviewer')),
                   colx(6, tags$iframe(style="height:600px; width:100%",
-                                     #src="http://localhost/ressources/pdf/R-Intro.pdf"
-                                     #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
-                                     src="pdf.pdf"
-                                     )
+                                      #src="http://localhost/ressources/pdf/R-Intro.pdf"
+                                      #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                      src="pdf.pdf"
+                  )
                   )
                 )
               )
