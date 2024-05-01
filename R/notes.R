@@ -6,16 +6,14 @@
 # cola::diagnose_cola()
 # cola::setup_cola()
 # Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
-# Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THREs_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
+# Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THRES_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
 # cola::setup_cola_dss()
 # .rs.restartR()
 # library(cola)
 # cola::cola_dss()
 
 # origLibs <- installed.packages()
-# save(origLibs, file = 'origLibsBeforeDss.RData')
 # cola::setup_cola_dss()
-# libsafter1 <- installed.packages(); save(libsafter1, file = 'libsafter1.RData')
 ## Step7. Errors ----------------------------------------------
 
 # https://github.com/rstudio/reticulate/issues/838
@@ -110,8 +108,10 @@ if (FALSE){
 #
 # sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
 # sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
-
+sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
 # sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+# cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/
+# http://18.190.126.82:3838/cola
 
 ## orig
 # cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R

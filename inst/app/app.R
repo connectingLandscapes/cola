@@ -5,7 +5,7 @@
 {
   library(cola)
 
-  library(bit) #
+  #library(bit) #
   library(digest)
   library(dplyr)
   library(ggplot2)
@@ -29,7 +29,7 @@
   library(shinydashboardPlus)
   library(shinyjs)
   library(shinyWidgets)
-  library(dashboardthemes)
+  #library(dashboardthemes)
   library(shinycssloaders)
   library(tidyverse)
   library(shiny)
@@ -1809,8 +1809,8 @@ server <- function(input, output, session) {
         #rng_newtif <- c(newtif@data@min, newtif@data@max)
         rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
 
-        updateTextInput(session, inputId = "in_surf_3", value = rv$hs_rng[1])
-        updateTextInput(session, inputId = "in_surf_4", value = rv$hs_rng[2])
+        updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
+        updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
 
 
         rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
@@ -1828,23 +1828,23 @@ server <- function(input, output, session) {
     if(rv$hsready){
       # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
       #            inSurSessID = 'V-2023082911285705_file3112303ea820')
-      # input <- list(in_surf_3 = 0, in_surf_4 =100, in_surf_5 = 100, in_surf_6 = 1, in_surf_7 = -9999)
+      # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
       output$ll_map_h2r <- leaflet::renderLeaflet({
 
         outs2r <- paste0(tempFolder, '/out_surface_', rv$inSurSessID, '.tif')
         rv$log <- paste0(rv$log,  # _______
                          '\nCreating resistance surface');updateVTEXT(rv$log) # _______
 
-        in_surf_7 <- ifelse(input$in_surf_7 == '', yes = -9999, no = input$in_surf_7)
+        in_sur_7 <- ifelse(input$in_sur_7 == '', yes = -9999, no = input$in_sur_7)
 
         hs2rs_file <- s2res_py(py = py,
                                intif = rv$hs,
                                outtif = outs2r,
-                               param3 = as.numeric(input$in_surf_3),
-                               param4 = as.numeric(input$in_surf_4),
-                               param5 = as.numeric(input$in_surf_5),
-                               param6 = as.numeric(input$in_surf_6),
-                               param7 = in_surf_7,
+                               param3 = as.numeric(input$in_sur_3),
+                               param4 = as.numeric(input$in_sur_4),
+                               param5 = as.numeric(input$in_sur_5),
+                               param6 = as.numeric(input$in_sur_6),
+                               param7 = in_sur_7,
                                param8 = 'None')
 
         if(!is.na(hs2rs_file$file)){
@@ -1887,7 +1887,7 @@ server <- function(input, output, session) {
 
     # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
     #            inSurSessID = 'V-2023082911285705_file3112303ea820')
-    # input <- list(in_surf_3 = 0, in_surf_4 =100, in_surf_5 = 100, in_surf_6 = 1, in_surf_7 = -9999)
+    # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
     # (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
     # rv <<- list(hs = hs2rs_samp_file)
     output$ll_map_h2r <- leaflet::renderLeaflet({
@@ -1904,8 +1904,8 @@ server <- function(input, output, session) {
       #rv$hs_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
       rv$hs_rng <- rng_rstif <- getMxMn(rv$hs_sp)[1:2]
 
-      updateTextInput(session, inputId = "in_surf_3", value = rv$hs_rng[1])
-      updateTextInput(session, inputId = "in_surf_4", value = rv$hs_rng[2])
+      updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
+      updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
 
       rv$hs_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                    domain = rng_rstif, na.color = "transparent")
@@ -1989,6 +1989,57 @@ server <- function(input, output, session) {
     })
   })
 
+
+  observeEvent(input$in_edi_shp, {
+
+    # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
+    pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+
+    rv$log <- paste0(rv$log, '\nLoading scenario shapefile');updateVTEXT(rv$log) # _______
+
+    ## Create session IF if started from this tab
+    if(is.null(rv$inEdiSessID)){
+      (inEdiSessID <<- sessionIDgen())
+      rv$inEdiSessID <- inEdiSessID
+    }
+
+    pdebug(devug=devug,sep='\n',pre='--', 'inEdiSessID', 'rv$inEdiSessID') # _____________
+
+    inFiles <- input$in_edi_shp #
+
+    inFiles$newFile <- paste0(tempFolder, '/', basename(inFiles$name))
+    pdebug(devug=devug,sep='\n',pre='\n--','print(inFiles)', 'inFiles$newFile', 'tempFolder') # _____________
+
+    file.copy(inFiles$datapath, inFiles$newFile);
+    # try(file.remove(inFiles$datapath))
+    #if(devug){save(inFiles, file = paste0(tempFolder, '/shpfiles.RData'))}
+
+    inShp <<- loadShp(inFiles, tempFolder, rv$inEdiSessID)
+
+    if (any(class(inShp$shp) %in% 'sf')){
+      # if(class(inShp$shp) == 'SpatialPointsDataFrame'){
+
+      rv$sceready <- TRUE
+      rv$sce <- inShp$layer
+      rv$shp <- inShp$shp
+      rv$log <- paste0(rv$log, ' -- Scenario shapefile loaded');
+      updateVTEXT(rv$log) # _______
+
+      pdebug(devug=devug,sep='\n',pre='---- LOAD SCE LCC\n','rv$sceready', 'rv$sce', 'rv$inEdiSessID') # _____________
+
+      sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      shp$ID <- 1:nrow(shp)
+
+      rv$edi_sp <- sce
+
+      proxy <- leafletProxy("ll_map_edi")
+      proxy %>% leaflet::addPolygons(sce)
+
+      # output$ll_map_edi <- leaflet::renderLeaflet({
+      #   makeLL( )
+      # })
+    }
+  })
   ####### > Draw notes ------------------
 
 
@@ -2052,7 +2103,7 @@ server <- function(input, output, session) {
     if(is.numeric(input$in_edi_val) & input$in_edi_val != 0 & rv$tifready & !is.null(polDraw)){
       # rv <- list(tif = '/data/temp/XS2023100319220605file859285936e77a/in_edit_TG2023100319221605file8592817dc90f8.tif')
       # rv$tif_sp <- terra::rast(rv$tif)
-      # input <- list(in_surf_3 = 0, in_surf_4 =100, in_surf_5 = 100, in_surf_6 = 1, in_surf_7 = -9999)
+      # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
 
       output$ll_map_edi <- leaflet::renderLeaflet({
         (inEdiSessID2 <<- sessionIDgen())
@@ -3463,7 +3514,7 @@ server <- function(input, output, session) {
 
     ## Download edit surface
     output$editifDwn <- downloadHandler(
-      filename =  paste0('scenatioSurfRes_', rv$inEdiSessID2 , '.tif'),
+      filename =  paste0('scenarioSurfRes_', rv$inEdiSessID2 , '.tif'),
       content = function(filename) {
         if(!is.null( rv$tif) ){
           terra::writeRaster(rv$tif_sp,
@@ -3560,49 +3611,77 @@ if (FALSE){
 
           shinydashboard::menuItem(HTML(paste("Habitat suitability <>", "  resistance surface", sep="<br/>")),
                                    tabName = "tab_surface", icon = icon("right-left")),
+
           conditionalPanel( 'input.sidebarid == "tab_surface"',
+                            div(style = "margin-top: -10px"),
+                            textInput('name_tif_sur', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_sur_tif', 'Load Suitability',
                                              buttonLabel = 'Search', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
                                              multiple=FALSE),
+                            div(style = "margin-top: -30px")
           ),
 
           shinydashboard::menuItem(HTML(paste("Customize resistance surface", sep="<br/>")),
                                    tabName = "tab_edit", icon = icon("pencil")),
           conditionalPanel( 'input.sidebarid == "tab_edit"',
+                            textInput('name_tif_edi', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_edi_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
                                              multiple=FALSE),
+                            div(style = "margin-top: -30px"),
+                            shiny::fileInput('in_edi_shp', 'Load polygon', buttonLabel = 'Search',
+                                             placeholder = 'INC SHP, DBF, SHX and PRJ ',
+                                             accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
+                                             multiple=TRUE),
+                            div(style = "margin-top: -30px")
           ),
 
           shinydashboard::menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
           conditionalPanel( 'input.sidebarid == "tab_points"',
+                            div(style = "margin-top: -30px"),
+                            textInput('name_hs_pts', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_points_hs', 'Load Suitability',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
                                              multiple=FALSE),
-          ),
-          conditionalPanel( 'input.sidebarid == "tab_points"',
+                            div(style = "margin-top: -30px"),
+                            # ),
+                            # conditionalPanel( 'input.sidebarid == "tab_points"',
+                            textInput('name_tif_pts', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_points_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
                                              multiple=FALSE),
+                            div(style = "margin-top: -30px"),
           ),
 
           shinydashboard::menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
           conditionalPanel( 'input.sidebarid == "tab_distance"',
+                            textInput('name_tif_dst', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_dist_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -30px"),
+                            textInput('name_pts_dst', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_dist_shp', 'Load points files', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
+                            div(style = "margin-top: -30px"),
                             #actionButton("dist_shp", "Load points!"),
 
           ),
@@ -3615,25 +3694,37 @@ if (FALSE){
           shinydashboard::menuItem(HTML(paste("Connectivity", "dispersal kernels", sep="<br/>")),
                                    tabName = "tab_kernels", icon = icon("bezier-curve")),
           conditionalPanel( 'input.sidebarid == "tab_kernels"',
+                            textInput('name_tif_crk', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_crk_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -50px"),
+                            textInput('name_pts_crk', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_crk_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
+                            div(style = "margin-top: -30px"),
                             #actionButton("dist_shp", "Load points!"),
           ),
 
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
           conditionalPanel( 'input.sidebarid == "tab_corridors"',
+                            textInput('name_tif_lcc', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_lcc_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -50px"),
+                            textInput('name_pts_crk', label = '', value = "",
+                                      width = NULL, placeholder = 'Name:'),
                             shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
+                            div(style = "margin-top: -30px"),
                             #actionButton("dist_shp", "Load points!"),
 
           ),
@@ -3880,52 +3971,88 @@ if (FALSE){
           shinydashboard::tabItem(
             tabName = 'tab_surface',
             fluidRow(
-              column(3, h2(' Create surface resistance', style="text-align: center;")),
+              column(3,
+                     tags$td(style = "width: 25%", align = "top",
+                             h3(' Create surface resistance',
+                                style="text-align: center;vertical-align: top")
+                     )),
               column(7, verbatimTextOutput("vout_h2r") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
                      tags$head(tags$style("#vout_h2r{overflow-y:scroll; max-height: 70px}"))),
-              column(1, actionButton("h2rsample", HTML("Load<br/>sample data"), icon = icon("upload")))
+              column(1,
+                     actionButton("h2rsample", HTML("Load<br/>sample data"), icon = icon("upload")))
             ),
 
             fluidRow(
+              column(2,
+                     textInput("in_sur_3", "Min-grid:", '0'),
+                     textInput("in_sur_4", "Max-grid:", '100')
+              ),
+              column(2,
+                     textInput("in_sur_5", "Max-resistance:", '100'),
+                     textInput("in_sur_6", "Shape:", '1')
+              ),
 
-              tags$table(style = "width: 100%", align = "left",
-                         tags$tr(tags$td(style = "width: 30%",
-                                         align = "center",
-                                         htmlOutput(outputId = 'out_par_surA',  fill = TRUE)
-                         ),
-                         tags$td(#style = "width: 60%",
-                           align = "center",
-                           textInput('name_surf', label = 'New layer name:', value = "",
-                                     width = NULL, placeholder = 'NameOfNewLayertoCreate')),
-                         tags$td(align = "left",
-                                 actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play"))),
-                         tags$td(align = "left",
-                                 downloadButton('tifDwn', 'Download'))
-                         )
+              column(6,
+                     fluidRow(
+                       column(3,
+                              textInput("in_sur_7", "No Data:", '-9999')
+                       ),
+                       column(6,
+                              selectInput("in_pts_hs", "Source layer:", '50', choices = '')
+                       ),
+                       column(3,
+                              tags$table(
+                                style = "width: 100%", align = "left",
+                                tags$tr(
+                                  tags$td(style = "width: 25%", align = "center",
+                                          htmlOutput(outputId = 'out_par_surA',  fill = TRUE))
+                                ))
+                       ),
+                     ),
+                     textInput('name_sur', label = 'New layer name:', value = "",
+                               width = '100%', placeholder = 'NameOfNewLayertoCreate')
+                     #tags$tr(tags$td(style = "width: 20%", align = "center",),
+              ),
+
+              column(2,
+
+                     tags$table(
+                       style = "width: 100%", align = "left",
+                       tags$tr(
+                         tags$td(style = "width: 25%", align = "center",
+                                 #
+                         )),
+                       tags$tr(
+                         tags$td(style = "width: 25%", align = "center",
+                                 br(),
+                                 actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play")),
+                         )),
+                       tags$tr(
+                         tags$td(style = "width: 25%", align = "center",
+                                 h6(""),
+                                 downloadButton('tifDwn', 'Download')
+                         ))
+                     ),
+
               )
             ),
 
-            # fluidRow(
-            #   column( 3, align = "center",
-            #          tags$style(HTML('.verticalcenter {
-            #          # display: table-cell;
-            #          # height: 400px;
-            #                          vertical-align: bottom;}')),
-            #
-            #          htmlOutput(outputId = 'out_par_surA',  fill = TRUE)),
-            #   column(4,
-            #          textInput('name_surf', label = 'New layer name:', value = "HabSui_A",
-            #                    width = NULL, placeholder = 'HabSui_A')),
-            #   column(3, actionButton("h2r", HTML("Get Res\nSurf"), icon = icon("play"))),
-            #   column(2, downloadButton('tifDwn', 'Download'))
+            # tags$tr(tags$td(style = "width: 20%", align = "center", ), ),
+            #     tags$td(#style = "width: 60%",
+            #       align = "center", ),
+            #     tags$td(align = "left", ),
+            #     tags$td(align = "left", )
+            #     ) ) ),
+
+
+
+            # fluidPage(
+            #   column(2, textInput("in_sur_3", "Min-grid:", '0')),
+            #   column(2, textInput("in_sur_4", "Max-grid:", '100')),
+            #   column(2, textInput("in_sur_5", "Max-resistance:", '100')),
+            #   column(1, textInput("in_sur_6", "Shape:", '1')),
+            #   column(2, textInput("in_sur_7", "No Data:", '-9999')),
             # ),
-            fluidPage(
-              column(2, textInput("in_surf_3", "Min-grid:", '0')),
-              column(2, textInput("in_surf_4", "Max-grid:", '100')),
-              column(2, textInput("in_surf_5", "Max-resistance:", '100')),
-              column(1, textInput("in_surf_6", "Shape:", '1')),
-              column(2, textInput("in_surf_7", "No Data:", '-9999')),
-            ),
             fluidPage(
               leaflet::leafletOutput("ll_map_h2r", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1"))
@@ -3940,24 +4067,52 @@ if (FALSE){
                      tags$head(tags$style("#vout_edi{overflow-y:scroll; max-height: 70px}"))
               )
             ),
-            fluidPage(
-              column(3,
-                     htmlOutput(outputId = 'out_par_ediA',  fill = TRUE),
-                     h6(paste(
-                       #"Draw only one geometry type at the time.",
-                       #"Only last type of polygon(s) will be used.",
-                       "Use a positive or negative single value other than 0.",
-                       "Please remove existing polygons brefire running again. "))),
-              column(2, numericInput("in_edi_val", label = "Value to add/replace:", value = 0)),
-              column(2, numericInput("in_edi_wid", label = "Pixel width:", value = 1),
-                     checkboxInput("in_edi_che", "All pix. touched", FALSE)),
-              column(3, actionButton("edi", HTML("Add values to raster"), icon = icon("play")),
-                     actionButton("rpl", HTML("Replace values in raster"), icon = icon("play"))),
-              column(1,
-                     downloadButton('editifDwn', 'Download')
 
-              )
+            # fluidPage(
+            #   column(1, numericInput("in_edi_val", label = "Value to add/replace:", value = 0),
+            #          numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
+            #   column(3,
+            #          h6(paste(
+            #            #"Draw only one geometry type at the time.",
+            #            #"Only last type of polygon(s) will be used.",
+            #            "Use a positive or negative single value other than 0.",
+            #            "Please remove existing polygons brefire running again. ")),
+            #    checkboxInput("in_edi_che", "All pix. touched", FALSE)),
+            #   column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = ''),
+            #          textInput('name_edi', label = 'New layer name:', value = "",
+            #                    width = '100%', placeholder = 'NameOfNewLayertoCreate')),
+            #   column(3, actionButton("edi", HTML("Add vals"), icon = icon("play")),
+            #          br(),
+            #          actionButton("rpl", HTML("Replace vals"), icon = icon("play"))
+            #          ),
+            #   column(1,
+            #          htmlOutput(outputId = 'out_par_ediA',  fill = TRUE),
+            #          downloadButton('editifDwn', 'Download')
+            #
+            #   )
+            # ),
+
+            fluidPage(
+              column(1, numericInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
+              column(1, numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
+              column(1, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
+              column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
+              # column(2, textInput('name_edi', label = 'New layer name:', value = "",
+              #                     width = '100%', placeholder = 'NameOfNewLayertoCreate')),
+              column(1, actionButton("edi", HTML("Add vals"), icon = icon("play"))),
+              column(1, actionButton("rpl", HTML("Replace vals"), icon = icon("play"))),
+
+              column(2,
+                     tags$table(
+                       style = "width: 100%", align = "left",
+                       tags$tr(
+                         tags$td(style = "width: 25%", align = "center",
+                                 htmlOutput(outputId = 'out_par_ediA',  fill = TRUE)),
+                       ))),
+              column(1, downloadButton('editifDwn', 'Download'))
+
             ),
+
             fluidPage(
               leaflet::leafletOutput("ll_map_edi", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1"))
@@ -3974,13 +4129,17 @@ if (FALSE){
             ),
 
             fluidPage(
-              htmlOutput(outputId = 'out_par_ptsA',  fill = TRUE),
-              column(2, textInput("in_points_3", "Min-grid:", '2')),
-              column(2, textInput("in_points_4", "Max-grid:", '95')),
-              column(2, textInput("in_points_5", "# of points:", '50')),
+              column(1, textInput("in_points_3", "Min-grid:", '2')),
+              column(1, textInput("in_points_4", "Max-grid:", '95')),
+              column(1, textInput("in_points_5", "# of points:", '50')),
               column(3, selectInput("in_points_ly", "Source layer:", '50', choices = '')),
-              column(3, actionButton("points_py", "Create points", icon = icon("play"))),
-              column(2, downloadButton('ptsDwn', 'Download'))
+              column(2, textInput('name_pts', label = 'New layer name:', value = "",
+                                  width = '100%', placeholder = 'Name new layer')),
+              # column(2, textInput('name_edi', label = 'New layer name:', value = "",
+              #                     width = '100%', placeholder = 'NameOfNewLayertoCreate')),
+              column(1, htmlOutput(outputId = 'out_par_ptsA',  fill = TRUE)),
+              column(1, actionButton("points_py", "Create points", icon = icon("play"))),
+              column(1, downloadButton('ptsDwn', 'Download'))
             ),
             leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
@@ -3999,10 +4158,21 @@ if (FALSE){
             ),
 
             fluidRow(
-              column(2, textInput("in_dist_3", "Distance threshold (meters x cost):", '25000')),
-              column(1, actionButton("dist_py", "Get matrix", icon = icon("play")),
-                     downloadButton('csvDwn', 'Download')),
-              column(9, shinydashboard::valueBoxOutput("dist_box1") %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+              column(9,
+                     fluidRow(
+                       column(4, textInput("in_dist_3", "Distance threshold (meters x cost):", '25000')),
+                       column(4, textInput('name_dst', label = 'New CSV name:', value = "",
+                                           width = '100%', placeholder = 'Name new CSV')),
+                       column(4, actionButton("dist_py", "Get matrix", icon = icon("play")),
+                              downloadButton('csvDwn', 'Download'))
+                     )
+              ),
+              column(3,
+                     fluidRow(
+                       #column(9,
+                       shinydashboard::valueBoxOutput("dist_box1") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                       #)
+                     ))
             ),
             leaflet::leafletOutput("ll_map_dist", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
@@ -4019,13 +4189,16 @@ if (FALSE){
               )
             ),
             fluidPage(
-              htmlOutput(outputId = 'out_par_lccA',  fill = TRUE),
-              htmlOutput(outputId = 'out_par_lccB',  fill = TRUE),
+              column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(3, textInput("in_lcc_4", "Distance threshold (meters):", '500000')),
-              column(3, textInput("in_lcc_5", "Corridor smoothing factor:", '5')),
-              column(3, textInput("in_lcc_6", "Corridor tolerance (meters x cost):", '5')),
-              column(3, actionButton("lcc", "Get corridors"),
+              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '500000')),
+              column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '5')),
+              column(2, textInput("in_lcc_6", "Corridor tolerance (meters x cost):", '5')),
+              column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
+              column(2, textInput('name_lcc', label = 'New layer name:', value = "",
+                                  width = '100%', placeholder = 'Name new layer')),
+              column(1, actionButton("lcc", "Get corridors", icon = icon("play")),
                      actionButton("lcc2", "Get corridors (heavy)", icon = icon("play")),
                      downloadButton('lccDwn', 'Download'))
             ),
@@ -4055,14 +4228,17 @@ if (FALSE){
               )
             ),
             fluidPage(
-              htmlOutput(outputId = 'out_par_crkA',  fill = TRUE),
-              htmlOutput(outputId = 'out_par_crkB',  fill = TRUE),
-              column(3, textInput("in_crk_4", "Distance threshold (meters x cost):", '25000')),
-              column(3, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
+              column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
+              column(2, textInput("in_crk_4", "Distance threshold (meters x cost):", '25000')),
+              column(1, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
-              column(3, textInput("in_crk_6", "Kernel volume (meters x cost):", '1')),
-              column(3, actionButton("crk", "Get kernels", icon = icon("play")),
+              column(2, textInput("in_crk_6", "Kernel volume (meters x cost):", '1')),
+              column(2, selectInput("in_crk_sr", "Source layer:", '50', choices = '')),
+              column(2, textInput('name_crk', label = 'New layer name:', value = "",
+                                  width = '100%', placeholder = 'Name new layer')),
+              column(1, actionButton("crk", "Get kernels", icon = icon("play")),
                      downloadButton('crkDwn', 'Download')),
             ),
 
@@ -4103,13 +4279,17 @@ if (FALSE){
               )
             ),
             fluidPage(
-              htmlOutput(outputId = 'out_par_prioA',  fill = TRUE),
-              htmlOutput(outputId = 'out_par_prioB',  fill = TRUE),
-              htmlOutput(outputId = 'out_par_prioC',  fill = TRUE),
-              column(4, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
+              column(1, htmlOutput(outputId = 'out_par_prioA',  fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_prioB',  fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_prioC',  fill = TRUE)),
+              column(2, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
+              column(2, selectInput("in_pri_lcc", "Source layer:", '50', choices = '')),
+              column(2, selectInput("in_pri_crk", "Source layer:", '50', choices = '')),
+              column(2, textInput('name_pri', label = 'New layer name:', value = "",
+                                  width = '100%', placeholder = 'Name new layer')),
               # column(4, textInput("in_pri_6", "Corridor tolerance:", '1000')),
-              column(2, actionButton("pri", "Prioritize", icon = icon("play"))),
-              column(2, downloadButton('priDwn', 'Download')),
+              column(1, actionButton("pri", "Prioritize", icon = icon("play")),
+                     downloadButton('priDwn', 'Download')),
             ),
 
             leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
@@ -4127,10 +4307,10 @@ if (FALSE){
                 rowx(
                   #col(6, htmlOutput('pdfviewer')),
                   colx(6, tags$iframe(style="height:600px; width:100%",
-                                     #src="http://localhost/ressources/pdf/R-Intro.pdf"
-                                     #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
-                                     src="pdf.pdf"
-                                     )
+                                      #src="http://localhost/ressources/pdf/R-Intro.pdf"
+                                      #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                      src="pdf.pdf"
+                  )
                   )
                 )
               )
