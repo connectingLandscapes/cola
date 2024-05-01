@@ -555,7 +555,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
-### time stamp -----
+### time stamp
 sessionIDgen <- function(letter = TRUE, sep = ''){
   tempID <- basename(tempfile())
   timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
@@ -925,6 +925,7 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
     # try(file.remove(inFiles$name))
   }
   #save(outshp, file = paste0(gitPath, '/R/outshp_shp.RData'))
+  cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
   return(outshp)
 }
 
