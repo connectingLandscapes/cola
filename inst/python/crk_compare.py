@@ -29,29 +29,35 @@ rfBase = sys.argv[1]
 # Assumes files have nodata values of -9999 and have valid projections
 csn = sys.argv[2]
 
+# Table output of absolute values (csv)
+table1 = sys.argv[3]
+
+# Table output of relative values (csv)
+table2 = sys.argv[4]
+
 # Output figure 1 name (png)
 # This is barchart of the sum of crk values for each scenario
-ofig1 = sys.argv [3]
+ofig1 = sys.argv [5]
 
 # Output figure 2 name (png)
 # This is the barchart comparing crk of the baseline scenario
 # against all the others. Values are in % of baseline.
-ofig2 = sys.argv[4]
+ofig2 = sys.argv[6]
 
 # Output folder for writing rasters to file
 # These are tiffs created by subtracting the baseline scenario
 # from each of the other scenarios. Files are named using this
 # pattern: s1_comp.tif, s2_comp.tif, etc.
-odir = sys.argv[5]
+odir = sys.argv[7]
 
 # Shapefile for summarizing
 # Needs to have an ID field for grouping polygons
 # Use None to summarize over the entire raster extent
-shpZones = sys.argv[6]
+shpZones = sys.argv[8]
 
 # ID field for grouping polygons
 # Use None if shapefile arg is None
-idField = sys.argv[7]
+idField = sys.argv[9]
 
 # Set style
 plt.style.use('ggplot')
@@ -83,6 +89,12 @@ if shpZones == 'None':
     # Convert values to a dataframe
     csum = pd.DataFrame({'crksum': np.array(csumlist).transpose(), 'Scenario': ['S' + str(f) for f,n in enumerate(nlist)]})
     
+    # Reorder columns
+    csum = csum.loc[:, ['Scenario','crksum']]
+
+    # Write table to file
+    csum.to_csv(table1, index=False)
+    
     # Barplot
     ax = csum.plot.bar(x='Scenario', y='crksum', rot=0, color="darkblue", title="Core Movement Potential", fontsize=16)
     ax.title.set_size(16)
@@ -104,6 +116,12 @@ if shpZones == 'None':
     
     # Calculate basesum/scenario ratio
     csum['crkcomp'] = csum['crksum']/basesum*100
+    
+    # Drop crksum
+    csum = csum.drop('crksum', axis=1)
+    
+    # Write table to file
+    csum.to_csv(table2, index=False)
     
     # Barplot
     ax = csum.plot.bar(x='Scenario', y='crkcomp', rot=0, color="darkblue", title="Core Movement Scenario Comparison", fontsize=16)
@@ -183,6 +201,10 @@ else:
     # Absolute values
     # Pivot for grouped barplot
     pivot_df = csum.pivot(index='Scenario',columns='PolyID',values='crksum')
+    
+    # Write to file
+    pivot_df.to_csv(table1, index=True)
+    
     # Remove polygons with zero values across all scenarios
     pivot_df = pivot_df.loc[:,(pivot_df.sum(axis=0) != 0)]
 
@@ -210,6 +232,9 @@ else:
     pivot_df = pivot_df.divide(basesum, axis=0)*100
     pivot_df = pivot_df.T
 
+    # Write to file
+    pivot_df.to_csv(table2, index=True)
+    
     # Barplot
     ax = pivot_df.plot.bar(rot=0, title="Core Movement Scenario Comparison", fontsize=16, color=colormaps['tab20'].colors)
     ax.title.set_size(16)
