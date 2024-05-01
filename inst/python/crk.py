@@ -136,10 +136,16 @@ def main() -> None:
             nPts = len(cinds)
             # Check for points and remove any that are out of raster bounds
             # Apparently this can happen using cell_indices_from_coords
+            # Outside outer dims
             if any(cinds[:,0] >= r.shape[0]):
                 cinds = cinds[cinds[:,0] < r.shape[0]]
             if any(cinds[:,1] >= r.shape[1]):
                 cinds = cinds[cinds[:,1] < r.shape[1]]
+            # Outside inner dims
+            if any(cinds[:,0] < 0):
+                cinds = cinds[cinds[:,0] >= 0]
+            if any(cinds[:,1] < 0):
+                cinds = cinds[cinds[:,1] >= 0]
             # Check for individual points with no data
             checkND = r[np.array(cinds[:,0]),np.array(cinds[:,1])]
             if -9999 in checkND:

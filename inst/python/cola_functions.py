@@ -16,6 +16,8 @@ from scipy import sparse
 from scipy.sparse import diags
 from numba import njit, prange
 from scipy.sparse import tril
+from shapely.geometry import MultiPolygon
+import geopandas as gpd
     
 #%%
 def asciiToGeoTiff(infile, outfile, crs=None):
@@ -301,6 +303,29 @@ def is_float(numString):
     if "." in numString and numString.replace(".", "").isnumeric():
         return True
     else:
+        return False
+
+def is_floatpy3(element: any) -> bool:
+    """
+    From https://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python/20929881#20929881
+    Parameters
+    ----------
+    element : any
+        DESCRIPTION.
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    """
+    #If you expect None to be passed:
+    if element is None: 
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
         return False
 
 def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=False, Cshape=0.1, NewMin=0, NewMax=1):
@@ -744,6 +769,24 @@ def read2flt32array(upCRS, rg):
             if profile['count'] > 1:
                 profile['count'] = 1
     return(r, profile)
+
+def groupby_multipoly(df, by, aggfunc="first"):
+    data = df.drop(labels=df.geometry.name, axis=1)
+    aggregated_data = data.groupby(by=by).agg(aggfunc)
+
+    # Process spatial component
+    def merge_geometries(block):
+        return MultiPolygon(block.values)
+
+    g = df.groupby(by=by, group_keys=False)[df.geometry.name].agg(
+        merge_geometries
+    )
+
+    # Aggregate
+    aggregated_geometry = gpd.GeoDataFrame(g, geometry=df.geometry.name, crs=df.crs)
+    # Recombine
+    aggregated = aggregated_geometry.join(aggregated_data)
+    return aggregated
 
 def zoneAdjacency(zones):
     """
