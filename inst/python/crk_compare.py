@@ -258,7 +258,7 @@ for i, j in enumerate(nlist):
     comp = np.expand_dims(comp, axis=0)
     
     # Write to file
-    otiff = Path(odir) / ('s' + str(i+1) + '_comp.tif' )
+    otiff = Path(odir) / ('s' + str(i+1) + '_crk_comp.tif' )
     cf.arrayToGeoTiff(comp, otiff, profile)
 
 
