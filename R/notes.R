@@ -108,7 +108,7 @@ if (FALSE){
 #
 # sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
 # sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
-sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
 # sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
 # cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/
 # http://18.190.126.82:3838/cola

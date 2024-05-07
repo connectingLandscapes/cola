@@ -540,3 +540,97 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
               shp = ifelse(file.exists(outshp), outshp, NA),
               log = intCMD) )
 }
+
+
+#' @title  Compare maps of cumulative resistance kernels
+#' @description This tool compares the cumulative resistance kernels
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' crk_compare_py( )
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#'
+crk_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                           pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
+                           intif, intifs,
+                           outcsv, outpng, outfolder,
+                           inshp = 'None',
+                           shpfield = 'None'){
+
+  # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
+  # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
+  # C:/Users/pj276/Scratch/scenario_testing/size7_crk_abs_comp.png
+  # C:/Users/pj276/Scratch/scenario_testing/size7_crk_percent_comp.png
+  # C:/Users/pj276/Scratch/scenario_testing
+  # C:/Users/pj276/Scratch/scenario_testing/mys_pas_ss.shp
+  # WDPA_PID',
+  # [1] Baseline raster path that contains original no data values
+  # [2] string, coma separated raster to compare
+  # [3] out csv with stats
+  # [4] out PNG file
+  # [5] out folder with pairwise comparisson
+  # [6] shapefile to regionalize
+  # [7] shapefile attribute/column name to aggregate
+
+  (cmd_crk_comp <- paste0(py, ' ', pyscript, ' ',
+                          intif, ' ', intifs, ' ',
+                          outcsv, ' ', outpng, ' ',
+                          outfolder, ' ',
+                          inshp, ' ', shpfield)
+  )
+  cat('\n\n\tCMD:')
+  print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+
+  intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outpng), outpng, NA),
+               log =  intCMD) )
+}
+
+#' @title  Compare maps of least cost paths
+#' @description This tool compares the least cost paths
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' crk_compare_py( )
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#'
+lcc_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                           pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
+                           intif, intifs,
+                           outcsv, outpng, outfolder,
+                           inshp = 'None',
+                           shpfield = 'None'){
+
+  # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
+  # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
+  # C:/Users/pj276/Scratch/scenario_testing/size7_crk_abs_comp.png
+  # C:/Users/pj276/Scratch/scenario_testing/size7_crk_percent_comp.png
+  # C:/Users/pj276/Scratch/scenario_testing
+  # C:/Users/pj276/Scratch/scenario_testing/mys_pas_ss.shp
+  # WDPA_PID',
+  # [1] Baseline raster path that contains original no data values
+  # [2] string, coma separated raster to compare
+  # [3] out csv with stats
+  # [4] out PNG file
+  # [5] out folder with pairwise comparisson
+  # [6] shapefile to regionalize
+  # [7] shapefile attribute/column name to aggregate
+
+  (cmd_lcc_comp <- paste0(py, ' ', pyscript, ' ',
+                          intif, ' ', intifs, ' ',
+                          outcsv, ' ', outpng, ' ',
+                          outfolder, ' ',
+                          inshp, ' ', shpfield)
+  )
+  cat('\n\n\tCMD:')
+  print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+
+  intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outpng), outpng, NA),
+               log =  intCMD) )
+}
+

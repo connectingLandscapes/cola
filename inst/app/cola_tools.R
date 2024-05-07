@@ -4,7 +4,6 @@
 # options(scipen = 9)
 
 
-# draws2Features(polDraw)
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
 
   ## Create list of empty features types
@@ -840,6 +839,8 @@ loadRast <- function(inFiles, tempFolder, sessID){ # inFile <- input$shapefile
 
 
 loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
+  #inFiles: data frame with files. column 'name' with file name, and 'newFile' with full new name path
+
   # rv$inDistSessID
   # sessID <- (inDistSessID <- sessionIDgen())
   # tempFolder <- "/data/temp/SL2023112814374705file138b6c29cf34/"
@@ -896,7 +897,8 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
                                          basename(tools::file_path_sans_ext(inFiles$newFile[1]))),
                              error = function (e) NULL)
 
-      if( is.null(outshp$shp)){
+
+      if( is.null(outshp$shp) ){
         outshp$shp <- tryCatch(sf::read_sf(
           grep('shp$', inFiles$newFile, value = TRUE)),
           error = function (e) NULL)
@@ -905,27 +907,29 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
           outshp$shp <- as(outshp$shp, 'Spatial')
         }
       }
+      #print( ' ............. '); print(outshp$shp)
 
       outshp$files <- inFiles$newFile
       outshp$layer <- grep(pattern = '.shp', outshp$files, value = TRUE)
     }
 
-    if (is.na(st_crs(outshp$shp))){
+    if ( is.na(st_crs(outshp$shp)) ){
       # if (is.na(outshp$shp@proj4string@projargs)){
       outshp$mssg <- 'No projection in shapefile'
     }
 
-    if (any(class(outshp$shp) %in% 'sf')){
+    if ( any(class(outshp$shp) %in% 'sf') ){
       #if (class(outshp$shp) == 'SpatialPointsDataFrame'){
-      outshp$shp$ID <- 1:nrow(outshp$shp)
+      outshp$shp$sortID <- 1:nrow(outshp$shp)
     }
 
     # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
     # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
     # try(file.remove(inFiles$name))
   }
-  #save(outshp, file = paste0(gitPath, '/R/outshp_shp.RData'))
+  #save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
   cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
+  #print(outshp)
   return(outshp)
 }
 
@@ -966,6 +970,7 @@ pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
       if(is.null(y)){ y <- 'NULL' }
       tryCatch(cat(sep, x, ": ", y), error = function(e) e)
     }))
+    cat('\n\t \n')
   }
 } # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
 

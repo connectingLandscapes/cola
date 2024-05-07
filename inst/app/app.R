@@ -521,30 +521,24 @@ server <- function(input, output, session) {
   }
 
   #test <- burnShp(polDraw, burnval, rastPath, rastCRS)
-  burnShp <- function(polDraw, burnval, rastPath, rastCRS = NA, lineBuffW = 1){
+  burnShp <- function(polPath, burnval = 'val2burn',
+                      rastPath, rastCRS = NA,  att = FALSE, lineBuffW = 1){
     # rastPath <- '/data/temp/XZ2024041911393405file9c152374e9a2/in_edit_DJ2024041911410705file9c15429f450d.tif'
     # rast <-terra::rast(rastPath)
-    # rastCRS <- crs(rast, describe = TRUE)$code
     # burnval = -10
     # (load(file = '/data/tempR/draw.RData')) # polDraw
 
-    if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
+    #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
 
-      (polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+      #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
       (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
       file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
-      #gdalwarp(srcfile = rastPath, dstfile = rasterizedPath, ot = "Float64")
-
-      #load(file = '/data/temp/2lines.RData') # polDraw
-      #load(file = '/data/temp/4geom.RData') # polDraw
-      #str(polDraw)
-      #polDraw$type # FeatureCollection
+      #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
+      #str(polDraw) #polDraw$type # FeatureCollection
 
       rt <- terra::rast(rastPath)
       rastRes <- res(rt)
-
-
 
       if( is.na(rastCRS)){
         ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
@@ -561,53 +555,36 @@ server <- function(input, output, session) {
         #EPSG:4326
       }
 
-
-      pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes) * lineBuffW )
-
-      # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-      pol2Rastx <- st_as_sf( pol2Rast)
-      pol2Rastx$val2burn <- as.numeric(burnval)
-      sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
-                    layer = tools::file_path_sans_ext(basename(polPath)),
-                    driver = 'ESRI Shapefile',
-                    append=FALSE,
-                    overwrite_layer = TRUE)
-
       gdalUtilities::gdal_rasterize(
         src_datasource = polPath,
-        at = FALSE,
+        at = att,
         dst_filename = rasterizedPath,
-        add = TRUE, a = 'val2burn') #as.numeric(burnval)
+        add = TRUE,
+        a = 'val2burn') #as.numeric(burnval)
 
       #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
       # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
       #                                      dst_filename = rastPath,
       #                                      add = TRUE, a = 'val2burn')
-
       # plot(raster(rastPath))
       # plot(raster(rasterizedPath), main = 'Rasterized')
       # plot(sf::read_sf(polPath), add = TRUE)
       # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
       return(rasterizedPath)
-    } else {
-      return(NA)
-    }
+    # } else {
+    #   return(NA)
+    # }
   }
 
 
   #test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
-  replaceRastShp <- function(polDraw, burnval, rastPath, att = FALSE, rastCRS = NA, lineBuffW = 2){
-    # rastPath0 <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
-    # rastPath <- '/data/temp/CR2024041807261605file906c9e353f9/HS_size5_nd_squared.tif'
-    # file.copy(rastPath0, rastPath)
-    # (load('/data/tempR/draw4pol.RData'))
-    # burnval = 200
+  replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
+                             att = FALSE, rastCRS = NA, lineBuffW = 1){
 
-    if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
-
+    #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
       ## Polygon to write
-      (polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+      #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
       ## Raster with new features
       (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
       ## Raster to create
@@ -621,17 +598,17 @@ server <- function(input, output, session) {
         (rastCRS <- st_crs(rt))
       }
 
-      pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
-      # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-      pol2Rastx <- st_as_sf( pol2Rast)
-      # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
-
-      pol2Rastx$val2burn <- as.numeric(burnval)
-      sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
-                    layer = tools::file_path_sans_ext(basename(polPath)),
-                    driver = 'ESRI Shapefile',
-                    append = FALSE,
-                    overwrite_layer = TRUE)
+      # pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
+      # # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+      # pol2Rastx <- st_as_sf( pol2Rast)
+      # # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
+      #
+      # pol2Rastx$val2burn <- as.numeric(burnval)
+      # sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+      #               layer = tools::file_path_sans_ext(basename(polPath)),
+      #               driver = 'ESRI Shapefile',
+      #               append = FALSE,
+      #               overwrite_layer = TRUE)
 
 
       ## Rasterize polygons
@@ -663,9 +640,7 @@ server <- function(input, output, session) {
       # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
       return(replacedPath)
-    } else {
-      return(NA)
-    }
+    #} else { return(NA) }
   }
 
   makeLL <- function(){
@@ -940,7 +915,8 @@ server <- function(input, output, session) {
         ll
       })
 
-    output$ll_map_edi <- leaflet::renderLeaflet({ ll %>%
+    ## add draw tools to scenarios and comparisson
+    output$ll_map_com <- output$ll_map_edi <- leaflet::renderLeaflet({ ll %>%
         leaflet.extras::addDrawToolbar(singleFeature = FALSE,
                                        targetGroup='draw', polylineOptions = T,
                                        rectangleOptions = T, circleOptions = T,
@@ -1052,6 +1028,7 @@ server <- function(input, output, session) {
     lccready = FALSE,
     crkready = FALSE,
     priready = FALSE,
+    sceready = FALSE,
 
     ## Spatial file paths
     hs = NULL, # path
@@ -1158,11 +1135,11 @@ server <- function(input, output, session) {
     leaflet::addMeasure( position = "topright",
                          primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
                          activeColor = "#3D535D",completedColor = "#7D4479") %>%
-    leaflet.extras::addDrawToolbar(singleFeature = FALSE,
-                                   targetGroup='draw', polylineOptions = TRUE,
-                                   rectangleOptions = TRUE, circleOptions = TRUE,
-                                   markerOptions = TRUE, circleMarkerOptions = F,
-                                   editOptions = leaflet.extras::editToolbarOptions()) %>%
+    # leaflet.extras::addDrawToolbar(singleFeature = FALSE,
+    #                                targetGroup='draw', polylineOptions = TRUE,
+    #                                rectangleOptions = TRUE, circleOptions = TRUE,
+    #                                markerOptions = TRUE, circleMarkerOptions = F,
+    #                                editOptions = leaflet.extras::editToolbarOptions()) %>%
     leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
 
 
@@ -1925,6 +1902,45 @@ server <- function(input, output, session) {
 
 
   ####### > EDIT  ------------------
+  ####### > Draw notes ------------------
+  # observeEvent(input$ll_map_edi_draw_new_feature, {
+  # https://rdrr.io/cran/leaflet.extras/src/inst/examples/shiny/draw-events/app.R
+  #   polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
+  #   save(polDraw, file = '/data/temp/draw.RData')
+  # })
+  # observeEvent(input$ll_map_edi_draw_start, {
+  #   print("Start of drawing")
+  #   print(input$ll_map_edi_draw_start)
+  # })
+  # # Stop of Drawing
+  # observeEvent(input$ll_map_edi_draw_stop, {
+  #   print("Stopped drawing")
+  #   print(input$ll_map_edi_draw_stop)
+  # })
+  # # New Feature
+  # observeEvent(input$ll_map_edi_draw_new_feature, {
+  #   print("New Feature")
+  #   print(input$ll_map_edi_draw_new_feature)
+  # })
+  # # Edited Features
+  # observeEvent(input$ll_map_edi_draw_edited_features, {
+  #   print("Edited Features")
+  #   print(input$ll_map_edi_draw_edited_features)
+  # })
+  # # Deleted features
+  # observeEvent(input$ll_map_edi_draw_deleted_features, {
+  #   print("Deleted Features")
+  #   print(input$ll_map_edi_draw_deleted_features)
+  # })
+  # # We also listen for draw_all_features which is called anytime
+  # # features are created/edited/deleted from the map
+  # observeEvent(input$ll_map_edi_draw_all_features, {
+  #   print("VVVV----- All Features ------VVVV")
+  #   print(input$ll_map_edi_draw_all_features)
+  #   print("^^^^^^----- All Features ------^^^^")
+  # })
+
+
   ## Load tif
   observeEvent(input$in_edi_tif, {
 
@@ -1955,7 +1971,7 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
         updateVTEXT(rv$log)
       } else {
-        params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
         rv$newtifPath <- newtifPath
         rv$edi <- newtifPath
@@ -1989,7 +2005,7 @@ server <- function(input, output, session) {
     })
   })
 
-
+  ## Load shp
   observeEvent(input$in_edi_shp, {
 
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
@@ -2015,6 +2031,9 @@ server <- function(input, output, session) {
     #if(devug){save(inFiles, file = paste0(tempFolder, '/shpfiles.RData'))}
 
     inShp <<- loadShp(inFiles, tempFolder, rv$inEdiSessID)
+    print( inShp$shp )
+
+    save(inShp, inFiles, file = paste0(tempFolder, '/debug_edi_shp.RData'))
 
     if (any(class(inShp$shp) %in% 'sf')){
       # if(class(inShp$shp) == 'SpatialPointsDataFrame'){
@@ -2022,70 +2041,32 @@ server <- function(input, output, session) {
       rv$sceready <- TRUE
       rv$sce <- inShp$layer
       rv$shp <- inShp$shp
+      rv$sce_sp <- inShp$shp
       rv$log <- paste0(rv$log, ' -- Scenario shapefile loaded');
       updateVTEXT(rv$log) # _______
 
-      pdebug(devug=devug,sep='\n',pre='---- LOAD SCE LCC\n','rv$sceready', 'rv$sce', 'rv$inEdiSessID') # _____________
+      pdebug(devug=devug,sep='\n',pre='---- LOAD SCE SHP\n','rv$sceready', 'rv$sce', 'rv$inEdiSessID') # _____________
 
       sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-      shp$ID <- 1:nrow(shp)
-
+      sce$sortID <- 1:nrow(sce)
       rv$edi_sp <- sce
 
+      print(rv$edi_sp)
+
+      bounds <- sce %>% st_bbox() %>% as.character()
       proxy <- leafletProxy("ll_map_edi")
-      proxy %>% leaflet::addPolygons(sce)
+      #proxy <- leaflet() %>% addTiles()
+      #print (getwd()); save(sce, file = 'sce_debug_edi_shp.RData'); print (sce)
+      proxy %>%  #remove(layerId = 'SurfaceResistance')  %>%
+        removeShape('layerId') %>%
+        leaflet::addPolygons(data = sce, color = 'darkblue', fillColor = 'darkblue', group = "layerId") %>%
+      fitBounds(bounds[1], bounds[2], bounds[3], bounds[4])
 
       # output$ll_map_edi <- leaflet::renderLeaflet({
       #   makeLL( )
       # })
     }
   })
-  ####### > Draw notes ------------------
-
-
-  # observeEvent(input$ll_map_edi_draw_new_feature, {
-  # https://rdrr.io/cran/leaflet.extras/src/inst/examples/shiny/draw-events/app.R
-  #   polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
-  #   save(polDraw, file = '/data/temp/draw.RData')
-  # })
-
-
-  # observeEvent(input$ll_map_edi_draw_start, {
-  #   print("Start of drawing")
-  #   print(input$ll_map_edi_draw_start)
-  # })
-  #
-  # # Stop of Drawing
-  # observeEvent(input$ll_map_edi_draw_stop, {
-  #   print("Stopped drawing")
-  #   print(input$ll_map_edi_draw_stop)
-  # })
-  #
-  # # New Feature
-  # observeEvent(input$ll_map_edi_draw_new_feature, {
-  #   print("New Feature")
-  #   print(input$ll_map_edi_draw_new_feature)
-  # })
-  #
-  # # Edited Features
-  # observeEvent(input$ll_map_edi_draw_edited_features, {
-  #   print("Edited Features")
-  #   print(input$ll_map_edi_draw_edited_features)
-  # })
-  #
-  # # Deleted features
-  # observeEvent(input$ll_map_edi_draw_deleted_features, {
-  #   print("Deleted Features")
-  #   print(input$ll_map_edi_draw_deleted_features)
-  # })
-  #
-  # # We also listen for draw_all_features which is called anytime
-  # # features are created/edited/deleted from the map
-  # observeEvent(input$ll_map_edi_draw_all_features, {
-  #   print("VVVV----- All Features ------VVVV")
-  #   print(input$ll_map_edi_draw_all_features)
-  #   print("^^^^^^----- All Features ------^^^^")
-  # })
 
 
   ## Run Edi sum ---
@@ -2094,16 +2075,23 @@ server <- function(input, output, session) {
     #polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
     save(polDraw, file = paste0(tempFolder, '/draw.RData'))
-    # load('/data/temp/draw.RData')
 
-    print(input$in_edi_val)
-    #print(polDraw)
-    # print(num2Burn)
-
-    if(is.numeric(input$in_edi_val) & input$in_edi_val != 0 & rv$tifready & !is.null(polDraw)){
+    if(input$in_edi_val != 0 & input$in_edi_val != "0" & rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
       # rv <- list(tif = '/data/temp/XS2023100319220605file859285936e77a/in_edit_TG2023100319221605file8592817dc90f8.tif')
       # rv$tif_sp <- terra::rast(rv$tif)
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
+
+      print(input$in_edi_val)
+      # print(polDraw)
+      # print(num2Burn)
+      # (load('/data/tempR/draw4pol.RData'))
+      # (load('/home/shiny/cola/inst/app/sce_debug_edi_shp.RData')); print (sce)
+
+
+      ## Not required as string or numeric is passed to the
+      # if (in_edi_val %in% colnames(sce)){
+      #     num2Burn <- in_edi_val
+      #   }
 
       output$ll_map_edi <- leaflet::renderLeaflet({
         (inEdiSessID2 <<- sessionIDgen())
@@ -2115,10 +2103,61 @@ server <- function(input, output, session) {
                          '\n -- Creating scenario');updateVTEXT(rv$log) #
 
         num2Burn <<- input$in_edi_val
+        lineBuffW <<- input$in_edi_wid
+
+        # num2Burn <- 'try'
+        # in_edi_val <- input$in_edi_val
+        # #in_edi_val <- 'ID'
         pdebug(devug=devug,sep='\n',pre='-',"num2Burn", "input$in_edi_val", "rv$tif")
 
-        burned <<- burnShp(polDraw = polDraw,
-                           burnval = num2Burn,
+        ## Define if use shape or draw
+        if( isTRUE(rv$sceready) ){
+
+          ## Uses shapefile
+          pol2Rastx <- rv$sce_sp # polPath
+          # pol2use <- sce # polPath
+
+          ## Assign column
+          if(num2Burn %in% colnames(pol2Rastx)){ # num2Burn <- 'ID'
+            pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+          } else {
+            pol2Rastx$val2burn <- as.numeric(num2Burn)
+          }
+
+          polPath <- rv$sce
+          print(paste0(' ----- SAVE: ', tempFolder, '/polPath_pol2Rastx.RData'))
+          save(pol2Rastx, polPath, num2Burn, file = paste0(tempFolder, '/polPath_pol2Rastx.RData'))
+          newPolPath <- paste0(tools::file_path_sans_ext(basename(polPath)), '_2rast')
+
+        } else {
+
+          ## Uses draw polygon
+          rt <- terra::rast(rv$tif)
+          rastRes <- res(rt)
+          (rastCRS <- st_crs(rt))
+
+          pol2Rast <- draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW )
+          # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+          pol2Rastx <- st_as_sf( pol2Rast)
+          pol2Rastx$val2burn <- as.numeric(num2Burn)
+
+          polPath <- gsub('.tif$', '_scepol.shp', rv$tif)
+        }
+
+
+
+        ## Write polygon
+
+        sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+                      layer = polPath,
+                      driver = 'ESRI Shapefile',
+                      append=FALSE,
+                      overwrite_layer = TRUE)
+
+
+        ## Burn the value of the polygon into the rast
+        burned <<- burnShp(polPath = newPolPath,
+                           burnval = 'val2burn',
                            rastPath = rv$tif,
                            lineBuffW = as.numeric(input$in_edi_wid),
                            att = input$in_edi_che,
@@ -2161,9 +2200,11 @@ server <- function(input, output, session) {
   ## Run Edi replace ---
   isolate(observeEvent(input$rpl, {
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
-    if(is.numeric(input$in_edi_val) & input$in_edi_val != 0 & rv$tifready & !is.null(polDraw)){
+
+    if(input$in_edi_val != 0 & input$in_edi_val != "0" & rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
 
       output$ll_map_edi <- leaflet::renderLeaflet({
+
         (inEdiSessID2 <<- sessionIDgen())
         rv$inEdiSessID2 <<- inEdiSessID2
         editRastpath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.tif')
@@ -2173,16 +2214,64 @@ server <- function(input, output, session) {
                          '\n -- Creating scenario');updateVTEXT(rv$log) #
 
         num2Burn <<- input$in_edi_val
-        pdebug(devug=devug, sep='\n',pre='-',"num2Burn", "input$in_edi_val", "rv$tif")
+        lineBuffW <<- input$in_edi_wid
 
-        # rv <- list(tif = '/data/temp/RFG2024042123323705//out_surface_OBQ2024042123325205.tif')
-        # (load('/data/tempR/draw4pol.RData')) # polDraw
-        # num2Burn = 10
+        # num2Burn <- 'try'
+        # in_edi_val <- input$in_edi_val
+        # #in_edi_val <- 'ID'
+        pdebug(devug=devug,sep='\n',pre='-',"num2Burn", "input$in_edi_val", "rv$tif")
 
-        burned <<- replaceRastShp(polDraw = polDraw,
+        ## Define if use shape or draw
+        if( isTRUE(rv$sceready) ){
+
+          ## Uses shapefile
+          pol2Rastx <- rv$sce_sp # polPath
+          # pol2use <- sce # polPath
+
+          ## Assign column
+          if(num2Burn %in% colnames(pol2Rastx)){ # num2Burn <- 'ID'
+            pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+          } else {
+            pol2Rastx$val2burn <- num2Burn
+          }
+
+          polPath <- rv$sce
+          pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
+
+
+
+        } else {
+
+          ## Uses draw polygon
+          rt <- terra::rast(rv$tif)
+          rastRes <- res(rt)
+          (rastCRS <- st_crs(rt))
+
+          pol2Rast <- draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW )
+          # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+          pol2Rastx <- st_as_sf( pol2Rast)
+          pol2Rastx$val2burn <- num2Burn
+
+          polPath <- gsub('.tif$', '_scepol.shp', rv$tif)
+          pdebug(devug=devug,sep='\n',pre='-', "'Sce draw'", "polPath", polPath)
+
+        }
+
+
+
+        ## Write polygon
+        sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+                      layer = tools::file_path_sans_ext(basename(polPath)),
+                      driver = 'ESRI Shapefile',
+                      append=FALSE,
+                      overwrite_layer = TRUE)
+
+
+        ## Burn the value of the polygon into the rast
+        burned <<- replaceRastShp(polPath = polPath,
                                   lineBuffW = as.numeric(input$in_edi_wid),
                                   att = input$in_edi_che,
-                                  burnval = num2Burn,
+                                  burnval = 'val2burn',
                                   rastPath = rv$tif,
                                   rastCRS = NA)
 
@@ -2420,7 +2509,7 @@ server <- function(input, output, session) {
           #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
           points_shpO <- sf::read_sf(points_file$file)
           points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-          points_shp$ID <- 1:nrow(points_shp)
+          points_shp$sortID <- 1:nrow(points_shp)
           #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
           rv$pts_sp <- points_shp
 
@@ -2587,7 +2676,7 @@ server <- function(input, output, session) {
           params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
           shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-          shp$ID <- 1:nrow(rv$shp)
+          shp$sortID <- 1:nrow(shp)
           rv$pts_sp <- shp
 
           make(LL)
@@ -3235,6 +3324,169 @@ server <- function(input, output, session) {
     }
   })
 
+  ####### > COMPARE  ------------------
+
+  ## Load shp
+  observeEvent(input$in_com_shp, {
+
+    # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
+    pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+
+    rv$log <- paste0(rv$log, '\nLoading scenario shapefile');updateVTEXT(rv$log) # _______
+
+    ## Create session IF if started from this tab
+    if(is.null(rv$inComSessID)){
+      (inComSessID <<- sessionIDgen())
+      rv$inComSessID <- inComSessID
+    }
+
+    pdebug(devug=devug,sep='\n',pre='--', 'inComSessID', 'rv$inComSessID') # _____________
+
+    inFiles <- input$in_com_shp #
+
+    inFiles$newFile <- paste0(tempFolder, '/', basename(inFiles$name))
+    pdebug(devug=devug,sep='\n',pre='\n--','print(inFiles)', 'inFiles$newFile', 'tempFolder') # _____________
+
+    file.copy(inFiles$datapath, inFiles$newFile);
+    # try(file.remove(inFiles$datapath))
+    #if(devug){save(inFiles, file = paste0(tempFolder, '/shpfiles.RData'))}
+
+    inShp <<- loadShp(inFiles, tempFolder, rv$inComSessID)
+    #save(inShp, inFiles, file = 'debug_edi_shp.RData')
+
+    if (any(class(inShp$shp) %in% 'sf')){
+      # if(class(inShp$shp) == 'SpatialPointsDataFrame'){
+
+      rv$comready <- TRUE
+      rv$com <- inShp$layer
+      rv$comshp <- inShp$shp
+      rv$log <- paste0(rv$log, ' -- Comparisson shapefile loaded');
+      updateVTEXT(rv$log) # _______
+
+      pdebug(devug=devug,sep='\n',pre='---- LOAD SCE SHP\n','rv$comready', 'rv$com', 'rv$inComSessID') # _____________
+
+      com <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      rv$com_sp <- com
+
+
+      proxy <- leafletProxy("ll_map_com")
+      # print(getwd())
+      # save(com, file = 'com_debug_shp.RData'); print (com)
+      # (load('com_debug_shp.RData'))
+
+      # proxy <- leaflet() %>% addTiles()
+      bounds <- com %>% st_bbox() %>% as.character()
+
+      proxy %>%  #remove(layerId = 'SurfaceResistance')  %>%
+        removeShape('layerId') %>%
+        leaflet::addPolygons(data = com, color = 'darkblue', fillColor = 'darkblue', group = "layerId") %>%
+        fitBounds(bounds[1], bounds[2], bounds[3], bounds[4])
+
+      # output$ll_map_edi <- leaflet::renderLeaflet({
+      #   makeLL( )
+      # })
+    }
+  })
+
+
+  ## Run comparisson
+  observeEvent(input$com_py, {
+    rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
+
+    if(! (rv$tifready | rv$hsready)){
+    } else {
+      rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+
+      if(is.null(rv$inSurSessID)){
+        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
+        (inSurSessID <- sessionIDgen())
+        rv$inSurSessID <- inSurSessID
+        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
+      }
+
+      if(is.null(rv$inPointsSessID)){
+        (inPointsSessID <- sessionIDgen())
+        rv$inPointsSessID <- inPointsSessID
+      }
+
+      out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
+
+      in_com_ly <<- input$in_com_ly
+
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',
+             "inPts", 'rv$in_com_ly','in_com_ly',
+             'rv$hs', 'rv$tif') # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+
+      if(in_com_ly == 'Surface resistance'){
+
+        avail_tifs <- list.files()
+        inPts <<- rv$hs
+        pdebug(devug=devug,sep='\n',pre='---PTS\n',
+               "'SR'", 'rv$in_com_ly','in_com_ly', 'rv$hs', 'rv$tif')
+
+        # lcc_compare_py(intif, intifs,
+        #                            outcsv, outpng, outfolder,
+        #                            inshp = 'None',
+        #                            shpfield = 'None')
+
+        } else if(in_com_ly == 'Dispersal kernels'){
+
+      } else if(in_com_ly == 'Least cost path corridos'){
+
+      }
+
+      if(in_com_ly == 'HabitatSuitability'){
+        inPts <<- rv$tif
+        pdebug(devug=devug,sep='\n',pre='---PTS\n',
+               "'HS'", 'rv$in_com_ly','in_com_ly',
+               'rv$hs', 'rv$tif')
+        points_file <- points_py(py = py,
+                                 intif = as.character(rv$hs),
+                                 outshp = out_pts,
+                                 param3 = as.numeric(input$in_points_3),
+                                 param4 = as.numeric(input$in_points_4),
+                                 param5 = as.numeric(input$in_points_5))
+      }
+
+      # inPts <<- switch (in_points_ly,
+      #                  SurfaceResistance = rv$hs,
+      #                  HabitatSuitability = rv$tif)
+      # print(points_file)
+
+      # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+
+      if (!file.exists(points_file$file)){
+        rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
+      } else {
+        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+
+        rv$pts <- points_file$file
+        rv$ptsready <- TRUE
+
+        output$ll_map_points <- leaflet::renderLeaflet({
+
+          #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+          points_shpO <- sf::read_sf(points_file$file)
+          points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          points_shp$ID <- 1:nrow(points_shp)
+          #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+          rv$pts_sp <- points_shp
+
+          rv$log <- paste0(rv$log, '  --- DONE');updateVTEXT(rv$log) # _______
+
+          #temLL <- rv$llmap
+          #save(temLL, file = '/data/tempR/ll.RData')
+          #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+
+          makeLL( )
+
+        })
+      }
+    }
+  })
+
+
+
 
   ####### > Errors read  ------------------
 
@@ -3255,6 +3507,8 @@ server <- function(input, output, session) {
     })
     #  read.delim('/var/log/shiny-server/cola-shiny-20231011-230516-33145.log', header = FALSE)[, 1]
   })
+
+
 
 
   ####### > Priv showcase  ------------------
@@ -3615,7 +3869,7 @@ if (FALSE){
           conditionalPanel( 'input.sidebarid == "tab_surface"',
                             div(style = "margin-top: -10px"),
                             textInput('name_tif_sur', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Habitat suitability name:'),
                             shiny::fileInput('in_sur_tif', 'Load Suitability',
                                              buttonLabel = 'Search', placeholder = 'No file',
                                              accept=c('.tif'),
@@ -3628,7 +3882,7 @@ if (FALSE){
                                    tabName = "tab_edit", icon = icon("pencil")),
           conditionalPanel( 'input.sidebarid == "tab_edit"',
                             textInput('name_tif_edi', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Surface resitance name:'),
                             shiny::fileInput('in_edi_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
@@ -3644,11 +3898,11 @@ if (FALSE){
 
           shinydashboard::menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
           conditionalPanel( 'input.sidebarid == "tab_points"',
-                            div(style = "margin-top: -30px"),
-                            textInput('name_hs_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_points_hs', 'Load Suitability',
+                            textInput('name_hs_pts', label = '', value = "",
+                                      width = NULL, placeholder = 'Surface resitance name:'),
+                            div(style = "margin-top: -20px"),
+                            shiny::fileInput('in_points_hs', 'Suitability TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
@@ -3657,9 +3911,9 @@ if (FALSE){
                             # ),
                             # conditionalPanel( 'input.sidebarid == "tab_points"',
                             textInput('name_tif_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Surface resitance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_points_tif', 'Load Resistance',
+                            shiny::fileInput('in_points_tif', 'Resistance TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
@@ -3670,13 +3924,13 @@ if (FALSE){
           shinydashboard::menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
           conditionalPanel( 'input.sidebarid == "tab_distance"',
                             textInput('name_tif_dst', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Surface resitance name:'),
                             shiny::fileInput('in_dist_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -30px"),
                             textInput('name_pts_dst', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_dist_shp', 'Load points files', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -3695,13 +3949,13 @@ if (FALSE){
                                    tabName = "tab_kernels", icon = icon("bezier-curve")),
           conditionalPanel( 'input.sidebarid == "tab_kernels"',
                             textInput('name_tif_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Surface resitance name:'),
                             shiny::fileInput('in_crk_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
                             textInput('name_pts_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_crk_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -3713,13 +3967,13 @@ if (FALSE){
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
           conditionalPanel( 'input.sidebarid == "tab_corridors"',
                             textInput('name_tif_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Surface resitance name:'),
                             shiny::fileInput('in_lcc_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
                             textInput('name_pts_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Name:'),
+                                      width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -3736,6 +3990,14 @@ if (FALSE){
                                    tabName = "tab_priori", icon = icon("trophy")),
 
           shinydashboard::menuItem("Compare results", tabName = "tab_compare", icon = icon("clone")),
+          conditionalPanel( 'input.sidebarid == "tab_compare"',
+                            # div(style = "margin-top: -30px"),
+                            shiny::fileInput('in_com_shp', 'Load polygon', buttonLabel = 'Search',
+                                             placeholder = 'INC SHP, DBF, SHX and PRJ ',
+                                             accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
+                                             multiple=TRUE),
+                            div(style = "margin-top: -30px")
+          ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
           shinydashboard::menuItem("PDF", tabName = "tab_pdf", icon = icon("code-fork")),
@@ -4093,10 +4355,10 @@ if (FALSE){
             # ),
 
             fluidPage(
-              column(1, numericInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
+              column(1, textInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
               column(1, numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
               column(1, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
-              column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
+              #column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #                     width = '100%', placeholder = 'NameOfNewLayertoCreate')),
               column(1, actionButton("edi", HTML("Add vals"), icon = icon("play"))),
@@ -4362,6 +4624,20 @@ if (FALSE){
               #        tags$head(tags$style("#vout_crk{overflow-y:scroll; max-height: 70px}"))
               #)
             ) ,
+            fluidRow(
+              column(2, br()),
+              column(3,
+                     selectInput("in_com_ly", "Layers:", '',
+                                 choices = c('Surface resistance',
+                                             'Dispersal kernels', 'Least cost path corridos'))
+              ),
+              column(3,
+                     actionButton("com_py", "Compare", icon = icon("play"))
+                     ),
+              column(3,
+                     downloadButton('comDwn', 'Download')
+              ),
+            ),
             # fluidPage(
             #   column(3, textInput("in_crk_4", "Distance threshold (meters x cost):", '25000')),
             #   column(3, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
@@ -4372,26 +4648,40 @@ if (FALSE){
             #          downloadButton('crkDwn', 'Download')),
             # ),
             #
+            fluidRow(
+              column(6,
+                     tabsetPanel(
+                       type = "pills",
+                       tabPanel(title = 'Map',
+                                #h2(' Comparing results', style="text-align: center;"),
+                                leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
 
-            tabsetPanel(
-              type = "pills",
-              tabPanel(title = 'Slider',
-                       h2(' Comparing results', style="text-align: center;")
-                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                                #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                                #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                       ),
+                       tabPanel(title = 'Slider',
+                                h2(' Comparing results', style="text-align: center;")
+                                #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                                #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                       ),
+
+                       tabPanel(title = 'Synced',
+                                fluidPage(
+                                  h2(' Comparing results', style="text-align: center;")
+                                  #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
+                                  #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
+                                )
+                       ))
               ),
-
-              tabPanel(title = 'Synced',
-                       fluidPage(
-                         h2(' Comparing results', style="text-align: center;")
-                         #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
-                         #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
-                       )
+              column(6,
+                     tabsetPanel(
+                       type = "pills",
+                       tabPanel(title = 'PNG', h4('png here')),
+                       tabPanel(title = 'Chart', h4('charts here'))
+                     )
               )
             )
-
-            # ll_map_crk crk vout_crk in_crk_3 4
-          ),
+            ),
 
           ##### UI COORDS ----
           shinydashboard::tabItem(
