@@ -50,6 +50,7 @@
   # NO R -e "write('TMP = "/data/tempR"', file=file.path(Sys.getenv('R_USER'), '.Renviron'))"
 }
 
+
 ## Init A
 {
   ## Initials ---
@@ -4299,7 +4300,6 @@ shinyApp(ui, server)
 # sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
 
 ## orig
-
 # cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
 # shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
 

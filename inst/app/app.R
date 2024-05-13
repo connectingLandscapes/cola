@@ -832,7 +832,9 @@ server <- function(input, output, session) {
 
       if((rv$ptsready)){
         grps <- c(grps, 'Points')
-        ll0 <- ll0 %>%  addCircleMarkers(data = rv$pts_sp, label = ~ID, group = 'Points',  radius = 5)
+        #rv$pts_sp$ID <- 1:nrow(rv$pts_sp)
+        ll0 <- ll0 %>%  addCircleMarkers(data = rv$pts_sp, label = ~sortID,
+                                         group = 'Points',  radius = 5)
       }
     }
 
@@ -988,6 +990,8 @@ server <- function(input, output, session) {
     return(params_txt_loc)
     # paste0("Input: Habita
   }
+
+  output$vout_com <- renderText({isolate('Waiting for inputs')})
 
   updateVTEXT <- function(txt, devug = FALSE){
     if(devug){print(txt)}
@@ -2031,11 +2035,12 @@ server <- function(input, output, session) {
     #if(devug){save(inFiles, file = paste0(tempFolder, '/shpfiles.RData'))}
 
     inShp <<- loadShp(inFiles, tempFolder, rv$inEdiSessID)
+    print( ' =================== print( inShp$shp ')
     print( inShp$shp )
 
     save(inShp, inFiles, file = paste0(tempFolder, '/debug_edi_shp.RData'))
 
-    if (any(class(inShp$shp) %in% 'sf')){
+    if ( any(class(inShp$shp) %in% 'sf') ){
       # if(class(inShp$shp) == 'SpatialPointsDataFrame'){
 
       rv$sceready <- TRUE
@@ -2051,6 +2056,7 @@ server <- function(input, output, session) {
       sce$sortID <- 1:nrow(sce)
       rv$edi_sp <- sce
 
+      print( ' =================== print(rv$edi_sp) ')
       print(rv$edi_sp)
 
       bounds <- sce %>% st_bbox() %>% as.character()
@@ -2081,7 +2087,7 @@ server <- function(input, output, session) {
       # rv$tif_sp <- terra::rast(rv$tif)
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
 
-      print(input$in_edi_val)
+      # print(input$in_edi_val)
       # print(polDraw)
       # print(num2Burn)
       # (load('/data/tempR/draw4pol.RData'))
@@ -2127,7 +2133,7 @@ server <- function(input, output, session) {
           polPath <- rv$sce
           print(paste0(' ----- SAVE: ', tempFolder, '/polPath_pol2Rastx.RData'))
           save(pol2Rastx, polPath, num2Burn, file = paste0(tempFolder, '/polPath_pol2Rastx.RData'))
-          newPolPath <- paste0(tools::file_path_sans_ext(basename(polPath)), '_2rast')
+          polPath <- paste0(tools::file_path_sans_ext(basename(polPath)), '_scepol.shp')
 
         } else {
 
@@ -2144,19 +2150,20 @@ server <- function(input, output, session) {
           polPath <- gsub('.tif$', '_scepol.shp', rv$tif)
         }
 
-
+        print(paste0('polPath:', polPath ))
 
         ## Write polygon
 
-        sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
-                      layer = polPath,
+        sf::st_write( obj = pol2Rastx,
+                      dsn = dirname(polPath),
+                      layer = tools::file_path_sans_ext(basename(polPath)),
                       driver = 'ESRI Shapefile',
-                      append=FALSE,
+                      append = FALSE,
                       overwrite_layer = TRUE)
 
 
         ## Burn the value of the polygon into the rast
-        burned <<- burnShp(polPath = newPolPath,
+        burned <<- burnShp(polPath = polPath,
                            burnval = 'val2burn',
                            rastPath = rv$tif,
                            lineBuffW = as.numeric(input$in_edi_wid),
@@ -2260,7 +2267,8 @@ server <- function(input, output, session) {
 
 
         ## Write polygon
-        sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+        sf::st_write( obj = pol2Rastx,
+                      dsn = dirname(polPath),
                       layer = tools::file_path_sans_ext(basename(polPath)),
                       driver = 'ESRI Shapefile',
                       append=FALSE,
@@ -2284,7 +2292,7 @@ server <- function(input, output, session) {
           rv$tifready <- TRUE
           rv$tif <- burned
           rv$tiforig <- burned
-          rv$tif_sp <- terra::rast(rv$tif)
+          rv$tif_sp <- terra::rast(burned)
 
           rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
           #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
@@ -4618,26 +4626,32 @@ if (FALSE){
           shinydashboard::tabItem(
             tabName = 'tab_compare',
             fluidRow(
-              column(4, h2(' Comparing results', style="text-align: center;"))
-              # ,
-              # column(8, verbatimTextOutput("vout_com") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
-              #        tags$head(tags$style("#vout_crk{overflow-y:scroll; max-height: 70px}"))
-              #)
-            ) ,
-            fluidRow(
-              column(2, br()),
+              column(4, h2(' Comparing results', style="text-align: center;")
+                     ),
               column(3,
                      selectInput("in_com_ly", "Layers:", '',
                                  choices = c('Surface resistance',
                                              'Dispersal kernels', 'Least cost path corridos'))
               ),
               column(3,
-                     actionButton("com_py", "Compare", icon = icon("play"))
+                     verbatimTextOutput("vout_com")
                      ),
-              column(3,
-                     downloadButton('comDwn', 'Download')
+
+              column(1,
+                     actionButton("com_py", "Compare", icon = icon("play"))
               ),
-            ),
+              column(1,
+                     downloadButton('comDwn', 'Download')
+              )
+              # ,
+              # column(8, verbatimTextOutput("vout_com") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
+              #        tags$head(tags$style("#vout_crk{overflow-y:scroll; max-height: 70px}"))
+              #)
+
+            ) ,
+            # fluidRow(
+            #   column(2, br()),
+            # ),
             # fluidPage(
             #   column(3, textInput("in_crk_4", "Distance threshold (meters x cost):", '25000')),
             #   column(3, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
