@@ -8,13 +8,13 @@ cola_params <<- list(
   envName = 'cola',
 
   ## Libraries to install in the python conda environment
-  libs2Install = c('gdal', 'h5py', # 'osgeo',
+  libs2Install = c('gdal', 'h5py',
                    'numexpr',
                    'rasterio', 'pytables',
                    'pandas',  'cython', 'numba' ,
                    'networkit', 'fiona', 'shapely',
                    'geopandas',
-                   'kdepy', # 'KDEpy',
+                   'kdepy',
                    'scikit-image'),
   yml = TRUE,
   ## Number steps
@@ -63,7 +63,7 @@ diagnose_cola <- function(envName = 'cola',
                                           'pandas',  'cython', 'numba' ,
                                           'networkit', 'fiona', 'shapely',
                                           'geopandas',
-                                          'kdepy', # 'KDEpy',
+                                          'kdepy',
                                           'scikit-image')){
 
   cat(sep = '',

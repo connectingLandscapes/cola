@@ -1,3 +1,4 @@
+############################# installing #################################
 # .rs.restartR()
 # remove.packages('cola')
 # .rs.restartR()
@@ -14,6 +15,55 @@
 
 # origLibs <- installed.packages()
 # cola::setup_cola_dss()
+
+
+
+
+############################# Shiny end #################################
+# """""""" ========== -------------------
+#
+# sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
+# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+# cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/.
+# http://18.190.126.82:3838/cola
+
+## orig
+# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
+# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
+
+# sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
+# shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 20, users.per.session = 10)
+# http://18.190.126.82:3838/connecting-landscapes
+# http://18.190.126.82:3838/connecting-landscapes/?admin
+# http://18.190.126.82:3838/connecting-landscapes/?admin1
+
+# sudo su shiny; cd /home/shiny/cola; git add . ; git commit -m " "; git push
+# sudo su shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push
+# git pull main --rebase --autostash
+# sudo chown -R shiny:shiny .
+# git stash
+# remove before commit, split or lost it
+# git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
+
+
+# https://github.com/settings/tokens/1354187156/regenerate
+
+# git pull connectscape
+# cd /home/shiny/connecting-landscapes/; git pull .
+
+# R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
+# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
+# sudo chown -R shiny:shiny .
+
+# sudo cat /var/log/shiny-server/cola
+# sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R### COLA web app.
+
+
+############################# Shiny end #################################
+
+
 ## Step7. Errors ----------------------------------------------
 
 # https://github.com/rstudio/reticulate/issues/838
@@ -61,13 +111,10 @@
 # conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs
 #https://stackoverflow.com/questions/57527131/conda-environment-has-no-name-visible-in-conda-env-list-how-do-i-activate-it-a
 
-
 # C:\Users\Admin\DOCUME~1\VIRTUA~1\colaR3\Scripts\python.exe' -c 'import io, os, sys, setuptools, tokenize; sys.argv[0] = '"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"'; __file__='"'"'C:\\Users\\Admin\\AppData\\Local\\Temp\\pip-install-q2renvli\\networkit_bbb1ed5652414ced8de6bd7c807b6c54\\setup.py'"'"';f
 
 ##
 # reticulate::py_run_file( system.file("python/welcome.py", package = envName))
-
-
 ## Step6. For debugging ----------------------------------------------
 
 
@@ -103,43 +150,3 @@ if (FALSE){
 # Rprofile.site
 
 
-
-# """""""" ========== -------------------
-#
-# sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
-# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
-# sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
-# sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
-# cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/
-# http://18.190.126.82:3838/cola
-
-## orig
-# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
-# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
-
-# sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/colashiny/connecting-landscapes/. -R
-# shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes ', max.sessions = 20, users.per.session = 10)
-# http://18.190.126.82:3838/connecting-landscapes
-# http://18.190.126.82:3838/connecting-landscapes/?admin
-# http://18.190.126.82:3838/connecting-landscapes/?admin1
-
-# sudo su shiny; cd /home/shiny/cola; git add . ; git commit -m " "; git push
-# sudo su shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push
-# git pull main --rebase --autostash
-# sudo chown -R shiny:shiny .
-# git stash
-# remove before commit, split or lost it
-# git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
-
-
-# https://github.com/settings/tokens/1354187156/regenerate
-
-# git pull connectscape
-# cd /home/shiny/connecting-landscapes/; git pull .
-
-# R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
-# ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
-# sudo chown -R shiny:shiny .
-
-# sudo cat /var/log/shiny-server/cola
-# sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R### COLA web app.

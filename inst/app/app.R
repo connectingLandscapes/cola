@@ -2760,18 +2760,20 @@ server <- function(input, output, session) {
 
     rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
     file.copy(input$in_lcc_tif$datapath, rv$tiforig);
+
     # try(file.remove(input$in_lcc_tif$datapath))
 
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
-
     tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+    pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
 
-    # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
-    #            tiforig = '/data/temp/YM2024011512020305file178cf97a81eeae/in_lcc_XL2024011512024005file178cf941a24eb4.tif')
-    # tifFixed <- '/data/temp/VK2024011517312305file1a4cf91dbd4cbd/in_lcc_fixedKH2024011517313705file1a4cf97fb7cce6.tif'
+    rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
+               tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
+    tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
 
     newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
                                       outrasterpath = tifFixed)
+
     rv$tif <- ifelse(is.na(newtifPath_lcc),
                      yes =  rv$tiforig,
                      no = newtifPath_lcc)
