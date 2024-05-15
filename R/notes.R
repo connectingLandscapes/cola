@@ -21,25 +21,20 @@
 
 ############################# Shiny end #################################
 # """""""" ========== -------------------
-# sudo cp /home/shiny/cola/inst/app/cola_tools.R /home/shiny/R/x86_64-pc-linux-gnu-library/4.1/cola/app/cola_tools.R
 
-# sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
-# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
-# sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
-# sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+## Cola
 # cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/.
+# sudo cp /home/shiny/cola/inst/app/cola_tools.R /home/shiny/R/x86_64-pc-linux-gnu-library/4.1/cola/app/cola_tools.R
 # http://18.190.126.82:3838/cola
 
-## orig
-# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
-# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
-
+## conn land
 # sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
 # shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 20, users.per.session = 10)
 # http://18.190.126.82:3838/connecting-landscapes
 # http://18.190.126.82:3838/connecting-landscapes/?admin
 # http://18.190.126.82:3838/connecting-landscapes/?admin1
 
+## Git
 # sudo su shiny; cd /home/shiny/cola; git add . ; git commit -m " "; git push
 # sudo su shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push
 # git pull main --rebase --autostash
@@ -48,11 +43,11 @@
 # remove before commit, split or lost it
 # git pull connectscape |||  git pull --rebase --autostash || git pull origin HEAD
 
-
 # https://github.com/settings/tokens/1354187156/regenerate
 
 # git pull connectscape
 # cd /home/shiny/connecting-landscapes/; git pull .
+
 
 # R -e "shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)"
 # ##sudo su - -c "R -e \"shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes', max.sessions = 25)\"" #
@@ -60,6 +55,15 @@
 
 # sudo cat /var/log/shiny-server/cola
 # sudo rm /home/shiny/tmpR/leafSim.RDatasudo cp /home/vmuser/gedivis /srv/shiny-server/gedivis -R### COLA web app.
+
+## Old
+# sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
+# sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
+# sudo cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/.; sudo rm /srv/shiny-server/connecting-landscapes -R
+
+# cp /home/shiny/connecting-landscapes/R/* /home/shiny/cola/connecting-landscapes/. -R; sudo rm /srv/shiny-server/connecting-landscapes -R
+# shinyParallel::installShinyParallel('/home/shiny/cola/connecting-landscapes/', max.sessions = 20, users.per.session = 10)
 
 
 ############################# Shiny end #################################

@@ -955,6 +955,7 @@ server <- function(input, output, session) {
     crkready = FALSE,
     priready = FALSE,
     sceready = FALSE,
+    comready = FALSE,
 
     ## Spatial file paths
     hs = NULL, # path
@@ -968,6 +969,7 @@ server <- function(input, output, session) {
     pritif = NULL, # spatial object
     prishp = NULL, # spatial object
     cdm = NULL, # csv
+    com = NULL, # csv
 
     ## Spatial file 2 show (2s) paths
     hs2s = NULL, # path
@@ -991,6 +993,7 @@ server <- function(input, output, session) {
     lcc0 = "", # path
     crk0 = "", # path
     pritif0 = "", # path
+    com0 = "", # path
     cdm0 = "", # csv
 
     ## Spatial objects
@@ -3335,6 +3338,7 @@ server <- function(input, output, session) {
     in_com_ly <- input$in_com_ly
     # in_com_ly <- 'Dispersal kernels'
     # tempFolder <- '/data/temp/scenario_folder'
+    # tempFolder <- '/data/tempR/colaXZV2024051511050405'
     layer_type_compare <- switch(in_com_ly,
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
@@ -3355,12 +3359,15 @@ server <- function(input, output, session) {
     dir.create(outComFolder, recursive = TRUE)
     # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
 
+    pdebug(devug=devug,sep='\n',pre='---COMP\n', "rv$comready", 'rv$com','in_com_ly') # = = = = = = =  = = =  = = =  = = =  = = =
     inCompShp <-  'None'
     inCompShpField <-  'None'
-    if (isTRUE(rv$comready) & file.exists(rv$com)){
-      inCompShp <- rv$com
+    if (isTRUE(rv$comready) & is.null(rv$com)){
+      if (file.exists(rv$com)){
+        inCompShp <- rv$com
+      }
     }
-    #pdebug(devug=devug,sep='\n',pre='---PTS\n', "inPts", 'rv$in_com_ly','in_com_ly', 'rv$hs', 'rv$tif') # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+
 
     ( cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2  ) )
 
@@ -3394,7 +3401,8 @@ server <- function(input, output, session) {
 
       }
 
-
+      print(" --- comp_out")
+      print(comp_out)
       if (!is.null(comp_out) & file.exists(comp_out$file)){
 
         output$ll_map_com <- leaflet::renderLeaflet({
@@ -3419,14 +3427,14 @@ server <- function(input, output, session) {
 
 
           output$hccomp1 <- highcharter::renderHighchart({
-            hcchart <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hcchart1 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
               hc_add_series(data = csvAbs,
                             type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           })
 
           output$hccomp2 <- highcharter::renderHighchart({
-            hcchart <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hcchart2 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
               hc_add_series(data = csvRel, name = 'Relative difference',
                             type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
@@ -3452,8 +3460,57 @@ server <- function(input, output, session) {
                                            domain = ori_rng2+0.001, na.color = "transparent")
 
 
-          ##
-          {
+          # ## OPT1:  sync 3 layers
+          # lls <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
+          #
+          #   leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+          #   leaflet::addMeasure( position = "topright",
+          #                        primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+          #                        activeColor = "#3D535D",completedColor = "#7D4479")
+          #
+          # llsA <- lls %>%
+          #   addRasterImage(x = ori_stack[[1]], colors = ori_pal,
+          #                  opacity = .7,
+          #                  group = names(ori_stack)[1],
+          #                  layerId = names(ori_stack)[1]) %>%
+          #   addLegend(pal = ori_pal, values = ori_rng2,
+          #             position = 'bottomleft', title = names(ori_stack)[1]) %>%
+          #   leaflet::addLayersControl(
+          #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          #     overlayGroups = c(names(ori_stack)[1]),
+          #     options =  leaflet::layersControlOptions(collapsed = FALSE))
+          #
+          # llsB <- lls %>%
+          #   addRasterImage(x = ori_stack[[2]], colors = ori_pal,
+          #                  opacity = .7,
+          #                  group = names(ori_stack)[2],
+          #                  layerId = names(ori_stack)[2]) %>%
+          #   addLegend(pal = ori_pal, values = ori_rng2,
+          #             position = 'bottomleft', title = names(ori_stack)[2]) %>%
+          #   leaflet::addLayersControl(
+          #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          #     overlayGroups = c(names(ori_stack)[2]),
+          #     options =  leaflet::layersControlOptions(collapsed = FALSE))
+          #
+          # llsC <- lls %>%
+          #   addRasterImage(x = com_stack[[1]], colors = com_pal,
+          #                  opacity = .7,
+          #                  group = names(com_stack)[1],
+          #                  layerId = names(com_stack)[1]) %>%
+          #   addLegend(pal = com_pal, values = com_rng2,
+          #             position = 'bottomleft', title = names(com_stack)[1]) %>%
+          #   leaflet::addLayersControl(
+          #     baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          #     overlayGroups = c(names(com_stack)[1]),
+          #     options =  leaflet::layersControlOptions(collapsed = FALSE))
+          #
+          #
+          # leafsync::sync(llsA, llsB, llsC, no.initial.sync = TRUE)
+
+
+
+          # OPT2:  all layers
+          #if (FALSE) {
             llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
 
               leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
@@ -3479,7 +3536,6 @@ server <- function(input, output, session) {
                                             layerId = names(com_stack)[x2])
             }
 
-
             llc <- llc %>%
               addLegend(pal = ori_pal, values = ori_rng2,
                         group = in_com_ly, layerId = in_com_ly,
@@ -3492,7 +3548,7 @@ server <- function(input, output, session) {
                 baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
                 overlayGroups = c(names(com_stack), names(ori_stack)),
                 options =  leaflet::layersControlOptions(collapsed = FALSE))
-          }
+         # }
         })
 
       }
@@ -3543,7 +3599,7 @@ server <- function(input, output, session) {
     avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
                                full.names = TRUE)
 
-    mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ',
+    mssg2Display <- paste0(length(avail_layers), ' layer(s) found for ', in_com_ly, ': ',
                            paste0(basename(avail_layers), collapse = ' '))
     output$vout_com <- renderText({isolate( mssg2Display )})
   })
@@ -3560,6 +3616,7 @@ server <- function(input, output, session) {
     } else {
       output$sessLog <- renderText({isolate( 'No session folder found' )})
     }
+
   })
 
   ####### > Errors read  ------------------
@@ -4393,7 +4450,26 @@ if (FALSE){
             # ),
             fluidPage(
               leaflet::leafletOutput("ll_map_h2r", height = "600px") %>%
-                shinycssloaders::withSpinner(color="#0dc5c1"))
+                shinycssloaders::withSpinner(color="#0dc5c1")
+              ),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4,
+              h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            )
           ),
           ##### UI EDIT ----
 
@@ -4735,49 +4811,68 @@ if (FALSE){
             #          downloadButton('crkDwn', 'Download')),
             # ),
             #
+          #   fluidRow(
+          #     column(6,
+          #            tabsetPanel(
+          #              type = "pills",
+          #              tabPanel(title = 'Map',
+          #                       #h2(' Comparing results', style="text-align: center;"),
+          #                       leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+          #
+          #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+          #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+          #              ),
+          #              tabPanel(title = 'Slider',
+          #                       h2(' Comparing results', style="text-align: center;")
+          #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+          #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+          #              ),
+          #
+          #              tabPanel(title = 'Synced',
+          #                       fluidPage(
+          #                         h2(' Comparing results', style="text-align: center;")
+          #                         #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
+          #                         #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
+          #                       )
+          #              ))
+          #     ),
+          #     column(6,
+          #            tabsetPanel(
+          #              type = "pills",
+          #              tabPanel(title = 'PNG',
+          #                       imageOutput("png1"),
+          #                       imageOutput("png2")),
+          #              tabPanel(title = 'Chart',
+          #                       highcharter::highchartOutput("hccomp1"#, height = "800px"
+          #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+          #                       highcharter::highchartOutput("hccomp2"
+          #                                                    #, height = "800px"
+          #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1")
+          #
+          #                       )
+          #            )
+          #     )
+          #   )
+          # ),
+
+          fluidRow(
             fluidRow(
-              column(6,
-                     tabsetPanel(
-                       type = "pills",
-                       tabPanel(title = 'Map',
-                                #h2(' Comparing results', style="text-align: center;"),
-                                leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-
-                                #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                                #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                       ),
-                       tabPanel(title = 'Slider',
-                                h2(' Comparing results', style="text-align: center;")
-                                #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                                #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                       ),
-
-                       tabPanel(title = 'Synced',
-                                fluidPage(
-                                  h2(' Comparing results', style="text-align: center;")
-                                  #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
-                                  #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
-                                )
-                       ))
-              ),
-              column(6,
-                     tabsetPanel(
-                       type = "pills",
-                       tabPanel(title = 'PNG',
-                                imageOutput("png1"),
-                                imageOutput("png2")),
-                       tabPanel(title = 'Chart',
-                                highcharter::highchartOutput("hccomp1"#, height = "800px"
-                                ) %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                                highcharter::highchartOutput("hccomp2"
-                                                             #, height = "800px"
-                                ) %>%shinycssloaders::withSpinner(color="#0dc5c1")
-
-                                )
-                     )
-              )
-            )
+              column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
+              column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
+              column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
             ),
+            leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+          ),
+          fluidRow(
+            column(3, imageOutput("png1")),
+            column(3, imageOutput("png2")),
+            column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
+            ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+            column(3, highcharter::highchartOutput("hccomp2"
+                                                   #, height = "800px"
+            ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+          )
+          ),
 
           ##### UI COORDS ----
           shinydashboard::tabItem(
