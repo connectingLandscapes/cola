@@ -3,6 +3,87 @@
 # options(scipen = 999)
 # options(scipen = 9)
 
+## Errors -- only for shiny server
+{
+
+  logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
+  path_error <- '/var/log/shiny-server/'
+
+
+  allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
+
+  if( length(allLogs) != 0 ){
+    # cleanMemory(logFilePath)
+
+    validLogs <- unname(
+      na.omit(
+        sapply(allLogs, simplify = TRUE, function(x){
+          # x = allLogs[1]
+          y <- tryCatch(read.delim(file.path(path_error, x), quote = "")[, 1], error = function(e) NULL)
+          if (any(grep('[E|e]rror', y)) & !is.null(y) ){
+            return (x)
+          } else {
+            return (NA)
+          }
+        })
+      ))
+  } else {
+    ## Temporal variable --- not to use outside the server
+    validLogs <- c('')
+  }
+}
+
+
+### time stamp -----
+## Create temporal ID
+sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE){
+  (tempID <- basename(tempfile()))
+  (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
+
+  if( short){
+    (sessionID <- timeMark)
+  } else {
+    (sessionID <- paste0( timeMark, sep, tempID ))
+  }
+
+  if (letter){
+    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1),
+                        sep, sessionID)
+  }
+
+  if(folder){
+    sessionID <- paste0('cola', sessionID)
+  }
+  return(sessionID)
+}
+
+
+## Clean files
+cleanMemory <- function(logFilePath){
+  dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
+
+  if(file.exists(logFilePath)){
+    logDF <- tryCatch(read.csv(logFilePath), error = function(e) NULL)
+  } else {
+    logDF <- NULL
+  }
+
+  logDF <- rbind(logDF, dfm)
+
+  openFolders <- dir.exists(logDF$Rtmp)
+  sapply(logDF$tempFolder[!openFolders], unlink, recursive = TRUE)
+  logDF <- logDF[dir.exists(logDF$Rtmp), ]
+  write.csv(x = logDF, logFilePath, row.names = FALSE)
+}
+
+delFiles <- function(...){
+  invisible(suppressWarnings(
+    tryCatch(file.remove(c(...)),
+             error = function(e) NULL)
+  ))
+}
+
+
 
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
 
@@ -463,18 +544,6 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
-
-### time stamp
-sessionIDgen <- function(letter = TRUE, sep = ''){
-  tempID <- basename(tempfile())
-  timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-  sessionID <- paste0( timeMark, sep, tempID )
-  if (letter){
-    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1),
-                        sep, sessionID)
-  }
-  sessionID
-}
 
 
 

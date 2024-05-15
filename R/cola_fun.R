@@ -555,7 +555,9 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"), tif, incrk, inlcc,
 crk_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
                            intif, intifs,
-                           outcsv, outpng, outfolder,
+                           outcsvabs, outcsvrel,
+                           outpngabs, outpngrel,
+                           outfolder,
                            inshp = 'None',
                            shpfield = 'None'){
 
@@ -576,15 +578,19 @@ crk_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   (cmd_crk_comp <- paste0(py, ' ', pyscript, ' ',
                           intif, ' ', intifs, ' ',
-                          outcsv, ' ', outpng, ' ',
+                          outcsvabs, ' ',
+                          outcsvrel, ' ',
+                          outpngabs, ' ',
+                          outpngrel, ' ',
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
   cat('\n\n\tCMD:')
-  print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
 
-  intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
-  return( list(file = ifelse(file.exists(outpng), outpng, NA),
+  intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE),
+                     error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                log =  intCMD) )
 }
 
@@ -601,12 +607,14 @@ crk_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 lcc_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
                            intif, intifs,
-                           outcsv, outpng, outfolder,
+                           outcsvabs, outcsvrel,
+                           outpngabs, outpngrel,
+                           outfolder,
                            inshp = 'None',
                            shpfield = 'None'){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
-  # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
+  # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
   # C:/Users/pj276/Scratch/scenario_testing/size7_crk_abs_comp.png
   # C:/Users/pj276/Scratch/scenario_testing/size7_crk_percent_comp.png
   # C:/Users/pj276/Scratch/scenario_testing
@@ -622,15 +630,18 @@ lcc_compare_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   (cmd_lcc_comp <- paste0(py, ' ', pyscript, ' ',
                           intif, ' ', intifs, ' ',
-                          outcsv, ' ', outpng, ' ',
+                          outcsvabs, ' ',
+                          outcsvrel, ' ',
+                          outpngabs, ' ',
+                          outpngrel, ' ',
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
   cat('\n\n\tCMD:')
-  print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
-  return( list(file = ifelse(file.exists(outpng), outpng, NA),
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                log =  intCMD) )
 }
 

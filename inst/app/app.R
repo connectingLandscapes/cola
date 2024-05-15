@@ -54,7 +54,7 @@
 
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
-  (dataFolder <- ifelse( COLA_DATA_PATH == '' & dir.exists(COLA_DATA_PATH),
+  (dataFolder <<- ifelse( COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH),
                          no = paste0(tempdir(), '/'), yes = COLA_DATA_PATH));
   # Keep last slash
   # /data/temp/'; dir.create(dataFolder)
@@ -106,83 +106,6 @@
   uper <- cola::uper ## Unique performance table
   per <- cola::per ## Performance table
   crs_df <- cola::crs_df ## CRS available
-
-
-  ## Errors -- only forshinyserver
-  {
-
-    logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
-    path_error <- '/var/log/shiny-server/'
-
-
-    allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
-
-    if( length(allLogs) != 0 ){
-      # cleanMemory(logFilePath)
-
-      validLogs <- unname(
-        na.omit(
-          sapply(allLogs, simplify = TRUE, function(x){
-            # x = allLogs[1]
-            y <- tryCatch(read.delim(file.path(path_error, x), quote = "")[, 1], error = function(e) NULL)
-            if (any(grep('[E|e]rror', y)) & !is.null(y) ){
-              return (x)
-            } else {
-              return (NA)
-            }
-          })
-        ))
-    } else {
-      ## Temporal variable --- not to use outside the server
-      validLogs <- c('')
-    }
-  }
-
-
-  ### time stamp -----
-  ## Create temporal ID
-  sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE){
-    (tempID <- basename(tempfile()))
-    (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
-
-    if( short){
-      (sessionID <- timeMark)
-    } else {
-      (sessionID <- paste0( timeMark, sep, tempID ))
-    }
-
-    if (letter){
-      sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1),
-                          sep, sessionID)
-    }
-    sessionID
-  }
-
-
-  ## Clean files
-  cleanMemory <- function(logFilePath){
-    dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
-
-    if(file.exists(logFilePath)){
-      logDF <- tryCatch(read.csv(logFilePath), error = function(e) NULL)
-    } else {
-      logDF <- NULL
-    }
-
-    logDF <- rbind(logDF, dfm)
-
-    openFolders <- dir.exists(logDF$Rtmp)
-    sapply(logDF$tempFolder[!openFolders], unlink, recursive = TRUE)
-    logDF <- logDF[dir.exists(logDF$Rtmp), ]
-    write.csv(x = logDF, logFilePath, row.names = FALSE)
-  }
-
-  delFiles <- function(...){
-    invisible(suppressWarnings(
-      tryCatch(file.remove(c(...)),
-               error = function(e) NULL)
-    ))
-  }
 
 
   ## Showcase -----
@@ -279,14 +202,13 @@
 
 ## Init B
 {
-  (sessionID <<- sessionIDgen())
+  (sessionID <<- sessionIDgen(folder = TRUE))
   tempFolder <<- paste0(dataFolder, sessionID, '/')
   dir.create(tempFolder)
 
   (cat('\n\n >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
-
 }
 
 
@@ -1812,11 +1734,17 @@ server <- function(input, output, session) {
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
       output$ll_map_h2r <- leaflet::renderLeaflet({
 
-        outs2r <- paste0(tempFolder, '/out_surface_', rv$inSurSessID, '.tif')
+        (inSurSessID <- sessionIDgen())
+        #(inSurSessID2 <<- sessionIDgen())
+        outs2r <- paste0(tempFolder, '/out_surface_', inSurSessID, '.tif')
+        #pdebug(devug=devug,sep='\n',pre='---H2S\n',"inSurSessID", 'inSurSessID2', 'outs2r') # = = = = = = =  = = =  = = =  = = =  = = =
+
         rv$log <- paste0(rv$log,  # _______
                          '\nCreating resistance surface');updateVTEXT(rv$log) # _______
 
         in_sur_7 <- ifelse(input$in_sur_7 == '', yes = -9999, no = input$in_sur_7)
+
+
 
         hs2rs_file <- s2res_py(py = py,
                                intif = rv$hs,
@@ -2767,9 +2695,9 @@ server <- function(input, output, session) {
     tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
     pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
 
-    rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
-               tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
-    tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
+    # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
+    #            tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
+    # tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
 
     newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
                                       outrasterpath = tifFixed)
@@ -2907,10 +2835,10 @@ server <- function(input, output, session) {
     }
     #pdebug(devug=devug, ... = 'condDist') # _____________
 
-    if(is.null(rv$inLccSessID)){
+    #if(is.null(rv$inLccSessID)){
       (inLccSessID <<- sessionIDgen())
       rv$inLccSessID <- inLccSessID
-    }
+    #}
 
 
     if( condDist == 1){
@@ -2919,7 +2847,7 @@ server <- function(input, output, session) {
 
       output$ll_map_lcc <- leaflet::renderLeaflet({
 
-        out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
+        out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
         out_lcc <- lcc_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
@@ -3041,8 +2969,9 @@ server <- function(input, output, session) {
       rv$inSurSessID <- inSurSessID
     }
 
+    (incrkSessID <- sessionIDgen()) # rv <- list()
+    #(incrkSessID <<- sessionIDgen()) # rv <- list()
     if(is.null(rv$incrkSessID)){
-      (incrkSessID <<- sessionIDgen()) # rv <- list()
       rv$incrkSessID <- incrkSessID
     }
     pdebug(devug=devug,sep='\n',pre='','rv$inSurSessID', 'rv$incrkSessID')
@@ -3168,7 +3097,7 @@ server <- function(input, output, session) {
     if( condDist == 1){
       #input <- c(in_dist_3 = 25000)
       rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
-      out_crk <- paste0(tempFolder, '/out_crk_', rv$incrkSessID, '.tif')
+      out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
 
       output$ll_map_crk <- leaflet::renderLeaflet({
 
@@ -3403,100 +3332,235 @@ server <- function(input, output, session) {
   observeEvent(input$com_py, {
     rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
 
-    if(! (rv$tifready | rv$hsready)){
-    } else {
-      rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+    in_com_ly <- input$in_com_ly
+    # in_com_ly <- 'Dispersal kernels'
+    # tempFolder <- '/data/temp/scenario_folder'
+    layer_type_compare <- switch(in_com_ly,
+                                 #'Surface resistance' = 'out_surface_.+.tif$',
+                                 'Dispersal kernels' = 'out_crk_.+.tif$',
+                                 'Least cost path corridos' = 'out_lcc_.+.tif$')
 
-      if(is.null(rv$inSurSessID)){
-        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
-        (inSurSessID <- sessionIDgen())
-        rv$inSurSessID <- inSurSessID
-        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
+    (avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
+                               full.names = TRUE))
+    # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
+
+    (compID <- sessionIDgen(short = TRUE))
+    (outComFolder <- paste0(tempFolder, '/comp', compID))
+    (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
+    (outComPngRel <- paste0(outComFolder, '/compRel.png'))
+
+    (outComCsvAbs <- paste0(outComFolder, '/compAbs.csv'))
+    (outComCsvRel <- paste0(outComFolder, '/compRel.csv'))
+
+    dir.create(outComFolder, recursive = TRUE)
+    # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
+
+    inCompShp <-  'None'
+    inCompShpField <-  'None'
+    if (isTRUE(rv$comready) & file.exists(rv$com)){
+      inCompShp <- rv$com
+    }
+    #pdebug(devug=devug,sep='\n',pre='---PTS\n', "inPts", 'rv$in_com_ly','in_com_ly', 'rv$hs', 'rv$tif') # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+
+    ( cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2  ) )
+
+    if (cond ){
+
+      if(in_com_ly == 'Least cost path corridos'){
+
+        comp_out <- tryCatch(
+          lcc_compare_py(intif = avail_layers[1],
+                         intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+                         outcsvabs = outComCsvAbs,
+                         outcsvrel = outComCsvRel,
+                         outpngabs = outComPngAbs,
+                         outpngrel = outComPngRel,
+                         outfolder = outComFolder,
+                         inshp = inCompShp,
+                         shpfield = inCompShpField), error = function(e) NULL)
+
+      } else if(in_com_ly == 'Dispersal kernels'){
+
+        comp_out <- tryCatch(
+          crk_compare_py(intif = avail_layers[1],
+                         intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+                         outcsvabs = outComCsvAbs,
+                         outcsvrel = outComCsvRel,
+                         outpngabs = outComPngAbs,
+                         outpngrel = outComPngRel,
+                         outfolder = outComFolder,
+                         inshp = inCompShp,
+                         shpfield = inCompShpField), error = function(e) NULL)
+
       }
 
-      if(is.null(rv$inPointsSessID)){
-        (inPointsSessID <- sessionIDgen())
-        rv$inPointsSessID <- inPointsSessID
-      }
 
-      out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
+      if (!is.null(comp_out) & file.exists(comp_out$file)){
 
-      in_com_ly <<- input$in_com_ly
+        output$ll_map_com <- leaflet::renderLeaflet({
+          csvAbs <- read.csv(outComCsvAbs)
+          csvAbs$val <- csvAbs[, 2]
+          csvRel <- read.csv(outComCsvRel)
+          csvRel$val <- csvRel[, 2]
 
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',
-             "inPts", 'rv$in_com_ly','in_com_ly',
-             'rv$hs', 'rv$tif') # = = = = = = =  = = =  = = =  = = =  = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+          output$png1 <- renderImage({
+            ## Following three lines CREATE a NEW image. You do not need them
+            #outfile <- tempfile(fileext = '.png')
+            #png(outfile, width = 400, height = 300) # Generate the PNG
+            #dev.off()
+            list(src = outComPngAbs, contentType = 'image/png', width = 400, height = 300,
+                 alt = "Absolute values")
+          }, deleteFile = TRUE)
 
-      if(in_com_ly == 'Surface resistance'){
+          output$png2 <- renderImage({
+            list(src = outComPngRel, contentType = 'image/png', width = 400, height = 300,
+                 alt = "This is alternate text")
+          }, deleteFile = TRUE)
 
-        avail_tifs <- list.files()
-        inPts <<- rv$hs
-        pdebug(devug=devug,sep='\n',pre='---PTS\n',
-               "'SR'", 'rv$in_com_ly','in_com_ly', 'rv$hs', 'rv$tif')
 
-        # lcc_compare_py(intif, intifs,
-        #                            outcsv, outpng, outfolder,
-        #                            inshp = 'None',
-        #                            shpfield = 'None')
+          output$hccomp1 <- highcharter::renderHighchart({
+            hcchart <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_add_series(data = csvAbs,
+                            type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+          })
 
-        } else if(in_com_ly == 'Dispersal kernels'){
+          output$hccomp2 <- highcharter::renderHighchart({
+            hcchart <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_add_series(data = csvRel, name = 'Relative difference',
+                            type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+          })
 
-      } else if(in_com_ly == 'Least cost path corridos'){
 
-      }
+          com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
+          com_rast <- lapply(as.list(com_tifs), terra::rast)
+          com_stack <- do.call(c, com_rast)
+          com_rng <- terra::global(com_stack, fun="range")
+          com_rng2 <- range(com_rng)
 
-      if(in_com_ly == 'HabitatSuitability'){
-        inPts <<- rv$tif
-        pdebug(devug=devug,sep='\n',pre='---PTS\n',
-               "'HS'", 'rv$in_com_ly','in_com_ly',
-               'rv$hs', 'rv$tif')
-        points_file <- points_py(py = py,
-                                 intif = as.character(rv$hs),
-                                 outshp = out_pts,
-                                 param3 = as.numeric(input$in_points_3),
-                                 param4 = as.numeric(input$in_points_4),
-                                 param5 = as.numeric(input$in_points_5))
-      }
+          com_pal <- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                           domain = com_rng2+0.001, na.color = "transparent")
+          # "viridis", "magma", "inferno", or "plasma".
 
-      # inPts <<- switch (in_points_ly,
-      #                  SurfaceResistance = rv$hs,
-      #                  HabitatSuitability = rv$tif)
-      # print(points_file)
+          ori_rast <- lapply(as.list(avail_layers), terra::rast)
+          ori_stack <- do.call(c, ori_rast)
+          ori_rng <- terra::global(ori_stack, fun="range")
+          ori_rng2 <- range(ori_rng)
 
-      # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+          ori_pal <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                           domain = ori_rng2+0.001, na.color = "transparent")
 
-      if (!file.exists(points_file$file)){
-        rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
-      } else {
-        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
-        rv$pts <- points_file$file
-        rv$ptsready <- TRUE
+          ##
+          {
+            llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
 
-        output$ll_map_points <- leaflet::renderLeaflet({
+              leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+              leaflet::addMeasure( position = "topright",
+                                   primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                                   activeColor = "#3D535D",completedColor = "#7D4479")  %>%
+              leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
 
-          #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-          points_shpO <- sf::read_sf(points_file$file)
-          points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-          points_shp$ID <- 1:nrow(points_shp)
-          #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-          rv$pts_sp <- points_shp
 
-          rv$log <- paste0(rv$log, '  --- DONE');updateVTEXT(rv$log) # _______
+            ## Orig layers
+            for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
+              llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
+                                            opacity = .7,
+                                            group = names(ori_stack)[x1],
+                                            layerId = names(ori_stack)[x1])
+            }
 
-          #temLL <- rv$llmap
-          #save(temLL, file = '/data/tempR/ll.RData')
-          #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+            ## Compare layers
+            for (x2 in 1:length(names(com_stack)) ){
+              llc <- llc %>% addRasterImage(x = com_stack[[x2]], colors = com_pal,
+                                            opacity = .7,
+                                            group = names(com_stack)[x2],
+                                            layerId = names(com_stack)[x2])
+            }
 
-          makeLL( )
 
+            llc <- llc %>%
+              addLegend(pal = ori_pal, values = ori_rng2,
+                        group = in_com_ly, layerId = in_com_ly,
+                        position = 'bottomleft', title = in_com_ly) %>%
+
+              addLegend(pal = com_pal, values = com_rng2,
+                        group = in_com_ly, layerId = 'Comparison',
+                        position = 'bottomleft', title = 'Comparisson') %>%
+              leaflet::addLayersControl(
+                baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                overlayGroups = c(names(com_stack), names(ori_stack)),
+                options =  leaflet::layersControlOptions(collapsed = FALSE))
+          }
         })
+
       }
+
+#     if (!file.exists(points_file$file)){
+#       rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
+#     } else {
+#       params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+#
+#       rv$pts <- points_file$file
+#       rv$ptsready <- TRUE
+#
+#       output$ll_map_points <- leaflet::renderLeaflet({
+#
+#         #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+#         points_shpO <- sf::read_sf(points_file$file)
+#         points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+#         points_shp$ID <- 1:nrow(points_shp)
+#         #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+#         rv$pts_sp <- points_shp
+#
+#         rv$log <- paste0(rv$log, '  --- DONE');updateVTEXT(rv$log) # _______
+#
+#         #temLL <- rv$llmap
+#         #save(temLL, file = '/data/tempR/ll.RData')
+#         #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+#
+#         makeLL( )
+#
+#       })
+#     }
     }
   })
 
 
+  observeEvent( input$in_com_ly, {
+    # in_com_ly <- 'Dispersal kernels'
+    # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridos')
+    #tempFolder <- '/data/temp/scenario_folder'
 
+    in_com_ly <- input$in_com_ly
+    layer_type_compare <- switch(in_com_ly,
+                                 #'Surface resistance' = 'out_surface_.+.tif$',
+                                 'Dispersal kernels' = 'out_crk_.+.tif$',
+                                 'Least cost path corridos' = 'out_lcc_.+.tif$')
+
+    # tempFolder <- '/data/temp/scenario_folder'
+    avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
+                               full.names = TRUE)
+
+    mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ',
+                           paste0(basename(avail_layers), collapse = ' '))
+    output$vout_com <- renderText({isolate( mssg2Display )})
+  })
+
+  ####### > Change session folder  ------------------
+  observeEvent(input$sessPath, {
+
+    sessInput <- input$sessInput
+    newTempFolder <- paste0(dataFolder, sessInput)
+    print(paste('---New session: ', newTempFolder))
+    if(dir.exists(newTempFolder)){
+      tempFolder <<- paste0(sessInput, '/')
+      output$sessLog <- renderText({isolate( 'Session folder found' )})
+    } else {
+      output$sessLog <- renderText({isolate( 'No session folder found' )})
+    }
+  })
 
   ####### > Errors read  ------------------
 
@@ -4006,7 +4070,9 @@ if (FALSE){
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
-                            div(style = "margin-top: -30px")
+                            div(style = "margin-top: -30px"),
+                            textInput('field_shp_com', label = '', value = "",
+                                      width = NULL, placeholder = 'Shapefile name')
           ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
@@ -4597,13 +4663,14 @@ if (FALSE){
             h6('    Comming soon ... stay tuned')
           ),
 
-          ##### UI LOCAL ----
+          ##### UI LOCAL --------
           shinydashboard::tabItem(
             tabName = 'tab_local',
             h2(' Running this locally'),
             #h6('    Comming soon ... stay tuned'),
-            includeMarkdown("/home/shiny/cola/inst/docs/md_cola_install.md"),
-
+            includeMarkdown(
+              system.file(package = 'cola', 'docs/md_cola_install.md')
+              ),
             h2(' '),
             fluidRow(
               column(width = 10,
@@ -4617,18 +4684,22 @@ if (FALSE){
                      br(),
                      actionButton("read_error", HTML("Read file")))
             ),
+            verbatimTextOutput("outerror"),
 
-            verbatimTextOutput("outerror")
-
-
-
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "", status = "primary", collapsed = TRUE,
+              column(4, textInput("sessInput", "", '')),
+              column(4, actionButton("sessPath", "Run")),
+              column(4, verbatimTextOutput("sessLog"))
+            )
           ),
 
-          ##### UI COMPARE ----
+          ##### UI COMPARE ------
           shinydashboard::tabItem(
             tabName = 'tab_compare',
             fluidRow(
-              column(4, h2(' Comparing results', style="text-align: center;")
+              column(3, h2(' Comparing results', style="text-align: center;")
                      ),
               column(3,
                      selectInput("in_com_ly", "Layers:", '',
@@ -4692,8 +4763,17 @@ if (FALSE){
               column(6,
                      tabsetPanel(
                        type = "pills",
-                       tabPanel(title = 'PNG', h4('png here')),
-                       tabPanel(title = 'Chart', h4('charts here'))
+                       tabPanel(title = 'PNG',
+                                imageOutput("png1"),
+                                imageOutput("png2")),
+                       tabPanel(title = 'Chart',
+                                highcharter::highchartOutput("hccomp1"#, height = "800px"
+                                ) %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                                highcharter::highchartOutput("hccomp2"
+                                                             #, height = "800px"
+                                ) %>%shinycssloaders::withSpinner(color="#0dc5c1")
+
+                                )
                      )
               )
             )

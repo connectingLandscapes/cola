@@ -21,7 +21,8 @@
 
 ############################# Shiny end #################################
 # """""""" ========== -------------------
-#
+# sudo cp /home/shiny/cola/inst/app/cola_tools.R /home/shiny/R/x86_64-pc-linux-gnu-library/4.1/cola/app/cola_tools.R
+
 # sudo cp /home/shiny/connecting-landscapes/R/cola_tools.R /srv/shiny-server/cola/cola_tools.R
 # sudo cp /home/shiny/connecting-landscapes/R /srv/shiny-server/cola -R
 # sudo cp /home/shiny/connecting-landscapes/R/*.R /srv/shiny-server/cola -R
