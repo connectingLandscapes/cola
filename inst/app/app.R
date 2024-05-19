@@ -219,6 +219,9 @@ server <- function(input, output, session) {
   getRastVal <- function(clk, grp){
     #clk <- list(lat = 5.9999, lng = 116.89)
     # $lat [1] 5.9999 | $lng     [1] 116.89
+    if(!is.null(clk) & !is.null(grp) & length(grp) > 1){
+
+
     coords <- cbind(clk$lng, clk$lat)
     pt0 <-  st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
     #grp <- 'Habitat suitability'
@@ -296,6 +299,10 @@ server <- function(input, output, session) {
     }
 
     text<-paste0('<strong>', rw2add$lay, ':</strong> ', round(rw2add$val, 3), collapse = '<br>')
+    } else {
+      text <- 'none'
+    }
+
 
     return(text)
   }
@@ -305,7 +312,9 @@ server <- function(input, output, session) {
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
+    if (text != 'none') {
     leafletProxy("ll_map_lcc") %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
   })
 
   observeEvent(input$ll_map_crk_click,{
@@ -313,34 +322,44 @@ server <- function(input, output, session) {
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
-    leafletProxy("ll_map_crk")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
-  })
+    if (text != 'none') {
+      leafletProxy("ll_map_crk")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
+      })
 
   observeEvent(input$ll_map_pri_click,{
     clk <- input$ll_map_pri_click; grp <- input$ll_map_pri_groups;
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
+    if (text != 'none') {
     leafletProxy("ll_map_pri")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
-  })
+  }
+    })
 
   observeEvent(input$ll_map_edi_click,{
     clk <- input$ll_map_edi_click; grp <- input$ll_map_edi_groups;
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
+    if (text != 'none') {
     leafletProxy("ll_map_edi")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
-  })
+    }
+      })
 
   observeEvent(input$ll_map_h2r_click,{
     clk <- input$ll_map_h2r_click; grp <- input$ll_map_h2r_groups; ##
-    # print(clk)
+    print(' ---- clk')
+    print(clk)
+    print(' ---- grp')
     print(grp)
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
-    print(text)
-    leafletProxy("ll_map_h2r")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    #print(text)
+    if (text != 'none') {
+      leafletProxy("ll_map_h2r")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
   })
 
   observeEvent(input$ll_map_dist_click,{ ##
@@ -348,7 +367,9 @@ server <- function(input, output, session) {
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
-    leafletProxy("ll_map_dist")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    if (text != 'none') {
+      leafletProxy("ll_map_dist")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
   })
 
   observeEvent(input$ll_map_points_click,{ ##
@@ -356,7 +377,19 @@ server <- function(input, output, session) {
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
-    leafletProxy("ll_map_points")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    if (text != 'none') {
+      leafletProxy("ll_map_points")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
+  })
+
+  observeEvent(input$ll_map_comp_click,{ ##
+    clk <- input$ll_map_comp_click; grp <- input$ll_map_comp_groups; ##
+    text <- getRastVal(clk, grp)
+    # rastVal <- getRastVal(clk, grp)
+    # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
+    if (text != 'none') {
+      leafletProxy("ll_map_points")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
   })
 
   # clk <- input$ll_map_pri_click; grp <- input$ll_map_pri_groups;
@@ -3350,6 +3383,7 @@ server <- function(input, output, session) {
 
     (compID <- sessionIDgen(short = TRUE))
     (outComFolder <- paste0(tempFolder, '/comp', compID))
+    rv$comFolder <- outComFolder
     (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
     (outComPngRel <- paste0(outComFolder, '/compRel.png'))
 
@@ -3755,6 +3789,55 @@ server <- function(input, output, session) {
   ####### > Download buttons  ------------------
   # out_crk$file points_file$file out_pri_tif
   {
+    #rv$comFolder <- outComFolder
+    ## Download points
+    output$comDwn <- downloadHandler(
+      filename = paste0('comparison',
+                        #"_",
+                        #ifelse(!is.null(rv$inPtsSessID), rv$inPtsSessID, rv$sessionID),
+                        '.zip'),
+      content = function(filename) {
+        if(!is.null( rv$comFolder) ){
+          # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
+          #filename <- paste0('points_', rv$inPointsSessID , '.zip')
+          zip_file <- paste0(tempfile(), '_tempComp.zip')
+          #'',
+          #file.path(rv$tempFolder ,
+          #filename)
+          #)
+          #zip_file <- file.path(tempdir(), filename)
+          print(paste0('Making temp zip file: ', zip_file))
+
+          com_files <- list.files(path = rv$comFolder,
+                                  all.files = TRUE, include.dirs = TRUE,
+                                  #pattern = "out_simpts_",
+                                  full.names = TRUE)
+          print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
+
+
+          if (os == 'Windows'){
+            zip(zipfile = zip_file, files = paste0(com_files), flags = '-r9X')
+          } else {
+
+            # the following zip method works for me in linux but substitute with whatever method working in your OS
+            zip_command <<- paste("zip -j",
+                                  zip_file,
+                                  paste(com_files, collapse = " "))
+
+            pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n',
+                   'filename', 'zip_file') # _____________  , 'zip_command'
+
+            system(zip_command)
+          }
+          # copy the zip file to the file argument
+          file.copy(zip_file, filename)
+          # remove all the files created
+          try(file.remove(zip_file))
+        }
+      })
+
+
+
     ## Download points
     output$ptsDwn <- downloadHandler(
       filename = paste0('points',
@@ -4606,9 +4689,9 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '500000')),
-              column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '5')),
-              column(2, textInput("in_lcc_6", "Corridor tolerance (meters x cost):", '5')),
+              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '150000')),
+              column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
+              column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5000')),
               column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
               column(2, textInput('name_lcc', label = 'New layer name:', value = "",
                                   width = '100%', placeholder = 'Name new layer')),
@@ -4644,12 +4727,12 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
-              column(2, textInput("in_crk_4", "Distance threshold (meters x cost):", '25000')),
-              column(1, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
+              column(2, textInput("in_crk_4", "Distance threshold (meters):", '125000')),
+              column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
-              column(2, textInput("in_crk_6", "Kernel volume (meters x cost):", '1')),
-              column(2, selectInput("in_crk_sr", "Source layer:", '50', choices = '')),
+              column(1, textInput("in_crk_6", "Kernel volume:", '1')),
+              column(2, selectInput("in_crk_sr", "Source layer:", '', choices = '')),
               column(2, textInput('name_crk', label = 'New layer name:', value = "",
                                   width = '100%', placeholder = 'Name new layer')),
               column(1, actionButton("crk", "Get kernels", icon = icon("play")),
@@ -4778,8 +4861,8 @@ if (FALSE){
               column(3, h2(' Comparing results', style="text-align: center;")
                      ),
               column(3,
-                     selectInput("in_com_ly", "Layers:", '',
-                                 choices = c('Surface resistance',
+                     selectInput("in_com_ly", label = "Layers:", selected = '',
+                                 choices = c('', #'Surface resistance',
                                              'Dispersal kernels', 'Least cost path corridos'))
               ),
               column(3,
@@ -4856,13 +4939,14 @@ if (FALSE){
           # ),
 
           fluidRow(
-            fluidRow(
-              column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
-              column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
-              column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
-            ),
+            # fluidRow(
+            #   column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
+            #   column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
+            #   column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
+            # ),
             leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
+          br(),
           fluidRow(
             column(3, imageOutput("png1")),
             column(3, imageOutput("png2")),
