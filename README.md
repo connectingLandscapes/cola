@@ -1,7 +1,7 @@
 # Connectiviy analysis software: Connecting landscapes - `cola` 
 
 
-![.](./inst/docs/logoA.jpg "")
+![.](./inst/docs/logoA.jpg)
 
 > Toolkit Overview
 
@@ -31,5 +31,5 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
 
 > Workshops
 
-   * [Bandar Seri Begawan (Brunei). May 20th / 2024](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
+   * [Bandar Seri Begawan (Brunei). May 20th / 2024](https://github.com/connectingLandscapes/cola/blob/main/workshops/Brunei-05May-20-2024)
 
