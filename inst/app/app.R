@@ -3219,26 +3219,35 @@ server <- function(input, output, session) {
       #input <- c(in_dist_3 = 25000)
       rv$log <- paste0(rv$log, '\n Generating prioritization');updateVTEXT(rv$log) # _______
       out_pri_tif <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.tif')
+      out_pri_tif_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.tif')
       out_pri_shp <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.shp')
+      out_pri_shp_pol <- paste0(tempFolder, '/out_pri_pol_', rv$inpriSessID, '.shp')
+      out_pri_shp_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.shp')
 
-      # tempFolder <- '/data/temp/RY2024011519163805file176c0d742621ed'
-      # rv <- list(crk = '/data/temp/RY2024011519163805file176c0d742621ed/out_crk_IF2024011520212105file176c0d2f0a3994.tif',
-      #            lcc = '/data/temp/RY2024011519163805file176c0d742621ed/out_lcc_GG2024011519164505file176c0d5f4b6267.tif')
+
+      # tempFolder <- '/data/tempR/colaZGI2024051609530805//'; list.files(path = tempFolder)
+      # rv <- list(crk = '/data/tempR/colaZGI2024051609530805/out_crk_CFR2024051610192005.tif',
+      #            tif = '/data/tempR/colaZGI2024051609530805/in_crk_IIF2024051609552305.tif',
+      #            lcc = '/data/tempR/colaZGI2024051609530805/out_lcc_FRE2024051610211205.tif')
+      #rv$inpriSessID <- 'sessA'
+
       #
-      # out_pri_tif <- '/data/temp/RY2024011519163805file176c0d742621ed/out_pri_IF2024011520212105file176c0d2f0a3994.tif'
-      # out_pri_shp <- '/data/temp/RY2024011519163805file176c0d742621ed/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
-      # input <- list(in_prio_5 = 0.5)
+      # out_pri_tif <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.tif'
+      # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
+      # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
 
       output$ll_map_pri <- leaflet::renderLeaflet({
 
         tStartPri <- Sys.time()
-        out_pri <- pri_py(py = py,
-                          tif = rv$tif,
+        out_pri <- pri_py(tif = rv$tif,
                           incrk = rv$crk ,
                           inlcc = rv$lcc,
                           maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
-                          outshp = out_pri_shp,
+                          outshppoint = out_pri_shp,
+                          outshppol = out_pri_shp_pol,
+                          outshppatch = out_pri_shp_patch,
                           outtif = out_pri_tif,
+                          outtifpatch = out_pri_tif_patch,
                           param7 = as.numeric(input$in_pri_5), # 0.5
                           param8 = as.numeric(input$in_lcc_6))
         ## missing param7 and 8 by user

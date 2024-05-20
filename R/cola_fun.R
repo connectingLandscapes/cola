@@ -391,7 +391,8 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
                    tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
-                   outshp, outtif,
+                   outshppoint, outshppol, outshppatch,
+                   outtifpatch, outtif,
                    param7 = 0.5,
                    param8 = 1000){
 
@@ -446,7 +447,11 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                       tif, ' ',
                       incrk, ' ', inlcc, ' ',
                       maskedcsname, ' ',
-                      outshp, ' ', outtif, ' ',
+                      outshppoint, ' ',
+                      outshppol, ' ',
+                      outshppatch, ' ',
+                      outtifpatch, ' ',
+                      outtif, ' ',
                       format(param7, scientific=F), " ",
                       format(param8, scientific=F)))
 

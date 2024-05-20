@@ -36,7 +36,6 @@
 
 ## Git
 # sudo su shiny; cd /home/shiny/cola; git add . ; git commit -m " "; git push
-# sudo su shiny; cd /home/shiny/connecting-landscapes; git add . ; git commit -m "Change coordiantes()"; git push
 # git pull main --rebase --autostash
 # sudo chown -R shiny:shiny .
 # git stash
