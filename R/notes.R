@@ -24,6 +24,7 @@
 
 ## Cola
 # cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/.
+# system('cp /home/shiny/cola/inst/app/* -R /srv/shiny-server/cola/.')
 # sudo cp /home/shiny/cola/inst/app/cola_tools.R /home/shiny/R/x86_64-pc-linux-gnu-library/4.1/cola/app/cola_tools.R
 # http://18.190.126.82:3838/cola
 

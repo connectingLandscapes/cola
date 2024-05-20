@@ -4475,8 +4475,8 @@ if (FALSE){
 
             fluidRow(
               column(2,
-                     textInput("in_sur_3", "Min-grid:", '0'),
-                     textInput("in_sur_4", "Max-grid:", '100')
+                     textInput("in_sur_3", "Min. val:", '0'),
+                     textInput("in_sur_4", "Max. val:", '100')
               ),
               column(2,
                      textInput("in_sur_5", "Max-resistance:", '100'),

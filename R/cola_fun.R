@@ -460,9 +460,11 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   print(intCMD)
-  return(list(tif = ifelse(file.exists(outtif), outtif, NA),
-              shp = ifelse(file.exists(outshp), outshp, NA),
-              log = intCMD) )
+  return(
+    list(tif = ifelse(file.exists(outtif), outtif, NA),
+              shp = ifelse(file.exists(outshppoint), outshp, NA),
+              log = intCMD)
+    )
 }
 
 #' @title  Runs CDOPOP2
