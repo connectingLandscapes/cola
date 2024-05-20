@@ -3371,14 +3371,18 @@ server <- function(input, output, session) {
     in_com_ly <- input$in_com_ly
     # in_com_ly <- 'Dispersal kernels'
     # tempFolder <- '/data/temp/scenario_folder'
-    # tempFolder <- '/data/tempR/colaXZV2024051511050405'
     layer_type_compare <- switch(in_com_ly,
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
                                  'Least cost path corridos' = 'out_lcc_.+.tif$')
 
+   # tempFolder <- '/data/tempR/colaCVY2024051611341905/';
     (avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
-                               full.names = TRUE))
+                                full.names = TRUE))
+    (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+    # avail_layers <- rev(avail_layers)
+    avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
+
     # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
 
     (compID <- sessionIDgen(short = TRUE))
