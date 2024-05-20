@@ -1,4 +1,4 @@
-![logo](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner_short.png?raw=true)
+![](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner_short.png?raw=true)
 
 
 ### Toolkit Overview
