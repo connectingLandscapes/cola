@@ -342,7 +342,7 @@ def main() -> None:
             corrShape = gpd.GeoDataFrame.from_features(geoms)
             corrShape['id'] = pid
             # Use groupby function to convert to multipolygon    
-            corrShape = groupby_multipoly(corrShape, by='id')
+            corrShape = cf.groupby_multipoly(corrShape, by='id')
             # Append to list
             polyList.append(corrShape)
 
