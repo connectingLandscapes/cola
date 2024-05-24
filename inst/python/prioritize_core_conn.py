@@ -214,7 +214,11 @@ def main() -> None:
     
     # Delete edge pairs in the same patch
     ecc = ecc[ecc[:,2] != ecc[:,3],:]
-    
+
+    # Check if no connecting corridors
+    if ecc.shape[0] == 0:
+        raise Exception('There are no corridors connecting your patches.')
+
     #%%
     # Read in original cost surface
     with rio.open(ocsFile) as src:
