@@ -3239,7 +3239,7 @@ server <- function(input, output, session) {
       output$ll_map_pri <- leaflet::renderLeaflet({
 
         tStartPri <- Sys.time()
-        out_pri <- pri_py(tif = rv$tif,
+        out_pri <- tryCatch(pri_py(tif = rv$tif,
                           incrk = rv$crk ,
                           inlcc = rv$lcc,
                           maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
@@ -3249,7 +3249,7 @@ server <- function(input, output, session) {
                           outtif = out_pri_tif,
                           outtifpatch = out_pri_tif_patch,
                           param7 = as.numeric(input$in_pri_5), # 0.5
-                          param8 = as.numeric(input$in_lcc_6))
+                          param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
         ## missing param7 and 8 by user
 
 
@@ -3261,7 +3261,7 @@ server <- function(input, output, session) {
         rv$pritif <- out_pri$tif
         rv$prishp <- out_pri$shp
 
-        if(!file.exists(out_pri$shp)){
+        if(is.na(out_pri$shp)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
           rv$llmap
 
