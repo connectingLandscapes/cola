@@ -334,6 +334,7 @@ def main() -> None:
         # Convert corridor to 0-1
         tCorr = np.where(tCorr > 0, 1, 0)
         cmask = tCorr == 1
+        cmask = cmask.astype('uint8')
         
         # Convert to shapefile
         with rio.open(ocsFile) as src:
