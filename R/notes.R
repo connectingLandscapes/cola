@@ -13,12 +13,7 @@
 # .rs.restartR()
 # library(cola)
 # cola::cola_dss()
-
-# origLibs <- installed.packages()
 # cola::setup_cola_dss()
-
-
-
 
 ############################# Shiny end #################################
 # """""""" ========== -------------------
