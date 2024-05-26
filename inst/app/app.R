@@ -3262,7 +3262,7 @@ server <- function(input, output, session) {
         rv$prishp <- out_pri$shp
 
         if(is.na(out_pri$shp)){
-          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          rv$log <- paste0(rv$log, ' --- ERROR ');updateVTEXT(rv$log) # _______
           rv$llmap
 
         } else {
@@ -4586,7 +4586,7 @@ if (FALSE){
             #            #"Draw only one geometry type at the time.",
             #            #"Only last type of polygon(s) will be used.",
             #            "Use a positive or negative single value other than 0.",
-            #            "Please remove existing polygons brefire running again. ")),
+            #            "Please remove existing polygons before running again. ")),
             #    checkboxInput("in_edi_che", "All pix. touched", FALSE)),
             #   column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = ''),
             #          textInput('name_edi', label = 'New layer name:', value = "",
@@ -4603,6 +4603,10 @@ if (FALSE){
             # ),
 
             fluidPage(
+              column(2,
+                     h6(paste("Use a positive or negative single value other than 0.",
+                                "Please remove existing polygons before running again. "))),
+
               column(1, textInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
               column(1, numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
               column(1, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
@@ -4788,6 +4792,8 @@ if (FALSE){
                      tags$head(tags$style("#vout_pri{overflow-y:scroll; max-height: 70px}"))
               )
             ),
+            h6(paste("Only run this tool if you have more than two isolated pathces on the kernels layers. ")),
+
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_prioA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioB',  fill = TRUE)),

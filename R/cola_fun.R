@@ -455,6 +455,7 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                       format(param7, scientific=F), " ",
                       format(param8, scientific=F)))
 
+  print(' CMD prio:')
   print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
 
 
@@ -462,7 +463,7 @@ pri_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   print(intCMD)
   return(
     list(tif = ifelse(file.exists(outtif), outtif, NA),
-              shp = ifelse(file.exists(outshppoint), outshp, NA),
+              shp = ifelse(file.exists(outshppoint), outshppoint, NA),
               log = intCMD)
     )
 }
