@@ -333,6 +333,7 @@ def main() -> None:
         
         # Convert corridor to 0-1
         tCorr = np.where(tCorr > 0, 1, 0)
+        tCorr = tCorr.astype('uint8')
         cmask = tCorr == 1
         cmask = cmask.astype('uint8')
         
