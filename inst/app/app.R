@@ -4693,45 +4693,6 @@ if (FALSE){
 
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
 
-          ##### UI LCC ----
-          shinydashboard::tabItem(
-            tabName = 'tab_corridors',
-            fluidRow(
-              column(4, h2(' Create corridors', style="text-align: center;")),
-              column(8, verbatimTextOutput("vout_lcc") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
-                     tags$head(tags$style("#vout_lcc{overflow-y:scroll; max-height: 70px}"))
-              )
-            ),
-            fluidPage(
-              column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
-              column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
-
-              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '5000000')),
-              column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
-              column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '20000')),
-              column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
-              column(2, textInput('name_lcc', label = 'New layer name:', value = "",
-                                  width = '100%', placeholder = 'Name new layer')),
-              column(1, actionButton("lcc", "Get corridors", icon = icon("play")),
-                     actionButton("lcc2", "Get corridors (heavy)", icon = icon("play")),
-                     downloadButton('lccDwn', 'Download'))
-            ),
-            leaflet::leafletOutput("ll_map_lcc", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-            # ll_map_corr lcc vout_corr in_lcc_3 4 5
-            br(),
-            shinydashboard::box(
-              width = 12, solidHeader = T, collapsible = T,
-              title = "Parameters info", status = "primary", collapsed = TRUE
-              ,
-
-              #fluidRow(
-              column(width = 4, h5('Hola')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
-            )
-          ),
-
           ##### UI CRK ----
           shinydashboard::tabItem(
             tabName = 'tab_kernels',
@@ -4744,7 +4705,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
-              column(2, textInput("in_crk_4", "Distance threshold (meters):", '1000000')),
+              column(2, textInput("in_crk_4", "Distance threshold (meters):", '125000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
@@ -4772,6 +4733,47 @@ if (FALSE){
               #)
             )
           ),
+
+
+          ##### UI LCC ----
+          shinydashboard::tabItem(
+            tabName = 'tab_corridors',
+            fluidRow(
+              column(4, h2(' Create corridors', style="text-align: center;")),
+              column(8, verbatimTextOutput("vout_lcc") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                     tags$head(tags$style("#vout_lcc{overflow-y:scroll; max-height: 70px}"))
+              )
+            ),
+            fluidPage(
+              column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
+
+              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '150000')),
+              column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
+              column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
+              column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
+              column(2, textInput('name_lcc', label = 'New layer name:', value = "",
+                                  width = '100%', placeholder = 'Name new layer')),
+              column(1, actionButton("lcc", "Get corridors", icon = icon("play")),
+                     actionButton("lcc2", "Get corridors (heavy)", icon = icon("play")),
+                     downloadButton('lccDwn', 'Download'))
+            ),
+            leaflet::leafletOutput("ll_map_lcc", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            # ll_map_corr lcc vout_corr in_lcc_3 4 5
+            br(),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4, h5('Hola')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            )
+          ),
+
 
           #shinydashboard::tabItem('tab_plotting',
           #         h2(' Create plots'),
