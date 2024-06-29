@@ -81,7 +81,7 @@ guessNoData <- function(path){
   # path = raster path
   ans <- NA
   if (require(gdalUtilities) & file.exists(path)){
-    gi <- strsplit(gdalinfo(intif), '\n')[[1]]
+    gi <- strsplit(gdalinfo(path), '\n')[[1]]
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
       (ans <- gsub('.+\\=', '', ndv))
@@ -134,7 +134,7 @@ s2res_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # param5 = 100
   # param6 = 1
   # param7 = -9999
-  # param8 = 'None
+  # param8 = 'None'
 
   ## Guess NA value if not provided
   if(is.null(param7)){
