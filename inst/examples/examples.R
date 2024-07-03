@@ -1,11 +1,8 @@
 library(cola)
 library(terra)
 
-wd <- '/home/shiny/cola/inst/examples'
-dir.create(wd)
-setwd(wd)
-
-wd <- 'cola_examples'
+#wd <- '/home/shiny/cola/inst/examples'
+wd <- '/home/user/cola_examples'
 dir.create(wd)
 setwd(wd)
 
@@ -311,7 +308,10 @@ points(pts_vect, col = '1', cex = .4)
 # Param [6] corridor tolerance (in cost distance units)
 
 pts_path <- '/home/shiny/cola/inst/sampledata/points_sabahA_50.shp'
+pts_path <- '/home/user/cola/inst/sampledata/points_sabahA_50.shp'
 
+hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
 
 ## Param 4 -- distance threshold
 

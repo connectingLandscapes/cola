@@ -4705,7 +4705,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
-              column(2, textInput("in_crk_4", "Distance threshold (meters):", '125000')),
+              column(2, textInput("in_crk_4", "Max. dispersal distance (meters):", '125000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
@@ -4748,7 +4748,7 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(1, textInput("in_lcc_4", "Distance threshold (meters):", '150000')),
+              column(1, textInput("in_lcc_4", "Max. dispersal distance (meters):", '150000')),
               column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
               column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
               column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),

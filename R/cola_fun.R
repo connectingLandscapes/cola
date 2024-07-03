@@ -254,7 +254,7 @@ lcc_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
   # [3] output file name
-  # [4] distance threshold (should be in meters*)
+  # [4] Max. dispersal distance (meters)
   # [5] corridor smoothing factor (in number of cells)
   # [6] corridor tolerance (in cost distance units)
 
