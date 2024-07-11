@@ -5,7 +5,7 @@ As there's many components and libraries involved in this software, your particu
 We need to evaluate several steps in two stages: ***A) the python conda environment*** and ***B) the R Dashboard***
 
 
-#### **A. Setting up cola R package and Python conda environment**
+## **A. Setting up cola R package and Python conda environment**
  
  1. Install `cola` R package
  2. Install `reticulate` R package
@@ -25,7 +25,7 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
 -------------
 -------------
 
-####  **1. Installing cola R package**
+###  **1. Installing cola R package**
   During the instruction `devtools::install_github('connectingLandscapes/cola')` or after the installation, when `library(cola)`:
   
   **Testing:** `library(cola)`
@@ -124,7 +124,7 @@ Downloading GitHub repo connectingLandscapes/cola@HEAD
 -------------
 -------------
 
-####  **2. Install `reticulate` R package**
+###  **2. Install `reticulate` R package**
   
   Installing `reticulate` R package should be done by the `cola::setup_cola()` function. Here some issues detected:
   
@@ -145,7 +145,7 @@ Downloading GitHub repo connectingLandscapes/cola@HEAD
 
 
 
-#####  **3. Install miniconda software**
+###  **3. Install miniconda software**
   
   Installing `miniconda` should be done by the `cola::setup_cola()` function. There's several reported problems trying to install miniconda, so we encourage not to uninstall it once is installed. Here some issues detected:
 
@@ -233,7 +233,7 @@ Downloading GitHub repo connectingLandscapes/cola@HEAD
 -------------
   
   
-#####  **4. Install cola conda environment**
+###  **4. Install cola conda environment**
 Installing `cola` conda environment should be done by the `cola::setup_cola()` function. Here some issues detected:
 
   **Testing:** `reticulate::conda_list()`
@@ -267,6 +267,16 @@ and having a message from `cola::setup_cola()` similar to: `The python version i
 
 
 
+  **Known issue:** `cola` environment can't be installed
+  
+ ***Solution:*** Install conda environment manually:
+ `conda_install(envname = 'cola', packages = c('gdal', 'h5py', 'numexpr', 'rasterio', 'pytables', 'pandas',  'cython', 'numba',                   'networkit', 'fiona', 'shapely', 'geopandas', 'kdepy','scikit-image'))` 
+
+
+-------------
+
+
+
   
   **Known issue:** `cola` conda environment available but without name. Your conda manager installed the environment correctly but is not named. This might occur because the path where R install the environment is different than the manager conda path. Likely occur when changing users, permissions. 
   `(base) C:\Users\Admin>conda activate C:\Users\USER\AppData\Local\r-miniconda\envs\cola`
@@ -291,7 +301,7 @@ base                  **  C:\ProgramData\Miniconda3
 -------------
 -------------
 
-#####  **5. Install cola conda environment packages**
+###  **5. Install cola conda environment packages**
 Installing the `cola` conda environment packages should be done by the `cola::setup_cola()` function. Here some issues detected:
 
   **Testing:** Running `cola::setup_cola()` and `cola::commonErrors()` getting the following messages:
@@ -301,7 +311,6 @@ Installing the `cola` conda environment packages should be done by the `cola::se
 
 
 -------------
-
 
 
   **Known issue:** Some Windows versions require the last VisualStudio version for Cython:
@@ -324,7 +333,7 @@ Installing the `cola` conda environment packages should be done by the `cola::se
 -------------
 -------------
 
-#####  **6. Define connections between R and Python**
+###  **6. Define connections between R and Python**
 These errors are common because each computer has a particular configuration. Here some of the solutions we found.
  
   **Testing:** Running `cola::setup_cola()` and `cola::commonErrors()` getting the following messages:
@@ -444,7 +453,7 @@ COLA_SCRIPTS_PATH
 -------------
 -------------
 
-#####  **7. Installing and running packages for the DSS dashboard**
+###  **7. Installing and running packages for the DSS dashboard**
 The installation of the required packages for `cola` dashboard  should be done by the `cola::setup_cola_dss()` function. Here some issues detected:
 
   **Testing:** Running `cola::setup_cola_dss()` and getting the following messages:
@@ -453,7 +462,6 @@ The installation of the required packages for `cola` dashboard  should be done b
 
 
 -------------
-
 
 
   **Known issue:** Some packages versions requires to be updated. The package migth exists in your machine, but is not usable. Some of these errors might include:
@@ -469,7 +477,18 @@ The installation of the required packages for `cola` dashboard  should be done b
 -------------
 -------------
 
-#####  **Check your local paths**
+
+
+  **Known issue:** Error in the front-end when loading raster files `Error in addRasterImage: inherits(x, "RasterLayer") is not TRUE`  
+  
+  
+ ***Solution:*** Update the libraries. Mostly `shiny`, `leaflet`, `tera`. Use `install.packages('terra')`.
+
+
+-------------
+-------------
+
+####  **Check your local paths**
  You can also try this command to see what's your cola path: 
  
   `Sys.getenv(c('COLA_MINICONDA_PATH', 'COLA_SCRIPTS_PATH'))`
@@ -477,7 +496,7 @@ The installation of the required packages for `cola` dashboard  should be done b
   Those paths must point to two different routes containing the python and scripts paths
 
 
-#### **B. Setting up cola R packages for the dashboard**
+## **B. Setting up cola R packages for the dashboard**
 The errors in this section are usually related with some libraries which require manual installations
 
   **Testing:** Running `cola::setup_cola_dss()`

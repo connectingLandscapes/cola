@@ -214,7 +214,11 @@ def main() -> None:
     
     # Delete edge pairs in the same patch
     ecc = ecc[ecc[:,2] != ecc[:,3],:]
-    
+
+    # Check if no connecting corridors
+    if ecc.shape[0] == 0:
+        raise Exception('There are no corridors connecting your patches.')
+
     #%%
     # Read in original cost surface
     with rio.open(ocsFile) as src:
@@ -329,7 +333,9 @@ def main() -> None:
         
         # Convert corridor to 0-1
         tCorr = np.where(tCorr > 0, 1, 0)
+        tCorr = tCorr.astype('uint8')
         cmask = tCorr == 1
+        cmask = cmask.astype('uint8')
         
         # Convert to shapefile
         with rio.open(ocsFile) as src:
@@ -342,7 +348,7 @@ def main() -> None:
             corrShape = gpd.GeoDataFrame.from_features(geoms)
             corrShape['id'] = pid
             # Use groupby function to convert to multipolygon    
-            corrShape = groupby_multipoly(corrShape, by='id')
+            corrShape = cf.groupby_multipoly(corrShape, by='id')
             # Append to list
             polyList.append(corrShape)
 

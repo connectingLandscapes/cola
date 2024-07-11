@@ -3,8 +3,88 @@
 # options(scipen = 999)
 # options(scipen = 9)
 
+## Errors -- only for shiny server
+{
 
-# draws2Features(polDraw)
+  logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
+  path_error <- '/var/log/shiny-server/'
+
+
+  allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
+
+  if( length(allLogs) != 0 ){
+    # cleanMemory(logFilePath)
+
+    validLogs <- unname(
+      na.omit(
+        sapply(allLogs, simplify = TRUE, function(x){
+          # x = allLogs[1]
+          y <- tryCatch(read.delim(file.path(path_error, x), quote = "")[, 1], error = function(e) NULL)
+          if (any(grep('[E|e]rror', y)) & !is.null(y) ){
+            return (x)
+          } else {
+            return (NA)
+          }
+        })
+      ))
+  } else {
+    ## Temporal variable --- not to use outside the server
+    validLogs <- c('')
+  }
+}
+
+
+### time stamp -----
+## Create temporal ID
+sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE){
+  (tempID <- basename(tempfile()))
+  (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
+
+  if( short){
+    (sessionID <- timeMark)
+  } else {
+    (sessionID <- paste0( timeMark, sep, tempID ))
+  }
+
+  if (letter){
+    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1),
+                        sep, sessionID)
+  }
+
+  if(folder){
+    sessionID <- paste0('cola', sessionID)
+  }
+  return(sessionID)
+}
+
+
+## Clean files
+cleanMemory <- function(logFilePath){
+  dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
+
+  if(file.exists(logFilePath)){
+    logDF <- tryCatch(read.csv(logFilePath), error = function(e) NULL)
+  } else {
+    logDF <- NULL
+  }
+
+  logDF <- rbind(logDF, dfm)
+
+  openFolders <- dir.exists(logDF$Rtmp)
+  sapply(logDF$tempFolder[!openFolders], unlink, recursive = TRUE)
+  logDF <- logDF[dir.exists(logDF$Rtmp), ]
+  write.csv(x = logDF, logFilePath, row.names = FALSE)
+}
+
+delFiles <- function(...){
+  invisible(suppressWarnings(
+    tryCatch(file.remove(c(...)),
+             error = function(e) NULL)
+  ))
+}
+
+
+
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
 
   ## Create list of empty features types
@@ -463,109 +543,7 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
   return(outraster0)
 }
 
-fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
-  # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
-  # inrasterpath = 'orig_tifs/size6.tif'
-  # outrasterpath = 'size6.tif'
 
-  inraster <- inrasterpath
-  outraster <- outrasterpath
-
-  outraster0 <- NA
-
-  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
-    stop( print('  >>> Infile not found - ', inraster))
-  }
-
-  if( is.null(outraster) ){
-    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
-                        basename(tempfile()) ,'.tif')
-  } else {
-    if( !file.exists(inraster)){
-      stop( print('  >>> Outfile not found - ', inraster))
-    }
-  }
-
-  if (require('gdalUtils')){
-    # print(1)
-
-    gi <- gdalUtils::gdalinfo(inraster)
-
-    nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-    nd <- length(nd0) == 1 & nd0 == -9999
-
-    pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-    options(digits = max(nchar(pixsize0)))
-    (pixsize <- abs(as.numeric(pixsize0 )))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-
-    if( !( nd & ps ) ) {
-      gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-                          tr = rep(max(pixsize), 2), dstnodata = -9999)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-
-  } else if(require('gdalUtilities')){
-    # print(2)
-
-    # options(scipen = 999)
-    # options(scipen = 9)
-
-    gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-
-    nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-    nd <- length(nd0) == 1 & nd0 == -9999
-
-    pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-    options(digits = max(nchar(pixsize0)))
-    (pixsize <- abs(as.numeric(pixsize0 )))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-
-    if( !( nd & ps ) ) {
-      gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                              tr = rep(max(pixsize), 2), dstnodata = -9999)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-
-
-  } else if(require('raster')){
-    # print(3)
-
-    options(digits = 20)
-    rx <- raster(inraster)
-    nd <- rx@file@nodatavalue == -9999
-
-    (pixsize <- res(rx))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    if( !( nd & ps ) ) {
-      templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-      raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-  }
-
-  options(digits = 5)
-  return(outraster0)
-}
-
-
-### time stamp
-sessionIDgen <- function(letter = TRUE, sep = ''){
-  tempID <- basename(tempfile())
-  timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-  sessionID <- paste0( timeMark, sep, tempID )
-  if (letter){
-    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1),
-                        sep, sessionID)
-  }
-  sessionID
-}
 
 
 
@@ -699,14 +677,9 @@ fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
 
 ### Orig fitRaster2cola, cell size and nodata
 fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
-  # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
-
+  # setwd('/home/shiny')
   # inrasterpath = 'orig_tifs/size6.tif'
   # outrasterpath = 'size6.tif'
-
-  # setwd('/home/shiny')
-  # inrasterpath = 'preCanopyClass30mCost.tif'
-  # outrasterpath = 'preCanopyClass30mCost_OUT.tif'
 
   inraster <- inrasterpath
   outraster <- outrasterpath
@@ -725,6 +698,28 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
       stop( print('  >>> Outfile not found - ', inraster))
     }
   }
+
+  #   if (require('gdalUtils')){
+  #     # print(1)
+  #
+  #     gi <- gdalUtils::gdalinfo(inraster)
+  #
+  #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+  #     nd <- length(nd0) == 1 & nd0 == -9999
+  #
+  #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+  #     options(digits = max(nchar(pixsize0)))
+  #     (pixsize <- abs(as.numeric(pixsize0 )))
+  #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+  #
+  #     if( !( nd & ps ) ) {
+  #       gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
+  #                           tr = rep(max(pixsize), 2), dstnodata = -9999)
+  #       outraster0 <- outraster
+  #     } else{
+  #       outraster0 <- inraster
+  #     }
+
 
   # if (require('gdalUtils')){
   #   # print(1)
@@ -766,21 +761,22 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   #   }
   #
   # } else
-  if(require('gdalUtilities')){
-    # print(2)
+  # if( require('gdalUtilities') ){ print(2) }
 
+  if( require('gdalUtilities') ){
     # options(scipen = 999)
     # options(scipen = 9)
 
     gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-    nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+    (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
     if (length(nd0) == 0) { nd0 <- 0}
-    nd <- length(nd0) == 1 & nd0 == -9999
+    nd <- (length(nd0) == 1) & (nd0 == -9999)
+    if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
 
     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
     options(digits = max(nchar(pixsize0)))
     (pixsize <- abs(as.numeric(pixsize0 )))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+    (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
 
     if( !( nd & ps ) ) {
       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
@@ -796,7 +792,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
                               tr = rep(max(pixsize), 2))
       outraster0 <- outraster
 
-    } else if (!nd & ps){
+    } else if (!nd & ps ){
       gdalUtilities::gdalwarp(srcfile = inraster,
                               dstfile = outraster,
                               #b = 1,
@@ -809,6 +805,30 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     }
 
 
+  #} else if(require('gdalUtilities')){
+    #     # print(2)
+    #
+    #     # options(scipen = 999)
+    #     # options(scipen = 9)
+    #
+    #     gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+    #
+    #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+    #     nd <- length(nd0) == 1 & nd0 == -9999
+    #
+    #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+    #     options(digits = max(nchar(pixsize0)))
+    #     (pixsize <- abs(as.numeric(pixsize0 )))
+    #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+    #
+    #     if( !( nd & ps ) ) {
+    #       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+    #                               tr = rep(max(pixsize), 2), dstnodata = -9999)
+    #       outraster0 <- outraster
+    #     } else{
+    #       outraster0 <- inraster
+    #     }
+    #
   } else if(require('raster')){
     # print(3)
 
@@ -827,10 +847,28 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     } else{
       outraster0 <- inraster
     }
+  # } else if(require('raster')){
+    #     # print(3)
+    #
+    #     options(digits = 20)
+    #     rx <- raster(inraster)
+    #     nd <- rx@file@nodatavalue == -9999
+    #
+    #     (pixsize <- res(rx))
+    #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+    #     if( !( nd & ps ) ) {
+    #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+    #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+    #       outraster0 <- outraster
+    #     } else{
+    #       outraster0 <- inraster
+    #     }
+    #   }
   }
 
   options(digits = 5)
   return(outraster0)
+
 }
 
 
@@ -840,6 +878,8 @@ loadRast <- function(inFiles, tempFolder, sessID){ # inFile <- input$shapefile
 
 
 loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
+  #inFiles: data frame with files. column 'name' with file name, and 'newFile' with full new name path
+
   # rv$inDistSessID
   # sessID <- (inDistSessID <- sessionIDgen())
   # tempFolder <- "/data/temp/SL2023112814374705file138b6c29cf34/"
@@ -896,7 +936,8 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
                                          basename(tools::file_path_sans_ext(inFiles$newFile[1]))),
                              error = function (e) NULL)
 
-      if( is.null(outshp$shp)){
+
+      if( is.null(outshp$shp) ){
         outshp$shp <- tryCatch(sf::read_sf(
           grep('shp$', inFiles$newFile, value = TRUE)),
           error = function (e) NULL)
@@ -905,27 +946,29 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
           outshp$shp <- as(outshp$shp, 'Spatial')
         }
       }
+      #print( ' ............. '); print(outshp$shp)
 
       outshp$files <- inFiles$newFile
       outshp$layer <- grep(pattern = '.shp', outshp$files, value = TRUE)
     }
 
-    if (is.na(st_crs(outshp$shp))){
+    if ( is.na(st_crs(outshp$shp)) ){
       # if (is.na(outshp$shp@proj4string@projargs)){
       outshp$mssg <- 'No projection in shapefile'
     }
 
-    if (any(class(outshp$shp) %in% 'sf')){
+    if ( any(class(outshp$shp) %in% 'sf') ){
       #if (class(outshp$shp) == 'SpatialPointsDataFrame'){
-      outshp$shp$ID <- 1:nrow(outshp$shp)
+      outshp$shp$sortID <- 1:nrow(outshp$shp)
     }
 
     # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
     # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
     # try(file.remove(inFiles$name))
   }
-  #save(outshp, file = paste0(gitPath, '/R/outshp_shp.RData'))
+  #save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
   cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
+  #print(outshp)
   return(outshp)
 }
 
@@ -966,6 +1009,7 @@ pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
       if(is.null(y)){ y <- 'NULL' }
       tryCatch(cat(sep, x, ": ", y), error = function(e) e)
     }))
+    cat('\n\t \n')
   }
 } # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
 
