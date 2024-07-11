@@ -207,8 +207,7 @@ def main() -> None:
     
     # Multiplier
     if kvol > 1:
-        vc = kvol * 3/(np.pi*dThreshold**2)
-        ccArr = ccArr*vc
+        ccArr = kvol * 3/(np.pi*ccArr**2)
     elif kvol < 1:
         raise Exception('Kernel volume should be >= 1.')
     
