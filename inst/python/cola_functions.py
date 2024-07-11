@@ -208,6 +208,49 @@ def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
     return nG, nid, idmap
     print(f"The process took {toc - tic:0.4f} seconds")
 
+import skimage as ski
+from scipy.sparse import coo_matrix
+def sk_image_to_graph(src_data, cellSize, ndValue):
+    tic = time.perf_counter()
+    # Get array    
+    A = src_data
+    # Convert to 1D
+    A = A.flatten()
+    # Create mask for pixel graph
+    mask = np.full(src_data.shape, True)
+    #mask[src_data == ndValue] = False
+    # Function to average pixel neighbors
+    func = lambda x, y, z: ((x+y)/2)*z
+    # Create pixel graph (adjacency matrix)
+    adj = ski.graph.pixel_graph(src_data, mask=mask, edge_function = func, connectivity=2, spacing=cellSize)
+    # Convert from csr to coo
+    adj = adj[0].tocoo()  
+    # Get lower triangle in triplet format
+    ro, co, dat = sparse.find(tril(adj))
+    # Remove duplicate edges
+    #x = [(i,j,v) for i,j,v in zip(adj.row, adj.col, adj.data) if i < j]
+    # Convert back to coo
+    #adj = coo_matrix(([i[2] for i in x], ([i[0] for i in x], [i[1] for i in x])))
+    adj = coo_matrix((dat, (ro, co)))
+    # Convert to graph
+    nG = nk.graph.GraphFromCoo(adj, weighted=True, directed=False, edgesIndexed=True)
+    # Iterate through nodes and remove if nodata
+    for u in nG.iterNodes():
+        if A[u] == -9999:
+            nG.removeNode(u)
+    # Get original node ids
+    nid = [u for u in nG.iterNodes()]
+    # Create mapping from original node ids to node ids
+    # after removing no data
+    idmap = nk.graphtools.getContinuousNodeIds(nG)
+    # Renumber node ids to be continuous
+    nG = nk.graphtools.getCompactedGraph(nG, idmap)
+    # Index edges
+    nG.indexEdges()
+    toc = time.perf_counter()
+    return nG, nid, idmap
+    print(f"The process took {toc - tic:0.4f} seconds")
+    
 def cell_indices_from_coords(src, src_data, coords, win=None):
     """
     Find row and column indices of spatial coordinates relative
