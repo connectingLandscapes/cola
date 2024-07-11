@@ -97,7 +97,7 @@ if shpZones == 'None':
     ax = csum.plot.bar(x='Scenario', y='lccsum', rot=0, color="darkblue", title="Corridor Movement Potential", fontsize=16)
     ax.title.set_size(16)
     ax.xaxis.label.set_size(16)
-    ax.set_ylabel('Kernel Sum', fontsize=16)
+    ax.set_ylabel('Corridor Sum', fontsize=16)
     ax.get_legend().remove()
     fig = ax.get_figure()
     plt.gcf().set_size_inches(6, 5)
