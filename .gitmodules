@@ -1,0 +1,3 @@
+[submodule "inst/CDPOP"]
+	path = inst/CDPOP
+	url = https://github.com/forest-rev/CDPOP.git
