@@ -372,7 +372,7 @@ cdmat_py <- function(inshp, intif, outcsv,
   print(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
-  checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) summary(checkcsv); sum(checkcsv, )
+  #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
 
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
