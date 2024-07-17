@@ -159,19 +159,19 @@
 
       # addCircleMarkers(sh_pt, group = "draw") %>%
       # ll_sh %>%
-      addLegend(pal =  sh_hs_pal, values= base::range(sh_hs[], na.rm = TRUE),
+      addLegend(pal =  sh_hs_pal, values = base::range(sh_hs[], na.rm = TRUE),
                 group = "HabitatSuitability", layerId = "HabitatSuitability",
                 position = 'bottomleft', title = "Hab. suitability")  %>%
 
-      addLegend(pal = sh_crk_pal, values= base::range(sh_crk[], na.rm = TRUE),
+      addLegend(pal = sh_crk_pal, values = base::range(sh_crk[], na.rm = TRUE),
                 group = "Kernels", layerId = "Kernels",
                 position = 'bottomleft', title = "Kernels")  %>%
 
-      addLegend(pal =  sh_sr_pal, values= base::range(sh_sr[], na.rm = TRUE),
+      addLegend(pal =  sh_sr_pal, values = base::range(sh_sr[], na.rm = TRUE),
                 group = "SurfaceResistance", layerId = "SurfaceResistance",
                 position = 'bottomleft', title = "Sur. resistance")  %>%
 
-      addLegend(pal = sh_lcc_pal, values= base::range(sh_lcc[], na.rm = TRUE),
+      addLegend(pal = sh_lcc_pal, values = base::range(sh_lcc[], na.rm = TRUE),
                 group = "Corridors", layerId = "Corridors",
                 position = 'bottomleft', title = "Corridors")  %>%
 
@@ -2683,7 +2683,7 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
       cdmat_file <- cdmat_py (py = py, inshp = rv$pts, intif = rv$tif,
-                              outcsv = outcdmat, param3 = as.numeric(input$in_dist_3), param4 = 1)
+                              outcsv = outcdmat, param4 = as.numeric(input$in_dist_3))
       rv$cdm <- cdmat_file$file
       tElapMat <- Sys.time() - tStartMat
       textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
