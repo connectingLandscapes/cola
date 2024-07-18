@@ -3,14 +3,18 @@
 Created on Mon Jul 24 15:48:54 2023
 Script to create source points spatially 
 distributed according to habitat suitability.
+If the min or max values provided by the user
+are > or < the min and max values present in the
+raster, we assume the user wants points distributed
+within this restricted range. We therefore mask out
+values outside the provided range.
+ 
 @author: pj276
 """
 #%%
 # IMPORTS
 import sys
-import osgeo
 import rasterio as rio
-from rasterio.crs import CRS
 import cola_functions as cf
 import pandas as pd
 import geopandas as gpd
@@ -88,6 +92,10 @@ def main() -> None:
     #%%
     # Convert no data value to nan
     r[r==-9999] = np.nan
+    
+    # Convert raster values outside the provided range to nan
+    r[r < sMin] = np.nan
+    r[r > sMax] = np.nan
     
     # Rescale to 0-1
     rRsc = (r - sMin) / (sMax - sMin)
