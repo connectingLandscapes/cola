@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jul 24 15:48:54 2023
-Script to create source points spatially 
-distributed according to habitat suitability.
-If the min or max values provided by the user
-are > or < the min and max values present in the
-raster, we assume the user wants points distributed
-within this restricted range. We therefore mask out
+☺ We therefore mask out
 values outside the provided range.
  
 @author: pj276
