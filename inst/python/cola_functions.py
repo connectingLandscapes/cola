@@ -371,7 +371,7 @@ def is_floatpy3(element: any) -> bool:
     except ValueError:
         return False
 
-def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=False, Cshape=0.1, NewMin=0, NewMax=1):
+def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=False, Cshape=0.1, NewMin=0, NewMax=1, NewRMin=1):
     """
     Rescales numbers using old and new ranges as references. If old value
     is outside the range of the original range, it is set to the corresponding
@@ -397,9 +397,11 @@ def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=Fa
         < 0 resistance increases rapidly with decrease in quality
         ~ 0 resistance increases linearly with decrease in quality
     NewMin : numeric
-        min value of new range
+        min value of new range (before exponential rescale)
     NewMax : numeric
-        max value of new range
+        max value of new range (before exponential rescale)
+    NewRMin : numeric
+        min value of new range (after exponential rescale)
 
     Returns
     -------
@@ -409,9 +411,15 @@ def rescale(OldValue, OldMin, OldMax, NewRMax, OldNdval, NewNdval, DoExpTrans=Fa
     if OldValue == OldNdval:
         NewValue = NewNdval
     elif OldValue > OldMax:
-        NewValue = NewMax
+        if DoExpTrans == False:
+            NewValue = NewMax
+        else:
+            NewValue = NewRMin
     elif OldValue < OldMin:
-        NewValue = NewMin
+        if DoExpTrans == False:
+            NewValue = NewMin
+        else:
+            NewValue = NewRMax
     else:
         OldRange = (OldMax - OldMin)
         if OldRange == 0:
