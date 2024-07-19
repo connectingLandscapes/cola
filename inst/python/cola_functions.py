@@ -794,6 +794,9 @@ def read2flt32array(upCRS, rg):
         with rio.open(rg, 'r+') as src:
             # Assign projection
             src.crs = CRS.from_string(upCRS)
+            # Check if projection is geographic
+            if src.crs.is_geographic:
+                raise Exception('Coordinate reference system of input file is geographic. CoLa requires input files to have a projected, equal area coordinate reference system.')
             # Get profile
             profile = src.profile
             # Read to array
@@ -808,6 +811,9 @@ def read2flt32array(upCRS, rg):
     # Otherwise, read as usual
     else:            
         with rio.open(rg) as src:
+            # Check if projection is geographic
+            if src.crs.is_geographic:
+                raise Exception('Coordinate reference system of input file is geographic. CoLa requires input files to have a projected, equal area coordinate reference system.')
             # Get profile
             profile = src.profile
             # Read to array
