@@ -65,15 +65,28 @@ setup_cola_dss <- function(
   #   devtools:::install_github("gearslaboratory/gdalUtils")
   # }
 
+  if (!require("shinydashboard")) {
+    instPack("rstudio/shinydashboard", devt = TRUE)
+  }
 
-  instPack("rstudio/shinydashboard", devt = TRUE)
-  instPack("hadley/shinySignals")
+  if (!require("shinySignals")) {
+    instPack("hadley/shinySignals")
+    if(!require('shinySignals') ){
+      remotes::install_github("hadley/shinySignals")
+    }
+  }
+
   # remotes::install_version("rjson", "0.2.20")
-  instPack("highcharter") ## CRAN
+  if (!require("shinySignals")) {
+    instPack("highcharter") ## CRAN
+  }
 
   if(!require('highcharter') ){
     (remotes::install_github("jbkunst/highcharter"))
   }
+
+
+
 
   library(bit) #
   library(digest)
@@ -109,5 +122,5 @@ setup_cola_dss <- function(
   library(terra)
   library(viridis)
 
-  cat("    === All libraries required for COLA's DSS installed ===")
+  cat("\n   === All libraries required for COLA's DSS installed === \n\n")
 }

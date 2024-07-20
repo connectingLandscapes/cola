@@ -486,8 +486,9 @@ server <- function(input, output, session) {
     #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
 
       #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-      (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
-      file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+    (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
+
+    file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
       #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
       #str(polDraw) #polDraw$type # FeatureCollection
@@ -1926,6 +1927,7 @@ server <- function(input, output, session) {
       tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
 
       file.copy(input$in_edi_tif$datapath, tifpath);
+      if (file.exists(tifpath)){ file.remove(input$in_edi_tif$datapath)}
       #try(file.remove(input$in_sur_tif$datapath))
       #if(devug){ print(' ----- input$in_sur_tif'); print(input$in_sur_tif); print(tifpath); file.exists(tifpath)}
 
@@ -2443,8 +2445,8 @@ server <- function(input, output, session) {
         points_file <- points_py(py = py,
                                  intif = as.character(rv$tif),
                                  outshp = out_pts,
-                                 param3 = as.numeric(input$in_points_4),
-                                 param4 = as.numeric(input$in_points_3),
+                                 param3 = as.numeric(input$in_points_3),
+                                 param4 = as.numeric(input$in_points_4),
                                  param5 = as.numeric(input$in_points_5))
       }
 

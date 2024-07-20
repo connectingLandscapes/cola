@@ -10,5 +10,5 @@ Description: Set of tools for creating corridors, nodes, and others landscape
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports: devtools
