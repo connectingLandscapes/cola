@@ -88,7 +88,8 @@
             yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
 
-  (rootPath <- find.package('cola'))
+  #(rootPath <- find.package('cola'))
+  (rootPath <- system.file(package = 'cola'))
 
 
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
@@ -4382,7 +4383,7 @@ if (FALSE){
               )
             )),
 
-          ##### UI CDPOP  ----
+          #### UI CDPOP  ----
           shinydashboard::tabItem(
             'tab_cdpop',
             fluidPage(
