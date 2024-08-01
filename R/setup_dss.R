@@ -17,19 +17,25 @@ instPack <- function(x, devt = FALSE){
 }
 
 setup_cola_dss <- function(
-    libs2colaDSS = c(
-  # "rgeos", "rgdal", 'raster',
+
+   libs2colaDSS = c(
+
   'markdown', 'rmarkdown',
   'knitr', 'units',
+
   "reshape2", 'bit', 'digest', 'dplyr',
-  'tidyverse', 'DT', 'ggplot2',
+  'tidyverse', 'DT', 'ggplot2', 'data.table',
+
   # debug install order: htmltools >> shiny >> shinyWidgets
   'htmlwidgets', 'htmltools', ## Before shiny
   'magrittr', 'RColorBrewer', 'viridis',
+
   ## Spatial
+  # "rgeos", "rgdal", 'raster',
   'sf', 'terra',
   'rlang', "leaflet", "leaflet.extras",
   'gdalUtilities',
+
   ## Shiny
   'shiny',  ## Before shiny plugins
   "shinydashboard",  "shinycssloaders",
@@ -40,23 +46,21 @@ setup_cola_dss <- function(
   if(Sys.info()["sysname"] == 'Linux'){
     cat('   Consider install the next libraries in Linux console before installing R packages: \n    ',
     'sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev libudunits2-dev')
-    Sys.sleep(10)
+    Sys.sleep(5)
   }
 
   if (!require("devtools")) {
     install.packages("devtools")
   }
   library(devtools)
+
   if(!find_rtools()){
-    warning(" No Rtools found. Please installed for your R version")
+    warning(" No Rtools found. Please install it for your R version")
   }
-
-
 
   if (!require("remotes")) {
     install.packages("remotes")
   }
-
 
   cola::instPack(libs2colaDSS )
 
@@ -65,11 +69,21 @@ setup_cola_dss <- function(
   #   devtools:::install_github("gearslaboratory/gdalUtils")
   # }
 
+  if (!require("shinydashboard")) {
+    instPack("rstudio/shinydashboard", devt = TRUE)
+  }
 
-  instPack("rstudio/shinydashboard", devt = TRUE)
-  instPack("hadley/shinySignals")
+  if (!require("shinySignals")) {
+    instPack("hadley/shinySignals")
+    if(!require('shinySignals') ){
+      remotes::install_github("hadley/shinySignals")
+    }
+  }
+
   # remotes::install_version("rjson", "0.2.20")
-  instPack("highcharter") ## CRAN
+  if (!require("shinySignals")) {
+    instPack("highcharter") ## CRAN
+  }
 
   if(!require('highcharter') ){
     (remotes::install_github("jbkunst/highcharter"))
@@ -109,5 +123,5 @@ setup_cola_dss <- function(
   library(terra)
   library(viridis)
 
-  cat("    === All libraries required for COLA's DSS installed ===")
+  cat("\n   === All libraries required for COLA's DSS installed === \n\n")
 }

@@ -36,7 +36,7 @@
 
 ### time stamp -----
 ## Create temporal ID
-sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE){
+sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE, only3 = FALSE){
   (tempID <- basename(tempfile()))
   (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
 
@@ -53,6 +53,10 @@ sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE){
 
   if(folder){
     sessionID <- paste0('cola', sessionID)
+  }
+
+  if(only3){
+    sessionID <- paste0(sample(LETTERS, 1), sample(LETTERS, 1), sample(LETTERS, 1))
   }
   return(sessionID)
 }

@@ -55,7 +55,7 @@
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
   (dataFolder <<- ifelse( COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH),
-                         no = paste0(tempdir(), '/'), yes = COLA_DATA_PATH));
+                          no = paste0(tempdir(), '/'), yes = COLA_DATA_PATH));
   # Keep last slash
   # /data/temp/'; dir.create(dataFolder)
 
@@ -88,7 +88,8 @@
             yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
 
-  (rootPath <- find.package('cola'))
+  #(rootPath <- find.package('cola'))
+  (rootPath <- system.file(package = 'cola'))
 
 
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
@@ -222,83 +223,83 @@ server <- function(input, output, session) {
     if(!is.null(clk) & !is.null(grp) & length(grp) > 1){
 
 
-    coords <- cbind(clk$lng, clk$lat)
-    pt0 <-  st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
-    #grp <- 'Habitat suitability'
-    # rv <- list(hs = '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif')
-    # rv$tiforig <- '/data/temp/XC2024012300322305file1392143e34bb6//out_surface_PF2024012300322605file13921692a78bb.tif'
-    # # rv$hs_sp <- terra::rast(rv$h)
-    # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
+      coords <- cbind(clk$lng, clk$lat)
+      pt0 <-  st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
+      #grp <- 'Habitat suitability'
+      # rv <- list(hs = '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif')
+      # rv$tiforig <- '/data/temp/XC2024012300322305file1392143e34bb6//out_surface_PF2024012300322605file13921692a78bb.tif'
+      # # rv$hs_sp <- terra::rast(rv$h)
+      # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
 
-    rw2add <- NULL
+      rw2add <- NULL
 
-    if("Habitat suitability" %in%  grp){
-      rast_sp <- rv$hs_sp
+      if("Habitat suitability" %in%  grp){
+        rast_sp <- rv$hs_sp
 
-      rast_prj <- terra::crs(rast_sp, proj = TRUE)
-      pt_ <- sf::st_transform(pt0, crs = rast_prj)
-      rw2add <- rbind.data.frame(
-        rw2add,
-        cbind.data.frame(
-          lay='Habitat suitability',
-          val = as.numeric(terra::extract(rast_sp, st_coordinates(pt_) ) ) )
-      )
-    }
+        rast_prj <- terra::crs(rast_sp, proj = TRUE)
+        pt_ <- sf::st_transform(pt0, crs = rast_prj)
+        rw2add <- rbind.data.frame(
+          rw2add,
+          cbind.data.frame(
+            lay='Habitat suitability',
+            val = as.numeric(terra::extract(rast_sp, st_coordinates(pt_) ) ) )
+        )
+      }
 
-    if("Surface resistance" %in%  grp){
-      rast_sp <- rv$tif_sp
+      if("Surface resistance" %in%  grp){
+        rast_sp <- rv$tif_sp
 
-      rast_prj <- terra::crs(rast_sp, proj = TRUE)
-      pt_ <- sf::st_transform(pt0, crs = rast_prj)
-      rw2add <- rbind.data.frame(
-        rw2add,
-        cbind.data.frame(lay='Surface resistance',
-                         val = as.numeric(terra::extract(rast_sp,
-                                                         st_coordinates(pt_) ) ) )
-      )
-    }
+        rast_prj <- terra::crs(rast_sp, proj = TRUE)
+        pt_ <- sf::st_transform(pt0, crs = rast_prj)
+        rw2add <- rbind.data.frame(
+          rw2add,
+          cbind.data.frame(lay='Surface resistance',
+                           val = as.numeric(terra::extract(rast_sp,
+                                                           st_coordinates(pt_) ) ) )
+        )
+      }
 
-    if("Corridors" %in%  grp){
-      rast_sp <- rv$lcc_sp
+      if("Corridors" %in%  grp){
+        rast_sp <- rv$lcc_sp
 
-      rast_prj <- terra::crs(rast_sp, proj = TRUE)
-      pt_ <- sf::st_transform(pt0, crs = rast_prj)
-      rw2add <- rbind.data.frame(
-        rw2add,
-        cbind.data.frame(lay='Corridors',
-                         val = as.numeric(terra::extract(rast_sp,
-                                                         st_coordinates(pt_) ) ) )
-      )
-    }
+        rast_prj <- terra::crs(rast_sp, proj = TRUE)
+        pt_ <- sf::st_transform(pt0, crs = rast_prj)
+        rw2add <- rbind.data.frame(
+          rw2add,
+          cbind.data.frame(lay='Corridors',
+                           val = as.numeric(terra::extract(rast_sp,
+                                                           st_coordinates(pt_) ) ) )
+        )
+      }
 
-    # "Habitat suitability" = rv$hs; "Surface resistance" : rv$tiforig; 'Corridors' rv$lcc; 'Kernels' : rv$crk; 'Prioritization' rv$pritif;
-    if("Kernels" %in%  grp){
-      rast_sp <- rv$crk_sp
+      # "Habitat suitability" = rv$hs; "Surface resistance" : rv$tiforig; 'Corridors' rv$lcc; 'Kernels' : rv$crk; 'Prioritization' rv$pritif;
+      if("Kernels" %in%  grp){
+        rast_sp <- rv$crk_sp
 
-      rast_prj <- terra::crs(rast_sp, proj = TRUE)
-      pt_ <- sf::st_transform(pt0, crs = rast_prj)
-      rw2add <- rbind.data.frame(
-        rw2add,
-        cbind.data.frame(lay='Kernels',
-                         val = as.numeric(terra::extract(rast_sp,
-                                                         st_coordinates(pt_) ) ) )
-      )
-    }
+        rast_prj <- terra::crs(rast_sp, proj = TRUE)
+        pt_ <- sf::st_transform(pt0, crs = rast_prj)
+        rw2add <- rbind.data.frame(
+          rw2add,
+          cbind.data.frame(lay='Kernels',
+                           val = as.numeric(terra::extract(rast_sp,
+                                                           st_coordinates(pt_) ) ) )
+        )
+      }
 
-    if("Prioritization" %in%  grp){
-      rast_sp <- rv$pritif_sp
+      if("Prioritization" %in%  grp){
+        rast_sp <- rv$pritif_sp
 
-      rast_prj <- terra::crs(rast_sp, proj = TRUE)
-      pt_ <- sf::st_transform(pt0, crs = rast_prj)
-      rw2add <- rbind.data.frame(
-        rw2add,
-        cbind.data.frame(lay='Prioritization',
-                         val = as.numeric(terra::extract(rast_sp,
-                                                         st_coordinates(pt_) ) ) )
-      )
-    }
+        rast_prj <- terra::crs(rast_sp, proj = TRUE)
+        pt_ <- sf::st_transform(pt0, crs = rast_prj)
+        rw2add <- rbind.data.frame(
+          rw2add,
+          cbind.data.frame(lay='Prioritization',
+                           val = as.numeric(terra::extract(rast_sp,
+                                                           st_coordinates(pt_) ) ) )
+        )
+      }
 
-    text<-paste0('<strong>', rw2add$lay, ':</strong> ', round(rw2add$val, 3), collapse = '<br>')
+      text<-paste0('<strong>', rw2add$lay, ':</strong> ', round(rw2add$val, 3), collapse = '<br>')
     } else {
       text <- 'none'
     }
@@ -313,7 +314,7 @@ server <- function(input, output, session) {
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
     if (text != 'none') {
-    leafletProxy("ll_map_lcc") %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+      leafletProxy("ll_map_lcc") %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
     }
   })
 
@@ -325,7 +326,7 @@ server <- function(input, output, session) {
     if (text != 'none') {
       leafletProxy("ll_map_crk")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
     }
-      })
+  })
 
   observeEvent(input$ll_map_pri_click,{
     clk <- input$ll_map_pri_click; grp <- input$ll_map_pri_groups;
@@ -333,9 +334,9 @@ server <- function(input, output, session) {
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
     if (text != 'none') {
-    leafletProxy("ll_map_pri")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
-  }
-    })
+      leafletProxy("ll_map_pri")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+    }
+  })
 
   observeEvent(input$ll_map_edi_click,{
     clk <- input$ll_map_edi_click; grp <- input$ll_map_edi_groups;
@@ -343,9 +344,9 @@ server <- function(input, output, session) {
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
     if (text != 'none') {
-    leafletProxy("ll_map_edi")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
+      leafletProxy("ll_map_edi")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
     }
-      })
+  })
 
   observeEvent(input$ll_map_h2r_click,{
     clk <- input$ll_map_h2r_click; grp <- input$ll_map_h2r_groups; ##
@@ -485,48 +486,49 @@ server <- function(input, output, session) {
 
     #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
 
-      #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-      (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
-      file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+    #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+    (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
 
-      #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
-      #str(polDraw) #polDraw$type # FeatureCollection
+    file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
-      rt <- terra::rast(rastPath)
-      rastRes <- res(rt)
+    #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
+    #str(polDraw) #polDraw$type # FeatureCollection
 
-      if( is.na(rastCRS)){
-        ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
-        #gi <- rgdal::GDALinfo(rastPath)
-        #gi2 <- sf::gdal_crs(rastPath)
-        #gi <- strsplit(x = gdalUtilities::gdalinfo(rastPath), '\n')
-        #prj <- attr(x = gi, "projection")
-        prj <- terra::crs(rt, proj = TRUE)
-        (rastCRS <- st_crs(rt))
-        # if(!is.na(prj)){
-        #   pol2save@proj4string@projargs <- prj
-        # }
-        #ogr2ogr -f "ESRI Shapefile" -t_srs EPSG:NEW_EPSG_NUMBER -s_srs EPSG:OLD_EPSG_NUMBER output.shp input.shp
-        #EPSG:4326
-      }
+    rt <- terra::rast(rastPath)
+    rastRes <- res(rt)
 
-      gdalUtilities::gdal_rasterize(
-        src_datasource = polPath,
-        at = att,
-        dst_filename = rasterizedPath,
-        add = TRUE,
-        a = 'val2burn') #as.numeric(burnval)
+    if( is.na(rastCRS)){
+      ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
+      #gi <- rgdal::GDALinfo(rastPath)
+      #gi2 <- sf::gdal_crs(rastPath)
+      #gi <- strsplit(x = gdalUtilities::gdalinfo(rastPath), '\n')
+      #prj <- attr(x = gi, "projection")
+      prj <- terra::crs(rt, proj = TRUE)
+      (rastCRS <- st_crs(rt))
+      # if(!is.na(prj)){
+      #   pol2save@proj4string@projargs <- prj
+      # }
+      #ogr2ogr -f "ESRI Shapefile" -t_srs EPSG:NEW_EPSG_NUMBER -s_srs EPSG:OLD_EPSG_NUMBER output.shp input.shp
+      #EPSG:4326
+    }
 
-      #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
-      # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
-      #                                      dst_filename = rastPath,
-      #                                      add = TRUE, a = 'val2burn')
-      # plot(raster(rastPath))
-      # plot(raster(rasterizedPath), main = 'Rasterized')
-      # plot(sf::read_sf(polPath), add = TRUE)
-      # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+    gdalUtilities::gdal_rasterize(
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = TRUE,
+      a = 'val2burn') #as.numeric(burnval)
 
-      return(rasterizedPath)
+    #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+    # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
+    #                                      dst_filename = rastPath,
+    #                                      add = TRUE, a = 'val2burn')
+    # plot(raster(rastPath))
+    # plot(raster(rasterizedPath), main = 'Rasterized')
+    # plot(sf::read_sf(polPath), add = TRUE)
+    # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+
+    return(rasterizedPath)
     # } else {
     #   return(NA)
     # }
@@ -538,63 +540,63 @@ server <- function(input, output, session) {
                              att = FALSE, rastCRS = NA, lineBuffW = 1){
 
     #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
-      ## Polygon to write
-      #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-      ## Raster with new features
-      (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
-      ## Raster to create
-      (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
+    ## Polygon to write
+    #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+    ## Raster with new features
+    (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
+    ## Raster to create
+    (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
 
 
-      rt <- terra::rast(rastPath)
-      (rastRes <- res(rt))
-      if( is.na(rastCRS)){
-        prj <- terra::crs(rt, proj = TRUE)
-        (rastCRS <- st_crs(rt))
-      }
+    rt <- terra::rast(rastPath)
+    (rastRes <- res(rt))
+    if( is.na(rastCRS)){
+      prj <- terra::crs(rt, proj = TRUE)
+      (rastCRS <- st_crs(rt))
+    }
 
-      # pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
-      # # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-      # pol2Rastx <- st_as_sf( pol2Rast)
-      # # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
-      #
-      # pol2Rastx$val2burn <- as.numeric(burnval)
-      # sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
-      #               layer = tools::file_path_sans_ext(basename(polPath)),
-      #               driver = 'ESRI Shapefile',
-      #               append = FALSE,
-      #               overwrite_layer = TRUE)
+    # pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
+    # # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+    # pol2Rastx <- st_as_sf( pol2Rast)
+    # # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
+    #
+    # pol2Rastx$val2burn <- as.numeric(burnval)
+    # sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+    #               layer = tools::file_path_sans_ext(basename(polPath)),
+    #               driver = 'ESRI Shapefile',
+    #               append = FALSE,
+    #               overwrite_layer = TRUE)
 
 
-      ## Rasterize polygons
-      rastExtent <- as.character(as.vector(terra::ext(rt))[c('xmin', 'ymin', 'xmax', 'ymax')])
-      gdalUtilities::gdal_rasterize(
-        te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-        # tr = rastRes,
-        ts = c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
-        src_datasource = polPath,
-        at = att,
-        dst_filename = rasterizedPath,
-        add = FALSE,
-        a = 'val2burn') #as.numeric(burnval)
+    ## Rasterize polygons
+    rastExtent <- as.character(as.vector(terra::ext(rt))[c('xmin', 'ymin', 'xmax', 'ymax')])
+    gdalUtilities::gdal_rasterize(
+      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+      # tr = rastRes,
+      ts = c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = FALSE,
+      a = 'val2burn') #as.numeric(burnval)
 
-      #rft <- rast(rasterizedPath); plot(rft)
+    #rft <- rast(rasterizedPath); plot(rft)
 
-      (cmdCalc <- paste0('gdal_calc.py --overwrite ',
-                         ' -A ', rastPath, # original
-                         ' -B ', rasterizedPath,
-                         ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
-                         ' --outfile ', replacedPath))
+    (cmdCalc <- paste0('gdal_calc.py --overwrite ',
+                       ' -A ', rastPath, # original
+                       ' -B ', rasterizedPath,
+                       ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
+                       ' --outfile ', replacedPath))
 
-      runCMD <- system(cmdCalc, intern = TRUE)
+    runCMD <- system(cmdCalc, intern = TRUE)
 
-      # plot(rast(rastPath))
-      # plot(rast(rasterizedPath), main = 'Rasterized')
-      # plot(sf::read_sf(polPath), add = TRUE, col = NA, border = 'red')
-      # plot(rast(replacedPath), main = 'Replaced')
-      # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+    # plot(rast(rastPath))
+    # plot(rast(rasterizedPath), main = 'Rasterized')
+    # plot(sf::read_sf(polPath), add = TRUE, col = NA, border = 'red')
+    # plot(rast(replacedPath), main = 'Replaced')
+    # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
-      return(replacedPath)
+    return(replacedPath)
     #} else { return(NA) }
   }
 
@@ -674,6 +676,9 @@ server <- function(input, output, session) {
         }
         rv$tif2s_sp <- terra::rast(rv$tif2s)
         rv$tif_rng2 <- getMxMn(rv$tif2s) + 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        #
+        rv$tif_rng2 <- c(max(0, rv$tif_rng2[1]), rv$tif_rng2[2])
+
         rv$tif_pal2 <-leaflet::colorNumeric(palette = tif_pal_name, reverse = TRUE,
                                             domain = rv$tif_rng2 + 0.0,
                                             na.color = "transparent")
@@ -888,7 +893,7 @@ server <- function(input, output, session) {
   updateParamsTEXT <- function(params_txt = params_txt,
                                start = FALSE, pprint = FALSE,
                                hs = FALSE, sr = FALSE,
-                               pts = FALSE,
+                               pts = FALSE, dst = FALSE,
                                lcc = FALSE, crk = FALSE){
     # hs = FALSE; sr = FALSE; pts = FALSE; lcc = FALSE; crk = FALSE
 
@@ -912,6 +917,14 @@ server <- function(input, output, session) {
       output$out_par_lccA <- output$out_par_crkA <- renderText({ paste0("Input: Points", notReadyMsg)})
       output$out_par_prioB <- renderText({ paste0("Input: Corridors", notReadyMsg)})
       output$out_par_prioC <- renderText({ paste0("Input: Kernels", notReadyMsg)})
+
+
+      output$out_par_distA <- renderText({ paste0("Input: Surface resistance", notReadyMsg)})
+      output$out_par_distB <- renderText({ paste0("Input: Points", notReadyMsg)})
+      output$out_par_distC <- renderText({ paste0("Output: Distance", notReadyMsg)})
+
+      output$out_par_cdpoA <- renderText({ paste0("Input: Points", notReadyMsg)})
+      output$out_par_cdpoB <- renderText({ paste0("Input: Distance matrix", notReadyMsg)})
     }
 
     params_txt_loc <- params_txt
@@ -919,19 +932,24 @@ server <- function(input, output, session) {
     sr <<- params_txt_loc$sr <- (sr | params_txt_loc$sr)
     params_txt <<- params_txt_loc
 
+    ## Turn labels to 'ready'
     if( hs  ){
       output$out_par_surA <- renderText({ paste0("Input: Habitat suitability", readyMsg)})
       output$out_par_ptsA <- renderText({paste0("Input: Raster ", readyMsg)})
     }
 
     if( sr ){
-      output$out_par_prioA <<- output$out_par_ediA <<- output$out_par_lccB <<- output$out_par_crkB <<-
+      output$out_par_distA <<- output$out_par_prioA <<- output$out_par_ediA <<- output$out_par_lccB <<- output$out_par_crkB <<-
         renderText({paste0("Input: Surface resistance", readyMsg)})
       output$out_par_ptsA <- renderText({paste0("Input: Raster ", readyMsg)})
     }
 
     if( pts ){
-      output$out_par_lccA <- output$out_par_crkA <- renderText({ paste0("Input: Points", readyMsg)})
+      output$out_par_cdpoA <- output$out_par_distB <- output$out_par_lccA <- output$out_par_crkA <- renderText({ paste0("Input: Points", readyMsg)})
+    }
+
+    if( dst ){
+      output$out_par_cdpoB <- renderText({ paste0("Input: Distance", readyMsg)})
     }
 
     if( lcc ){
@@ -950,7 +968,7 @@ server <- function(input, output, session) {
 
   updateVTEXT <- function(txt, devug = FALSE){
     if(devug){print(txt)}
-    output$vout_h2r <- output$vout_pri <- output$vout_points <-
+    output$vout_cdp <-  output$vout_h2r <- output$vout_pri <- output$vout_points <-
       output$vout_dist <- output$vout_crk <- output$vout_cdpop <-
       output$vout_lcc <- output$vout_edi <- renderText({isolate(txt)})
   }
@@ -1518,7 +1536,6 @@ server <- function(input, output, session) {
     #try(file.remove(cdmatfile$datapath))
   })
 
-
   # output$selectUI<-renderUI({
   #   req(rv$data)
   #   selectInput(inputId='selectcolumn', label='select column', choices = names(rv$data))
@@ -1537,7 +1554,7 @@ server <- function(input, output, session) {
   })
 
 
-  ####### renderDT  ------------------
+  ####### CDPOP  ------------------
 
   # output$table1 <- renderDT({
   #   datatable(rv$data, editable = TRUE)
@@ -1548,9 +1565,7 @@ server <- function(input, output, session) {
                      options = list(
                        paging =TRUE,
                        pageLength =  nrow(rv$data)
-                     )
-    )
-  )
+                     )))
 
   observeEvent(input$table1_cell_edit, {
     roww  <- input$table1_cell_edit$row
@@ -1634,6 +1649,54 @@ server <- function(input, output, session) {
     }
   })
 
+  observeEvent(input$run_cdpop, {
+
+    # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
+    # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
+
+    # tempFolder = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/'; setwd(tempFolder)
+    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_simpts_VZZ2024080110191205.shp',
+    #            cdm = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_cdmatrix_SXX2024080110202905.csv')
+
+    newxy <- gsub('.shp', '.csv', x = rv$pts)
+    shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
+    rv$ptsxy <- newxy
+    # rv$cdm <- 'cdmat.csv'
+
+    cdpop_ans <- cdpop_py(inputvars = NULL, agevars = NULL,
+                          cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder)
+
+    rv$cdpop_ans <- cdpop_ans
+
+    cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
+    rv$cdpop_out <<- read.csv(cdpop_out)
+
+    cdpop_grids <- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
+    cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+    cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
+    cdpop_grids_Num <- sort(cdpop_grids_Num)
+
+    cat('CDPOP:\n')
+    print(cdpop_ans)
+
+    updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                         choices = cdpop_grids_Num,
+                         selected = tail(cdpop_grids_Num, 1), server = TRUE)
+    # updateSelectizeInput(session, inputId = "in_points_ly",
+    #                      selected = 'HabitatSuitability',
+    #                      choices = rv$point_choices,
+    #                      server = TRUE)
+  })
+
+
+  observeEvent(input$cdpop_ans_yy, {
+    if(input$cdpop_ans_yy != ''){
+      rv$cdpop_ans
+
+    }
+  })
+
+
   observeEvent(input$cdpop_check3, {
     if(input$out_cdpop_files != ''){
       selfile <- cdpopRun$newFiles[basename(cdpopRun$newFiles) %in% input$out_cdpop_files]
@@ -1709,6 +1772,12 @@ server <- function(input, output, session) {
 
 
       file.copy(input$in_sur_tif$datapath, tifpath);
+      if(file.exists(tifpath)){file.remove(input$in_sur_tif$datapath)}
+      isProj <- !terra::is.lonlat(rast(tifpath));
+      if (isProj){
+
+      }
+
       # try(file.remove(input$in_sur_tif$datapath))
 
       pdebug(devug=F,sep='\n',pre='- A',"tempFolder","inSurSessID",
@@ -1722,6 +1791,7 @@ server <- function(input, output, session) {
 
       newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
       newtifPath <<- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
+      isProj <- !terra::is.lonlat(rast(tifs[i]))
 
 
       if(is.na(newtifPath)){
@@ -1926,6 +1996,7 @@ server <- function(input, output, session) {
       tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
 
       file.copy(input$in_edi_tif$datapath, tifpath);
+      if (file.exists(tifpath)){ file.remove(input$in_edi_tif$datapath)}
       #try(file.remove(input$in_sur_tif$datapath))
       #if(devug){ print(' ----- input$in_sur_tif'); print(input$in_sur_tif); print(tifpath); file.exists(tifpath)}
 
@@ -2030,7 +2101,7 @@ server <- function(input, output, session) {
       proxy %>%  #remove(layerId = 'SurfaceResistance')  %>%
         removeShape('layerId') %>%
         leaflet::addPolygons(data = sce, color = 'darkblue', fillColor = 'darkblue', group = "layerId") %>%
-      fitBounds(bounds[1], bounds[2], bounds[3], bounds[4])
+        fitBounds(bounds[1], bounds[2], bounds[3], bounds[4])
 
       # output$ll_map_edi <- leaflet::renderLeaflet({
       #   makeLL( )
@@ -2443,8 +2514,8 @@ server <- function(input, output, session) {
         points_file <- points_py(py = py,
                                  intif = as.character(rv$tif),
                                  outshp = out_pts,
-                                 param3 = as.numeric(input$in_points_4),
-                                 param4 = as.numeric(input$in_points_3),
+                                 param3 = as.numeric(input$in_points_3),
+                                 param4 = as.numeric(input$in_points_4),
                                  param5 = as.numeric(input$in_points_5))
       }
 
@@ -2872,8 +2943,8 @@ server <- function(input, output, session) {
     #pdebug(devug=devug, ... = 'condDist') # _____________
 
     #if(is.null(rv$inLccSessID)){
-      (inLccSessID <<- sessionIDgen())
-      rv$inLccSessID <- inLccSessID
+    (inLccSessID <<- sessionIDgen())
+    rv$inLccSessID <- inLccSessID
     #}
 
 
@@ -3240,16 +3311,16 @@ server <- function(input, output, session) {
 
         tStartPri <- Sys.time()
         out_pri <- tryCatch(pri_py(tif = rv$tif,
-                          incrk = rv$crk ,
-                          inlcc = rv$lcc,
-                          maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
-                          outshppoint = out_pri_shp,
-                          outshppol = out_pri_shp_pol,
-                          outshppatch = out_pri_shp_patch,
-                          outtif = out_pri_tif,
-                          outtifpatch = out_pri_tif_patch,
-                          param7 = as.numeric(input$in_pri_5), # 0.5
-                          param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
+                                   incrk = rv$crk ,
+                                   inlcc = rv$lcc,
+                                   maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
+                                   outshppoint = out_pri_shp,
+                                   outshppol = out_pri_shp_pol,
+                                   outshppatch = out_pri_shp_patch,
+                                   outtif = out_pri_tif,
+                                   outtifpatch = out_pri_tif_patch,
+                                   param7 = as.numeric(input$in_pri_5), # 0.5
+                                   param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
         ## missing param7 and 8 by user
 
 
@@ -3263,7 +3334,7 @@ server <- function(input, output, session) {
 
         if(is.na(out_pri$shp)){
           rv$log <- paste0(rv$log, ' --- ERROR ');updateVTEXT(rv$log) # _______
-          rv$llmap
+          return(rv$llmap)
 
         } else {
           rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
@@ -3385,7 +3456,8 @@ server <- function(input, output, session) {
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
                                  'Least cost path corridos' = 'out_lcc_.+.tif$')
 
-   # tempFolder <- '/data/tempR/colaCVY2024051611341905/';
+    # tempFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/';
+    # layer_type_compare <- 'out_crk_.+.tif$'
     (avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
                                 full.names = TRUE))
     (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
@@ -3395,7 +3467,13 @@ server <- function(input, output, session) {
     # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
 
     (compID <- sessionIDgen(short = TRUE))
-    (outComFolder <- paste0(tempFolder, '/comp', compID))
+    if(in_com_ly == 'Least cost path corridos'){
+      prefcomp <- '_lcc_'
+    } else if(in_com_ly == 'Dispersal kernels'){
+      prefcomp <- '_crk_'
+    }
+
+    (outComFolder <- paste0(tempFolder, '/comp', prefcomp, compID))
     rv$comFolder <- outComFolder
     (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
     (outComPngRel <- paste0(outComFolder, '/compRel.png'))
@@ -3488,9 +3566,11 @@ server <- function(input, output, session) {
           })
 
 
+          #outComFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/compJJV2024073022250605'
           com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
           com_rast <- lapply(as.list(com_tifs), terra::rast)
           com_stack <- do.call(c, com_rast)
+          #terra::NAflag(com_stack) <- 0
           com_rng <- terra::global(com_stack, fun="range")
           com_rng2 <- range(com_rng)
 
@@ -3558,75 +3638,82 @@ server <- function(input, output, session) {
 
           # OPT2:  all layers
           #if (FALSE) {
-            llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
+          llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
 
-              leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-              leaflet::addMeasure( position = "topright",
-                                   primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                                   activeColor = "#3D535D",completedColor = "#7D4479")  %>%
-              leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
+            leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+            leaflet::addMeasure( position = "topright",
+                                 primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                                 activeColor = "#3D535D",completedColor = "#7D4479")  %>%
+            leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
 
 
-            ## Orig layers
-            for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
-              llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
-                                            opacity = .7,
-                                            group = names(ori_stack)[x1],
-                                            layerId = names(ori_stack)[x1])
-            }
+          ## Orig layers
+          for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
+            llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
+                                          opacity = .7,
+                                          group = names(ori_stack)[x1],
+                                          layerId = names(ori_stack)[x1])
+          }
 
-            ## Compare layers
-            for (x2 in 1:length(names(com_stack)) ){
-              llc <- llc %>% addRasterImage(x = com_stack[[x2]], colors = com_pal,
-                                            opacity = .7,
-                                            group = names(com_stack)[x2],
-                                            layerId = names(com_stack)[x2])
-            }
+          ## Compare layers
+          # terra::NAflag(com_stack) <- 0
+          com_pal <- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                           domain = com_rng2+0.001, na.color = "transparent")
 
-            llc <- llc %>%
-              addLegend(pal = ori_pal, values = ori_rng2,
-                        group = in_com_ly, layerId = in_com_ly,
-                        position = 'bottomleft', title = in_com_ly) %>%
+          for (x2 in 1:length(names(com_stack)) ){ # x2 <- 1
+            #xr2 <- com_stack[[x2]]
+            # terra::NAflag(xr2) <- 0
+            llc <- llc %>% addRasterImage(x = com_stack[[x2]], colors = com_pal,
+                                          opacity = .7,
+                                          group = names(com_stack)[x2],
+                                          layerId = names(com_stack)[x2])
+          }
 
-              addLegend(pal = com_pal, values = com_rng2,
-                        group = in_com_ly, layerId = 'Comparison',
-                        position = 'bottomleft', title = 'Comparisson') %>%
-              leaflet::addLayersControl(
-                baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-                overlayGroups = c(names(com_stack), names(ori_stack)),
-                options =  leaflet::layersControlOptions(collapsed = FALSE))
-         # }
+          # in_com_ly <- 'kernels'
+          llc <- llc %>%
+            addLegend(pal = ori_pal, values = ori_rng2,
+                      group = in_com_ly, layerId = in_com_ly,
+                      position = 'bottomleft', title = in_com_ly) %>%
+
+            addLegend(pal = com_pal, values = com_rng2,
+                      group = in_com_ly, layerId = 'Comparison',
+                      position = 'bottomleft', title = 'Comparisson') %>%
+            leaflet::addLayersControl(
+              baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+              overlayGroups = c(names(com_stack), names(ori_stack)),
+              options =  leaflet::layersControlOptions(collapsed = FALSE))
+          # }
         })
 
       }
 
-#     if (!file.exists(points_file$file)){
-#       rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
-#     } else {
-#       params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
-#
-#       rv$pts <- points_file$file
-#       rv$ptsready <- TRUE
-#
-#       output$ll_map_points <- leaflet::renderLeaflet({
-#
-#         #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-#         points_shpO <- sf::read_sf(points_file$file)
-#         points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-#         points_shp$ID <- 1:nrow(points_shp)
-#         #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-#         rv$pts_sp <- points_shp
-#
-#         rv$log <- paste0(rv$log, '  --- DONE');updateVTEXT(rv$log) # _______
-#
-#         #temLL <- rv$llmap
-#         #save(temLL, file = '/data/tempR/ll.RData')
-#         #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
-#
-#         makeLL( )
-#
-#       })
-#     }
+      #     if (!file.exists(points_file$file)){
+      #       rv$log <- paste0(rv$log, '  --- Error creating points');updateVTEXT(rv$log) # _______
+      #     } else {
+      #       params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+      #
+      #       rv$pts <- points_file$file
+      #       rv$ptsready <- TRUE
+      #
+      #       output$ll_map_points <- leaflet::renderLeaflet({
+      #
+      #         #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+      #         points_shpO <- sf::read_sf(points_file$file)
+      #         points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      #         points_shp$ID <- 1:nrow(points_shp)
+      #         #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+      #         rv$pts_sp <- points_shp
+      #
+      #         rv$log <- paste0(rv$log, '  --- DONE');updateVTEXT(rv$log) # _______
+      #
+      #         #temLL <- rv$llmap
+      #         #save(temLL, file = '/data/tempR/ll.RData')
+      #         #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+      #
+      #         makeLL( )
+      #
+      #       })
+      #     }
     }
   })
 
@@ -4199,7 +4286,7 @@ if (FALSE){
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
-                            textInput('name_pts_crk', label = '', value = "",
+                            textInput('name_pts_lcc', label = '', value = "",
                                       width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
@@ -4380,85 +4467,105 @@ if (FALSE){
               )
             )),
 
-          ##### UI CDPOP  ----
+          #### UI CDPOP  ----
+
           shinydashboard::tabItem(
             'tab_cdpop',
             fluidPage(
               #includeMarkdown("md_intro.md")
-              h2(' ... Under construction ....'),
-              h4(' Stay tunned for further develompents. We want to provide here the widgets required for running your CDOPOP models'),
-              tabsetPanel(
-                type = "pills",
-                tabPanel(
-                  "Parameters",
-                  fluidPage(
-
-                    fluidRow(
-                      column(
-                        width = 4,
-                        fileInput("in_cdpop_par", "Choose CSV File", accept = ".csv")
-
-                      ),
-                      column(
-                        width = 2,
-                        checkboxInput("header", "Header", TRUE),
-                      ),
-                      column(
-                        width = 6,
-                        #actionButton("Splitcolumn", "SplitColumn"),
-                        uiOutput("selectUI"),
-                        #actionButton("deleteRows", "Delete Rows"),
-                        #textInput("textbox", label="Input the value to replace:"),
-                        #actionButton("replacevalues", label = 'Replace values'),
-                        actionButton("addcolumn", "Add Column"),
-                        actionButton("removecolumn", "Remove last column"),
-                        actionButton("Undo", 'Undo')
-                      )
-                    ),
-                    fluidRow(
-                      column(width = 12,
-                             DT::dataTableOutput(outputId =  "table1"),
-                             actionButton("cdpop_check1", "Check files"),
-                             shinydashboard::valueBoxOutput("cdpop_box1"),
-                             plotOutput("cdpop_params"))
-                    ),
-
-                    fillRow(
-                      #column(width = 12,
-                      shinydashboard::box( width = 12, solidHeader = T, collapsible = T,
-                                           title = "Advanced parameters", status = "primary", collapsed = TRUE
-                                           ,
-
-                                           #fluidRow(
-                                           column(width = 4,
-                                                  #h1('Hola'),
-                                                  fileInput("in_cdpop_xy", "XY CSV File", accept = ".csv")),
-                                           column(width = 4,
-                                                  #h1('Hallo'),
-                                                  fileInput("in_cdpop_age", "Ages CSV File", accept = ".csv")),
-                                           column(width = 4,
-                                                  #h1('Hey'),
-                                                  fileInput("in_cdpop_cd", "CDmatrix CSV File", accept = ".csv"))
-                                           #)
-                      )
-                    )
-                    #)
-                  )
+              fluidRow(
+                column(3,
+                       tags$td(style = "width: 25%", align = "top",
+                               h3(' Population dynamics',
+                                  style="text-align: center;vertical-align: top")
+                       ),
+                       h4(' Run CDPOP module. ')
                 ),
-                tabPanel("Files",
-                         tableOutput("cdpop_files")),
+                column(9, verbatimTextOutput("vout_cdp") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                       tags$head(tags$style("#vout_cdp{overflow-y:scroll; max-height: 70px}")))
+              ),
 
-                tabPanel("Run",
-                         shinydashboard::valueBoxOutput("cdpop_box2"),
-                         actionButton("cdpop_check2", "Check files"),
-                         uiOutput("out_cdpop_files"),
-                         actionButton("cdpop_check3", "Load ouptut"),
-                         DT::dataTableOutput(outputId =  "out_cdpop_filestable"))
+              fluidRow(
+                column(width = 4,
+                       tags$table(
+                         style = "width: 100%", align = "left",
+                         tags$tr(
+                           tags$td(style = "width: 25%", align = "center",
+                                   htmlOutput(outputId = 'out_par_cdpoA',  fill = TRUE)),
+                           tags$td(style = "width: 25%", align = "center",
+                                   htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
+                         ))),
+                column(width = 2,
+                       actionButton("run_cdpop", 'Run CDPOP')),
+                column(width = 4,
+                       selectizeInput(inputId = 'cdpop_ans_yy', 'Years', choices = c(''))),
+                column(width = 2,
+                       actionButton("cdpop_check3", "Load ouptut"))
+              ),
+
+              fluidRow(
+                tableOutput("cdpop_files"),
+                # shinydashboard::valueBoxOutput("cdpop_box2"),
+                # actionButton("cdpop_check2", "Check files"),
+                # uiOutput("out_cdpop_files"),
+                DT::dataTableOutput(outputId =  "out_cdpop_filestable")
+              ),
+
+
+              fillRow(
+                #column(width = 12,
+                shinydashboard::box(
+
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Advanced parameters", status = "primary", collapsed = TRUE
+                  ,
+
+                  fluidRow(
+                    column(width = 4,
+                           #h1('Hola'),
+                           fileInput("in_cdpop_xy", "XY CSV File", accept = ".csv")),
+                    column(width = 4,
+                           #h1('Hallo'),
+                           fileInput("in_cdpop_age", "Ages CSV File", accept = ".csv")),
+                    column(width = 4,
+                           #h1('Hey'),
+                           fileInput("in_cdpop_cd", "CDmatrix CSV File", accept = ".csv"))
+                  ),
+
+                  fluidRow(
+                    column(
+                      width = 3,
+                      fileInput("in_cdpop_par", "Choose CSV File", accept = ".csv"),
+                      checkboxInput("header", "Header", TRUE),
+                    ),
+                    column(
+                      width = 5,
+                      textInput("textbox", label="Input the value to replace:"),
+                      actionButton("replacevalues", label = 'Replace values'),
+                      #uiOutput("selectUI"),
+                      actionButton("deleteRows", "Delete Rows"),
+                      actionButton("addcolumn", "Add Column"),
+                      actionButton("removecolumn", "Remove last column"),
+                      actionButton("Splitcolumn", "SplitColumn"),
+                      actionButton("Undo", 'Undo')
+                    ),
+                    column( width = 4,
+                            actionButton("cdpop_check1", "Check files"),
+                            shinydashboard::valueBoxOutput("cdpop_box1")
+                    ),
+                  ),
+                  fluidRow(
+                    column(width = 12,
+                           DT::dataTableOutput(outputId =  "table1"),
+                           plotOutput("cdpop_params"))
+                  )
+                )
               )
-            )),
+            )
+          ),
 
 
-          ##### UI HS 2 SR  ----
+          #### UI HS 2 SR  ----
           shinydashboard::tabItem(
             tabName = 'tab_surface',
             fluidRow(
@@ -4547,7 +4654,7 @@ if (FALSE){
             fluidPage(
               leaflet::leafletOutput("ll_map_h2r", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1")
-              ),
+            ),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
               title = "Parameters info", status = "primary", collapsed = TRUE
@@ -4555,7 +4662,7 @@ if (FALSE){
 
               #fluidRow(
               column(width = 4,
-              h6('Min-grid *Change to Min. value
+                     h6('Min-grid *Change to Min. value
 -Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
                  Max-grid *Change to Max. value
@@ -4567,7 +4674,7 @@ if (FALSE){
               #)
             )
           ),
-          ##### UI EDIT ----
+          #### UI EDIT ----
 
           shinydashboard::tabItem(
             tabName = 'tab_edit',
@@ -4605,7 +4712,7 @@ if (FALSE){
             fluidPage(
               column(2,
                      h6(paste("Use a positive or negative single value other than 0.",
-                                "Please remove existing polygons before running again. "))),
+                              "Please remove existing polygons before running again. "))),
 
               column(1, textInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
               column(1, numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
@@ -4632,7 +4739,7 @@ if (FALSE){
                 shinycssloaders::withSpinner(color="#0dc5c1"))
           ),
 
-          ##### UI POINTS ----
+          #### UI POINTS ----
           shinydashboard::tabItem(
             tabName = 'tab_points',
             fluidRow(
@@ -4653,6 +4760,7 @@ if (FALSE){
               #                     width = '100%', placeholder = 'NameOfNewLayertoCreate')),
               column(1, htmlOutput(outputId = 'out_par_ptsA',  fill = TRUE)),
               column(1, actionButton("points_py", "Create points", icon = icon("play"))),
+              column(width = 1, br()),
               column(1, downloadButton('ptsDwn', 'Download'))
             ),
             leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
@@ -4661,7 +4769,7 @@ if (FALSE){
           ##> vout_points; ll_map_points; points_py; in_points_3 -- 5
 
 
-          ##### UI DISTANCE ----
+          #### UI DISTANCE ----
           shinydashboard::tabItem(
             tabName = 'tab_distance',
             fluidRow(
@@ -4672,28 +4780,39 @@ if (FALSE){
             ),
 
             fluidRow(
-              column(9,
+              column(12,
                      fluidRow(
-                       column(4, textInput("in_dist_3", "Distance threshold (meters x cost):", '25000')),
-                       column(4, textInput('name_dst', label = 'New CSV name:', value = "",
+                       column(2,
+                              tags$table(
+                                style = "width: 100%", align = "left",
+                                tags$tr(
+                                  tags$td(style = "width: 25%", align = "center",
+                                          htmlOutput(outputId = 'out_par_distA',  fill = TRUE)
+                                  ),
+                                  tags$td(style = "width: 25%", align = "center",
+                                          htmlOutput(outputId = 'out_par_distB',  fill = TRUE))
+                                ))),
+                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '25000')),
+                       column(3, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
-                       column(4, actionButton("dist_py", "Get matrix", icon = icon("play")),
-                              downloadButton('csvDwn', 'Download'))
+                       column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
+                       column(1, h1('')),
+                       column(1, downloadButton('csvDwn', 'Download'))
                      )
-              ),
-              column(3,
-                     fluidRow(
-                       #column(9,
-                       shinydashboard::valueBoxOutput("dist_box1") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-                       #)
-                     ))
+              )
+              # , column(3,
+              #        fluidRow(
+              #          #column(9,
+              #          #shinydashboard::valueBoxOutput("dist_box1") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+              #          #)
+              #        ))
             ),
             leaflet::leafletOutput("ll_map_dist", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
 
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
 
-          ##### UI CRK ----
+          #### UI CRK ----
           shinydashboard::tabItem(
             tabName = 'tab_kernels',
             fluidRow(
@@ -4735,7 +4854,7 @@ if (FALSE){
           ),
 
 
-          ##### UI LCC ----
+          #### UI LCC ----
           shinydashboard::tabItem(
             tabName = 'tab_corridors',
             fluidRow(
@@ -4785,7 +4904,7 @@ if (FALSE){
           #         leaflet::leafletOutput("ll_map_map", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           # ),
 
-          ##### UI PRIOR ----
+          #### UI PRIOR ----
           shinydashboard::tabItem(
             tabName = 'tab_priori',
             fluidRow(
@@ -4813,7 +4932,7 @@ if (FALSE){
             leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           ),
 
-          ##### UI PDF ----
+          #### UI PDF ----
           shinydashboard::tabItem(
             tabName = 'tab_pdf',
             mainPanel(
@@ -4835,7 +4954,7 @@ if (FALSE){
             )
           ),
 
-          ##### UI GENETICS ----
+          #### UI GENETICS ----
 
           shinydashboard::tabItem(
             tabName = 'tab_genetics',
@@ -4843,14 +4962,14 @@ if (FALSE){
             h6('    Comming soon ... stay tuned')
           ),
 
-          ##### UI LOCAL --------
+          #### UI LOCAL --------
           shinydashboard::tabItem(
             tabName = 'tab_local',
             h2(' Running this locally'),
             #h6('    Comming soon ... stay tuned'),
             includeMarkdown(
               system.file(package = 'cola', 'docs/md_cola_install.md')
-              ),
+            ),
             h2(' '),
             fluidRow(
               column(width = 10,
@@ -4875,12 +4994,12 @@ if (FALSE){
             )
           ),
 
-          ##### UI COMPARE ------
+          #### UI COMPARE ------
           shinydashboard::tabItem(
             tabName = 'tab_compare',
             fluidRow(
               column(3, h2(' Comparing results', style="text-align: center;")
-                     ),
+              ),
               column(3,
                      selectInput("in_com_ly", label = "Layers:", selected = '',
                                  choices = c('', #'Surface resistance',
@@ -4888,7 +5007,7 @@ if (FALSE){
               ),
               column(3,
                      verbatimTextOutput("vout_com")
-                     ),
+              ),
 
               column(1,
                      actionButton("com_py", "Compare", icon = icon("play"))
@@ -4915,71 +5034,71 @@ if (FALSE){
             #          downloadButton('crkDwn', 'Download')),
             # ),
             #
-          #   fluidRow(
-          #     column(6,
-          #            tabsetPanel(
-          #              type = "pills",
-          #              tabPanel(title = 'Map',
-          #                       #h2(' Comparing results', style="text-align: center;"),
-          #                       leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-          #
-          #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-          #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-          #              ),
-          #              tabPanel(title = 'Slider',
-          #                       h2(' Comparing results', style="text-align: center;")
-          #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-          #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-          #              ),
-          #
-          #              tabPanel(title = 'Synced',
-          #                       fluidPage(
-          #                         h2(' Comparing results', style="text-align: center;")
-          #                         #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
-          #                         #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
-          #                       )
-          #              ))
-          #     ),
-          #     column(6,
-          #            tabsetPanel(
-          #              type = "pills",
-          #              tabPanel(title = 'PNG',
-          #                       imageOutput("png1"),
-          #                       imageOutput("png2")),
-          #              tabPanel(title = 'Chart',
-          #                       highcharter::highchartOutput("hccomp1"#, height = "800px"
-          #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-          #                       highcharter::highchartOutput("hccomp2"
-          #                                                    #, height = "800px"
-          #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1")
-          #
-          #                       )
-          #            )
-          #     )
-          #   )
-          # ),
-
-          fluidRow(
-            # fluidRow(
-            #   column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
-            #   column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
-            #   column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
+            #   fluidRow(
+            #     column(6,
+            #            tabsetPanel(
+            #              type = "pills",
+            #              tabPanel(title = 'Map',
+            #                       #h2(' Comparing results', style="text-align: center;"),
+            #                       leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            #
+            #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            #              ),
+            #              tabPanel(title = 'Slider',
+            #                       h2(' Comparing results', style="text-align: center;")
+            #                       #leaflet::leafletOutput("ll_map_cprA", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            #                       #leaflet::leafletOutput("ll_map_cprB", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            #              ),
+            #
+            #              tabPanel(title = 'Synced',
+            #                       fluidPage(
+            #                         h2(' Comparing results', style="text-align: center;")
+            #                         #column(6, leaflet::leafletOutput("ll_map_cpr1", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")),
+            #                         #column(6, leaflet::leafletOutput("ll_map_cpr2", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
+            #                       )
+            #              ))
+            #     ),
+            #     column(6,
+            #            tabsetPanel(
+            #              type = "pills",
+            #              tabPanel(title = 'PNG',
+            #                       imageOutput("png1"),
+            #                       imageOutput("png2")),
+            #              tabPanel(title = 'Chart',
+            #                       highcharter::highchartOutput("hccomp1"#, height = "800px"
+            #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            #                       highcharter::highchartOutput("hccomp2"
+            #                                                    #, height = "800px"
+            #                       ) %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            #
+            #                       )
+            #            )
+            #     )
+            #   )
             # ),
-            leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-          ),
-          br(),
-          fluidRow(
-            column(3, imageOutput("png1")),
-            column(3, imageOutput("png2")),
-            column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
-            ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
-            column(3, highcharter::highchartOutput("hccomp2"
-                                                   #, height = "800px"
-            ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
-          )
+
+            fluidRow(
+              # fluidRow(
+              #   column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
+              #   column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
+              #   column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
+              # ),
+              leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            ),
+            br(),
+            fluidRow(
+              column(3, imageOutput("png1")),
+              column(3, imageOutput("png2")),
+              column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
+              ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+              column(3, highcharter::highchartOutput("hccomp2"
+                                                     #, height = "800px"
+              ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+            )
           ),
 
-          ##### UI COORDS ----
+          #### UI COORDS ----
           shinydashboard::tabItem(
             tabName = 'tab_coords',
             h2(' Assigning projection to your points or raster'),
