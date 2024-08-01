@@ -86,7 +86,7 @@ def main() -> None:
     
     # Loop through files and interpolate
     for xyf in xylist:
-        # Read xy file to dataframe and convert to array with two columns (x and y coordinates)
+        # Read xy file to dataframe and convert to array 
         if Path(xyf).suffix == '.csv':
             xy = pd.read_csv(xyf, index_col=False)
         else:
