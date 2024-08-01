@@ -1654,9 +1654,9 @@ server <- function(input, output, session) {
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
     # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
 
-    # tempFolder = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/'; setwd(tempFolder)
-    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp',
-    #            cdm = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_cdmatrix_KJM2024073113032605.csv')
+    # tempFolder = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/'; setwd(tempFolder)
+    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_simpts_VZZ2024080110191205.shp',
+    #            cdm = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_cdmatrix_SXX2024080110202905.csv')
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
     shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
