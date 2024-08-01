@@ -1677,86 +1677,86 @@ server <- function(input, output, session) {
 
     output$ll_map_cdp <- leaflet::renderLeaflet({
 
-    cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
-    rv$cdpop_out <- read.csv(cdpop_out)
+      cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
+      rv$cdpop_out <- read.csv(cdpop_out)
 
-    cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
-                         function(x){ as.numeric(gsub('\\|.+', '', x))})
+      cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
+                           function(x){ as.numeric(gsub('\\|.+', '', x))})
 
-    cdpop_grids <- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
-    cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-    cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
-    cdpop_grids_Num <- sort(cdpop_grids_Num)
+      cdpop_grids <- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
+      cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+      cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
+      cdpop_grids_Num <- sort(cdpop_grids_Num)
 
 
-    output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
-                      type = "line", dashStyle = "DashDot", name = 'Population'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Population')) %>%
-        hc_xAxis(title = list(text = 'Year'))
-    }) #
+      output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
+                        type = "line", dashStyle = "DashDot", name = 'Population'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Population')) %>%
+          hc_xAxis(title = list(text = 'Year'))
+      }) #
 
-    output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                      type = "line", dashStyle = "DashDot", name = 'Alleles'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Alleles')) %>%
-        hc_xAxis(title = list(text = 'Year'))
-    }) #
+      output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                        type = "line", dashStyle = "DashDot", name = 'Alleles'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Alleles')) %>%
+          hc_xAxis(title = list(text = 'Year'))
+      }) #
 
-    output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                      type = "line", dashStyle = "DashDot", name = 'He'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                      type = "line", dashStyle = "DashDot", name = 'Ho'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Alleles')) %>%
-        hc_xAxis(title = list(text = 'Year'))
-    }) #
+      output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                        type = "line", dashStyle = "DashDot", name = 'He'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                              type = "line", dashStyle = "DashDot", name = 'Ho'
+                              #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Alleles')) %>%
+          hc_xAxis(title = list(text = 'Year'))
+      }) #
 
-    updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                         choices = cdpop_grids_Num,
-                         selected = tail(cdpop_grids_Num, 1), server = TRUE)
+      updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                           choices = cdpop_grids_Num,
+                           selected = tail(cdpop_grids_Num, 1), server = TRUE)
 
-    # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+      # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
 
-    densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
-                                method = 'average',
-                                bandwidths = 'None', type = 'count', crs = 'None')
-    # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+      densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
+                                  method = 'average',
+                                  bandwidths = 'None', type = 'count', crs = 'None')
+      # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
 
-    struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
-                     method = 'thin_plate_spline',
-                     neighbors = 'all', crs = 'None')
+      struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
+                                 method = 'thin_plate_spline',
+                                 neighbors = 'all', crs = 'None')
 
-    rv$struRA <- struRA <- rast(struMap$newFiles[1])
-    rv$struRB <- struRB <- rast(struMap$newFiles[2])
-    rv$densR <- densR <- rast(densMap$file)
+      rv$struRA <- struRA <- rast(struMap$newFiles[1])
+      rv$struRB <- struRB <- rast(struMap$newFiles[2])
+      rv$densR <- densR <- rast(densMap$file)
 
-    rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-    rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-    rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+      rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+      rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+      rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
 
-     llcdp <<- leaflet() %>% addTiles() %>%
-       addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-       addLegend(pal=palA, values =rng_strA, layerId = 'Alleles', position = 'topleft', title="Alleles") %>%
-       addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-       addLegend(pal=palB, values =rng_strB, layerId = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-       addRasterImage(densR, colors = palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-       addLegend(pal=palC, values =rng_dens, layerId = 'Density', position = 'bottomright', title="Density") %>%
-       leaflet::addLayersControl(
+      llcdp <<- leaflet() %>% addTiles() %>%
+        addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+        addLegend(pal=palA, values =rng_strA, layerId = 'Alleles', position = 'topleft', title="Alleles") %>%
+        addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+        addLegend(pal=palB, values =rng_strB, layerId = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+        addRasterImage(densR, colors = palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+        addLegend(pal=palC, values =rng_dens, layerId = 'Density', position = 'bottomright', title="Density") %>%
+        leaflet::addLayersControl(
           baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-           overlayGroups = c('Alleles', "Heterozygosity", "Density"),
-           options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
-       leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+          overlayGroups = c('Alleles', "Heterozygosity", "Density"),
+          options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
     })
 
   })
@@ -4875,10 +4875,12 @@ if (FALSE){
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
                        column(1,
-                              tags$tr(
-                                tags$td(style = "width: 25%", align = "center",
-                                        htmlOutput(outputId = 'out_par_distC',  fill = TRUE))
-                              )),
+                              tags$table( style = "width: 100%", align = "center",
+                                          tags$tr(
+                                            tags$td(style = "width: 25%", align = "center",
+                                                    htmlOutput(outputId = 'out_par_distC',  fill = TRUE))
+                                          ))
+                       ),
                        column(1, downloadButton('csvDwn', 'Download'))
                      )
               )

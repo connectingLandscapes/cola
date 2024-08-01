@@ -91,9 +91,9 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                            pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
-                            grids, template, method = 'average', bandwidths = 'None',
-                            type = 'count', crs = 'None'){
+                             pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
+                             grids, template, method = 'average', bandwidths = 'None',
+                             type = 'count', crs = 'None'){
 
   if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
     stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
@@ -257,7 +257,7 @@ shp2xy <- function(shapefile, outxy, tempDir){
   xynew <- as.data.frame(xy)
   xynew <- xynew[, c('Subpopulation', 'X', 'Y', 'Subpop_mortperc', 'ID', 'sex')]
   xynew[, paste0('Fitness_', c('AA', 'Aa', 'aa', 'AABB', 'AaBB', 'aaBB', 'AABb', 'AaBb',
-                                        'aaBb', 'AAbb', 'Aabb', 'aabb'))] <- 0
+                               'aaBb', 'AAbb', 'Aabb', 'aabb'))] <- 0
   xynew$Fitness_AA <- 50
   xynew$Fitness_aa <- 100
   xynew$Fitness_Aa <- 16
@@ -477,9 +477,9 @@ cdmat_py <- function(inshp, intif, outcsv,
   # [5] cores
   # [6] Projection # User provided CRS if using ascii or other file without projection info, as epsg or esri string e.g. "ESRI:102028"Default None
 
-   # inshp =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_simpts_XYA2024070817112705.shp'
-   # intif =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_surface_HWP2024070817115305.tif'
-   # outcsv = '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_cdmatrix_KQI.csv'
+  # inshp =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_simpts_XYA2024070817112705.shp'
+  # intif =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_surface_HWP2024070817115305.tif'
+  # outcsv = '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_cdmatrix_KQI.csv'
   # param4 = 100000; param5 = 1; param6 = 'None'
 
   # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
