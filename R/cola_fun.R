@@ -32,28 +32,27 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-runCDPOP <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                     cdpopscript = system.file(package = 'cola', 'CDPOP/src/CDPOP.py'),
                      inputvars = NULL,
                      agevars = NULL,
                      cdmat = NULL,
                      xy = NULL,
-                     tempFolder){
+                     tempFolder,
+                     prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE))){
   #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
   #dispcdmat	cdmats/EDcdmatrix16
 
-
-
   # file.copy('invars.csv', '/home/user/cola/inst/examples/invars.csv')
   # file.copy('age.csv', '/home/user/cola/inst/examples/agevars.csv')
-  if (is.null(inputvars)){
+  if ( is.null(inputvars) ){
     inputvars <- system.file(package = 'cola', 'sampledata/invars.csv')
-    file.copy(from = inputvars, to = file.path(tempFolder, 'invars'), overwrite = TRUE)
   }
 
-  if (is.null(agevars)){
-    agevars <- system.file(package = 'cola', 'sampledata/age.csv')
+  if ( is.null(agevars) ){
+    (agevars <- system.file(package = 'cola', 'sampledata/age.csv'))
   }
 
   if (is.null(cdmat)){
@@ -64,42 +63,46 @@ runCDPOP <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     stop(' XY required')
   }
 
-  py <- Sys.getenv("COLA_PYTHON_PATH")
-  # pyscript <- '/home/shiny/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
-  pyscript <- '/mnt/c/temp/cdpopx/connecting-landscapes/lib/CDPOP/src/CDPOP.py'
-
   datapath <- tempFolder # datapath = tempFolder
   timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
-  (cdpopPath <- paste0('cdpopout_', timeMarkCDPOP, '__'))
-  #cdpopPath <- 'cdpopout'
+  (cdpopPath <- paste0(prefix, '__')) # timeMarkCDPOP
 
-  # file.copy('out_cdmatrix_KQI.csv', 'cdmat.csv', overwrite = TRUE)
-  # tempFolder <- '/tmp/RtmpiD9uhw/colaMJJ2024070817062505'; setwd(tempFolder); list.files()
-  # tempFolder <- '/mnt/c/temp/tempCola'; setwd(tempFolder); list.files()
+  # inputvars <- read.csv('invars.csv')
+  # agevars <- read.csv('age.csv')
+  # xy <- read.csv('xy.csv')
+  # dim(xy)
+  # cdmat <- read.csv('cdmat.csv', header = FALSE)
+  # dim(cdmat)
+
+  # (inputvars <- system.file(package = 'cola', 'CDPOP/data/inputvars.csv'))
+  # (agevars <- system.file(package = 'cola', 'CDPOP/data/age.csv'))
+  # python CDPOP.py %userprofile%\dockerdata\CDPOP\data inputvars.csv outAnac1
+  # file.copy(inputvars, paste0(datapath, '/inputvars.csv'), overwrite = TRUE)
+  # file.copy('invars.csv', paste0(system.file(package = 'cola', 'sampledata'), '/invars.csv'))
+  # file.copy('invars.csv','/home/user/cola/inst/sampledata/invars.csv')
+
+  file.copy(cdmat, paste0(datapath, '/cdmat.csv'), overwrite = TRUE)
+  file.copy(inputvars, paste0(datapath, '/invars.csv'))
+  file.copy(agevars, paste0(datapath, '/age.csv'))
+
+
+  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
+  cat(' CMD:\n', cmd, '\n')
+  CMDcp <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
+  newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
+  (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
+
+  return(list(newFiles = newFiles, cdpopPath = cdpopPath))
+
+  # (gridFiles <- grep(pattern = '/grid.+csv$', x = newFiles, value = TRUE))
+  # gridFiles <- gridFiles[order( as.numeric(gsub('grid|.csv', '', basename(gridFiles) ) ) )]
+  # gridLast <- read.csv(tail(gridFiles, 1))
+
+  # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
   # inputvars <- read.csv('invars.csv')
   # agevars <- read.csv('age.csv')
   # xyorig <- read.csv('xy.csv'); dim(xy)
-  # unique(xy$DisperseCDist)
-  # cdmat <- read.csv('cdmat.csv', header = FALSE); dim(cdmat)
-  #cdmat2 <- read.csv('out_cdmatrix_KQI2024070817135705.csv', header = FALSE); dim(cdmat2)
-  #cdmat2[1:5, 1:5]
-  # vars <- paste0('invars.csv') # Only file name read.csv(vars)
-
-  # setwd(tempFolder)
-  # file.copy('xyA.csv', 'xy.csv')
-  # templ_invars <- ''
-  # templ_xy <- ''
-  # templ_agevars <- ''
-
-  # python CDPOP.py %userprofile%\dockerdata\CDPOP\data inputvars.csv outAnac1
-  (cmd <- paste0(py, ' ', pyscript, ' ', datapath, ' ', vars, ' ', cdpopPath))
-  cat(' CMD:\n', cmd, '\n')
-
-  intCMD <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
-
-  newFiles0 <- list.files(path = tempFolder, recursive = TRUE)
-  newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE)
-  return(list(newFiles = newFiles, cdpopPath = cdpopPath))
 
   # outfiles:
   #CDPOP/data/out11684988478/batchrun0mcrun0/grid0.csv [0, 1, ..]
@@ -131,12 +134,14 @@ shp2xy <- function(shapefile, outxy, tempDir){
   # tempDir = "/tmp/RtmpiD9uhw/colaMJJ2024070817062505"
   # tempDir = "/mnt/c/temp/tempCola/"
   # shapefile = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.shp'
+  #shapefile = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp'
   # outxy = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.csv'
   # df <- foreign::read.dbf(gsub('\\..+', '.dbf', shapefile))
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
   xy <- terra::vect(shapefile)
 
-  xy$ID <- xy$Subpopulation <- 1:nrow(xy)
+  xy$ID <- 1:nrow(xy)
+  xy$Subpopulation <- 1#:nrow(xy)
   if (! 'X' %in% names(xy) ){
     xy_coord <- data.frame(geom(xy))
     xy$XCOORD <- xy_coord$x
@@ -146,15 +151,23 @@ shp2xy <- function(shapefile, outxy, tempDir){
   xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
   xynew <- as.data.frame(xy)
   xynew <- xynew[, c('Subpopulation', 'X', 'Y', 'Subpop_mortperc', 'ID', 'sex')]
+  xynew[, paste0('Fitness_', c('AA', 'Aa', 'aa', 'AABB', 'AaBB', 'aaBB', 'AABb', 'AaBb',
+                                        'aaBb', 'AAbb', 'Aabb', 'aabb'))] <- 0
+  xynew$Fitness_AA <- 50
+  xynew$Fitness_aa <- 100
+  xynew$Fitness_Aa <- 16
+
 
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
 
   ## Write CSV as xy.csv
-  xynew[1:3, 1:3]
-  write.csv(x = xynew, file = file.path(tempDir, 'xy.csv'), row.names = FALSE, quote = FALSE)
+  # xynew[1:3, 1:3]
+  xy_out <- file.path(tempDir, 'xy.csv')
+  write.csv(x = xynew, file = xy_out, row.names = FALSE, quote = FALSE)
 
+  return(xy_out)
 
   # xy$YCOORD <- 1:nrow(xy)
   # # xyorig <- read.csv('xy.csv'); dim(xy)
@@ -184,7 +197,7 @@ guessNoData <- function(path){
   # path = raster path
   ans <- NA
   if (require(gdalUtilities) & file.exists(path)){
-    gi <- strsplit(gdalinfo(path), '\n')[[1]]
+    gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE)) '\n')[[1]]
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
       (ans <- gsub('.+\\=', '', ndv))
@@ -622,7 +635,7 @@ pri_py <- function(tif, incrk, inlcc,
 #' runCDPOP( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-cdpop_py <- function(outshp, outtif,
+cdpop_py2 <- function(outshp, outtif,
                      param5 = 0.5, param6 = 1000,
                      tif, incrk, inlcc,
                      maskedcsname = paste0(tempfile(), '.tif'),
