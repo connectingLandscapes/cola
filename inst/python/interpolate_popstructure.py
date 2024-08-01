@@ -7,11 +7,9 @@ Interpolate allelic diversity and heterozygosity
 
 #%%
 # Imports
-import osgeo
 import pandas as pd
 import numpy as np
 import rasterio as rio
-from rasterio.crs import CRS
 import cola_functions as cf
 from scipy.interpolate import RBFInterpolator
 import sys, time
@@ -23,30 +21,30 @@ def main() -> None:
     tic = time.perf_counter()
     
     # INPUTS
-    # CDPOP points csv containing population genetic structure
-    xyf = sys.argv[1] # 'C:/Users/pj276/Projects/UNICOR_arch/unicor/sabah_test_spts_5000.shp'
+    # List of CDPOP grid.csv files containing population genetic structure
+    xylist = sys.argv[1] # 'C:/Users/pj276/Projects/UNICOR_arch/unicor/sabah_test_spts_5000.shp'
     
     # Path to template grid
     tg = sys.argv[2] # 'C:/Users/pj276/Projects/UNICOR_arch/unicor/resist_sabah_example_pro.tif'
-
-    # Output alleles tif file name
-    ofileAlleles = sys.argv[3]
-    
-    # Output heterozygosity tif file name
-    ofileHo = sys.argv[4]
     
     # Interpolation method
     # Either 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'
-    iptMethod = sys.argv[5] 
+    iptMethod = sys.argv[3] 
     
     # Number of neighbors to use for interpolation or 'all'
     # to use all points in the dataset.
     # For idw, this argument has no effect
-    rbfNbs = sys.argv[6] # 10
+    rbfNbs = sys.argv[4] # 10
 
     # User provided CRS if using ascii or other file without projection info
     # Provide as epsg or esri string e.g. "ESRI:102028"
-    upCRS = sys.argv[7] # Default None
+    upCRS = sys.argv[5] # Default None
+    
+    # Hard code output file names prefixes
+    # Output alleles tif file name
+    ofileAlleles = 'alleles'
+    # Output heterozygosity tif file name
+    ofileHo = 'heterozygosity'
     
     # Convert number of neighbors to integer
     try:
@@ -83,63 +81,86 @@ def main() -> None:
     xflat = np.column_stack([xs,ys])
 
     #%%
-    # Read xy file to dataframe and convert to array with two columns (x and y coordinates)
-    if Path(xyf).suffix == '.csv':
-        xy = pd.read_csv(xyf, index_col=False)
-    else:
-        raise Exception('Source point file should have a .csv extension.')
+    # Split string to list of files
+    xylist = xylist.strip().split(',')
     
-    #%%
-    # Get locations with data
-    xy = xy.loc[xy['ID'] != 'OPEN',]
-    # Remove unneeded columns
-    xySubset = xy.iloc[:,9:-1]
-    
-    #%%
-    # Get allele 1 count
-    c1 = xySubset[xySubset==1].sum(axis=1, skipna=True, numeric_only=False)
-    # Get allele 2 count
-    c2 = xySubset[xySubset==2].sum(axis=1, skipna=True, numeric_only=False)
-    # Get total allele count per location
-    alleles = c1 + c2
-    # Calculate heterozygosity
-    Ho = (c1/2)/(c2+(c1/2))
-    # Add allels and Ho back to dataframe
-    fout = pd.concat([xy[['XCOORD','YCOORD']],alleles,Ho],axis=1)
-    # Rename columns
-    fout = fout.rename(columns={0: 'Alleles', 1: 'Ho'})
-   
-    #%%
-    # Create interpolation model using genetic data
-    # and predict for raster cell locations
-    if iptMethod == 'multiquadric':
-        iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='multiquadric', epsilon=1)(xflat)
-        iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='multiquadric', epsilon=1)(xflat)
-    if iptMethod == 'thin_plate_spline':
-        iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='thin_plate_spline')(xflat)
-        iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='thin_plate_spline')(xflat)
-    if iptMethod == 'linear':
-        iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='linear',degree=1)(xflat)
-        iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='linear',degree=1)(xflat)
-    if iptMethod == 'idw':
-        iptAlleles = cf.simple_idw(fout.XCOORD,fout.YCOORD,fout.Alleles,xflat[:,0],xflat[:,1])
-        iptHo = cf.simple_idw(fout.XCOORD,fout.YCOORD,fout.Ho,xflat[:,0],xflat[:,1])
+    # Loop through files and interpolate
+    for xyf in xylist:
+        # Read xy file to dataframe and convert to array with two columns (x and y coordinates)
+        if Path(xyf).suffix == '.csv':
+            xy = pd.read_csv(xyf, index_col=False)
+        else:
+            raise Exception('Source point file should have a .csv extension.')
+        
+        #%%
+        # Get locations with data
+        xy = xy.loc[xy['ID'] != 'OPEN',]
+        # Remove unneeded columns
+        xySubset = xy.iloc[:,9:]
+        
+        #%%
+        # Get allele 1 count
+        c1 = np.sum(xySubset == 1, axis=1)
+        # Get allele 2 count
+        c2 = np.sum(xySubset == 2, axis=1)
+        # Get total allele count per location
+        alleles = c1 + c2
+        # Calculate observed heterozygosity
+        Ho = (c1/2)/(c2+(c1/2))
+        # Add allels and Ho back to dataframe
+        fout = pd.concat([xy[['XCOORD','YCOORD']],alleles,Ho],axis=1)
+        # Rename columns
+        fout = fout.rename(columns={0: 'Alleles', 1: 'Ho'})
+        
+        # Check for all zeros/nan in calculated values
+        # Both Ho and Alleles need to contain data, otherwise will skip
+        if np.sum(np.isnan(fout.Ho)) < len(fout.Ho) and np.nanmax(fout.Alleles) > 0:
+            
+            #%%
+            # Create interpolation model using genetic data
+            # and predict for raster cell locations
+            if iptMethod == 'multiquadric':
+                iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='multiquadric', epsilon=1)(xflat)
+                iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='multiquadric', epsilon=1)(xflat)
+                iptabb = 'mq'
+            if iptMethod == 'thin_plate_spline':
+                iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='thin_plate_spline')(xflat)
+                iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='thin_plate_spline')(xflat)
+                iptabb = 'tps'
+            if iptMethod == 'linear':
+                iptAlleles = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Alleles, neighbors=rbfNbs, kernel='linear',degree=1)(xflat)
+                iptHo = RBFInterpolator(fout[['XCOORD','YCOORD']], fout.Ho, neighbors=rbfNbs, kernel='linear',degree=1)(xflat)
+                iptabb = 'lin'
+            if iptMethod == 'idw':
+                iptAlleles = cf.simple_idw(fout.XCOORD,fout.YCOORD,fout.Alleles,xflat[:,0],xflat[:,1])
+                iptHo = cf.simple_idw(fout.XCOORD,fout.YCOORD,fout.Ho,xflat[:,0],xflat[:,1])
+                iptabb = 'idw'
+        
+            #%%
+            # For now, idw takes all neighbors into account so set output number
+            # of neighbors to 'all' when naming files
+            if iptMethod == 'idw':
+                rbfNbs = 'all'
+            # Write alleles to file
+            rAlleles = np.copy(r)
+            rAlleles[rows,cols] = iptAlleles
+            rAlleles = np.expand_dims(rAlleles, axis=0)
+            of1 = Path(xyf).parent / Path(ofileAlleles + '_' + iptabb + '_' + str(rbfNbs) + '_' + str((Path(xyf).stem)) + '.tif')
+            print(of1)
+            cf.arrayToGeoTiff(rAlleles, of1, profile)
+            del rAlleles
+            
+            # Write Ho to file
+            rHo = np.copy(r)
+            rHo[rows,cols] = iptHo
+            rHo = np.expand_dims(rHo, axis=0)
+            # Write to file
+            of2 = Path(xyf).parent / Path(ofileHo + '_' + iptabb + '_' + str(rbfNbs) + '_' + str((Path(xyf).stem)) + '.tif')
+            cf.arrayToGeoTiff(rHo, of2, profile)
+            del rHo
 
-    #%%
-    # Write alleles to file
-    rAlleles = np.copy(r)
-    rAlleles[rows,cols] = iptAlleles
-    rAlleles = np.expand_dims(rAlleles, axis=0)
-    cf.arrayToGeoTiff(rAlleles, ofileAlleles, profile)
-    del rAlleles
-    
-    # Write Ho to file
-    rHo = np.copy(r)
-    rHo[rows,cols] = iptHo
-    rHo = np.expand_dims(rHo, axis=0)
-    # Write to file
-    cf.arrayToGeoTiff(rHo, ofileHo, profile)
-    del rHo
+        else:
+            print("In input file " + str(Path(xyf).name) + ", either heterozygosity or alleles columns are empty/contain no data. Nothing to interpolate.")
 
     toc = time.perf_counter()
     print(f"Interpolating population genetic structure took {toc - tic:0.4f} seconds", flush=True)
