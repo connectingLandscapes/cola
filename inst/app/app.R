@@ -871,7 +871,8 @@ server <- function(input, output, session) {
   } # llz <- makeLL()
 
   updateLL <- function(ll){
-    output$ll_map_pri <- output$ll_map_lcc <- output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
+    output$ll_map_cdp <- output$ll_map_pri <- output$ll_map_lcc <-
+      output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
       output$ll_map_edi <- output$ll_map_dist <-
       output$ll_map_points <- output$ll_map_h2r <- leaflet::renderLeaflet({
         ll
@@ -950,10 +951,12 @@ server <- function(input, output, session) {
 
     if( dst ){
       output$out_par_cdpoB <- renderText({ paste0("Input: Distance", readyMsg)})
+      output$out_par_distC <- renderText({ paste0("Output: Distance", readyMsg)})
     }
 
     if( lcc ){
       output$out_par_prioB <- renderText({ paste0("Input: Corridors", readyMsg)})
+
     }
 
     if( crk ){
@@ -1654,47 +1657,116 @@ server <- function(input, output, session) {
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
     # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
 
-    # tempFolder = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/'; setwd(tempFolder)
-    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_simpts_VZZ2024080110191205.shp',
-    #            cdm = '/mnt/c/tempRLinux/RtmpstPjHu/colaXRA2024080110181305/out_cdmatrix_SXX2024080110202905.csv')
+    # tempFolder = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/'; setwd(tempFolder)
+    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp',
+    #            cdm = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_cdmatrix_KJM2024073113032605.csv')
+    # pref <- 'cdpopoutWFI'
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
     shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
     rv$ptsxy <- newxy
     # rv$cdm <- 'cdmat.csv'
+    (pref <- sessionIDgen(only3 = TRUE))
 
     cdpop_ans <- cdpop_py(inputvars = NULL, agevars = NULL,
-                          cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder)
+                          cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder, prefix = pref)
+    # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
+    #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
     rv$cdpop_ans <- cdpop_ans
 
+    output$ll_map_cdp <- leaflet::renderLeaflet({
+
     cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
-    rv$cdpop_out <<- read.csv(cdpop_out)
+    rv$cdpop_out <- read.csv(cdpop_out)
+
+    cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
+                         function(x){ as.numeric(gsub('\\|.+', '', x))})
 
     cdpop_grids <- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
     cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
     cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
     cdpop_grids_Num <- sort(cdpop_grids_Num)
 
-    cat('CDPOP:\n')
-    print(cdpop_ans)
+
+    output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
+                      type = "line", dashStyle = "DashDot", name = 'Population'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Population')) %>%
+        hc_xAxis(title = list(text = 'Year'))
+    }) #
+
+    output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                      type = "line", dashStyle = "DashDot", name = 'Alleles'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Alleles')) %>%
+        hc_xAxis(title = list(text = 'Year'))
+    }) #
+
+    output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                      type = "line", dashStyle = "DashDot", name = 'He'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                      type = "line", dashStyle = "DashDot", name = 'Ho'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Alleles')) %>%
+        hc_xAxis(title = list(text = 'Year'))
+    }) #
 
     updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
                          choices = cdpop_grids_Num,
                          selected = tail(cdpop_grids_Num, 1), server = TRUE)
-    # updateSelectizeInput(session, inputId = "in_points_ly",
-    #                      selected = 'HabitatSuitability',
-    #                      choices = rv$point_choices,
-    #                      server = TRUE)
+
+    # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+
+    densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
+                                method = 'average',
+                                bandwidths = 'None', type = 'count', crs = 'None')
+    # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+    struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
+                     method = 'thin_plate_spline',
+                     neighbors = 'all', crs = 'None')
+
+    rv$struRA <- struRA <- rast(struMap$newFiles[1])
+    rv$struRB <- struRB <- rast(struMap$newFiles[2])
+    rv$densR <- densR <- rast(densMap$file)
+
+    rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+    rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+    rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+
+     llcdp <<- leaflet() %>% addTiles() %>%
+       addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+       addLegend(pal=palA, values =rng_strA, layerId = 'Alleles', position = 'topleft', title="Alleles") %>%
+       addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+       addLegend(pal=palB, values =rng_strB, layerId = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+       addRasterImage(densR, colors = palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+       addLegend(pal=palC, values =rng_dens, layerId = 'Density', position = 'bottomright', title="Density") %>%
+       leaflet::addLayersControl(
+          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+           overlayGroups = c('Alleles', "Heterozygosity", "Density"),
+           options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+       leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+    })
+
   })
 
-
-  observeEvent(input$cdpop_ans_yy, {
-    if(input$cdpop_ans_yy != ''){
-      rv$cdpop_ans
-
-    }
-  })
+  # observeEvent(mapcdpop, {
+  #   input$cdpop_ans_yy
+  #   if(input$cdpop_ans_yy != ''){
+  #     rv$cdpop_ans
+  #   }
+  # })
 
 
   observeEvent(input$cdpop_check3, {
@@ -2623,6 +2695,7 @@ server <- function(input, output, session) {
 
     if (file.exists(rv$newtifPath_dist)){
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+
       rv$tifready <- TRUE
       rv$tif <- newtifPath_dist
       params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
@@ -2762,6 +2835,7 @@ server <- function(input, output, session) {
 
       if(file.exists(outcdmat)){
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
 
         rv$log <- paste0(rv$log,
                          paste0(' --- DONE\nMatrix generated, dim:',
@@ -4500,7 +4574,7 @@ if (FALSE){
                 column(width = 4,
                        selectizeInput(inputId = 'cdpop_ans_yy', 'Years', choices = c(''))),
                 column(width = 2,
-                       actionButton("cdpop_check3", "Load ouptut"))
+                       actionButton("mapcdpop", "Load year map"))
               ),
 
               fluidRow(
@@ -4508,7 +4582,11 @@ if (FALSE){
                 # shinydashboard::valueBoxOutput("cdpop_box2"),
                 # actionButton("cdpop_check2", "Check files"),
                 # uiOutput("out_cdpop_files"),
-                DT::dataTableOutput(outputId =  "out_cdpop_filestable")
+                DT::dataTableOutput(outputId =  "out_cdpop_filestable"),
+                leaflet::leafletOutput("ll_map_cdp", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                highcharter::highchartOutput("hccdpop1", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                highcharter::highchartOutput("hccdpop2", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                highcharter::highchartOutput("hccdpop3", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
               ),
 
 
@@ -4796,7 +4874,11 @@ if (FALSE){
                        column(3, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
-                       column(1, h1('')),
+                       column(1,
+                              tags$tr(
+                                tags$td(style = "width: 25%", align = "center",
+                                        htmlOutput(outputId = 'out_par_distC',  fill = TRUE))
+                              )),
                        column(1, downloadButton('csvDwn', 'Download'))
                      )
               )

@@ -21,6 +21,110 @@ cola_dss <- function(launch.browser = TRUE)  {
 }
 
 
+
+#' @title  Makes a population structure map from CDPOP results interpolation
+#' @description Takes CDPOP results and generates a raster interpolation
+#' @param py Python location
+#' @param cdpopscript Python location
+#' @return Path with the resulting TIF raster
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                            pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
+                            grids, template,
+                            method = 'thin_plate_spline',
+                            neighbors, crs = 'None'){
+
+  # 1. List of CDPOP grid.csv files containing population genetic structure
+  # 2. Path/filename of a template raster used for interpolation
+  # 3. Interpolation method. One of 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'.
+  # 4. Number of neighbors to use for interpolation. Either a positive integer < the total number of occupied points or 'all'.
+  # 5. User provided CRS as epsg or esri string. Can also be 'None' in which case the CRS will be extracted from the template raster.
+
+  # neighbors = 5; method = 'thin_plate_spline'; crs = 'None'; py = Sys.getenv("COLA_PYTHON_PATH"); pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py')
+  # grids = list.files(path = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/cdpopoutLNY__1722460599', recursive = TRUE, pattern = 'grid.+csv$', full.names = TRUE)
+  # template <- '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif'
+  # grids <- grids[1]; read.csv(grids)
+
+  # allele = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/cdpopoutLNY__1722460599/allele.tif'
+  # hetero = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/cdpopoutLNY__1722460599/hetero.tif'
+
+  if( !method %in% c('multiquadric', 'thin_plate_spline', 'linear', 'idw')){
+    stop('Not valid method')
+  }
+
+  ### Create CMD
+  (cmd_inter <- paste0(py, ' ', pyscript, ' ',
+                       grids, ' ', template, ' ',
+                       # allele, ' ', hetero, ' ',
+                       method, ' ', neighbors, ' ', crs))
+  cat('\n\n\tCMD:')
+  cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+
+  prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
+  intCMD <- tryCatch(system( cmd_inter ,
+                             intern = TRUE, ignore.stdout = TRUE),
+                     error = function(e) e$message)
+  #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
+  newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
+                   list.files(path = dirname(grids), full.names = TRUE))
+
+  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
+               newFiles = newFiles,
+               log =  intCMD) )
+}
+
+
+#' @title  Makes a population density map from CDPOP results interpolation
+#' @description Takes CDPOP results and generates a raster interpolation
+#' @param py Python location
+#' @param cdpopscript Python location
+#' @return Path with the resulting TIF raster
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                            pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
+                            grids, template, method = 'average', bandwidths = 'None',
+                            type = 'count', crs = 'None'){
+
+  if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
+    stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
+  }
+
+  if( !type %in% c('count', 'density')){
+    stop('Not valid output: count or density')
+  }
+  ### Create CMD
+  (cmd_inter <- paste0(py, ' ', pyscript, ' ',
+                       grids, ' ', template, ' ',
+                       # allele, ' ', hetero, ' ',
+                       method, ' ', bandwidths, ' ', type, ' ', crs))
+  cat('\n\n\tCMD:')
+  cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+
+  prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
+  intCMD <- tryCatch(system( cmd_inter ,
+                             intern = TRUE, ignore.stdout = TRUE),
+                     error = function(e) e$message)
+  #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
+  newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
+                   list.files(path = dirname(grids), full.names = TRUE))
+  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
+               newFiles = newFiles,
+               log =  intCMD) )
+
+}
+
+
+
 #' @title  Run CDPOP model
 #' @description Run CDPOP model
 #' @param py Python location
@@ -48,7 +152,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # file.copy('invars.csv', '/home/user/cola/inst/examples/invars.csv')
   # file.copy('age.csv', '/home/user/cola/inst/examples/agevars.csv')
   if ( is.null(inputvars) ){
-    inputvars <- system.file(package = 'cola', 'sampledata/invars.csv')
+    (inputvars <- system.file(package = 'cola', 'sampledata/invars.csv'))
   }
 
   if ( is.null(agevars) ){
@@ -82,8 +186,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # file.copy('invars.csv','/home/user/cola/inst/sampledata/invars.csv')
 
   file.copy(cdmat, paste0(datapath, '/cdmat.csv'), overwrite = TRUE)
-  file.copy(inputvars, paste0(datapath, '/invars.csv'))
-  file.copy(agevars, paste0(datapath, '/age.csv'))
+  file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
+  file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE)
 
 
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
@@ -92,7 +196,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
-  return(list(newFiles = newFiles, cdpopPath = cdpopPath))
+  ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath)
+  return(ans2ret)
 
   # (gridFiles <- grep(pattern = '/grid.+csv$', x = newFiles, value = TRUE))
   # gridFiles <- gridFiles[order( as.numeric(gsub('grid|.csv', '', basename(gridFiles) ) ) )]
