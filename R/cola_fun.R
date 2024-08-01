@@ -197,7 +197,7 @@ guessNoData <- function(path){
   # path = raster path
   ans <- NA
   if (require(gdalUtilities) & file.exists(path)){
-    gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE)) '\n')[[1]]
+    gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
       (ans <- gsub('.+\\=', '', ndv))
