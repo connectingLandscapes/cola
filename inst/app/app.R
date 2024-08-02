@@ -778,10 +778,17 @@ server <- function(input, output, session) {
 
         rv$prishp_sp$ID <- order(rv$prishp_sp$cp1)
         rv$prishp_wgs <- st_transform(rv$prishp_sp, '+proj=longlat +datum=WGS84')
+        patchTif <- (gsub('out_pri_', 'out_pri_patch_', rv$pritif))
+        patchTifR <- rast(patchTif)
 
-        ll0 <- ll0 %>% addRasterImage(rv$pritif_sp,
-                                      colors = rv$pritif_pal2, opacity = .5,
-                                      group = "Prioritization", layerId = "Prioritization") %>%
+        patchpal <- colorBin(palette = "Dark2", domain = c(1, max(getMxMn(patchTif))), bins = c( 1, 43),
+          reverse = FALSE, na.color = "transparent")
+
+        ll0 <- ll0 %>%
+          addRasterImage(rv$pritif_sp, colors = rv$pritif_pal2, opacity = .5,
+                                      group = "Prioritization", layerId = "Priorit. corr") %>%
+           addRasterImage(patchTifR, colors = patchpal,
+                          opacity = .5, group = "Prioritization", layerId = "Priorit. patch") %>%
           addCircleMarkers(data = rv$prishp_wgs, label = ~ID, group = 'Prioritization',  radius = 5, color = 'red')  %>%
           addLegend(pal =  rv$pritif_pal2, values = rv$pritif_rng2,
                     layerId = "Prioritization", group = "Prioritization",
@@ -1721,11 +1728,11 @@ server <- function(input, output, session) {
 
       llcdp <<- leaflet() %>% addTiles() %>%
         addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-        addLegend(pal=palA, values =rng_strA, layerId = 'Alleles', position = 'topleft', title="Alleles") %>%
+        addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
         addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-        addLegend(pal=palB, values =rng_strB, layerId = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-        addRasterImage(densR, colors = palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-        addLegend(pal=palC, values =rng_dens, layerId = 'Density', position = 'bottomright', title="Density") %>%
+        addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+        addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+        addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
         leaflet::addLayersControl(
           baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
           overlayGroups = c('Alleles', "Heterozygosity", "Density"),
@@ -4030,6 +4037,7 @@ server <- function(input, output, session) {
 
 
     ## Download comparision
+
     output$comDwn <- downloadHandler(
       filename = paste0('comparison',
                         #"_",
@@ -4038,6 +4046,7 @@ server <- function(input, output, session) {
       content = function(filename) {
         if(!is.null( rv$comFolder) ){
           # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
+          # rv <- list(comFolder = "/mnt/c/tempRLinux/RtmpaEKrMb/colaCQT2024080119231805//comp_crk_XNM2024080119481905")
           #filename <- paste0('points_', rv$inPointsSessID , '.zip')
           zip_file <- paste0(tempfile(), '_tempComp.zip')
           #'',
@@ -4051,11 +4060,15 @@ server <- function(input, output, session) {
                                   all.files = TRUE, include.dirs = TRUE,
                                   #pattern = "out_simpts_",
                                   full.names = TRUE)
-          print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
+          otherFiles <- list.files(full.names = TRUE, include.dirs = FALSE,
+                                   path = dirname(rv$comFolder),
+                                   pattern = gsub('comp_|_.+', '', basename(rv$comFolder)))
+
+          # print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
 
 
           if (os == 'Windows'){
-            zip(zipfile = zip_file, files = paste0(com_files), flags = '-r9X')
+            zip(zipfile = zip_file, files = c(com_files, otherFiles), flags = '-r9X')
           } else {
 
             # the following zip method works for me in linux but substitute with whatever method working in your OS
@@ -4065,7 +4078,6 @@ server <- function(input, output, session) {
 
             pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n',
                    'filename', 'zip_file') # _____________  , 'zip_command'
-
             system(zip_command)
           }
           # copy the zip file to the file argument
@@ -4428,14 +4440,17 @@ if (FALSE){
 
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
           conditionalPanel( 'input.sidebarid == "tab_corridors"',
+                            div(style = "margin-top: -10px"),
                             textInput('name_tif_lcc', label = '', value = "",
                                       width = NULL, placeholder = 'Surface resistance name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_lcc_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
                             textInput('name_pts_lcc', label = '', value = "",
                                       width = NULL, placeholder = 'Points name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -4454,13 +4469,15 @@ if (FALSE){
           shinydashboard::menuItem("Compare results", tabName = "tab_compare", icon = icon("clone")),
           conditionalPanel( 'input.sidebarid == "tab_compare"',
                             # div(style = "margin-top: -30px"),
+                            div(style = "margin-top: -10px"),
+                            textInput('field_shp_com', label = '', value = "",
+                                      width = NULL, placeholder = 'Shapefile name'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_com_shp', 'Load polygon', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
-                            div(style = "margin-top: -30px"),
-                            textInput('field_shp_com', label = '', value = "",
-                                      width = NULL, placeholder = 'Shapefile name')
+                            div(style = "margin-top: -30px")
           ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
@@ -4500,7 +4517,6 @@ if (FALSE){
         shinydashboard::tabItems(
 
           #### UI Tabs  ----
-
 
           # tab_home tab_surface tab_points tab_distance tab_cdpop
           # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal
@@ -4626,8 +4642,7 @@ if (FALSE){
                        tags$td(style = "width: 25%", align = "top",
                                h3(' Population dynamics',
                                   style="text-align: center;vertical-align: top")
-                       ),
-                       h4(' Run CDPOP module. ')
+                       ) # , h4(' Run CDPOP module. ')
                 ),
                 column(9, verbatimTextOutput("vout_cdp") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
                        tags$head(tags$style("#vout_cdp{overflow-y:scroll; max-height: 70px}")))
