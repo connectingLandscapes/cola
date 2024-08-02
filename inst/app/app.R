@@ -1141,6 +1141,8 @@ server <- function(input, output, session) {
   params_txt <- list(hs = FALSE, sr = FALSE, pts = FALSE, lcc = FALSE, crk = FALSE)
   params_txt <- updateParamsTEXT(params_txt = params_txt, start = TRUE)
 
+  output$hccdpop1 <- output$hccdpop2 <- output$hccdpop3 <- highcharter::renderHighchart({ highchart() })
+
 
   # output$ll_map_lcc <- output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
   #   output$ll_map_dist <- output$ll_map_points <- output$ll_map_h2r <- leaflet::renderLeaflet({
@@ -1652,15 +1654,15 @@ server <- function(input, output, session) {
     }
   })
 
-  observeEvent(input$run_cdpop, {
+  isolate(observeEvent(input$run_cdpop, {
 
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
     # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
 
-    # tempFolder = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/'; setwd(tempFolder)
-    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp',
-    #            cdm = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_cdmatrix_KJM2024073113032605.csv')
-    # pref <- 'cdpopoutWFI'
+    # tempFolder = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305'; setwd(tempFolder)
+    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_simpts_ZFE2024080118415505.shp',
+    #            cdm = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_cdmatrix_XUV2024080118421705.csv')
+    # pref <- 'SLW'
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
     shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
@@ -1668,17 +1670,22 @@ server <- function(input, output, session) {
     # rv$cdm <- 'cdmat.csv'
     (pref <- sessionIDgen(only3 = TRUE))
 
-    cdpop_ans <- cdpop_py(inputvars = NULL, agevars = NULL,
-                          cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder, prefix = pref)
-    # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
+    output$vout_cdo <- isolate(renderText({
 
-    #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
-    rv$cdpop_ans <- cdpop_ans
+      cdpop_ans <- cdpop_py(inputvars = NULL, agevars = NULL,
+                            cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder, prefix = pref)
+      mssg2Display
+    }))
+      # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
     output$ll_map_cdp <- leaflet::renderLeaflet({
 
+      #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
+      rv$cdpop_ans <- cdpop_ans
+
       cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
       rv$cdpop_out <- read.csv(cdpop_out)
+      rv$cdpFolder <- dirname(dirname(cdpop_out))
 
       cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
                            function(x){ as.numeric(gsub('\\|.+', '', x))})
@@ -1688,43 +1695,10 @@ server <- function(input, output, session) {
       cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
       cdpop_grids_Num <- sort(cdpop_grids_Num)
 
-
-      output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
-                        type = "line", dashStyle = "DashDot", name = 'Population'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Population')) %>%
-          hc_xAxis(title = list(text = 'Year'))
-      }) #
-
-      output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                        type = "line", dashStyle = "DashDot", name = 'Alleles'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Alleles')) %>%
-          hc_xAxis(title = list(text = 'Year'))
-      }) #
-
-      output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                        type = "line", dashStyle = "DashDot", name = 'He'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                              type = "line", dashStyle = "DashDot", name = 'Ho'
-                              #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Alleles')) %>%
-          hc_xAxis(title = list(text = 'Year'))
-      }) #
-
       updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
                            choices = cdpop_grids_Num,
                            selected = tail(cdpop_grids_Num, 1), server = TRUE)
+
 
       # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
 
@@ -1759,7 +1733,44 @@ server <- function(input, output, session) {
         leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
     })
 
-  })
+    output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
+                      type = "line", dashStyle = "DashDot", name = 'Population'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Population')) %>%
+        hc_xAxis(title = list(text = 'Year')) %>%
+        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+
+    })
+
+    output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                      type = "line", dashStyle = "DashDot", name = 'Alleles'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Alleles')) %>%
+        hc_xAxis(title = list(text = 'Year')) %>%
+        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+    })
+
+    output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+      highchart() %>% hc_exporting(enabled = TRUE) %>%
+        hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                      type = "line", dashStyle = "DashDot", name = 'He'
+                      #, hcaes(x = 'Year', y = 'Population')
+        ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                            type = "line", dashStyle = "DashDot", name = 'Ho'
+                            #, hcaes(x = 'Year', y = 'Population')
+        ) %>%
+        hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+        hc_xAxis(title = list(text = 'Year')) %>%
+        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+    }) #
+
+  }))
 
   # observeEvent(mapcdpop, {
   #   input$cdpop_ans_yy
@@ -1959,7 +1970,7 @@ server <- function(input, output, session) {
           makeLL( )
 
         } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resitance" TIF file')
+          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
           updateVTEXT(rv$log)
         }
 
@@ -2303,7 +2314,7 @@ server <- function(input, output, session) {
           makeLL( )
 
         } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resitance" TIF file')
+          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
           updateVTEXT(rv$log)
         }
       })
@@ -2410,7 +2421,7 @@ server <- function(input, output, session) {
           makeLL( )
 
         } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resitance" TIF file')
+          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
           updateVTEXT(rv$log)
         }
       })
@@ -2835,12 +2846,16 @@ server <- function(input, output, session) {
 
       if(file.exists(outcdmat)){
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
+        rv$cdm_nvalid <- validCels <- sum(headMat > 1, na.rm = T)/2
         params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
 
         rv$log <- paste0(rv$log,
                          paste0(' --- DONE\nMatrix generated, dim:',
                                 ncol(headMat), ' cols, ', nrow(headMat), ' rows.',
                                 ' Time elapsed: ', textElapMat));updateVTEXT(rv$log) # _______
+        rv$log <- paste0(rv$log,
+                         paste0('\n  Pairs of points connected: ', validCels,
+                                 '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
 
         output$dist_box1 <- shinydashboard::renderValueBox({
           valueBox("YES", "Matrix: Done",
@@ -3964,7 +3979,57 @@ server <- function(input, output, session) {
   # out_crk$file points_file$file out_pri_tif
   {
     #rv$comFolder <- outComFolder
-    ## Download points
+
+    ## Download cdpop
+    output$cdpDwn <- downloadHandler(
+      filename = paste0('cdpop',
+                        #"_",
+                        #ifelse(!is.null(rv$inPtsSessID), rv$inPtsSessID, rv$sessionID),
+                        '.zip'),
+      content = function(filename) {
+        if(!is.null( rv$cdpFolder) ){
+          # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
+          #filename <- paste0('points_', rv$inPointsSessID , '.zip')
+          zip_file <- paste0(tempfile(), '_tempCDPOP.zip')
+          #'',
+          #file.path(rv$tempFolder ,
+          #filename)
+          #)
+          #zip_file <- file.path(tempdir(), filename)
+          print(paste0('Making temp zip file: ', zip_file))
+
+          com_files <- list.files(path = rv$cdpFolder,
+                                  all.files = TRUE, include.dirs = TRUE,
+                                  #pattern = "out_simpts_",
+                                  full.names = TRUE)
+          print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
+
+
+          if (os == 'Windows'){
+            zip(zipfile = zip_file, files = paste0(com_files), flags = '-r9X')
+          } else {
+
+            # the following zip method works for me in linux but substitute with whatever method working in your OS
+            zip_command <<- paste("zip -j",
+                                  zip_file,
+                                  paste(com_files, collapse = " "))
+
+            pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n',
+                   'filename', 'zip_file') # _____________  , 'zip_command'
+
+            system(zip_command)
+          }
+          # copy the zip file to the file argument
+          file.copy(zip_file, filename)
+          # remove all the files created
+          try(file.remove(zip_file))
+        }
+      })
+
+
+
+
+    ## Download comparision
     output$comDwn <- downloadHandler(
       filename = paste0('comparison',
                         #"_",
@@ -4258,6 +4323,7 @@ if (FALSE){
                             div(style = "margin-top: -10px"),
                             textInput('name_tif_sur', label = '', value = "",
                                       width = NULL, placeholder = 'Habitat suitability name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_sur_tif', 'Load Suitability',
                                              buttonLabel = 'Search', placeholder = 'No file',
                                              accept=c('.tif'),
@@ -4269,8 +4335,10 @@ if (FALSE){
           shinydashboard::menuItem(HTML(paste("Customize resistance surface", sep="<br/>")),
                                    tabName = "tab_edit", icon = icon("pencil")),
           conditionalPanel( 'input.sidebarid == "tab_edit"',
+                            div(style = "margin-top: -10px"),
                             textInput('name_tif_edi', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_edi_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
@@ -4288,7 +4356,7 @@ if (FALSE){
           conditionalPanel( 'input.sidebarid == "tab_points"',
                             div(style = "margin-top: -10px"),
                             textInput('name_hs_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -20px"),
                             shiny::fileInput('in_points_hs', 'Suitability TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4298,8 +4366,10 @@ if (FALSE){
                             div(style = "margin-top: -30px"),
                             # ),
                             # conditionalPanel( 'input.sidebarid == "tab_points"',
+                            div(style = "margin-top: -10px"),
+
                             textInput('name_tif_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_points_tif', 'Resistance TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4311,8 +4381,10 @@ if (FALSE){
 
           shinydashboard::menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
           conditionalPanel( 'input.sidebarid == "tab_distance"',
+                            div(style = "margin-top: -10px"),
                             textInput('name_tif_dst', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_dist_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
@@ -4336,8 +4408,10 @@ if (FALSE){
           shinydashboard::menuItem(HTML(paste("Connectivity", "dispersal kernels", sep="<br/>")),
                                    tabName = "tab_kernels", icon = icon("bezier-curve")),
           conditionalPanel( 'input.sidebarid == "tab_kernels"',
+                            div(style = "margin-top: -10px"),
                             textInput('name_tif_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            div(style = "margin-top: -10px"),
                             shiny::fileInput('in_crk_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
@@ -4355,7 +4429,7 @@ if (FALSE){
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
           conditionalPanel( 'input.sidebarid == "tab_corridors"',
                             textInput('name_tif_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resitance name:'),
+                                      width = NULL, placeholder = 'Surface resistance name:'),
                             shiny::fileInput('in_lcc_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
@@ -4574,19 +4648,30 @@ if (FALSE){
                 column(width = 4,
                        selectizeInput(inputId = 'cdpop_ans_yy', 'Years', choices = c(''))),
                 column(width = 2,
-                       actionButton("mapcdpop", "Load year map"))
+                       actionButton("mapcdpop", "Load year map"),
+                       downloadButton('cdpDwn', 'Download'))
               ),
 
               fluidRow(
-                tableOutput("cdpop_files"),
+                # tableOutput("cdpop_files"),
                 # shinydashboard::valueBoxOutput("cdpop_box2"),
                 # actionButton("cdpop_check2", "Check files"),
                 # uiOutput("out_cdpop_files"),
                 DT::dataTableOutput(outputId =  "out_cdpop_filestable"),
-                leaflet::leafletOutput("ll_map_cdp", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                highcharter::highchartOutput("hccdpop1", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                highcharter::highchartOutput("hccdpop2", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                highcharter::highchartOutput("hccdpop3", height = "800px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                column(width = 6,
+                  leaflet::leafletOutput("ll_map_cdp") %>% shinycssloaders::withSpinner(color="#0dc5c1")
+                       ),
+                column(width = 6,
+                       tabsetPanel(
+                         type = "pills",
+                         tabPanel( "Population", highcharter::highchartOutput("hccdpop1") #, height = "800px")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+                         tabPanel( "Alleles", highcharter::highchartOutput("hccdpop2") #, height = "800px")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+                         tabPanel( "Heterozygosity", highcharter::highchartOutput("hccdpop3") #, height = "800px")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+                         )
+                       )
               ),
 
 
@@ -4870,11 +4955,11 @@ if (FALSE){
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_distB',  fill = TRUE))
                                 ))),
-                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '25000')),
-                       column(3, textInput('name_dst', label = 'New CSV name:', value = "",
+                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '250000')),
+                       column(2, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
-                       column(1,
+                       column(2,
                               tags$table( style = "width: 100%", align = "center",
                                           tags$tr(
                                             tags$td(style = "width: 25%", align = "center",

@@ -62,7 +62,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', neighbors, ' ', crs))
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD interpol: ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
@@ -107,7 +107,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', bandwidths, ' ', type, ' ', crs))
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD interpol: ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
@@ -191,7 +191,9 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
-  cat(' CMD:\n', cmd, '\n')
+  cat('\n\tCMD CDPOP: ')
+  cat(cmd, '\n')
+
   CMDcp <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
@@ -373,8 +375,8 @@ s2res_py <- function(intif, outtif,
                        format(param6, scientific=F), ' ',
                        format(param7, scientific=F), ' ',
                        param8))
-  cat('\n\n\tCMD:')
 
+  cat('\n\tCMD Surface : ')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
 
   intCMD <- tryCatch(system( cmd_s2res ,
@@ -441,8 +443,7 @@ points_py <- function(intif, outshp,
                      format(param4, scientific=F), ' ',
                      format(param5, scientific=F), ' ',
                      param6))
-  cat('\n\n\tCMD:')
-
+  cat('\n\tCMD Points: ')
   print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -486,8 +487,8 @@ cdmat_py <- function(inshp, intif, outcsv,
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', param4, ' ', param5, ' ', param6))
 
-  cat('\n\n\tCMD:')
-  print(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
+  cat('\n\n\tCMD cdmat: ')
+  cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
@@ -533,8 +534,8 @@ lcc_py <- function(inshp, intif, outtif,
                      format(param6, scientific=F), " ",
                      format(param7, scientific=F), " ",
                      param8))
-  cat('\n\n\tCMD:')
-  print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  cat('\n\tCMD LCC: ')
+  cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -590,7 +591,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      h5file2, " ",
                      '50'
   ))
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD LCC: ')
   print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
   file.remove(c(h5file1, h5file2))
@@ -632,7 +633,7 @@ crk_py <- function(inshp, intif, outtif,
                      format(param7, scientific=F), ' ', # [7] cores
                      param8) # [8] proj
   )
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD Kernel: ')
   print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -718,7 +719,8 @@ pri_py <- function(tif, incrk, inlcc,
                       format(param7, scientific=F), " ",
                       format(param8, scientific=F)))
 
-  print(' CMD prio:')
+
+  cat('\n\tCMD prio: ')
   print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
 
 
@@ -776,7 +778,7 @@ crk_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD Compare CRK: ')
   print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE),
@@ -829,7 +831,7 @@ lcc_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
-  cat('\n\n\tCMD:')
+  cat('\n\tCMD Comp LCC: ')
   print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
