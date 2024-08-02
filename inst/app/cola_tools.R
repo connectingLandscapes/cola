@@ -87,6 +87,20 @@ delFiles <- function(...){
   ))
 }
 
+## Evals if the raster is GEO or PROJ
+isProjected <- function(rastPath){
+
+  if (require('gdalUtilities')){
+    gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+    g2 <- strsplit(x = gi, split = '\n')[[1]]
+    (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
+  } else{
+    isGEO <- terra::is.lonlat(rast(tifs[i]));
+    (isProj <- !isGEO)
+  }
+  return(isProj)
+}
+
 
 
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
@@ -703,119 +717,15 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     }
   }
 
-  #   if (require('gdalUtils')){
-  #     # print(1)
-  #
-  #     gi <- gdalUtils::gdalinfo(inraster)
-  #
-  #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-  #     nd <- length(nd0) == 1 & nd0 == -9999
-  #
-  #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-  #     options(digits = max(nchar(pixsize0)))
-  #     (pixsize <- abs(as.numeric(pixsize0 )))
-  #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-  #
-  #     if( !( nd & ps ) ) {
-  #       gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-  #                           tr = rep(max(pixsize), 2), dstnodata = -9999)
-  #       outraster0 <- outraster
-  #     } else{
-  #       outraster0 <- inraster
-  #     }
 
+  if (isProjected(rastPath)){
+    return(NA)
+  } else {
 
-  # if (require('gdalUtils')){
-  #   # print(1)
-  #
-  #   gi <- gdalUtils::gdalinfo(inraster)
-  #
-  #   nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-  #   if (length(nd0) == 0) { nd0 <- 0}
-  #   nd <- length(nd0) == 1 & nd0 == -9999
-  #
-  #   pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-  #   options(digits = max(nchar(pixsize0)))
-  #   (pixsize <- abs(as.numeric(pixsize0 )))
-  #   ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-  #
-  #   if( !( nd & ps ) ) {
-  #     gdalUtils::gdalwarp(srcfile = inraster,
-  #                         b = 1,
-  #                         dstfile = outraster,
-  #                         ot = 'Float64',
-  #                         tr = rep(max(pixsize), 2), dstnodata = -9999)
-  #     outraster0 <- outraster
-  #   } else if ( nd & !ps ){
-  #     gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-  #                         srcnodata = nd0,
-  #                         ot = 'Float64',
-  #                         tr = rep(max(pixsize), 2))
-  #     outraster0 <- outraster
-  #
-  #   } else if (!nd & ps){
-  #     gdalUtils::gdalwarp(srcfile = inraster,
-  #                         b = 1,
-  #                         dstfile = outraster,
-  #                         ot = 'Float64',
-  #                         srcnodata = nd0 , dstnodata = -9999)
-  #     outraster0 <- outraster
-  #   } else {
-  #     outraster0 <- inraster
-  #   }
-  #
-  # } else
-  # if( require('gdalUtilities') ){ print(2) }
-
-  if( require('gdalUtilities') ){
-    # options(scipen = 999)
-    # options(scipen = 9)
-
-    gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-    (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
-    if (length(nd0) == 0) { nd0 <- 0}
-    nd <- (length(nd0) == 1) & (nd0 == -9999)
-    if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
-
-    pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-    options(digits = max(nchar(pixsize0)))
-    (pixsize <- abs(as.numeric(pixsize0 )))
-    (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
-
-    if( !( nd & ps ) ) {
-      gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                              ot = 'Float64',
-                              #srcband  = 1,
-                              tr = rep(max(pixsize), 2), dstnodata = -9999)
-      outraster0 <- outraster
-    } else if( nd & !ps ){
-      gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                              #srcband  = 1,
-                              srcnodata = nd0,
-                              ot = 'Float64',
-                              tr = rep(max(pixsize), 2))
-      outraster0 <- outraster
-
-    } else if (!nd & ps ){
-      gdalUtilities::gdalwarp(srcfile = inraster,
-                              dstfile = outraster,
-                              #b = 1,
-                              ot = 'Float64',
-                              srcnodata = nd0 ,
-                              dstnodata = -9999)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-
-
-  #} else if(require('gdalUtilities')){
-    #     # print(2)
+    #   if (require('gdalUtils')){
+    #     # print(1)
     #
-    #     # options(scipen = 999)
-    #     # options(scipen = 9)
-    #
-    #     gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+    #     gi <- gdalUtils::gdalinfo(inraster)
     #
     #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
     #     nd <- length(nd0) == 1 & nd0 == -9999
@@ -826,52 +736,163 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
     #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
     #
     #     if( !( nd & ps ) ) {
-    #       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-    #                               tr = rep(max(pixsize), 2), dstnodata = -9999)
+    #       gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
+    #                           tr = rep(max(pixsize), 2), dstnodata = -9999)
     #       outraster0 <- outraster
     #     } else{
     #       outraster0 <- inraster
     #     }
-    #
-  } else if(require('raster')){
-    # print(3)
 
-    options(digits = 20)
-    rx <- raster(inraster)
-    nd0 <- rx@file@nodatavalue
-    if (length(nd0) == 0) { nd0 <- 0}
-    nd0 <- nd0 == -9999
 
-    (pixsize <- res(rx))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    if( !( nd & ps ) ) {
-      templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-      raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-  # } else if(require('raster')){
-    #     # print(3)
+    # if (require('gdalUtils')){
+    #   # print(1)
     #
-    #     options(digits = 20)
-    #     rx <- raster(inraster)
-    #     nd <- rx@file@nodatavalue == -9999
+    #   gi <- gdalUtils::gdalinfo(inraster)
     #
-    #     (pixsize <- res(rx))
-    #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    #     if( !( nd & ps ) ) {
-    #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-    #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
-    #       outraster0 <- outraster
-    #     } else{
-    #       outraster0 <- inraster
-    #     }
+    #   nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+    #   if (length(nd0) == 0) { nd0 <- 0}
+    #   nd <- length(nd0) == 1 & nd0 == -9999
+    #
+    #   pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+    #   options(digits = max(nchar(pixsize0)))
+    #   (pixsize <- abs(as.numeric(pixsize0 )))
+    #   ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+    #
+    #   if( !( nd & ps ) ) {
+    #     gdalUtils::gdalwarp(srcfile = inraster,
+    #                         b = 1,
+    #                         dstfile = outraster,
+    #                         ot = 'Float64',
+    #                         tr = rep(max(pixsize), 2), dstnodata = -9999)
+    #     outraster0 <- outraster
+    #   } else if ( nd & !ps ){
+    #     gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
+    #                         srcnodata = nd0,
+    #                         ot = 'Float64',
+    #                         tr = rep(max(pixsize), 2))
+    #     outraster0 <- outraster
+    #
+    #   } else if (!nd & ps){
+    #     gdalUtils::gdalwarp(srcfile = inraster,
+    #                         b = 1,
+    #                         dstfile = outraster,
+    #                         ot = 'Float64',
+    #                         srcnodata = nd0 , dstnodata = -9999)
+    #     outraster0 <- outraster
+    #   } else {
+    #     outraster0 <- inraster
     #   }
-  }
+    #
+    # } else
+    # if( require('gdalUtilities') ){ print(2) }
 
-  options(digits = 5)
-  return(outraster0)
+    if( require('gdalUtilities') ){
+      # options(scipen = 999)
+      # options(scipen = 9)
+
+      gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+      (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd <- (length(nd0) == 1) & (nd0 == -9999)
+      if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
+
+      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+      options(digits = max(nchar(pixsize0)))
+      (pixsize <- abs(as.numeric(pixsize0 )))
+      (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
+
+      if( !( nd & ps ) ) {
+        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+                                ot = 'Float64',
+                                #srcband  = 1,
+                                tr = rep(max(pixsize), 2), dstnodata = -9999)
+        outraster0 <- outraster
+      } else if( nd & !ps ){
+        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+                                #srcband  = 1,
+                                srcnodata = nd0,
+                                ot = 'Float64',
+                                tr = rep(max(pixsize), 2))
+        outraster0 <- outraster
+
+      } else if (!nd & ps ){
+        gdalUtilities::gdalwarp(srcfile = inraster,
+                                dstfile = outraster,
+                                #b = 1,
+                                ot = 'Float64',
+                                srcnodata = nd0 ,
+                                dstnodata = -9999)
+        outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+
+
+      #} else if(require('gdalUtilities')){
+      #     # print(2)
+      #
+      #     # options(scipen = 999)
+      #     # options(scipen = 9)
+      #
+      #     gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+      #
+      #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+      #     nd <- length(nd0) == 1 & nd0 == -9999
+      #
+      #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+      #     options(digits = max(nchar(pixsize0)))
+      #     (pixsize <- abs(as.numeric(pixsize0 )))
+      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      #
+      #     if( !( nd & ps ) ) {
+      #       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+      #                               tr = rep(max(pixsize), 2), dstnodata = -9999)
+      #       outraster0 <- outraster
+      #     } else{
+      #       outraster0 <- inraster
+      #     }
+      #
+    } else if(require('raster')){
+      # print(3)
+
+      options(digits = 20)
+      rx <- raster(inraster)
+      nd0 <- rx@file@nodatavalue
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd0 <- nd0 == -9999
+
+      (pixsize <- res(rx))
+      ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      if( !( nd & ps ) ) {
+        templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+        raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+        outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+      # } else if(require('raster')){
+      #     # print(3)
+      #
+      #     options(digits = 20)
+      #     rx <- raster(inraster)
+      #     nd <- rx@file@nodatavalue == -9999
+      #
+      #     (pixsize <- res(rx))
+      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      #     if( !( nd & ps ) ) {
+      #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+      #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+      #       outraster0 <- outraster
+      #     } else{
+      #       outraster0 <- inraster
+      #     }
+      #   }
+    }
+
+    options(digits = 5)
+    return(outraster0)
+
+  }
 
 }
 

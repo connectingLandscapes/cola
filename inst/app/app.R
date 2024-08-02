@@ -220,8 +220,11 @@ server <- function(input, output, session) {
   getRastVal <- function(clk, grp){
     #clk <- list(lat = 5.9999, lng = 116.89)
     # $lat [1] 5.9999 | $lng     [1] 116.89
-    if(!is.null(clk) & !is.null(grp) & length(grp) > 1){
+    # grp <- c("OpenStreetMap", "draw" )
+    # grp <- c("Habitat suitability", "OpenStreetMap", "draw" )
 
+    (avgrp <- length(setdiff(grp, c("OpenStreetMap", "Esri.WorldImagery", "draw")))>0)
+    if(!is.null(clk) & !is.null(grp) & avgrp ){
 
       coords <- cbind(clk$lng, clk$lat)
       pt0 <-  st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
@@ -339,7 +342,12 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$ll_map_edi_click,{
-    clk <- input$ll_map_edi_click; grp <- input$ll_map_edi_groups;
+    clk <- input$ll_map_edi_click;
+    grp <- input$ll_map_edi_groups;
+    #print('--------------------------------------------')
+    #print(' > clk '); print(clk)
+    #print(' > grp '); print(grp)
+    # grp: "OpenStreetMap" "Esri.WorldImagery" "draw" || 'none'
     text <- getRastVal(clk, grp)
     # rastVal <- getRastVal(clk, grp)
     # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
@@ -350,13 +358,11 @@ server <- function(input, output, session) {
 
   observeEvent(input$ll_map_h2r_click,{
     clk <- input$ll_map_h2r_click; grp <- input$ll_map_h2r_groups; ##
-    print(' ---- clk')
-    print(clk)
-    print(' ---- grp')
-    print(grp)
+    # print(' ---- clk')
+    # print(clk)
+    # print(' ---- grp')
+    # print(grp)
     text <- getRastVal(clk, grp)
-    # rastVal <- getRastVal(clk, grp)
-    # text<-paste(rastVal$lay, ':', round(rastVal$val, 3), '\n')
     #print(text)
     if (text != 'none') {
       leafletProxy("ll_map_h2r")  %>% clearPopups() %>% addPopups(clk$lng, clk$lat, text)
@@ -1194,7 +1200,7 @@ server <- function(input, output, session) {
                                                tempID, '_', basename(rv$crs_pts_orig)))
     pdebug(devug=devug,pre='\n\t Load uncrs PTS\n', sep='\n','rv$crs_pts_orig', 'rv$crs_pts')
     file.copy(rv$crs_pts_orig, rv$crs_pts);
-    #rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    #rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
 
     #rv <- list(crs_pts = '~/small_test_10pts.xy')
     rv$pts_uncrs <- read.csv(rv$crs_pts)
@@ -1218,7 +1224,7 @@ server <- function(input, output, session) {
     pdebug(devug=devug,sep='\n\t Load uncrs TIF', pre='','rv$crs_tif_orig', 'rv$crs_tif')
     file.copy(rv$crs_tif_orig, rv$crs_tif);
 
-    #rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    #rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
     rv$tif_uncrs <- terra::rast(rv$crs_tif)
     rv$tif_uncrs_extent <- as.polygons(terra::ext(rv$tif_uncrs))
     #plot(rv$pts_uncrs)
@@ -1677,18 +1683,25 @@ server <- function(input, output, session) {
     # rv$cdm <- 'cdmat.csv'
     (pref <- sessionIDgen(only3 = TRUE))
 
-    output$vout_cdo <- isolate(renderText({
+    output$vout_cdp <- isolate(renderText({
 
-      cdpop_ans <- cdpop_py(inputvars = NULL, agevars = NULL,
-                            cdmat = rv$cdm, xy = rv$ptsxy, tempFolder = tempFolder, prefix = pref)
-      mssg2Display
+      tStartCDP <- Sys.time()
+
+      cdpop_ans <<- cdpop_py(inputvars = NULL, agevars = NULL,
+                            cdmat = rv$cdm, xy = rv$ptsxy,
+                            tempFolder = tempFolder, prefix = pref)
+      #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
+      rv$cdpop_ans <<- cdpop_ans
+      cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
+
+
+      tStopCDP <- Sys.time() - tStartCDP
+      textElapCDP <- paste(round(as.numeric(tStopCDP), 2), attr(tStopCDP, 'units'))
+      mssg2Display <- paste0(' CDPOP simulation finished on ', textElapCDP, '. Generated ', length(cdpop_grids), ' years.')
     }))
       # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
     output$ll_map_cdp <- leaflet::renderLeaflet({
-
-      #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
-      rv$cdpop_ans <- cdpop_ans
 
       cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
       rv$cdpop_out <- read.csv(cdpop_out)
@@ -1697,10 +1710,46 @@ server <- function(input, output, session) {
       cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
                            function(x){ as.numeric(gsub('\\|.+', '', x))})
 
-      cdpop_grids <- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
       cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
       cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
       cdpop_grids_Num <- sort(cdpop_grids_Num)
+
+      output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
+                        type = "line", dashStyle = "DashDot", name = 'Population'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Population')) %>%
+          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+
+      })
+
+      output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                        type = "line", dashStyle = "DashDot", name = 'Alleles'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Alleles')) %>%
+          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+      })
+
+      output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+        highchart() %>% hc_exporting(enabled = TRUE) %>%
+          hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                        type = "line", dashStyle = "DashDot", name = 'He'
+                        #, hcaes(x = 'Year', y = 'Population')
+          ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                              type = "line", dashStyle = "DashDot", name = 'Ho'
+                              #, hcaes(x = 'Year', y = 'Population')
+          ) %>%
+          hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+      }) #
 
       updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
                            choices = cdpop_grids_Num,
@@ -1739,43 +1788,6 @@ server <- function(input, output, session) {
           options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
         leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
     })
-
-    output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
-                      type = "line", dashStyle = "DashDot", name = 'Population'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Population')) %>%
-        hc_xAxis(title = list(text = 'Year')) %>%
-        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-
-    })
-
-    output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                      type = "line", dashStyle = "DashDot", name = 'Alleles'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Alleles')) %>%
-        hc_xAxis(title = list(text = 'Year')) %>%
-        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-    })
-
-    output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-      highchart() %>% hc_exporting(enabled = TRUE) %>%
-        hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                      type = "line", dashStyle = "DashDot", name = 'He'
-                      #, hcaes(x = 'Year', y = 'Population')
-        ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                            type = "line", dashStyle = "DashDot", name = 'Ho'
-                            #, hcaes(x = 'Year', y = 'Population')
-        ) %>%
-        hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-        hc_xAxis(title = list(text = 'Year')) %>%
-        hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-    }) #
 
   }))
 
@@ -1848,7 +1860,7 @@ server <- function(input, output, session) {
       #
       #
       # file.copy(input$in_edi_tif$datapath, tifpath);
-      # rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data')
+      # rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
       # updateVTEXT(rv$log)
       #
       # newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
@@ -1863,10 +1875,6 @@ server <- function(input, output, session) {
 
       file.copy(input$in_sur_tif$datapath, tifpath);
       if(file.exists(tifpath)){file.remove(input$in_sur_tif$datapath)}
-      isProj <- !terra::is.lonlat(rast(tifpath));
-      if (isProj){
-
-      }
 
       # try(file.remove(input$in_sur_tif$datapath))
 
@@ -1876,7 +1884,7 @@ server <- function(input, output, session) {
              "paste0(tempFolder, '/in_surface_', inSurSessID, '.tif')"
       )
 
-      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data')
+      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
       updateVTEXT(rv$log)
 
       newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
@@ -2090,7 +2098,7 @@ server <- function(input, output, session) {
       #try(file.remove(input$in_sur_tif$datapath))
       #if(devug){ print(' ----- input$in_sur_tif'); print(input$in_sur_tif); print(tifpath); file.exists(tifpath)}
 
-      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data')
+      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
       updateVTEXT(rv$log)
 
       newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
@@ -2461,7 +2469,7 @@ server <- function(input, output, session) {
     # try(file.remove(input$in_points_tif$datapath))
     # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = =
 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
 
     rv$tifpathptsfix <- paste0(tempFolder, '/in_points_fixed_', rv$inPointsSessID, '.tif')
     pdebug(devug=devug,sep='\n',pre='-','rv$tiforig')
@@ -2533,7 +2541,7 @@ server <- function(input, output, session) {
 
     rv$tifpathpts <- paste0(tempFolder, '/in_pointshs_', rv$inPointsSessID, '.tif')
     file.copy(input$in_points_hs$datapath, rv$tifpathpts);
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
 
     rv$tifpathptsfix <- paste0(tempFolder, '/in_pointshs_fixed_', rv$inPointsSessID, '.tif')
     newtifPath_pts <- fitRaster2cola(inrasterpath = rv$tifpathpts, outrasterpath =  rv$tifpathptsfix)
@@ -2703,7 +2711,7 @@ server <- function(input, output, session) {
 
     # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = =
 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
 
     rv$tifpathdistfix <- paste0(tempFolder, '/in_dist_fixed_', rv$inDistSessID, '.tif')
     newtifPath_dist <- fitRaster2cola(inrasterpath = rv$tiforig, outrasterpath = rv$tifpathdistfix)
@@ -2894,7 +2902,7 @@ server <- function(input, output, session) {
 
     # try(file.remove(input$in_lcc_tif$datapath))
 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
     tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
     pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
 
@@ -3184,7 +3192,7 @@ server <- function(input, output, session) {
     file.copy(input$in_crk_tif$datapath,rv$tiforig);
     # try(file.remove(input$in_crk_tif$datapath))
 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared and -9999 as no data');updateVTEXT(rv$log) # _______
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
 
     rv$tifpathcrkfix <- paste0(tempFolder, '/in_crk_fixed_', rv$incrkSessID, '.tif')
     newtifPath_crk <- fitRaster2cola(inrasterpath = rv$tiforig, outrasterpath = rv$tifpathcrkfix)
@@ -4661,7 +4669,7 @@ if (FALSE){
                 column(width = 2,
                        actionButton("run_cdpop", 'Run CDPOP')),
                 column(width = 4,
-                       selectizeInput(inputId = 'cdpop_ans_yy', 'Years', choices = c(''))),
+                       selectizeInput(inputId = 'cdpop_ans_yy', 'Year to plot:', choices = c(''), )),
                 column(width = 2,
                        actionButton("mapcdpop", "Load year map"),
                        downloadButton('cdpDwn', 'Download'))
@@ -4833,9 +4841,10 @@ if (FALSE){
               leaflet::leafletOutput("ll_map_h2r", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1")
             ),
+            br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Parameters info", status = "primary", collapsed = TRUE
+              title = "Habitat 2 resistance parameters info", status = "primary", collapsed = TRUE
               ,
 
               #fluidRow(
@@ -5026,7 +5035,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Parameters info", status = "primary", collapsed = TRUE
+              title = "Kernels parameters info", status = "primary", collapsed = TRUE
               ,
 
               #fluidRow(
@@ -5066,7 +5075,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Parameters info", status = "primary", collapsed = TRUE
+              title = "Corridors parameters info", status = "primary", collapsed = TRUE
               ,
 
               #fluidRow(
@@ -5329,4 +5338,5 @@ if (FALSE){
   )
 }
 
+## Run the APP
 shinyApp(ui, server)
