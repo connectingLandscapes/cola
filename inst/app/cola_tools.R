@@ -88,10 +88,14 @@ delFiles <- function(...){
 }
 
 ## Evals if the raster is GEO or PROJ
-isProjected <- function(rastPath){
+isProjected <- function(rastPath, details = FALSE){
 
   if (require('gdalUtilities')){
     gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+    if (details){
+      print(gi)
+    }
+
     g2 <- strsplit(x = gi, split = '\n')[[1]]
     (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
   } else{
@@ -698,6 +702,9 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   # setwd('/home/shiny')
   # inrasterpath = 'orig_tifs/size6.tif'
   # outrasterpath = 'size6.tif'
+  # inrasterpath = '/data/tempR/colaELU2024080412561105//in_points_JLT2024080412564005.tif'
+  # outrasterpath = '/data/tempR/colaELU2024080412561105//in_points_fixed_JLT2024080412564005.tif'
+
 
   inraster <- inrasterpath
   outraster <- outrasterpath
@@ -718,7 +725,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   }
 
 
-  if (isProjected(rastPath)){
+  if (!isProjected(inraster)){
     return(NA)
   } else {
 
