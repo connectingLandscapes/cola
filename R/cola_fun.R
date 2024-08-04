@@ -444,7 +444,7 @@ points_py <- function(intif, outshp,
                      format(param5, scientific=F), ' ',
                      param6))
   cat('\n\tCMD Points: ')
-  print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+  cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
@@ -577,8 +577,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
   # [11] Max GB ram allowed
 
   tempH5 <- sessionIDgen()
-  h5file1 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_A.h5')
-  h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
+  h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
 
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
@@ -594,9 +594,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
   cat('\n\tCMD LCC: ')
   print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
-  file.remove(c(h5file1, h5file2))
-
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                log =  intCMD) )
 }

@@ -2,6 +2,8 @@
 ### Ivan Gonzalez - ig299@nau.edu | gonzalezgarzonivan@gmail.com
 ### Patrick Jantz - Patrick.Jantz@nau.edu | jantzenator@gmail.com
 
+(cat('\n\n >>>> getwd: ', getwd(), ''))
+
 {
   library(cola)
 
@@ -207,7 +209,7 @@
   tempFolder <<- paste0(dataFolder, sessionID, '/')
   dir.create(tempFolder)
 
-  (cat('\n\n >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
+  (cat('\n>>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
 }
@@ -4014,6 +4016,7 @@ server <- function(input, output, session) {
           print(paste0('Making temp zip file: ', zip_file))
 
           com_files <- list.files(path = rv$cdpFolder,
+                                  recursive = TRUE,
                                   all.files = TRUE, include.dirs = TRUE,
                                   #pattern = "out_simpts_",
                                   full.names = TRUE)
@@ -4687,7 +4690,7 @@ if (FALSE){
                 column(width = 6,
                        tabsetPanel(
                          type = "pills",
-                         tabPanel( "Population", highcharter::highchartOutput("hccdpop1") #, height = "800px")
+                         tabPanel( "Population", highcharter::highchartOutput("hccdpop1", height = "800px")
                                    %>%shinycssloaders::withSpinner(color="#0dc5c1")),
                          tabPanel( "Alleles", highcharter::highchartOutput("hccdpop2") #, height = "800px")
                                    %>%shinycssloaders::withSpinner(color="#0dc5c1")),
@@ -4697,6 +4700,7 @@ if (FALSE){
                        )
               ),
 
+              br(),
 
               fillRow(
                 #column(width = 12,
@@ -4859,7 +4863,7 @@ if (FALSE){
               column(width = 4, h5('Hallo')),
               column(width = 4, h5('Hello'))
               #)
-            )
+            ) # close box
           ),
           #### UI EDIT ----
 
