@@ -206,10 +206,10 @@
 ## Init B
 {
   (sessionID <<- sessionIDgen(folder = TRUE))
-  tempFolder <<- paste0(dataFolder, sessionID, '/')
+  tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
   dir.create(tempFolder)
 
-  (cat('\n>>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
+  (cat('\n >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
 }
@@ -1157,6 +1157,7 @@ server <- function(input, output, session) {
   params_txt <- updateParamsTEXT(params_txt = params_txt, start = TRUE)
 
   output$hccdpop1 <- output$hccdpop2 <- output$hccdpop3 <- highcharter::renderHighchart({ highchart() })
+  output$hccomp1 <- output$hccomp2 <- highcharter::renderHighchart({ highchart() })
 
 
   # output$ll_map_lcc <- output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
@@ -1705,12 +1706,18 @@ server <- function(input, output, session) {
 
     output$ll_map_cdp <- leaflet::renderLeaflet({
 
+      # rv <- list()
+     # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
       cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
       rv$cdpop_out <- read.csv(cdpop_out)
       rv$cdpFolder <- dirname(dirname(cdpop_out))
 
-      cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population', 'Alleles', 'He', 'Ho')],
-                           function(x){ as.numeric(gsub('\\|.+', '', x))})
+      cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+                           function(x){
+                             #x = rv$cdpop_out$Population_Age1.
+                             as.numeric(gsub('\\|.+|\\|', '', x))
+                             }
+                           )
 
       cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
       cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
@@ -1718,7 +1725,7 @@ server <- function(input, output, session) {
 
       output$hccdpop1 <- highcharter::renderHighchart({ # cpu
         highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'Population')],
+          hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
                         type = "line", dashStyle = "DashDot", name = 'Population'
                         #, hcaes(x = 'Year', y = 'Population')
           ) %>%
@@ -4642,117 +4649,6 @@ if (FALSE){
               )
             )),
 
-          #### UI CDPOP  ----
-
-          shinydashboard::tabItem(
-            'tab_cdpop',
-            fluidPage(
-              #includeMarkdown("md_intro.md")
-              fluidRow(
-                column(3,
-                       tags$td(style = "width: 25%", align = "top",
-                               h3(' Population dynamics',
-                                  style="text-align: center;vertical-align: top")
-                       ) # , h4(' Run CDPOP module. ')
-                ),
-                column(9, verbatimTextOutput("vout_cdp") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
-                       tags$head(tags$style("#vout_cdp{overflow-y:scroll; max-height: 70px}")))
-              ),
-
-              fluidRow(
-                column(width = 4,
-                       tags$table(
-                         style = "width: 100%", align = "left",
-                         tags$tr(
-                           tags$td(style = "width: 25%", align = "center",
-                                   htmlOutput(outputId = 'out_par_cdpoA',  fill = TRUE)),
-                           tags$td(style = "width: 25%", align = "center",
-                                   htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
-                         ))),
-                column(width = 2,
-                       actionButton("run_cdpop", 'Run CDPOP')),
-                column(width = 4,
-                       selectizeInput(inputId = 'cdpop_ans_yy', 'Year to plot:', choices = c(''), )),
-                column(width = 2,
-                       actionButton("mapcdpop", "Load year map"),
-                       downloadButton('cdpDwn', 'Download'))
-              ),
-
-              fluidRow(
-                # tableOutput("cdpop_files"),
-                # shinydashboard::valueBoxOutput("cdpop_box2"),
-                # actionButton("cdpop_check2", "Check files"),
-                # uiOutput("out_cdpop_files"),
-                DT::dataTableOutput(outputId =  "out_cdpop_filestable"),
-                column(width = 6,
-                  leaflet::leafletOutput("ll_map_cdp") %>% shinycssloaders::withSpinner(color="#0dc5c1")
-                       ),
-                column(width = 6,
-                       tabsetPanel(
-                         type = "pills",
-                         tabPanel( "Population", highcharter::highchartOutput("hccdpop1", height = "800px")
-                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
-                         tabPanel( "Alleles", highcharter::highchartOutput("hccdpop2") #, height = "800px")
-                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
-                         tabPanel( "Heterozygosity", highcharter::highchartOutput("hccdpop3") #, height = "800px")
-                                   %>%shinycssloaders::withSpinner(color="#0dc5c1"))
-                         )
-                       )
-              ),
-
-              br(),
-
-              fillRow(
-                #column(width = 12,
-                shinydashboard::box(
-
-                  width = 12, solidHeader = T, collapsible = T,
-                  title = "Advanced parameters", status = "primary", collapsed = TRUE
-                  ,
-
-                  fluidRow(
-                    column(width = 4,
-                           #h1('Hola'),
-                           fileInput("in_cdpop_xy", "XY CSV File", accept = ".csv")),
-                    column(width = 4,
-                           #h1('Hallo'),
-                           fileInput("in_cdpop_age", "Ages CSV File", accept = ".csv")),
-                    column(width = 4,
-                           #h1('Hey'),
-                           fileInput("in_cdpop_cd", "CDmatrix CSV File", accept = ".csv"))
-                  ),
-
-                  fluidRow(
-                    column(
-                      width = 3,
-                      fileInput("in_cdpop_par", "Choose CSV File", accept = ".csv"),
-                      checkboxInput("header", "Header", TRUE),
-                    ),
-                    column(
-                      width = 5,
-                      textInput("textbox", label="Input the value to replace:"),
-                      actionButton("replacevalues", label = 'Replace values'),
-                      #uiOutput("selectUI"),
-                      actionButton("deleteRows", "Delete Rows"),
-                      actionButton("addcolumn", "Add Column"),
-                      actionButton("removecolumn", "Remove last column"),
-                      actionButton("Splitcolumn", "SplitColumn"),
-                      actionButton("Undo", 'Undo')
-                    ),
-                    column( width = 4,
-                            actionButton("cdpop_check1", "Check files"),
-                            shinydashboard::valueBoxOutput("cdpop_box1")
-                    ),
-                  ),
-                  fluidRow(
-                    column(width = 12,
-                           DT::dataTableOutput(outputId =  "table1"),
-                           plotOutput("cdpop_params"))
-                  )
-                )
-              )
-            )
-          ),
 
 
           #### UI HS 2 SR  ----
@@ -4927,7 +4823,27 @@ if (FALSE){
 
             fluidPage(
               leaflet::leafletOutput("ll_map_edi", height = "600px") %>%
-                shinycssloaders::withSpinner(color="#0dc5c1"))
+                shinycssloaders::withSpinner(color="#0dc5c1")),
+
+            br(),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Editing resistance parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
           ),
 
           #### UI POINTS ----
@@ -4954,7 +4870,27 @@ if (FALSE){
               column(width = 1, br()),
               column(1, downloadButton('ptsDwn', 'Download'))
             ),
-            leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+
+            br(),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Create points parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
           ),
 
           ##> vout_points; ll_map_points; points_py; in_points_3 -- 5
@@ -5004,10 +4940,140 @@ if (FALSE){
               #          #)
               #        ))
             ),
-            leaflet::leafletOutput("ll_map_dist", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-          ),
+            leaflet::leafletOutput("ll_map_dist", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            br(),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Distance matrix 2 resistance parameters info", status = "primary", collapsed = TRUE
+              ,
 
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
+          ),
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
+
+          #### UI CDPOP  ----
+
+          shinydashboard::tabItem(
+            'tab_cdpop',
+            fluidPage(
+              #includeMarkdown("md_intro.md")
+              fluidRow(
+                column(3,
+                       tags$td(style = "width: 25%", align = "top",
+                               h3(' Population dynamics',
+                                  style="text-align: center;vertical-align: top")
+                       ) # , h4(' Run CDPOP module. ')
+                ),
+                column(9, verbatimTextOutput("vout_cdp") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                       tags$head(tags$style("#vout_cdp{overflow-y:scroll; max-height: 70px}")))
+              ),
+
+              fluidRow(
+                column(width = 4,
+                       tags$table(
+                         style = "width: 100%", align = "left",
+                         tags$tr(
+                           tags$td(style = "width: 25%", align = "center",
+                                   htmlOutput(outputId = 'out_par_cdpoA',  fill = TRUE)),
+                           tags$td(style = "width: 25%", align = "center",
+                                   htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
+                         ))),
+                column(width = 2,
+                       actionButton("run_cdpop", 'Run CDPOP')),
+                column(width = 4,
+                       selectizeInput(inputId = 'cdpop_ans_yy', 'Year to plot:', choices = c(''), )),
+                column(width = 2,
+                       actionButton("mapcdpop", "Load year map"),
+                       downloadButton('cdpDwn', 'Download'))
+              ),
+
+              fluidRow(
+                # tableOutput("cdpop_files"),
+                # shinydashboard::valueBoxOutput("cdpop_box2"),
+                # actionButton("cdpop_check2", "Check files"),
+                # uiOutput("out_cdpop_files"),
+                DT::dataTableOutput(outputId =  "out_cdpop_filestable"),
+                column(width = 6,
+                  leaflet::leafletOutput("ll_map_cdp", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")
+                       ),
+                column(width = 6,
+                       tabsetPanel(
+                         type = "pills",
+                         tabPanel( "Population", highcharter::highchartOutput("hccdpop1")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+                         tabPanel( "Alleles", highcharter::highchartOutput("hccdpop2") #, height = "800px")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+                         tabPanel( "Heterozygosity", highcharter::highchartOutput("hccdpop3") #, height = "800px")
+                                   %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+                         )
+                       )
+              ),
+
+              br(),
+
+              fillRow(
+                #column(width = 12,
+                shinydashboard::box(
+
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Advanced parameters", status = "primary", collapsed = TRUE
+                  ,
+
+                  fluidRow(
+                    column(width = 4,
+                           #h1('Hola'),
+                           fileInput("in_cdpop_xy", "XY CSV File", accept = ".csv")),
+                    column(width = 4,
+                           #h1('Hallo'),
+                           fileInput("in_cdpop_age", "Ages CSV File", accept = ".csv")),
+                    column(width = 4,
+                           #h1('Hey'),
+                           fileInput("in_cdpop_cd", "CDmatrix CSV File", accept = ".csv"))
+                  ),
+
+                  fluidRow(
+                    column(
+                      width = 3,
+                      fileInput("in_cdpop_par", "Choose CSV File", accept = ".csv"),
+                      checkboxInput("header", "Header", TRUE),
+                    ),
+                    column(
+                      width = 5,
+                      textInput("textbox", label="Input the value to replace:"),
+                      actionButton("replacevalues", label = 'Replace values'),
+                      #uiOutput("selectUI"),
+                      actionButton("deleteRows", "Delete Rows"),
+                      actionButton("addcolumn", "Add Column"),
+                      actionButton("removecolumn", "Remove last column"),
+                      actionButton("Splitcolumn", "SplitColumn"),
+                      actionButton("Undo", 'Undo')
+                    ),
+                    column( width = 4,
+                            actionButton("cdpop_check1", "Check files"),
+                            shinydashboard::valueBoxOutput("cdpop_box1")
+                    ),
+                  ),
+                  fluidRow(
+                    column(width = 12,
+                           DT::dataTableOutput(outputId =  "table1"),
+                           plotOutput("cdpop_params"))
+                  )
+                )
+              )
+            )
+          ),
 
           #### UI CRK ----
           shinydashboard::tabItem(
@@ -5126,7 +5192,26 @@ if (FALSE){
                      downloadButton('priDwn', 'Download')),
             ),
 
-            leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            br(),
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Priorization parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
           ),
 
           #### UI PDF ----
@@ -5281,19 +5366,56 @@ if (FALSE){
               #   column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
               #   column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
               # ),
-              leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
-            ),
-            br(),
-            fluidRow(
-              column(3, imageOutput("png1")),
-              column(3, imageOutput("png2")),
-              column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
-              ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
-              column(3, highcharter::highchartOutput("hccomp2"
-                                                     #, height = "800px"
-              ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
-            )
+              column(6, leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+              column(6,
+
+                     tabsetPanel(
+                       type = "pills",
+                       tabPanel( "Abosolute", highcharter::highchartOutput("hccomp1")  #, height = "800px")
+                                 %>% shinycssloaders::withSpinner(color="#0dc5c1")),
+                       tabPanel( "Relative", highcharter::highchartOutput("hccomp2") %>%
+                                   shinycssloaders::withSpinner(color="#0dc5c1")),
+                       tabPanel( "Abs. PNG", imageOutput("png1")),
+                       tabPanel( "Rel. PNG", imageOutput("png2"))
+                     )
+              )
+
           ),
+
+          # , br(),
+          #   fluidRow(
+          #     column(3, imageOutput("png1")),
+          #     column(3, imageOutput("png2")),
+          #     column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
+          #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+          #     column(3, highcharter::highchartOutput("hccomp2"
+          #                                            #, height = "800px"
+          #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+          #   )
+          # )
+
+
+          shinydashboard::box(
+            width = 12, solidHeader = T, collapsible = T,
+            title = "Comparisson info", status = "primary", collapsed = TRUE
+            ,
+
+            #fluidRow(
+            column(width = 4,
+                   h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+            column(width = 4, h5('Hallo')),
+            column(width = 4, h5('Hello'))
+            #)
+          ) # close box
+
+          )
+        ,
 
           #### UI COORDS ----
           shinydashboard::tabItem(
@@ -5328,10 +5450,27 @@ if (FALSE){
             ),
             # https://shiny.posit.co/r/articles/build/selectize/
             leaflet::leafletOutput("ll_coord", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
+            ,
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Coordinates parameters info", status = "primary", collapsed = TRUE
+              ,
+
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
 
           )
-
-
           #shinydashboard::tabItem('tab_example',
           #         fluidPage( )
           # ),
