@@ -2821,7 +2821,7 @@ server <- function(input, output, session) {
           shp$sortID <- 1:nrow(shp)
           rv$pts_sp <- shp
 
-          make(LL)
+          makeLL()
           # llmap <<- rv$llmap  %>% removeMarker(layerId = 'Points') %>%
           #   addMarkers(data = rv$pts_sp, label = ~ID, group = 'Points')
           # rv$llmap <<- llmap
