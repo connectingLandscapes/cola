@@ -64,6 +64,8 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        method, ' ', neighbors, ' ', crs))
   cat('\n\tCMD interpol: ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+  cat('\n')
+
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
@@ -109,6 +111,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        method, ' ', bandwidths, ' ', type, ' ', crs))
   cat('\n\tCMD interpol: ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+  cat('\n')
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
@@ -378,6 +381,7 @@ s2res_py <- function(intif, outtif,
 
   cat('\n\tCMD Surface : ')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
+  cat('\n')
 
   intCMD <- tryCatch(system( cmd_s2res ,
                              intern = TRUE, ignore.stdout = TRUE),
@@ -444,7 +448,8 @@ points_py <- function(intif, outshp,
                      format(param5, scientific=F), ' ',
                      param6))
   cat('\n\tCMD Points: ')
-  print(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+  cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
@@ -489,6 +494,7 @@ cdmat_py <- function(inshp, intif, outcsv,
 
   cat('\n\n\tCMD cdmat: ')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
@@ -536,6 +542,7 @@ lcc_py <- function(inshp, intif, outtif,
                      param8))
   cat('\n\tCMD LCC: ')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  cat('\n')
 
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -577,8 +584,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
   # [11] Max GB ram allowed
 
   tempH5 <- sessionIDgen()
-  h5file1 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_A.h5')
-  h5file2 <- paste0(rootPath, '/', tempFolder, '/', tempH5, '_B.h5')
+  h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
 
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
@@ -593,10 +600,10 @@ lccHeavy_py <- function(inshp, intif, outtif,
   ))
   cat('\n\tCMD LCC: ')
   print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
-
-  file.remove(c(h5file1, h5file2))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                log =  intCMD) )
 }
@@ -635,6 +642,7 @@ crk_py <- function(inshp, intif, outtif,
   )
   cat('\n\tCMD Kernel: ')
   print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
@@ -722,6 +730,7 @@ pri_py <- function(tif, incrk, inlcc,
 
   cat('\n\tCMD prio: ')
   print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
+  cat('\n')
 
 
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -780,6 +789,7 @@ crk_compare_py <- function(intif, intifs,
   )
   cat('\n\tCMD Compare CRK: ')
   print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE),
                      error = function(e) e$message)
@@ -833,6 +843,7 @@ lcc_compare_py <- function(intif, intifs,
   )
   cat('\n\tCMD Comp LCC: ')
   print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
+  cat('\n')
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
