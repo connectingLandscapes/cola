@@ -330,6 +330,7 @@ def main() -> None:
         # Get max corridor strength value
         tCorrMax = np.max(tCorr)
         tCorrMean = np.mean(tCorr)
+        tCorrSum = np.sum(tCorr)
         
         # Convert corridor to 0-1
         tCorr = np.where(tCorr > 0, 1, 0)
@@ -361,16 +362,16 @@ def main() -> None:
         # Use index values to retrieve patch attributes
         # mean corridor xcoord, mean corridor ycoord, patch id 1, patch id 2, edge id 1, edge id 2, area patch 1, area patch 2, max patch 1, max patch 2, mean patch 1, mean patch 2
         # Add to list
-        attList.append(np.array([centx,centy,pp[2],pp[3],pp[0],pp[1],pAreas[pl1],pAreas[pl2],pMax[pl1],pMax[pl2],pMean[pl1],pMean[pl2],ppSum[pl1],ppSum[pl2],mcd,meancd,tCorrMax,tCorrMean]))
+        attList.append(np.array([centx,centy,pp[2],pp[3],pp[0],pp[1],pAreas[pl1],pAreas[pl2],pMax[pl1],pMax[pl2],pMean[pl1],pMean[pl2],ppSum[pl1],ppSum[pl2],mcd,meancd,tCorrMax,tCorrMean,tCorrSum]))
     
     # Combine attributes into single array
     attArray = np.vstack(attList)
     # Shapefile column names
-    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','psum1','psum2','mincost','meancost','maxstrength','meanstrength']
+    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','psum1','psum2','mincost','meancost','maxstrength','meanstrength','sumstrength']
     # Convert to dataframe
     cAttDf = pd.DataFrame(attArray, columns=column_names)
     # Add corridor quality metric
-    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.maxstrength * 1/cAttDf.mincost
+    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.sumstrength * 1/cAttDf.mincost
     # Add patch quality metric
     cAttDf['pp1'] = cAttDf.psum1 * cAttDf.psum2
  
