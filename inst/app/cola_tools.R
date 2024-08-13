@@ -3,13 +3,10 @@
 # options(scipen = 999)
 # options(scipen = 9)
 
-## Errors -- only for shiny server
-{
+## Errors -- only works for shiny server
+if (TRUE){
 
   logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
-  path_error <- '/var/log/shiny-server/'
-
-
   allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
 
   if( length(allLogs) != 0 ){
@@ -80,6 +77,7 @@ cleanMemory <- function(logFilePath){
   write.csv(x = logDF, logFilePath, row.names = FALSE)
 }
 
+
 delFiles <- function(...){
   invisible(suppressWarnings(
     tryCatch(file.remove(c(...)),
@@ -89,9 +87,13 @@ delFiles <- function(...){
 
 ## Evals if the raster is GEO or PROJ
 isProjected <- function(rastPath, details = FALSE){
+  #rastPath = 'C:/temp/cola/colaRKW2024081218272505//in_points_CHL2024081218292405.tif'
+  cat(' +++ Evaluaring if is proj: ', rastPath, '\n')
 
   if (require('gdalUtilities')){
     gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+    #gi <- capture.output(gdalUtilities::gdalinfo(rastPath))
+
     if (details){
       print(gi)
     }
@@ -99,7 +101,7 @@ isProjected <- function(rastPath, details = FALSE){
     g2 <- strsplit(x = gi, split = '\n')[[1]]
     (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
   } else{
-    isGEO <- terra::is.lonlat(rast(tifs[i]));
+    isGEO <- terra::is.lonlat(rastPath);
     (isProj <- !isGEO)
   }
   return(isProj)
@@ -566,37 +568,6 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
-
-
-
-
-
-## Clean files
-cleanMemory <- function(logFilePath){
-  dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
-
-  if(file.exists(logFilePath)){
-    logDF <- tryCatch(read.csv(logFilePath), error = function(e) NULL)
-  } else {
-    logDF <- NULL
-  }
-
-  logDF <- rbind(logDF, dfm)
-
-  openFolders <- dir.exists(logDF$Rtmp)
-  sapply(logDF$tempFolder[!openFolders], unlink, recursive = TRUE)
-  logDF <- logDF[dir.exists(logDF$Rtmp), ]
-  write.csv(x = logDF, logFilePath, row.names = FALSE)
-}
-
-delFiles <- function(...){
-  invisible(suppressWarnings(
-    tryCatch(file.remove(c(...)),
-             error = function(e) NULL)
-  ))
-}
-
-
 ### Only pix size
 fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
@@ -704,7 +675,6 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
   # outrasterpath = 'size6.tif'
   # inrasterpath = '/data/tempR/colaELU2024080412561105//in_points_JLT2024080412564005.tif'
   # outrasterpath = '/data/tempR/colaELU2024080412561105//in_points_fixed_JLT2024080412564005.tif'
-
 
   inraster <- inrasterpath
   outraster <- outrasterpath
