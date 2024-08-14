@@ -1899,7 +1899,6 @@ server <- function(input, output, session) {
 
       newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
       newtifPath <<- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
-      isProj <- !terra::is.lonlat(rast(tifs[i]))
 
 
       if(is.na(newtifPath)){
@@ -1934,8 +1933,7 @@ server <- function(input, output, session) {
                                                      domain = rng_newtif, na.color = "transparent")
 
         makeLL()
-      }
-
+        }
     })
   })
 
