@@ -292,10 +292,10 @@ input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
 out_shp <- 'outputPoints.shp'
 
 simulated_points <- points_py(intif = input_tif, outshp = out_shp,
-   param3 = 0 param4 =  100 param5 = 50)
+   param3 = 0, param4 =  100, param5 = 50)
   
 if(file.exists(out_tif)){
-  plot(sf::read_sf(simulated_points))  
+  plot(sf::read_sf(simulated_points$file))  
 }
 ```
 
