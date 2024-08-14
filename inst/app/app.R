@@ -2,7 +2,7 @@
 ### Ivan Gonzalez - ig299@nau.edu | gonzalezgarzonivan@gmail.com
 ### Patrick Jantz - Patrick.Jantz@nau.edu | jantzenator@gmail.com
 
-(cat('\n\n >>>> getwd: ', getwd(), ''))
+(cat('\n\n >>>> getwd(): ', getwd(), '\n'))
 
 {
   library(cola)
@@ -92,6 +92,7 @@
 
   #(rootPath <- find.package('cola'))
   (rootPath <- system.file(package = 'cola'))
+  path_error <<- '/var/log/shiny-server/'
 
 
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
@@ -209,7 +210,7 @@
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
   dir.create(tempFolder)
 
-  (cat('\n >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
+  (cat(' >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
 }
@@ -1898,7 +1899,6 @@ server <- function(input, output, session) {
 
       newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
       newtifPath <<- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
-      isProj <- !terra::is.lonlat(rast(tifs[i]))
 
 
       if(is.na(newtifPath)){
@@ -1933,8 +1933,7 @@ server <- function(input, output, session) {
                                                      domain = rng_newtif, na.color = "transparent")
 
         makeLL()
-      }
-
+        }
     })
   })
 

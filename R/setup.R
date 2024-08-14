@@ -125,7 +125,7 @@ diagnose_cola <- function(envName = 'cola',
 
               if( file.exists(pyCola2check) & dir.exists(pathCola) ){
 
-                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation")
+                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n")
 
               } else {
                 cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
@@ -208,13 +208,14 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @param nSteps The number of steps for printing log in console
 #' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
 #' @param yml Use YML file to build the conda environment? Default TRUE
+#' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
 #' setup_cola()
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
+setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE, onlyIndividual = TRUE,
                        libs2Install =  c('gdal', 'h5py', 'numexpr', 'rasterio',
                                          'pytables', 'pandas',  'cython', 'numba' ,
                                          'networkit', 'fiona', 'shapely', 'geopandas',
@@ -453,26 +454,28 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
   ## Step4. Install packages ----------------------------------------------
   cat (sep = '', '  +Step 4/', nSteps, ' Installing & checking conda modules\n')
 
-  # Try 3 times to install all the packages with yml file
-  for(i in 1:3){
+  if (!onlyIndividual){
 
-    ## list packages
-    (avLibs <- reticulate::py_list_packages(envname = envName))
+    # Try 3 times to install all the packages with yml file
+    for(i in 1:3){
 
-    ## Install conda packages
-    (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
+      ## list packages
+      (avLibs <- reticulate::py_list_packages(envname = envName))
 
-    if(length(lib2inst) != 0){
-      logPkg <- tryCatch(
-        reticulate::py_install(
-          envname = envName, # python_version = pyCola,
-          channel = "conda-forge", packages = lib2inst),
-        error = function (e) e)
-    } else {
-      break()
+      ## Install conda packages
+      (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
+
+      if(length(lib2inst) != 0){
+        logPkg <- tryCatch(
+          reticulate::py_install(
+            envname = envName, # python_version = pyCola,
+            channel = "conda-forge", packages = lib2inst),
+          error = function (e) e)
+      } else {
+        break()
+      }
     }
   }
-
 
   ## Try individually
 
@@ -775,7 +778,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = TRUE,
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
 
 
-      cat (sep = '', '    === Ready to connect landscapes! ===\n\t Please restart R to update the new settings')
+      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n\tPlease restart R to update the new settings\n')
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")

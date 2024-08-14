@@ -231,7 +231,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-shp2xy <- function(shapefile, outxy, tempDir){
+shp2xy <- function(shapefile, outxy, tempDir,
+                   mortrast = NULL, survrast = NULL){
 
   # The n-(x,y) grid location values. This is a comma delimited file with 5 column headings:
   # (Subpopulation)- a unique identifier for  each individual corresponding to a unique subpopulation
@@ -248,6 +249,13 @@ shp2xy <- function(shapefile, outxy, tempDir){
   # outxy = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.csv'
   # df <- foreign::read.dbf(gsub('\\..+', '.dbf', shapefile))
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
+  # shapefile<- system.file(package = 'cola', 'sampledata/xy.csv')
+
+  # shapefile<- 'C:/temp/cola/colaSFY2024081405054705//out_simpts_XMT2024081405055805.shp'
+  # survrast <- 'C:/temp/cola/colaSFY2024081405054705//in_surface_fixed_XMT2024081405055805.tif'
+  # outxy <- 'C:/temp/cola/colaSFY2024081405054705//outxy.xy'
+  # tempDir = "C:/temp/cola/colaSFY2024081405054705/"
+
   xy <- terra::vect(shapefile)
 
   xy$ID <- 1:nrow(xy)
@@ -266,6 +274,33 @@ shp2xy <- function(shapefile, outxy, tempDir){
   xynew$Fitness_AA <- 50
   xynew$Fitness_aa <- 100
   xynew$Fitness_Aa <- 16
+
+
+  if ( !is.null(mortrast) | !is.null(survrast) ){
+    cat('  Exctracing raster values for mortality')
+    vals2add <- xy$Subpop_mortperc
+    if (!is.null(mortrast)){
+      if(file.exists(mortrast)){
+        rx <- terra::rast(mortrast)
+        exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
+        vect2add <- as.numeric(exct[, 2])
+        vect2add <- vect2add/max(vect2add)*100
+        xy$Subpop_mortperc <- vals2add
+      }
+    }
+
+    } else if ( !is.null(survrast) ){
+      if ( file.exists(survrast)) {
+        rx <- terra::rast(survrast)
+        exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
+        vect2add <- as.numeric(exct[, 2])
+        vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
+        xy$Subpop_mortperc <- vals2add
+      }
+    }
+  }
+
+
 
 
 
