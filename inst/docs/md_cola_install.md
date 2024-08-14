@@ -3,6 +3,36 @@
 Find in this page the details and insrtuctions for a) installation and b) customize parameters
 
 
+This code contains the quick-and-dirt way to install `cola`.  For the full procedure from scratch check the details in the next session.
+
+```
+library(devtools) # Library for installing packages from github
+devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## Type "3": None ## Installs cola
+
+#@ If error: Go to https://github.com/connectingLandscapes/cola >> Green butto >>
+#@ Download zip
+# install.packages("D:/path/to/cola-main.zip", repos = NULL, type = "win.binary")
+## or
+# devtools::install_local('D:/path/to/cola-main.zip')
+
+library(cola) # Load cola
+cola::setup_cola() # Setup cola
+cola::diagnose_cola() # check installation problems
+cola::setup_cola() # Run again to solve any installation issue
+file.edit(file.path(Sys.getenv("HOME"), ".Renviron")) # Edit parameters
+.rs.restartR() # Restart RStudio
+Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH')) # Validate DSS parameters
+Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THRES_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
+cola::setup_cola_dss() # Setup the DSS libraries
+.rs.restartR() # Restart R
+library(cola) # Load Cola
+cola::cola_dss() # Launch the DSS
+
+```
+
+
+
+
 ### A) Installation 
 
 This package integrates R and Python modules. 
@@ -11,7 +41,10 @@ It's required to install several components (once). The structure of this softwa
 
 - R as the base. Use the latest available [here](https://cran.r-project.org/bin/windows/base/)
 
-- Have you [Rtools](https://cran.r-project.org/bin/windows/Rtools/) already? `devtools::find_rtools()` must be TRUE
+- Git as R package mange; Do you have  [git](https://git-scm.com/downloads) or [GitHub ](https://desktop.github.com/download/)
+
+
+- Only for windows: Have you [Rtools](https://cran.r-project.org/bin/windows/Rtools/) already? `devtools::find_rtools()` must be TRUE
 
 - Python as the engine for the main scripts
 
@@ -41,7 +74,7 @@ if (!require(devtools)){
 devtools::install_github('connectingLandscapes/cola') ## option 3: None
 ```
 
-The installation log will shown in console:
+The installation log will shown in console (type 3 for fast installation):
 
 ```
 Downloading GitHub repo connectingLandscapes/cola@HEAD
@@ -101,7 +134,10 @@ This might take several minutes and will show the following message once you *ge
 ```
 library(cola)
 cola::setup_cola()
+```
 
+A final success installation should print:
+```
   +Step 1/5: Installing & checking reticulate R package
     `reticulate` installed already!
   +Step 2/5 Installing & checking miniconda
@@ -290,15 +326,24 @@ There's some parameters we can customize for `cola` performance, in each of the 
  
  Find your R configuration file `.Renviron` file located in `Sys.getenv("R_USER")`.
  Edit with a text editor this file and edit with caution the values. Keep the proper file separator (\ or /), quotes, decimal separators, etc.
- 
+
+Open the file;
+```
+file.edit(file.path(Sys.getenv("HOME"), ".Renviron"))
+
+```
+
+Populate the values as you consider:
  
  ```
- COLA_DATA_PATH="C:\Users\USER\AppData\Local\Temp\RtmpXXXX"
- COLA_NCORES=1
- COLA_DSS_UPL_MB=250
- COLA_VIZ_THREs_PIX=1000000
- COLA_VIZ_RES_NCOL=1000
- COLA_VIZ_RES_NROW=1000
+COLA_PYTHON_PATH="C:\Users\gonza\AppData\Local\r-miniconda\envs\cola/python.exe"
+COLA_SCRIPTS_PATH="C:/Users/gonza/AppData/Local/R/win-library/4.2/cola/python"
+COLA_DATA_PATH="C:/temp/cola"
+COLA_NCORES=1
+COLA_DSS_UPL_MB=250
+COLA_VIZ_THRES_PIX=1000000
+COLA_VIZ_RES_NCOL=1000
+COLA_VIZ_RES_NROW=1000
  ```
  
  You should also see `COLA_PYTHON_PATH` and `COLA_SCRIPTS_PATH`, but ***DON'T*** edit them manually.
