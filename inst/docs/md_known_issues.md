@@ -74,6 +74,18 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
 -------------
 
 
+  **Known issue:** When installing the package by   `devtools::install_github('connectingLandscapes/cola')`, getting:
+  `Downloading GitHub repo connectingLandscapes/cola@HEAD`
+  `Error in utils::download.file(url, path, method = method, quiet = quiet,  : `
+  `download from 'https://api.github.com/repos/connectingLandscapes/cola/tarball/HEAD' failed`
+  This occurs in most cases where institutional internet prevents your computer to download unknown ZIP files. It's a security firewall.
+  
+ ***Solution:*** Download de ZIP file directly from [cola github repo](https://github.com/connectingLandscapes/cola). Click on the green button >> Download zip. Save the file on a known route and then run the either the follow commands:  ` install.packages("C:/path/to/cola_main.zip", repos = NULL, type = "win.binary")` or `devtools::install_local('C:/temp/cola-main.zip')`
+
+
+-------------
+
+
   **Known issue:** `Error in py_module_import(module, convert = convert) :` `ModuleNotFoundError: No module named 'rpytools'. `
   
  ***Solution:***  Load   `reticulate` library: `library(reticulate)`. 
@@ -109,6 +121,7 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   
   
  ***Solution:*** Try again `devtools::install_github('connectingLandscapes/cola'`. If the error persists, restart your R session. Here the log of the console of the reported case and solution: 
+
  ```
 > devtools::install_github('connectingLandscapes/cola')  # <----- HERE first try 
 Downloading GitHub repo connectingLandscapes/cola@HEAD
@@ -376,6 +389,7 @@ COLA_SCRIPTS_PATH
 
   **Known issue:** The `cola::cola_setup () `log doesn't print `=== Ready to connect landscapes! ===`. We can't guess the appropriate way to run `cola`.
     This occurs because even when the correct version of python is installed (step 4), the internal paths and libraries installed in the step are not finished. In a new R session, the following variables shouldn't be empty:
+    
   ```
   Sys.getenv("COLA_SCRIPTS_PATH")
   [1] "C:/Users/Admin/Documents/R/win-library/4.0/cola/python"
@@ -389,21 +403,21 @@ COLA_SCRIPTS_PATH
   
  ***Solution:*** Set up the manually the environmental variables. This requires that previous steps are completes: conda environment installed with all the libraries. We need R connect Python properly, so configure R internally.
  
-      
-    1. Find the `welcome.py` file and it's path: 
+  1. Find the `welcome.py` file and it's path: 
+    
     ```
       (welcomepy <- system.file("python/welcome.py", package = "cola"))
       (cola_scripts_path <- dirname(welcomepy))
     ```
     
-    2. Find the `python.exe` file
+  2. Find the `python.exe` file
     
     ```
       (pyCola <- subset(reticulate::conda_list(), name == 'cola')$python )
     ```
     
     
-    3. Run the python file in R. Try this:
+  3. Run the python file in R. Try this:
     ```
       ## Check the command line
       cat(cmd <- paste( pyCola, welcomepy) )
@@ -412,12 +426,11 @@ COLA_SCRIPTS_PATH
       # Some errors can include "ModuleNotFoundError: No module named '_gdal'"
     ```
     
-    The result must include  `=== Ready to connect landscapes! ===`.
+  The result must include  `=== Ready to connect landscapes! ===`.
     
-    In some computers this might no work. If is your case, use the following (adatp the paths to your case);
+  In some computers this might no work. If is your case, use the following (adatp the paths to your case);
     
     ```
-      
       ## Option 1;
       (pyCola <- 'conda run -n cola python ')
       cat(cmd <- paste0(pycola, welcomepy) )
@@ -431,24 +444,24 @@ COLA_SCRIPTS_PATH
       system(cmd, intern = TRUE)
     ``` 
     
-    4. If the previous command worked, saved the paths manually using `pyCola` as `COLA_PYTHON_PATH` and `cola_scripts_path` as  `COLA_SCRIPTS_PATH` depending on the way worked for you previously.
+  4. If the previous command worked, saved the paths manually using `pyCola` as `COLA_PYTHON_PATH` and `cola_scripts_path` as  `COLA_SCRIPTS_PATH` depending on the way worked for you previously.
     
     ``` 
     COLA_PYTHON_PATH="C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/python.exe"
     COLA_SCRIPTS_PATH="C:/Users/Admin/Documents/R/win-library/4.0/cola/python"
     ``` 
     
-    Save those paths permanently in your system using one of the following options:
+  Save those paths permanently in your system using one of the following options:
     - System environment variables following this [instructions](
       https://stackoverflow.com/questions/69550830/init-fs-encoding-failed-to-get-the-python-codec-of-the-filesystem-encoding)
       
     - Edit the `.Renviron` file located in `Sys.getenv("HOME")` and add the lines mentioned before. In my computer the file is lcoated in `C:\Users\Admin\Documents\.Renviron` at the file content looks like:
+    
      ``` 
      COLA_PYTHON_PATH="C:/Users/Admin/AppData/Local/r-miniconda/condabin/conda.bat run --cwd C:/Users/Admin/Documents/R/win-library/4.0/cola/python -n cola python "
      COLA_SCRIPTS_PATH="C:/Users/Admin/Documents/R/win-library/4.0/cola/python"
     ``` 
     
-
 
 -------------
 -------------
@@ -525,6 +538,24 @@ The errors in this section are usually related with some libraries which require
  ***Solution:*** Restart R. Then install the dependency mentioned in the message: `install.packages('fastmap')`. 
     
 -------------
+
+  **Known issue:**  R can't load raster maps.
+  
+  ```
+  Warning: Error in addRasterImage: inherits(x, "RasterLayer") is not TRUE
+  108: <Anonymous>
+  107: stop
+  106: stopifnot
+  105: addRasterImage
+  104: getMapData
+  101: addLegend
+  100: %>%
+  ```
+
+ ***Solution:*** Install newer version of leaflet, shiny and terra: `install.packages(c('terra', 'leaflet', 'shiny'))`. 
+
+-------------
+
     
   **Known issue:** Here your contribution!
   

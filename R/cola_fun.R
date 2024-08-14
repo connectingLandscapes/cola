@@ -289,20 +289,15 @@ shp2xy <- function(shapefile, outxy, tempDir,
       }
     }
 
-    } else if ( !is.null(survrast) ){
-      if ( file.exists(survrast)) {
-        rx <- terra::rast(survrast)
-        exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
-        vect2add <- as.numeric(exct[, 2])
-        vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
-        xy$Subpop_mortperc <- vals2add
-      }
+  } else if ( !is.null(survrast) ){
+    if ( file.exists(survrast)) {
+      rx <- terra::rast(survrast)
+      exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
+      vect2add <- as.numeric(exct[, 2])
+      vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
+      xy$Subpop_mortperc <- vals2add
     }
   }
-
-
-
-
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)

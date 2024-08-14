@@ -1003,7 +1003,7 @@ server <- function(input, output, session) {
     layersList = NULL,
     sessionID = sessionID,  tempFolder = tempFolder,
 
-    data = NULL, orig = NULL,
+    data = NULL, orig = NULL, refresh = 0,
     cdpopRun = NULL, out_cdpop_files = c(''),
 
     log = paste0('Your session ID: ', sessionID, '\nWaiting for inputs ... '),
@@ -1939,12 +1939,19 @@ server <- function(input, output, session) {
 
   ## Run h23
   observeEvent(input$h2r, {
-
     if(rv$hsready){
       # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
       #            inSurSessID = 'V-2023082911285705_file3112303ea820')
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
-      output$ll_map_h2r <- leaflet::renderLeaflet({
+
+      rv$refresh <- FALSE
+      #shinyjs::disable("h2r")
+
+      # output$plot0 <-renderPlot({
+      #   plot(1, main = input$h2r)
+      # })
+
+       output$ll_map_h2r <- leaflet::renderLeaflet({
 
         (inSurSessID <- sessionIDgen())
         #(inSurSessID2 <<- sessionIDgen())
@@ -1992,15 +1999,37 @@ server <- function(input, output, session) {
           # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = =  = = =  = = =  = = =  = = =
           makeLL( )
 
+
         } else {
           rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
           updateVTEXT(rv$log)
         }
 
 
-      })
+       })
+
     }
+
+    rv$refresh <- TRUE
+
   })
+
+  # output$plot0 <-renderPlot({
+  #   if (is.numeric(rv$refresh)){
+  #     shinyjs::enable("h2r")
+  #     plot(1)
+  #   }
+  # })
+
+  # observeEvent(rv$refresh, {
+  #   if (rv$refresh){
+  #     shinyjs::enable("h2r")
+  #   }
+  # })
+
+  # observeEvent(input$h2r, {
+  # })
+
 
 
 
@@ -2589,6 +2618,12 @@ server <- function(input, output, session) {
     if(! (rv$tifready | rv$hsready)){
       rv$log <- paste0(rv$log, ' \n Creating points -- No raster yet!');updateVTEXT(rv$log) # _______
     } else {
+
+      output$plot0 <-renderPlot({
+        shinyjs::disable("points_py")
+        plot(1, main = input$points_py)
+      })
+
       rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
 
       if(is.null(rv$inSurSessID)){
@@ -2672,6 +2707,11 @@ server <- function(input, output, session) {
 
         })
       }
+
+      output$plot <-renderPlot({
+        shinyjs::disable("points_py")
+        plot(1)
+      })
     }
   })
 
@@ -3046,6 +3086,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$lcc, {
+    shinyjs::enable("lcc")
     pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
     condDist <<- 0
     #pdebug(devug=devug, ... = 'condDist') # _____________
@@ -3107,6 +3148,11 @@ server <- function(input, output, session) {
       })
 
     }
+    output$plot <-renderPlot({
+      shinyjs::disable("lcc")
+      plot(1)
+    })
+
   })
 
   observeEvent(input$lcc2, {
@@ -3419,7 +3465,6 @@ server <- function(input, output, session) {
       # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
       # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
 
-      output$ll_map_pri <- leaflet::renderLeaflet({
 
         tStartPri <- Sys.time()
         out_pri <- tryCatch(pri_py(tif = rv$tif,
@@ -3441,53 +3486,55 @@ server <- function(input, output, session) {
         tElapPri <- Sys.time() - tStartPri
         textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
 
+
         rv$pritif <- out_pri$tif
         rv$prishp <- out_pri$shp
 
         if(is.na(out_pri$shp)){
-          rv$log <- paste0(rv$log, ' --- ERROR ');updateVTEXT(rv$log) # _______
+          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
           return(rv$llmap)
 
         } else {
           rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
-          # rv$lcc <- out_lcc
-          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+          output$ll_map_pri <- leaflet::renderLeaflet({
+            # rv$lcc <- out_lcc
+            # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
 
-          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-          rv$priready <- TRUE
-          rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
-          rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
+            # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+            rv$priready <- TRUE
+            rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
+            rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
 
-          rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
-          rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                                         domain = rng_newtif+0.01, na.color = "transparent")
-          # "viridis", "magma", "inferno", or "plasma".
+            rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+            #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
+            rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+                                                           domain = rng_newtif+0.01, na.color = "transparent")
+            # "viridis", "magma", "inferno", or "plasma".
 
-          makeLL()
+            makeLL()
 
-          # llmap <<- rv$llmap %>% removeImage('Kernel')  %>% removeControl('legendKernel') %>%
-          #   addRasterImage(out_crk, colors = tifPal, opacity = .7,
-          #                  group = "Surface resistance", layerId = 'Kernel') %>%
-          #   addLegend(pal =  tifPal, values = out_crk[], layerId = "legendKernel",
-          #             position = 'topleft',
-          #             title= "Dispersal Kernel"#, opacity = .3
-          #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-          #   ) %>%  leaflet::addLayersControl(
-          #     overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-          #     options =  leaflet::layersControlOptions(collapsed = FALSE)
-          #   ) %>% clearBounds() %>%  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-          #
-          # rv$llmap <<- llmap
-          # updateLL(llmap)
-          # rv$llmap
-          #
-          # # ## try
-          # llx <- makeLL()
-          # rv$ll
+            # llmap <<- rv$llmap %>% removeImage('Kernel')  %>% removeControl('legendKernel') %>%
+            #   addRasterImage(out_crk, colors = tifPal, opacity = .7,
+            #                  group = "Surface resistance", layerId = 'Kernel') %>%
+            #   addLegend(pal =  tifPal, values = out_crk[], layerId = "legendKernel",
+            #             position = 'topleft',
+            #             title= "Dispersal Kernel"#, opacity = .3
+            #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+            #   ) %>%  leaflet::addLayersControl(
+            #     overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+            #     options =  leaflet::layersControlOptions(collapsed = FALSE)
+            #   ) %>% clearBounds() %>%  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+            #
+            # rv$llmap <<- llmap
+            # updateLL(llmap)
+            # rv$llmap
+            #
+            # # ## try
+            # llx <- makeLL()
+            # rv$ll
+          })
         }
-      })
     }
   })
 
@@ -4327,7 +4374,10 @@ if (FALSE){
 }'
 
   ui <- shinydashboard::dashboardPage(
-    # useShinyjs(),
+    ## Activate enable / disable buttons
+    shinyjs::useShinyjs(),
+
+
     ####  title ----
     header = shinydashboard::dashboardHeader(
       title = "ConnectingLandscapes v0"
@@ -5468,11 +5518,12 @@ if (FALSE){
               column(width = 4, h5('Hello'))
               #)
             ) # close box
+          ),
 
+          shinydashboard::tabItem('tab_example',
+                  fluidPage(plotOutput('plot0'),
+                            plotOutput('plot1'))
           )
-          #shinydashboard::tabItem('tab_example',
-          #         fluidPage( )
-          # ),
           # tab_home tab_surface tab_points tab_distance tab_cdpop
           # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal
         )

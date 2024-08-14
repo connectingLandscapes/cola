@@ -21,7 +21,7 @@ setup_cola_dss <- function(
    libs2colaDSS = c(
 
   'markdown', 'rmarkdown',
-  'knitr', 'units',
+  'knitr', 'units', 'reticulate',
 
   "reshape2", 'bit', 'digest', 'dplyr',
   'tidyverse', 'DT', 'ggplot2', 'data.table',
