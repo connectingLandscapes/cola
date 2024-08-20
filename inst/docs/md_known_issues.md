@@ -418,6 +418,7 @@ COLA_SCRIPTS_PATH
     
     
   3. Run the python file in R. Try this:
+
     ```
       ## Check the command line
       cat(cmd <- paste( pyCola, welcomepy) )
