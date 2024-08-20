@@ -887,7 +887,7 @@ server <- function(input, output, session) {
   } # llz <- makeLL()
 
   updateLL <- function(ll){
-    output$ll_map_cdp <- output$ll_map_pri <- output$ll_map_lcc <-
+    output$ll_map_cdp <- output$ll_map_pri  <- output$ll_map_lcc <-
       output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
       output$ll_map_edi <- output$ll_map_dist <-
       output$ll_map_points <- output$ll_map_h2r <- leaflet::renderLeaflet({
@@ -904,6 +904,7 @@ server <- function(input, output, session) {
     })
   }
 
+  output$ll_map_pri_prev <- leaflet::renderLeaflet({ leaflet::leaflet() %>% leaflet::addTiles()  })
   output$ll_map_show <- leaflet::renderLeaflet({ ll_sh })
   output$ll_map_showPriv <- leaflet::renderLeaflet({  llmap })
 
@@ -1087,12 +1088,14 @@ server <- function(input, output, session) {
     cdm2s_sp = NULL, # csv
 
     ## Color pal
-    hs_pal = NULL, # path
-    tif_pal = NULL, # path
-    shp_pal = NULL, # spatial object
-    lcc_pal = NULL, # spatial object
-    pritif_pal = NULL, # spatial object
-    crk_pal = NULL, # spatial object
+    hs_pal = NULL, # color pallete
+    tif_pal = NULL, # color pallete
+    shp_pal = NULL, # color pallete
+    lcc_pal = NULL, # color pallete
+    pritif_pal = NULL, # color pallete
+    crk_pal = NULL, # color pallete
+    crk_pal2 = NULL, # color pallete
+    crk_quan = NULL, # color pallete
 
     # SessionIDs
     inLccSessID = NULL,
@@ -3367,7 +3370,7 @@ server <- function(input, output, session) {
       output$ll_map_crk <- leaflet::renderLeaflet({
 
         tStartCrk <- Sys.time()
-        out_crk <- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
+        out_crk <<- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
                           param4 = as.numeric(input$in_crk_4),
                           param5 = (input$in_crk_5),
                           param6 = as.numeric(input$in_crk_6))
@@ -3403,7 +3406,12 @@ server <- function(input, output, session) {
 
           rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
                                                          domain = rng_newtif+0.01, na.color = "transparent")
+
           # "viridis", "magma", "inferno", or "plasma".
+
+
+
+          ## Update all visor
 
           makeLL()
 
@@ -3428,10 +3436,111 @@ server <- function(input, output, session) {
           # rv$ll
         }
       })
+
+      isolate(
+        output$ll_map_pri_prev <- leaflet::renderLeaflet({
+
+        if((rv$crkready)){
+          ## Refresh prio tab
+          rv$crk2s <- resampIfNeeded(rv$crk)
+          rv$crk2s_sp <- terra::rast(rv$crk2s)
+          cat('adding CRK for prio:', rv$crk2s, '\n')
+
+          bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+
+          rv$crk_pal2 <- leaflet::colorNumeric(
+            palette = "plasma", reverse = TRUE,
+            domain = rv$crk_rng + 0.01 , na.color = "transparent")
+
+          if(is.null(rv$crk_quan) | !exists('crk_quan')){
+            rv$crk_quan0 <-
+              t(global(rv$crk2s_sp, fun=quantile,
+                       probs = seq(0.1, 1, 0.01))
+              )
+            rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+            brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
+            stp <<- diff(range(brks)) / 10 # length(brks)
+
+            crk_quan <<-  rev(rv$crk_quan)
+            #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+            updateSliderInput(inputId = 'pri_slider', value = median(brks),
+                              min = min(brks),max = max(brks), step = stp)
+          }
+
+          # leafletProxy("ll_map_pri_prev") %>%
+          llcrk2 <- leaflet::leaflet()  %>% addTiles() %>%
+            addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                           colors = rv$crk_pal2, opacity = .7)
+
+          #llcrk2 %>% clearImages()
+        }
+      })
+      )
+    }
+
+    })
+
+  ####### > PRIORI  ------------------
+
+  observeEvent(input$pri_slider, {
+    if(rv$crkready){
+
+      # rv <- list(crk = '/data/tempR//colaVMQ2024081501510005//out_crk_PPH2024081501513905.tif')
+      # rv$crk_sp <- terra::rast(rv$crk);
+      # input <- list(pri_slider = 0.2)
+      # rv$crk_rng <- getMxMn(rv$crk_sp)
+      # print(rv$crk_rng)
+      # rv$crk2s <- resampIfNeeded(rv$crk)
+      # rv$crk2s_sp <- terra::rast(rv$crk2s)
+      # rv$crk2s_sp
+      # bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character()
+
+
+      pri_slider <<- input$pri_slider
+      # if(is.null(rv$crk_quan) | !exists('crk_quan')){
+      #   rv$crk_quan0 <-
+      #       t(global(rv$crk2s_sp, fun=quantile,
+      #              probs = seq(0.1, 1, 0.01))
+      #                )
+      #   rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+      #   brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
+      #   stp <<- diff(range(brks)) / 10 # length(brks)
+      #
+      #   crk_quan <<-  rev(rv$crk_quan)
+      #   #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+      #   updateSliderInput(inputId = 'pri_slider', value = median(brks),
+      #                     min = min(brks),max = max(brks), step = stp)
+      # }
+
+      observe({
+        pri_slider <<- input$pri_slider
+        })
+
+      print(crk_quan)
+      #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
+      (posC <<- which(as.character(brks) == as.character(pri_slider)))
+      cat('pri_slider: ', pri_slider, ' posC: ', posC, '\n');
+      # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
+      newmin <-  crk_quan[posC]
+      if(newmin == 0){newDm <- 0.01}
+      newDm <<-  c(newmin, max(rv$crk_rng))
+      cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+
+        rv$crk_pal2 <- leaflet::colorNumeric(
+          palette = "plasma", reverse = TRUE,
+          domain = newDm, na.color = "transparent")
+
+        leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+          addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                         colors = rv$crk_pal2, opacity = .7)
+
+      # output$ll_map_pri_prev <- leaflet::renderLeaflet({
+      #   leaflet::leaflet()  %>% addTiles() %>%
+      #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
+      # })
     }
   })
 
-  ####### > PRIORI  ------------------
 
   observeEvent(input$pri, {
     condDist <- 0
@@ -5241,7 +5350,17 @@ if (FALSE){
                      downloadButton('priDwn', 'Download')),
             ),
 
-            leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+            fluidPage(
+              column(4,
+
+                     sliderInput(inputId = 'pri_slider',label =  'Percentile:', 0.1, 1, 0.5, step = 0.1),
+                     tags$head(tags$style("#vout_pri{overflow-y:scroll; max-height: 70px}")),
+
+                     leaflet::leafletOutput("ll_map_pri_prev", height = "500px") %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+              column(8,
+                leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+                     )
+            ),
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
