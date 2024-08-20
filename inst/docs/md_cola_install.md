@@ -6,6 +6,7 @@ Find in this page the details and insrtuctions for a) installation and b) custom
 This code contains the quick-and-dirt way to install `cola`.  For the full procedure from scratch check the details in the next session.
 
 ```
+## Windows users must have git or github installed.
 library(devtools) # Library for installing packages from github
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## Type "3": None ## Installs cola
 
@@ -16,14 +17,20 @@ devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade
 # devtools::install_local('D:/path/to/cola-main.zip')
 
 library(cola) # Load cola
-cola::setup_cola() # Setup cola
-cola::diagnose_cola() # check installation problems
-cola::setup_cola() # Run again to solve any installation issue
+cola::setup_cola() # Setup cola. Run this line until all problems are solved.
+# Expect 2 pop up windows for accepting to install Miniconda and cola environment
+
+cola::diagnose_cola() # check installation problems -- also suggests solutions
+cola::setup_cola() # Run again until solving all installation issue. Required to be
+#   finished in order to set up the package properly. 
+
 file.edit(file.path(Sys.getenv("HOME"), ".Renviron")) # Edit parameters
 .rs.restartR() # Restart RStudio
 Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH')) # Validate DSS parameters
 Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THRES_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
-cola::setup_cola_dss() # Setup the DSS libraries
+
+## Install the front end. Windows users must have Rtools and git installed.
+cola::setup_cola_dss() # Setup the DSS libraries. Takes a while. Run until getting a success message
 .rs.restartR() # Restart R
 library(cola) # Load Cola
 cola::cola_dss() # Launch the DSS
