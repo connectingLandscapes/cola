@@ -1,7 +1,7 @@
 # Connectiviy analysis software: Connecting landscapes - `cola` 
 
 
-![.](./inst/docs/logoA.jpg)
+![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
 > Toolkit Overview
 
@@ -26,10 +26,6 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
 
  * For the functions documentation and examples, go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_colafun.md)
 
- * Access here the live [Decision support system dashboard (DSS)](http://18.190.126.82:3838/connecting-landscapes/)
-
-
-> Workshops
-
-   * [Bandar Seri Begawan (Brunei). May 20th / 2024](https://github.com/connectingLandscapes/cola/blob/main/workshops/Brunei-05May-20-2024.md)
-
+ * Access here the live [Decision support system dashboard (DSS)](http://34.44.31.4:3838/connecting-landscapes)
+ 
+ * Access here the [User's manual document (DSS) ](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)

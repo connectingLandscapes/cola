@@ -1,4 +1,4 @@
-# Connectiviy analysis `cola` 
+# Installing -Connecting landscapes- `cola` 
 
 Find in this page the details and insrtuctions for a) installation and b) customize parameters
 

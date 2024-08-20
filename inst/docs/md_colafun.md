@@ -19,16 +19,27 @@ Converts a a given raster into a new given transformation function and outputs a
   **Python file:** s2res.py
   
   **Parameters:**
+  
 [A] py: Python executable path or instruction R runs in console to call cola python.
+
 [B] src: Python script path
+
 [1] initif: Habitat Suitability (HS) georreferenced TIF raster
+
 [2] outif: Surface resistance (SR) output file name TIF raster
+
 [3] param3: Suitability grid min value. Numeric value to cutoff the original layer. 
+
 [4] param4: Suitability grid max value. Numeric value to cutoff the original layer. 
+
 [5] param5: Maximum resistance value to have the new raster. Min value is set to 1.
+
 [6] param6: Shape Parameter. Between 1 and X
+
 [7] param7: No data value of suitability raster. Default NULL. To be guessed from metadata if not provided
+
 [8] param8: CRS if using ASCII|RSG or other file without projection info. Provide as EPSG or ESRI string e.g. "ESRI:102028"
+
 
   **Usage in R:**
 ```
