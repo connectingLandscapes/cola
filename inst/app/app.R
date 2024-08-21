@@ -647,7 +647,7 @@ server <- function(input, output, session) {
           rv$hs0 <- rv$hs
         }
         rv$hs2s_sp <- terra::rast(rv$hs2s)
-        rv$hs_rng2 <- getMxMn(rv$hs2s)+ 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$hs_rng2 <- c(0, max(getMxMn(rv$hs2s)))# hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$hs_pal2 <- leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
                                             domain = rv$hs_rng2 + 0.0,
                                             na.color = "transparent")
