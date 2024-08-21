@@ -791,13 +791,13 @@ server <- function(input, output, session) {
         patchTifR <- rast(patchTif)
 
         patchpal <- colorBin(palette = "Dark2", domain = c(1, max(getMxMn(patchTif))), bins = c( 1, 43),
-          reverse = FALSE, na.color = "transparent")
+                             reverse = FALSE, na.color = "transparent")
 
         ll0 <- ll0 %>%
           addRasterImage(rv$pritif_sp, colors = rv$pritif_pal2, opacity = .5,
-                                      group = "Prioritization", layerId = "Priorit. corr") %>%
-           addRasterImage(patchTifR, colors = patchpal,
-                          opacity = .5, group = "Prioritization", layerId = "Priorit. patch") %>%
+                         group = "Prioritization", layerId = "Priorit. corr") %>%
+          addRasterImage(patchTifR, colors = patchpal,
+                         opacity = .5, group = "Prioritization", layerId = "Priorit. patch") %>%
           addCircleMarkers(data = rv$prishp_wgs, label = ~ID, group = 'Prioritization',  radius = 5, color = 'red')  %>%
           addLegend(pal =  rv$pritif_pal2, values = rv$pritif_rng2,
                     layerId = "Prioritization", group = "Prioritization",
@@ -1695,8 +1695,8 @@ server <- function(input, output, session) {
       tStartCDP <- Sys.time()
 
       cdpop_ans <<- cdpop_py(inputvars = NULL, agevars = NULL,
-                            cdmat = rv$cdm, xy = rv$ptsxy,
-                            tempFolder = tempFolder, prefix = pref)
+                             cdmat = rv$cdm, xy = rv$ptsxy,
+                             tempFolder = tempFolder, prefix = pref)
       #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
       rv$cdpop_ans <<- cdpop_ans
       cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
@@ -1704,14 +1704,14 @@ server <- function(input, output, session) {
 
       tStopCDP <- Sys.time() - tStartCDP
       textElapCDP <- paste(round(as.numeric(tStopCDP), 2), attr(tStopCDP, 'units'))
-      mssg2Display <- paste0(' CDPOP simulation finished on ', textElapCDP, '. Generated ', length(cdpop_grids), ' years.')
+      mssg2Display <- paste0(' CDPOP simulation finished on ', textElapCDP, '. Generated ', length(cdpop_grids), ' generations.')
     }))
-      # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
+    # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
     output$ll_map_cdp <- leaflet::renderLeaflet({
 
       # rv <- list()
-     # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
+      # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
       cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
       rv$cdpop_out <- read.csv(cdpop_out)
       rv$cdpFolder <- dirname(dirname(cdpop_out))
@@ -1720,8 +1720,8 @@ server <- function(input, output, session) {
                            function(x){
                              #x = rv$cdpop_out$Population_Age1.
                              as.numeric(gsub('\\|.+|\\|', '', x))
-                             }
-                           )
+                           }
+      )
 
       cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
       cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
@@ -1734,7 +1734,7 @@ server <- function(input, output, session) {
                         #, hcaes(x = 'Year', y = 'Population')
           ) %>%
           hc_yAxis(title = list(text = 'Population')) %>%
-          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_xAxis(title = list(text = 'Generation')) %>%
           hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
 
       })
@@ -1746,7 +1746,7 @@ server <- function(input, output, session) {
                         #, hcaes(x = 'Year', y = 'Population')
           ) %>%
           hc_yAxis(title = list(text = 'Alleles')) %>%
-          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_xAxis(title = list(text = 'Generation')) %>%
           hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
       })
 
@@ -1760,7 +1760,7 @@ server <- function(input, output, session) {
                               #, hcaes(x = 'Year', y = 'Population')
           ) %>%
           hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-          hc_xAxis(title = list(text = 'Year')) %>%
+          hc_xAxis(title = list(text = 'Generation')) %>%
           hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
       }) #
 
@@ -1936,7 +1936,7 @@ server <- function(input, output, session) {
                                                      domain = rng_newtif, na.color = "transparent")
 
         makeLL()
-        }
+      }
     })
   })
 
@@ -1954,7 +1954,7 @@ server <- function(input, output, session) {
       #   plot(1, main = input$h2r)
       # })
 
-       output$ll_map_h2r <- leaflet::renderLeaflet({
+      output$ll_map_h2r <- leaflet::renderLeaflet({
 
         (inSurSessID <- sessionIDgen())
         #(inSurSessID2 <<- sessionIDgen())
@@ -2009,7 +2009,7 @@ server <- function(input, output, session) {
         }
 
 
-       })
+      })
 
     }
 
@@ -2921,7 +2921,7 @@ server <- function(input, output, session) {
                                 ' Time elapsed: ', textElapMat));updateVTEXT(rv$log) # _______
         rv$log <- paste0(rv$log,
                          paste0('\n  Pairs of points connected: ', validCels,
-                                 '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
+                                '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
 
         output$dist_box1 <- shinydashboard::renderValueBox({
           valueBox("YES", "Matrix: Done",
@@ -3371,9 +3371,9 @@ server <- function(input, output, session) {
 
         tStartCrk <- Sys.time()
         out_crk <<- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
-                          param4 = as.numeric(input$in_crk_4),
-                          param5 = (input$in_crk_5),
-                          param6 = as.numeric(input$in_crk_6))
+                           param4 = as.numeric(input$in_crk_4),
+                           param5 = (input$in_crk_5),
+                           param6 = as.numeric(input$in_crk_6))
         #out_crk_no_data <- gdal_nodata
 
         tElapCrk <- Sys.time() - tStartCrk
@@ -3440,45 +3440,45 @@ server <- function(input, output, session) {
       isolate(
         output$ll_map_pri_prev <- leaflet::renderLeaflet({
 
-        if((rv$crkready)){
-          ## Refresh prio tab
-          rv$crk2s <- resampIfNeeded(rv$crk)
-          rv$crk2s_sp <- terra::rast(rv$crk2s)
-          cat('adding CRK for prio:', rv$crk2s, '\n')
+          if((rv$crkready)){
+            ## Refresh prio tab
+            rv$crk2s <- resampIfNeeded(rv$crk)
+            rv$crk2s_sp <- terra::rast(rv$crk2s)
+            cat('adding CRK for prio:', rv$crk2s, '\n')
 
-          bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+            bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
 
-          rv$crk_pal2 <- leaflet::colorNumeric(
-            palette = "plasma", reverse = TRUE,
-            domain = rv$crk_rng + 0.01 , na.color = "transparent")
+            rv$crk_pal2 <- leaflet::colorNumeric(
+              palette = "plasma", reverse = TRUE,
+              domain = rv$crk_rng + 0.01 , na.color = "transparent")
 
-          if(is.null(rv$crk_quan) | !exists('crk_quan')){
-            rv$crk_quan0 <-
-              t(global(rv$crk2s_sp, fun=quantile,
-                       probs = seq(0.1, 1, 0.01))
-              )
-            rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
-            brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
-            stp <<- diff(range(brks)) / 10 # length(brks)
+            if(is.null(rv$crk_quan) | !exists('crk_quan')){
+              rv$crk_quan0 <-
+                t(global(rv$crk2s_sp, fun=quantile,
+                         probs = seq(0.1, 1, 0.01))
+                )
+              rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+              brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
+              stp <<- diff(range(brks)) / 10 # length(brks)
 
-            crk_quan <<-  rev(rv$crk_quan)
-            #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
-            updateSliderInput(inputId = 'pri_slider', value = median(brks),
-                              min = min(brks),max = max(brks), step = stp)
+              crk_quan <<-  rev(rv$crk_quan)
+              #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+              updateSliderInput(inputId = 'pri_slider', value = median(brks),
+                                min = min(brks),max = max(brks), step = stp)
+            }
+
+            # leafletProxy("ll_map_pri_prev") %>%
+            llcrk2 <- leaflet::leaflet()  %>% addTiles() %>%
+              addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                             colors = rv$crk_pal2, opacity = .7)
+
+            #llcrk2 %>% clearImages()
           }
-
-          # leafletProxy("ll_map_pri_prev") %>%
-          llcrk2 <- leaflet::leaflet()  %>% addTiles() %>%
-            addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                           colors = rv$crk_pal2, opacity = .7)
-
-          #llcrk2 %>% clearImages()
-        }
-      })
+        })
       )
     }
 
-    })
+  })
 
   ####### > PRIORI  ------------------
 
@@ -3514,25 +3514,35 @@ server <- function(input, output, session) {
 
       observe({
         pri_slider <<- input$pri_slider
-        })
-
+      })
+      print(' --crk_quan')
       print(crk_quan)
+      print(' --brks')
+      print(as.character(brks))
+
+      print(' --pri_slider:')
+      print(as.character(pri_slider))
+
       #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
-      (posC <<- which(as.character(brks) == as.character(pri_slider)))
-      cat('pri_slider: ', pri_slider, ' posC: ', posC, '\n');
+      (posC <<- which(as.character(round(brks*100)) ==
+                        as.character(round(pri_slider*100)))[1])
       # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
       newmin <-  crk_quan[posC]
+      print('newmin::')
+      print(newmin)
+      cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+
       if(newmin == 0){newDm <- 0.01}
       newDm <<-  c(newmin, max(rv$crk_rng))
       cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
 
-        rv$crk_pal2 <- leaflet::colorNumeric(
-          palette = "plasma", reverse = TRUE,
-          domain = newDm, na.color = "transparent")
+      rv$crk_pal2 <- leaflet::colorNumeric(
+        palette = "plasma", reverse = TRUE,
+        domain = newDm, na.color = "transparent")
 
-        leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
-          addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                         colors = rv$crk_pal2, opacity = .7)
+      leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+        addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                       colors = rv$crk_pal2, opacity = .7)
 
       # output$ll_map_pri_prev <- leaflet::renderLeaflet({
       #   leaflet::leaflet()  %>% addTiles() %>%
@@ -3575,75 +3585,75 @@ server <- function(input, output, session) {
       # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
 
 
-        tStartPri <- Sys.time()
-        out_pri <- tryCatch(pri_py(tif = rv$tif,
-                                   incrk = rv$crk ,
-                                   inlcc = rv$lcc,
-                                   maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
-                                   outshppoint = out_pri_shp,
-                                   outshppol = out_pri_shp_pol,
-                                   outshppatch = out_pri_shp_patch,
-                                   outtif = out_pri_tif,
-                                   outtifpatch = out_pri_tif_patch,
-                                   param7 = as.numeric(input$in_pri_5), # 0.5
-                                   param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
-        ## missing param7 and 8 by user
+      tStartPri <- Sys.time()
+      out_pri <- tryCatch(pri_py(tif = rv$tif,
+                                 incrk = rv$crk ,
+                                 inlcc = rv$lcc,
+                                 maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
+                                 outshppoint = out_pri_shp,
+                                 outshppol = out_pri_shp_pol,
+                                 outshppatch = out_pri_shp_patch,
+                                 outtif = out_pri_tif,
+                                 outtifpatch = out_pri_tif_patch,
+                                 param7 = as.numeric(input$in_pri_5), # 0.5
+                                 param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
+      ## missing param7 and 8 by user
 
 
-        #out_crk_no_data <- gdal_nodata
+      #out_crk_no_data <- gdal_nodata
 
-        tElapPri <- Sys.time() - tStartPri
-        textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
+      tElapPri <- Sys.time() - tStartPri
+      textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
 
 
-        rv$pritif <- out_pri$tif
-        rv$prishp <- out_pri$shp
+      rv$pritif <- out_pri$tif
+      rv$prishp <- out_pri$shp
 
-        if(is.na(out_pri$shp)){
-          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
-          return(rv$llmap)
+      if(is.na(out_pri$shp)){
+        rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
+        return(rv$llmap)
 
-        } else {
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
+      } else {
+        rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
-          output$ll_map_pri <- leaflet::renderLeaflet({
-            # rv$lcc <- out_lcc
-            # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+        output$ll_map_pri <- leaflet::renderLeaflet({
+          # rv$lcc <- out_lcc
+          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
 
-            # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-            rv$priready <- TRUE
-            rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
-            rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
+          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+          rv$priready <- TRUE
+          rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
+          rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
 
-            rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-            #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
-            rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                                           domain = rng_newtif+0.01, na.color = "transparent")
-            # "viridis", "magma", "inferno", or "plasma".
+          rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
+          rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+                                                         domain = rng_newtif+0.01, na.color = "transparent")
+          # "viridis", "magma", "inferno", or "plasma".
 
-            makeLL()
+          makeLL()
 
-            # llmap <<- rv$llmap %>% removeImage('Kernel')  %>% removeControl('legendKernel') %>%
-            #   addRasterImage(out_crk, colors = tifPal, opacity = .7,
-            #                  group = "Surface resistance", layerId = 'Kernel') %>%
-            #   addLegend(pal =  tifPal, values = out_crk[], layerId = "legendKernel",
-            #             position = 'topleft',
-            #             title= "Dispersal Kernel"#, opacity = .3
-            #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-            #   ) %>%  leaflet::addLayersControl(
-            #     overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-            #     options =  leaflet::layersControlOptions(collapsed = FALSE)
-            #   ) %>% clearBounds() %>%  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-            #
-            # rv$llmap <<- llmap
-            # updateLL(llmap)
-            # rv$llmap
-            #
-            # # ## try
-            # llx <- makeLL()
-            # rv$ll
-          })
-        }
+          # llmap <<- rv$llmap %>% removeImage('Kernel')  %>% removeControl('legendKernel') %>%
+          #   addRasterImage(out_crk, colors = tifPal, opacity = .7,
+          #                  group = "Surface resistance", layerId = 'Kernel') %>%
+          #   addLegend(pal =  tifPal, values = out_crk[], layerId = "legendKernel",
+          #             position = 'topleft',
+          #             title= "Dispersal Kernel"#, opacity = .3
+          #             #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+          #   ) %>%  leaflet::addLayersControl(
+          #     overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+          #     options =  leaflet::layersControlOptions(collapsed = FALSE)
+          #   ) %>% clearBounds() %>%  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+          #
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # rv$llmap
+          #
+          # # ## try
+          # llx <- makeLL()
+          # rv$ll
+        })
+      }
     }
   })
 
@@ -4830,8 +4840,8 @@ if (FALSE){
                      textInput("in_sur_4", "Max. val:", '100')
               ),
               column(2,
-                     textInput("in_sur_5", "Max-resistance:", '100'),
-                     textInput("in_sur_6", "Shape:", '1')
+                     textInput("in_sur_5", "Max-resistance:", '5'),
+                     textInput("in_sur_6", "Shape:", '12')
               ),
 
               column(6,
@@ -5077,7 +5087,7 @@ if (FALSE){
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_distB',  fill = TRUE))
                                 ))),
-                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '250000')),
+                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '200000')),
                        column(2, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
@@ -5151,9 +5161,9 @@ if (FALSE){
                 column(width = 2,
                        actionButton("run_cdpop", 'Run CDPOP')),
                 column(width = 4,
-                       selectizeInput(inputId = 'cdpop_ans_yy', 'Year to plot:', choices = c(''), )),
+                       selectizeInput(inputId = 'cdpop_ans_yy', 'Generation to plot:', choices = c(''), )),
                 column(width = 2,
-                       actionButton("mapcdpop", "Load year map"),
+                       actionButton("mapcdpop", "Load generation map"),
                        downloadButton('cdpDwn', 'Download'))
               ),
 
@@ -5164,8 +5174,8 @@ if (FALSE){
                 # uiOutput("out_cdpop_files"),
                 DT::dataTableOutput(outputId =  "out_cdpop_filestable"),
                 column(width = 6,
-                  leaflet::leafletOutput("ll_map_cdp", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")
-                       ),
+                       leaflet::leafletOutput("ll_map_cdp", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")
+                ),
                 column(width = 6,
                        tabsetPanel(
                          type = "pills",
@@ -5175,8 +5185,8 @@ if (FALSE){
                                    %>%shinycssloaders::withSpinner(color="#0dc5c1")),
                          tabPanel( "Heterozygosity", highcharter::highchartOutput("hccdpop3") #, height = "800px")
                                    %>%shinycssloaders::withSpinner(color="#0dc5c1"))
-                         )
                        )
+                )
               ),
 
               br(),
@@ -5245,7 +5255,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
-              column(2, textInput("in_crk_4", "Max. dispersal distance (meters):", '125000')),
+              column(2, textInput("in_crk_4", "Max. dispersal distance (meters):", '200000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
@@ -5288,7 +5298,7 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(1, textInput("in_lcc_4", "Max. dispersal distance (meters):", '150000')),
+              column(1, textInput("in_lcc_4", "Max. dispersal distance (meters):", '800000')),
               column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
               column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
               column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
@@ -5356,10 +5366,10 @@ if (FALSE){
                      sliderInput(inputId = 'pri_slider',label =  'Percentile:', 0.1, 1, 0.5, step = 0.1),
                      tags$head(tags$style("#vout_pri{overflow-y:scroll; max-height: 70px}")),
 
-                     leaflet::leafletOutput("ll_map_pri_prev", height = "500px") %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+                     leaflet::leafletOutput("ll_map_pri_prev", height = "500px") %>%shinycssloaders::withSpinner(color="#0dc5c1") ),
               column(8,
-                leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
-                     )
+                     leaflet::leafletOutput("ll_map_pri", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
+              )
             ),
             br(),
             shinydashboard::box(
@@ -5548,42 +5558,42 @@ if (FALSE){
                      )
               )
 
-          ),
+            ),
 
-          # , br(),
-          #   fluidRow(
-          #     column(3, imageOutput("png1")),
-          #     column(3, imageOutput("png2")),
-          #     column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
-          #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
-          #     column(3, highcharter::highchartOutput("hccomp2"
-          #                                            #, height = "800px"
-          #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
-          #   )
-          # )
+            # , br(),
+            #   fluidRow(
+            #     column(3, imageOutput("png1")),
+            #     column(3, imageOutput("png2")),
+            #     column(3, highcharter::highchartOutput("hccomp1"#, height = "800px"
+            #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+            #     column(3, highcharter::highchartOutput("hccomp2"
+            #                                            #, height = "800px"
+            #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
+            #   )
+            # )
 
 
-          shinydashboard::box(
-            width = 12, solidHeader = T, collapsible = T,
-            title = "Comparisson info", status = "primary", collapsed = TRUE
-            ,
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "Comparisson info", status = "primary", collapsed = TRUE
+              ,
 
-            #fluidRow(
-            column(width = 4,
-                   h6('Min-grid *Change to Min. value
+              #fluidRow(
+              column(width = 4,
+                     h6('Min-grid *Change to Min. value
 -Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
                  Max-grid *Change to Max. value
 -Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
                  ')),
-            column(width = 4, h5('Hallo')),
-            column(width = 4, h5('Hello'))
-            #)
-          ) # close box
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
+              #)
+            ) # close box
 
           )
-        ,
+          ,
 
           #### UI COORDS ----
           shinydashboard::tabItem(
@@ -5640,8 +5650,8 @@ if (FALSE){
           ),
 
           shinydashboard::tabItem('tab_example',
-                  fluidPage(plotOutput('plot0'),
-                            plotOutput('plot1'))
+                                  fluidPage(plotOutput('plot0'),
+                                            plotOutput('plot1'))
           )
           # tab_home tab_surface tab_points tab_distance tab_cdpop
           # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal
