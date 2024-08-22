@@ -29,3 +29,5 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
  * Access here the live [Decision support system dashboard (DSS)](http://34.44.31.4:3838/connecting-landscapes)
  
  * Access here the [User's manual document (DSS) ](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)
+
+ * If you attended the workshops, please consider filling [this form](https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link)
