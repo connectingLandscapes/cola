@@ -12,8 +12,8 @@ if(!require(devtools)){install.packages('devtools')}
 library(devtools) # Library for installing packages from github
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## Type "3": None ## Installs cola
 
-#@ If error: Go to https://github.com/connectingLandscapes/cola >> Green butto >>
-#@ Download zip
+## If error: Go to https://github.com/connectingLandscapes/cola >> Green button >>
+## Download zip >> D:/path/to/cola-main.zip. Then run the following commands:
 # install.packages("D:/path/to/cola-main.zip", repos = NULL, type = "win.binary")
 ## or
 # devtools::install_local('D:/path/to/cola-main.zip')
