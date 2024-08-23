@@ -1,6 +1,6 @@
 # Installing -Connecting landscapes- `cola` 
 
-Find in this page the details and insrtuctions for a) installation and b) customize parameters
+Find on this page the details and instructions for **a)** installation and **b)** customization *cola* installation parameters.
 
 
 This code contains the quick-and-dirt way to install `cola`.  For the full procedure from scratch check the details in the next session.
@@ -57,16 +57,16 @@ It's required to install several components (once). The structure of this softwa
 
 - Python as the engine for the main scripts
 
-- Miniconda (conda) environment as the package containing all python dependencies
+- Miniconda (conda) environment as the package containing all Python dependencies
 
-- R shiny for the dashboard Decision support system.
+- R shiny is for the dashboard decision support system.
 
 
 Some of the different computers might have particular conditions or requirements for installing all these components, so we made a section where you can find known issues an their potential solution. If you found a new one please share it with us so potential new users can see it.
 
 
 
-  ***If you have any issue installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md) (open in new tab if launched in R/Rstudio/Shiny) for potential solutions*** 
+  ***If you have any issues installing and setting up the software, please check the [KNOWN-ISSUES PAGE](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md) (open in a new tab if launched in R/Rstudio/Shiny) for potential solutions*** 
    
 
 ------------------
