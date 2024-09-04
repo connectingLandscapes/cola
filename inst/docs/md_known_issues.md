@@ -346,6 +346,22 @@ Installing the `cola` conda environment packages should be done by the `cola::se
 -------------
 -------------
 
+
+  **Known issue:** Your installing `path miniconda_path()` contains spaces:
+  
+  `Error in reticulate::install_miniconda() : cannot install Miniconda into a path containing spaces`
+   
+  
+ ***Solution:*** Create folder with writing permissions in your computer. Something like "C:/temp/R". Then in R type
+ `library(reticulate)`
+ `install_miniconda(path = 'C:/temp/R', update = TRUE, force = FALSE)`
+ `Sys.setenv(RETICULATE_MINICONDA_PATH = "C:/temp/R")`
+ 
+ Then restart R. [An eample here](https://github.com/rstudio/reticulate/issues/745),
+ 
+-------------
+-------------
+
 ###  **6. Define connections between R and Python**
 These errors are common because each computer has a particular configuration. Here some of the solutions we found.
  
