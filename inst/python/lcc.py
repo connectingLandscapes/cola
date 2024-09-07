@@ -248,10 +248,15 @@ def main() -> None:
     # The size of the kernel on each side is 2*radius + 1
     # E.g. a radius of 2 gives a 5x5 cell kernel
     # If radius is 0, don't smooth
+    # Use rule of thumb for setting sigma from here:
+    # https://dsp.stackexchange.com/questions/10057/gaussian-blur-standard-deviation-radius-and-kernel-size
     if gRad == 0:
         lccSmooth = dArr
     else:
-        lccSmooth = gaussian_filter(dArr, sigma=1, radius=gRad)
+        sigma = (gRad-1)/4
+        # Sigma should be at least 1
+        sigma = np.max([1,sigma])
+        lccSmooth = gaussian_filter(dArr, sigma=sigma, radius=gRad)
 
     #%% 
     # Add a dimension to the array (the rasterio profile expects
