@@ -120,7 +120,9 @@ def main() -> None:
     
     # Check if only one patch.
     if npatch1 == 1:
-        raise Exception('There is only one patch. You may want to change the threshold for creating patches.')
+        print('There is only one patch. You may want to change the threshold for creating patches.')
+        sys.exit(0)
+        #raise Exception('There is only one patch. You may want to change the threshold for creating patches.')
     
     # Convert patches to shapefile
     # Mask out zeros
