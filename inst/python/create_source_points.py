@@ -104,7 +104,7 @@ def main() -> None:
     rRsc = (r - sMin) / (sMax - sMin)
     
     # If resistance, invert
-    if isSuitability == 'N':
+    if isSuitability == 'No':
         rRsc = 1-rRsc
     
     #%%
