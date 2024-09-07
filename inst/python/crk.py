@@ -221,6 +221,12 @@ def main() -> None:
     # Reshape into rectangular array
     dArr = dArr.reshape(r.shape[0],r.shape[1])
 
+    # Calculate quantiles of values > 0 and write to csv
+    qDf = np.quantile(dArr[dArr>0],np.arange(0,1.01,0.01))
+    qDf = pd.DataFrame({'q': np.arange(0,1.01,0.01), 'value': qDf})
+    # Write quantiles to csv
+    qDf.to_csv(ofile.replace(".tif","_quantiles.csv"),index=False)
+    
     # Smooth (not implemented yet)
     #from scipy.ndimage import gaussian_filter
     #dArr = gaussian_filter(dArr, sigma=1, radius=2)
@@ -230,8 +236,8 @@ def main() -> None:
     # a dimension corresponding to number of bands)
     dArr = np.expand_dims(dArr, axis=0)
     
-    # Write to file
-    cf.arrayToGeoTiff(dArr, ofile, profile)
+    # Write crk to file
+    cf.arrayToGeoTiff(dArr, ofile, profile)    
     
     toc = time.perf_counter()
     print(f"Calculating kernels took {toc - tic:0.4f} seconds", flush=True)
