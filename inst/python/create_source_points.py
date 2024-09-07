@@ -28,8 +28,8 @@ def main() -> None:
     tic = time.perf_counter()
 
     # INPUTS    
-    # Path to suitability grid
-    rg = sys.argv[1]
+    # Path to suitability or resistance grid
+    srg = sys.argv[1]
 
     # Output file path
     ofile = sys.argv[2]
@@ -43,9 +43,12 @@ def main() -> None:
     # Number of source points to create
     numSourcePoints = sys.argv[5]
     
+    # Is provided grid suitability? If not, assume resistance. Should by 'Yes' or 'No'
+    isSuitability = sys.argv[6]
+    
     # User provided CRS if using ascii or other file without projection info
     # Provide as epsg or esri string e.g. "ESRI:102028"
-    upCRS = sys.argv[6] # Default None
+    upCRS = sys.argv[7] # Default None
 
     #%%
     # Convert min, max and nsources to float or integer
@@ -79,7 +82,7 @@ def main() -> None:
     # Assign crs if provided by user
     # Convert profile to single band if multi
     # Convert data and profile to float32
-    r, profile = cf.read2flt32array(upCRS, rg)
+    r, profile = cf.read2flt32array(upCRS, srg)
 
     # Check no data value and convert to 
     # -9999 if necessary
@@ -99,6 +102,10 @@ def main() -> None:
     
     # Rescale to 0-1
     rRsc = (r - sMin) / (sMax - sMin)
+    
+    # If resistance, invert
+    if isSuitability == 'N':
+        rRsc = 1-rRsc
     
     #%%
     # Subtract random array from rescaled suitability array
@@ -122,7 +129,7 @@ def main() -> None:
     randIndices = rcIndices[sSet,:]
     
     # Convert row, column to coordinates
-    with rio.open(rg) as src:
+    with rio.open(srg) as src:
         xCs, yCs = rio.transform.xy(src.transform, randIndices[:,0], randIndices[:,1])
     
     # Convert to pandas df
