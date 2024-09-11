@@ -465,7 +465,7 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 points_py <- function(intif, outshp,
-                      param3, param4, param5, param6 = 'None',
+                      smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
                       py = Sys.getenv("COLA_PYTHON_PATH"),
                       pyscript = system.file(package = 'cola', 'python/create_source_points.py')){
   # param3 = 2
@@ -473,10 +473,10 @@ points_py <- function(intif, outshp,
   # param5 = 50
   # pyscript <- system.file(package = 'cola', 'python/create_source_points.py'
   (cmd_pts <- paste0(py, ' ', pyscript, ' ', intif, ' ', outshp, ' ',
-                     format(param3, scientific=F), ' ',
-                     format(param4, scientific=F), ' ',
-                     format(param5, scientific=F), ' ',
-                     param6))
+                     format(smin, scientific=F), ' ',
+                     format(smax, scientific=F), ' ',
+                     format(npoints, scientific=F), ' ',
+                     issuit, ' ', upcrs))
   cat('\n\tCMD Points: ')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')

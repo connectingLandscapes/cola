@@ -2586,11 +2586,12 @@ server <- function(input, output, session) {
     rv$tifpathptsfix <- paste0(tempFolder, '/in_pointshs_fixed_', rv$inPointsSessID, '.tif')
     newtifPath_pts <- fitRaster2cola(inrasterpath = rv$tifpathpts, outrasterpath =  rv$tifpathptsfix)
     newtifPath_pts <<- ifelse(is.na(newtifPath_pts), yes = rv$tifpathpts, no = newtifPath_pts)
+    rv$newtifPath_pts <- newtifPath_pts
 
-    pdebug(devug=devug,sep='\n',pre='---PTS\n',"newtifPath_pts") # = = = = = = =  = = =  = = =  = = =  = = =
+    pdebug(devug=devug,sep='\n',pre='---PTS hs\n',"newtifPath_pts") # = = = = = = =  = = =  = = =  = = =  = = =
+    print(rv$newtifPath_pts)
 
-
-    if (file.exists(newtifPath_pts)){
+    if (file.exists(rv$newtifPath_pts)){
       params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
       rv$hsready <- TRUE
@@ -2658,9 +2659,10 @@ server <- function(input, output, session) {
         points_file <- points_py(py = py,
                                  intif = as.character(rv$tif),
                                  outshp = out_pts,
-                                 param3 = as.numeric(input$in_points_3),
-                                 param4 = as.numeric(input$in_points_4),
-                                 param5 = as.numeric(input$in_points_5))
+                                 smin = as.numeric(input$in_points_3),
+                                 smax = as.numeric(input$in_points_4),
+                                 npoints = as.numeric(input$in_points_5),
+                                 issuit = 'No')
       }
 
       if(in_points_ly == 'HabitatSuitability'){
@@ -2671,9 +2673,11 @@ server <- function(input, output, session) {
         points_file <- points_py(py = py,
                                  intif = as.character(rv$hs),
                                  outshp = out_pts,
-                                 param3 = as.numeric(input$in_points_3),
-                                 param4 = as.numeric(input$in_points_4),
-                                 param5 = as.numeric(input$in_points_5))
+                                 smin = as.numeric(input$in_points_3),
+                                 smax = as.numeric(input$in_points_4),
+                                 npoints = as.numeric(input$in_points_5),
+                                 issuit = 'Yes'
+                                 )
       }
 
       # inPts <<- switch (in_points_ly,
