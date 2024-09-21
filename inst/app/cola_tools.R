@@ -31,7 +31,7 @@ if (TRUE){
 }
 
 
-### time stamp -----
+## time stamp -----
 ## Create temporal ID
 sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE, only3 = FALSE){
   (tempID <- basename(tempfile()))
@@ -879,9 +879,14 @@ loadRast <- function(inFiles, tempFolder, sessID){ # inFile <- input$shapefile
 }
 
 
-loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
+# xx <- loadShp(inFiles, tempFolder, sessID, rastTemp = NULL)
+loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- input$shapefile
   #inFiles: data frame with files. column 'name' with file name, and 'newFile' with full new name path
 
+  # sessID <- 'colaQDZ2024091910420805'
+  # tempFolder <- paste0('/data/tempR/', sessID)
+  #inFiles <- data.frame(newFile = list.files(full.names = TRUE, path = tempFolder, pattern = 'pws'))
+  #inFiles$name <- basename(inFiles$newFile)
   # rv$inDistSessID
   # sessID <- (inDistSessID <- sessionIDgen())
   # tempFolder <- "/data/temp/SL2023112814374705file138b6c29cf34/"
@@ -889,13 +894,15 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
   # sss <- load(paste0('/data/temp/inFiles_input_shp.RData'))
   # load(paste0(rootPath, '/inFiles_input_shp.RData'))
   # sss <- load(paste0(tempFolder, '/shpfiles.RData')) # sss
+
   #print(inFiles)
   outshp <- list()
   if ( class(inFiles) == "NULL" ){
     outshp$mssg <- 'Error in loading shapefile'
   } else {
-    if ( nrow(inFiles) == 1){
-      if(grepl('*\\.zip', inFiles$name)){ ## zip files
+    if ( class(inFiles) == 'data.frame' & nrow(inFiles) == 1){
+      ## zip files
+      if(grepl('*\\.zip', inFiles$name)){
         outZip <- paste0(tempFolder, '/shp_', sessID);
         dir.create(outZip)
         unzip(zipfile = inFiles$newFile, exdir = outZip)
@@ -909,7 +916,7 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
         outshp$shp <- tryCatch(sf::read_sf(inFiles$newFile[1]), error = function (e) NULL)
         outshp$files <- inFiles$newFile
         outshp$layer <- inFiles$newFile[1]
-      } else if (grepl('\\.csv', inFiles$name)){ ## single
+      } else if (grepl('\\.csv', inFiles$name)){ ## single CSV
         #save(inFiles, file = 'inFileSingle.RData'); load(paste0(rootPath, '/inFiles_input_shp.RData')) # sss
         # inFiles <- inFiles[5, ]
         outshp$shp <- tryCatch(sf::read_sf(inFiles$newFile[1]), error = function (e) NULL)
@@ -943,188 +950,204 @@ loadShp <- function(inFiles, tempFolder, sessID){ # inFiles <- input$shapefile
         outshp$shp <- tryCatch(sf::read_sf(
           grep('shp$', inFiles$newFile, value = TRUE)),
           error = function (e) NULL)
+      }
+
+      if( !is.null(outshp$shp) ){
+
         if (any(class(outshp$shp$geometry) == 'sfc_MULTIPOINT')){
           outshp$shp <- st_cast(outshp$shp, "POINT")
           outshp$shp <- as(outshp$shp, 'Spatial')
         }
+
+        # if (any(class(outshp$shp$geometry) == 'sfc_LINESTRING')){
+        #   outshp$shp <- st_cast(outshp$shp, "LINE")
+        #   outshp$shp <- as(outshp$shp, 'Spatial')
+        # }
+
+        #print( ' ............. '); print(outshp$shp)
+
+        if ( is.na(st_crs(outshp$shp)) ){
+          # if (is.na(outshp$shp@proj4string@projargs)){
+          outshp$mssg <- 'No projection in shapefile'
+        } else {
+          if(terra::same.crs(outshp$shp, rastTemp)){
+            outshp$shp <- terra::project(outshp$shp, crs(rastTemp))
+          }
+        }
+
+        if ( any(class(outshp$shp) %in% 'sf') ){
+          #if (class(outshp$shp) == 'SpatialPointsDataFrame'){
+          outshp$shp$sortID <- 1:nrow(outshp$shp)
+        }
+
+        outshp$files <- inFiles$newFile
+        outshp$layer <- grep(pattern = '.shp', outshp$files, value = TRUE)
       }
-      #print( ' ............. '); print(outshp$shp)
 
-      outshp$files <- inFiles$newFile
-      outshp$layer <- grep(pattern = '.shp', outshp$files, value = TRUE)
+
+
+
+      # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
+      # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
+      # try(file.remove(inFiles$name))
     }
-
-    if ( is.na(st_crs(outshp$shp)) ){
-      # if (is.na(outshp$shp@proj4string@projargs)){
-      outshp$mssg <- 'No projection in shapefile'
-    }
-
-    if ( any(class(outshp$shp) %in% 'sf') ){
-      #if (class(outshp$shp) == 'SpatialPointsDataFrame'){
-      outshp$shp$sortID <- 1:nrow(outshp$shp)
-    }
-
-    # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
-    # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
-    # try(file.remove(inFiles$name))
-  }
-  #save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
-  cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
-  #print(outshp)
-  return(outshp)
-}
-
-getMxMn <- function(rastPath){
-  # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
-  if(class(rastPath) == 'character'){
-    rst <- terra::rast(rastPath)
-  } else if (class(rastPath) == 'SpatRaster'){
-    rst <- (rastPath)
+    #save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
+    cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
+    #print(outshp)
+    return(outshp)
   }
 
-  ra <- minmax(rst)[1:2]
-  if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-    return(ra)
-  } else {
-    (ra <- range(rst[], na.rm = TRUE))
+  getMxMn <- function(rastPath){
+    # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+    if(class(rastPath) == 'character'){
+      rst <- terra::rast(rastPath)
+    } else if (class(rastPath) == 'SpatRaster'){
+      rst <- (rastPath)
+    }
+
+    ra <- minmax(rst)[1:2]
     if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
       return(ra)
     } else {
-      ra <- global(rst, 'range' )
+      (ra <- range(rst[], na.rm = TRUE))
       if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
         return(ra)
+      } else {
+        ra <- global(rst, 'range' )
+        if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+          return(ra)
+        }
       }
     }
   }
-}
 
-pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
-  if (devug){
-    x. = c(...)
-    # x. = c('is.null(rv$newtifPath_dist)', 'rv$newtifPath_dist')
-    # x. = c('grps'); grps = c('A', 'B', 'C')
-    # print(x.)
-    cat('\n', pre)
-    invisible(sapply(x., function(x){
-      # x = x.[2]
-      y <- tryCatch(expr = eval(parse(text = x)), error = function(e) '-err-')
-      if(is.null(y)){ y <- 'NULL' }
-      tryCatch(cat(sep, x, ": ", y), error = function(e) e)
-    }))
-    cat('\n\t \n')
+  pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
+    if (devug){
+      x. = c(...)
+      # x. = c('is.null(rv$newtifPath_dist)', 'rv$newtifPath_dist')
+      # x. = c('grps'); grps = c('A', 'B', 'C')
+      # print(x.)
+      cat('\n', pre)
+      invisible(sapply(x., function(x){
+        # x = x.[2]
+        y <- tryCatch(expr = eval(parse(text = x)), error = function(e) '-err-')
+        if(is.null(y)){ y <- 'NULL' }
+        tryCatch(cat(sep, x, ": ", y), error = function(e) e)
+      }))
+      cat('\n\t \n')
+    }
+  } # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
+
+  # pdebug(devug=devug,sep='\n',pre='--', 'is.null(rv$newtifPath_dist)', 'rv$newtifPath_dist')
+  # pdebug(devug=devug,sep='\n',pre='--','print(inFiles)')
+
+  rowx <- function(...) {
+    tags$div(class="row", ...)
   }
-} # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
 
-# pdebug(devug=devug,sep='\n',pre='--', 'is.null(rv$newtifPath_dist)', 'rv$newtifPath_dist')
-# pdebug(devug=devug,sep='\n',pre='--','print(inFiles)')
-
-rowx <- function(...) {
-  tags$div(class="row", ...)
-}
-
-colx <- function(width, ...) {
-  tags$div(class=paste0("span", width), ...)
-}
-
-
-##function for removing the colum
-
-# removecolumn <- function(df, nameofthecolumn){
-#   df[ , -which(names(df) %in% nameofthecolumn)]
-# }
-
-removecolumn <- function(df, nameofthecolumn = NULL){
-  id <- ifelse(is.null(nameofthecolumn),
-               ncol(df),
-               which(names(df) %in% nameofthecolumn))
-  if(ncol(df) == 2){
-    df[ , -id, drop = FALSE]
-  } else if (ncol(df) == 1){
-    df
-  } else if (ncol(df) > 2){
-    df[ , -id]
+  colx <- function(width, ...) {
+    tags$div(class=paste0("span", width), ...)
   }
-}
-
-addcolumn <- function(df, nameofthecolumn = NULL){
-  id <- ifelse(is.null(nameofthecolumn), ncol(df), nameofthecolumn)
-  cbind(df, df[ , id])
-}
 
 
+  ##function for removing the colum
+
+  # removecolumn <- function(df, nameofthecolumn){
+  #   df[ , -which(names(df) %in% nameofthecolumn)]
+  # }
+
+  removecolumn <- function(df, nameofthecolumn = NULL){
+    id <- ifelse(is.null(nameofthecolumn),
+                 ncol(df),
+                 which(names(df) %in% nameofthecolumn))
+    if(ncol(df) == 2){
+      df[ , -id, drop = FALSE]
+    } else if (ncol(df) == 1){
+      df
+    } else if (ncol(df) > 2){
+      df[ , -id]
+    }
+  }
+
+  addcolumn <- function(df, nameofthecolumn = NULL){
+    id <- ifelse(is.null(nameofthecolumn), ncol(df), nameofthecolumn)
+    cbind(df, df[ , id])
+  }
 
 
 
 
-# for( x in 1:nrow(gd)){ # x = 1
-#   case <- case0
-#
-#   xy <- gd[x, 1]
-#   rs <- gd[x, 2]
-#
-#   (caseName <- paste0(outDir, '/case_', LETTERS[x], '.rip'))
-#   (case[1, 1] <- gsub('small_test', paste0('case1', LETTERS[x]), case[1, 1]))
-#   (case[2, 1] <- gsub('small_test.rsg', rs, case[2, 1]))
-#   (case[3, 1] <- gsub('small_test_10pts.xy', xy, case[3, 1]))
-#
-#   (case[21, 1] <- "Save_Path_Output    TRUE") # Save_Path_Output
-#   (case[24, 1] <- "Save_KDE_Output    TRUE") # Save_KDE_Output
-#   (case[25, 1] <- "Save_Category_Output    TRUE") # Save_Category_Output
-#   (case[26, 1] <- "Save_CDmatrix_Output    TRUE") # Save_CDmatrix_Output
-#
-#   if(file.exists(xy) & file.exists(rs)){
-#     write.table(case, file = caseName, col.names = FALSE, row.names = FALSE, quote = FALSE)
-#   }
-# }
-#
-# outConf <- expand.grid(o1 = c(FALSE, TRUE), o2 = c(FALSE, TRUE), o3 = c(FALSE, TRUE), o4 = c(FALSE, TRUE))
-# colnames(outConf) <- c('Save_Path_Output', 'KDE_Output', 'Category_Output', 'CDmatrix_Output')
-#
-# write.csv(outConf, 'caseO_output_config_time.csv')
-#
-# (x <- which(gd$case == 'R'))
-# xy <- gd[x, 1]
-# rs <- gd[x, 2]
-# for( h in 1:nrow(outConf)){ # h = 1
-#
-#   case <- case0
-#   (caseName <- paste0(outDir, '/case',LETTERS[x],'_', h,'.rip'))
-#   print(caseName)
-#   (case[1, 1] <- gsub('small_test', paste0( 'case',LETTERS[x], '_', h ), case[1, 1]))
-#   (case[2, 1] <- gsub('small_test.rsg', rs, case[2, 1]))
-#   (case[3, 1] <- gsub('small_test_10pts.xy', xy, case[3, 1]))
-#
-#   (case[21, 1] <- paste0("Save_Path_Output    ", outConf[h, 1])) # Save_Path_Output
-#   (case[24, 1] <- paste0("Save_KDE_Output    ", outConf[h, 2])) # Save_KDE_Output
-#   (case[25, 1] <- paste0("Save_Category_Output    ", outConf[h, 3])) # Save_Category_Output
-#   (case[26, 1] <- paste0("Save_CDmatrix_Output    ", outConf[h, 4])) # Save_CDmatrix_Output
-#
-#   if(file.exists(xy) & file.exists(rs) ){
-#     write.table(case, file = caseName, col.names = FALSE, row.names = FALSE, quote = FALSE)
-#   }
-# }
 
 
-# cd %userprofile%\dockerdata\UNICOR\unicor
-# python UNICOR.py caseA.rip
+  # for( x in 1:nrow(gd)){ # x = 1
+  #   case <- case0
+  #
+  #   xy <- gd[x, 1]
+  #   rs <- gd[x, 2]
+  #
+  #   (caseName <- paste0(outDir, '/case_', LETTERS[x], '.rip'))
+  #   (case[1, 1] <- gsub('small_test', paste0('case1', LETTERS[x]), case[1, 1]))
+  #   (case[2, 1] <- gsub('small_test.rsg', rs, case[2, 1]))
+  #   (case[3, 1] <- gsub('small_test_10pts.xy', xy, case[3, 1]))
+  #
+  #   (case[21, 1] <- "Save_Path_Output    TRUE") # Save_Path_Output
+  #   (case[24, 1] <- "Save_KDE_Output    TRUE") # Save_KDE_Output
+  #   (case[25, 1] <- "Save_Category_Output    TRUE") # Save_Category_Output
+  #   (case[26, 1] <- "Save_CDmatrix_Output    TRUE") # Save_CDmatrix_Output
+  #
+  #   if(file.exists(xy) & file.exists(rs)){
+  #     write.table(case, file = caseName, col.names = FALSE, row.names = FALSE, quote = FALSE)
+  #   }
+  # }
+  #
+  # outConf <- expand.grid(o1 = c(FALSE, TRUE), o2 = c(FALSE, TRUE), o3 = c(FALSE, TRUE), o4 = c(FALSE, TRUE))
+  # colnames(outConf) <- c('Save_Path_Output', 'KDE_Output', 'Category_Output', 'CDmatrix_Output')
+  #
+  # write.csv(outConf, 'caseO_output_config_time.csv')
+  #
+  # (x <- which(gd$case == 'R'))
+  # xy <- gd[x, 1]
+  # rs <- gd[x, 2]
+  # for( h in 1:nrow(outConf)){ # h = 1
+  #
+  #   case <- case0
+  #   (caseName <- paste0(outDir, '/case',LETTERS[x],'_', h,'.rip'))
+  #   print(caseName)
+  #   (case[1, 1] <- gsub('small_test', paste0( 'case',LETTERS[x], '_', h ), case[1, 1]))
+  #   (case[2, 1] <- gsub('small_test.rsg', rs, case[2, 1]))
+  #   (case[3, 1] <- gsub('small_test_10pts.xy', xy, case[3, 1]))
+  #
+  #   (case[21, 1] <- paste0("Save_Path_Output    ", outConf[h, 1])) # Save_Path_Output
+  #   (case[24, 1] <- paste0("Save_KDE_Output    ", outConf[h, 2])) # Save_KDE_Output
+  #   (case[25, 1] <- paste0("Save_Category_Output    ", outConf[h, 3])) # Save_Category_Output
+  #   (case[26, 1] <- paste0("Save_CDmatrix_Output    ", outConf[h, 4])) # Save_CDmatrix_Output
+  #
+  #   if(file.exists(xy) & file.exists(rs) ){
+  #     write.table(case, file = caseName, col.names = FALSE, row.names = FALSE, quote = FALSE)
+  #   }
+  # }
 
-#for %a in (4 5 6 7 8 9 10 11 12 13 14 15) do python UNICOR.py caseR_%a.rip
-#for /l %a in (1, 1, 16) do python UNICOR.py caseR_%a.rip
 
-# >python UNICOR.py sabah.rip
-# Log output directed to     : (sabah_test.log)
-# The path list is empty, try increasing the path threshold, caclulating path as Nan
-# Total UNICOR program run-time: 1:03:13.909943
+  # cd %userprofile%\dockerdata\UNICOR\unicor
+  # python UNICOR.py caseA.rip
 
-#
-# #### Plot results
-# result <- read.csv('N:/Mi unidad/connectivity-nasa/01_original-data/Sabah_example_CDPOP+UNICOR/cases_config_time_A-X.csv')[1:24, ]
-# result$nXWpts <- as.numeric(gsub('[a-zA-Z]|\\.|_', '', result$xy))
-# result$npix <- gsub('size.+px_|tot.+', '', result$rsg)
-#
-# library(ggplot2)
-# ggplot(result, aes(x = nXWpts, y = time, group = npix, color = npix)) +
-#   geom_point() + geom_line() +
-#   labs(title = 'Elapsed computing time in seconds',
-#        x = 'Number of XW points', y = 'Time in seconds', color = 'Raster size in tot pixels') +
-#   theme(legend.position="bottom")
+  #for %a in (4 5 6 7 8 9 10 11 12 13 14 15) do python UNICOR.py caseR_%a.rip
+  #for /l %a in (1, 1, 16) do python UNICOR.py caseR_%a.rip
+
+  # >python UNICOR.py sabah.rip
+  # Log output directed to     : (sabah_test.log)
+  # The path list is empty, try increasing the path threshold, caclulating path as Nan
+  # Total UNICOR program run-time: 1:03:13.909943
+
+  #
+  # #### Plot results
+  # result <- read.csv('N:/Mi unidad/connectivity-nasa/01_original-data/Sabah_example_CDPOP+UNICOR/cases_config_time_A-X.csv')[1:24, ]
+  # result$nXWpts <- as.numeric(gsub('[a-zA-Z]|\\.|_', '', result$xy))
+  # result$npix <- gsub('size.+px_|tot.+', '', result$rsg)
+  #
+  # library(ggplot2)
+  # ggplot(result, aes(x = nXWpts, y = time, group = npix, color = npix)) +
+  #   geom_point() + geom_line() +
+  #   labs(title = 'Elapsed computing time in seconds',
+  #        x = 'Number of XW points', y = 'Time in seconds', color = 'Raster size in tot pixels') +
+  #   theme(legend.position="bottom")

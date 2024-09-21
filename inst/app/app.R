@@ -49,6 +49,7 @@
   ## Initials ---
 
   os <- Sys.info()[c("sysname")]
+  os <<- os
   # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
   #   setwd('N:/Mi unidad/IG/server_IG/gedivis')
   #   #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
@@ -2234,11 +2235,11 @@ server <- function(input, output, session) {
 
       bounds <- sce %>% st_bbox() %>% as.character()
       proxy <- leafletProxy("ll_map_edi")
-      #proxy <- leaflet() %>% addTiles()
+      #proxy <- leaflet() %>% addTiles() %>% addRasterImage(terra::rast('/data/tempR//colaQLD2024092011544605/in_edit_fixed_XPX2024092011553205.tif'))
       #print (getwd()); save(sce, file = 'sce_debug_edi_shp.RData'); print (sce)
       proxy %>%  #remove(layerId = 'SurfaceResistance')  %>%
-        removeShape('layerId') %>%
-        leaflet::addPolygons(data = sce, color = 'darkblue', fillColor = 'darkblue', group = "layerId") %>%
+        removeShape('pol') %>%
+        leaflet::addPolygons(data = sce, color = 'darkblue', fillColor = 'darkblue', group = "pol") %>%
         fitBounds(bounds[1], bounds[2], bounds[3], bounds[4])
 
       # output$ll_map_edi <- leaflet::renderLeaflet({
@@ -2381,7 +2382,8 @@ server <- function(input, output, session) {
   isolate(observeEvent(input$rpl, {
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
 
-    if(input$in_edi_val != 0 & input$in_edi_val != "0" & rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
+    if(os != 'Windows' & input$in_edi_val != 0 & input$in_edi_val != "0" &
+       rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
 
       output$ll_map_edi <- leaflet::renderLeaflet({
 
@@ -3780,7 +3782,7 @@ server <- function(input, output, session) {
 
     if (cond ){
 
-      if(in_com_ly == 'Least cost path corridos'){
+      if(in_com_ly == 'Corridos'){
 
         comp_out <- tryCatch(
           lcc_compare_py(intif = avail_layers[1],
@@ -3959,7 +3961,7 @@ server <- function(input, output, session) {
 
             addLegend(pal = com_pal, values = com_rng2,
                       group = in_com_ly, layerId = 'Comparison',
-                      position = 'bottomleft', title = 'Comparisson') %>%
+                      position = 'bottomleft', title = 'Difference') %>%
             leaflet::addLayersControl(
               baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
               overlayGroups = c(names(com_stack), names(ori_stack)),
@@ -4009,7 +4011,7 @@ server <- function(input, output, session) {
     layer_type_compare <- switch(in_com_ly,
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
-                                 'Least cost path corridos' = 'out_lcc_.+.tif$')
+                                 'Corridos' = 'out_lcc_.+.tif$')
 
     # tempFolder <- '/data/temp/scenario_folder'
     avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
@@ -4607,7 +4609,7 @@ if (FALSE){
           #shinydashboard::menuItem(HTML(paste("Landscape genetics", "mapping tools", sep="<br/>")),
           #          tabName = "tab_genetics", icon = icon("route")),
 
-          shinydashboard::menuItem(HTML(paste("Connectivity", "dispersal kernels", sep="<br/>")),
+          shinydashboard::menuItem(HTML(paste("Connectivity - kernels")), # sep="<br/>"
                                    tabName = "tab_kernels", icon = icon("bezier-curve")),
           conditionalPanel( 'input.sidebarid == "tab_kernels"',
                             div(style = "margin-top: -10px"),
@@ -5462,12 +5464,12 @@ if (FALSE){
           shinydashboard::tabItem(
             tabName = 'tab_compare',
             fluidRow(
-              column(3, h2(' Comparing results', style="text-align: center;")
+              column(3, h2(' Compare results', style="text-align: center;")
               ),
               column(3,
                      selectInput("in_com_ly", label = "Layers:", selected = '',
                                  choices = c('', #'Surface resistance',
-                                             'Dispersal kernels', 'Least cost path corridos'))
+                                             'Dispersal kernels', 'Corridos'))
               ),
               column(3,
                      verbatimTextOutput("vout_com")
