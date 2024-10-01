@@ -3414,9 +3414,6 @@ server <- function(input, output, session) {
                                                          domain = rng_newtif+0.01, na.color = "transparent")
 
           # "viridis", "magma", "inferno", or "plasma".
-
-
-
           ## Update all visor
 
           makeLL()
@@ -3734,15 +3731,17 @@ server <- function(input, output, session) {
 
     in_com_ly <- input$in_com_ly
     # in_com_ly <- 'Dispersal kernels'
+    # in_com_ly <- 'Corridors'
     # tempFolder <- '/data/temp/scenario_folder'
     layer_type_compare <- switch(in_com_ly,
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
-                                 'Least cost path corridos' = 'out_lcc_.+.tif$')
+                                 'Corridors' = 'out_lcc_.+.tif$')
 
-    # tempFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/';
+    # tempFolder <- '/data/tempR//colaGPW2024100117131905';
     # layer_type_compare <- 'out_crk_.+.tif$'
-    (avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
+    (avail_layers <- list.files(path = tempFolder,
+                                pattern = layer_type_compare,
                                 full.names = TRUE))
     (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
     # avail_layers <- rev(avail_layers)
@@ -3751,13 +3750,14 @@ server <- function(input, output, session) {
     # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
 
     (compID <- sessionIDgen(short = TRUE))
-    if(in_com_ly == 'Least cost path corridos'){
+    if(in_com_ly == 'Corridors'){
       prefcomp <- '_lcc_'
     } else if(in_com_ly == 'Dispersal kernels'){
       prefcomp <- '_crk_'
     }
 
     (outComFolder <- paste0(tempFolder, '/comp', prefcomp, compID))
+
     rv$comFolder <- outComFolder
     (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
     (outComPngRel <- paste0(outComFolder, '/compRel.png'))
@@ -3777,12 +3777,13 @@ server <- function(input, output, session) {
       }
     }
 
-
-    ( cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2  ) )
+    (
+      cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2  )
+      )
 
     if (cond ){
 
-      if(in_com_ly == 'Corridos'){
+      if(in_com_ly == 'Corridors'){
 
         comp_out <- tryCatch(
           lcc_compare_py(intif = avail_layers[1],
@@ -4004,14 +4005,14 @@ server <- function(input, output, session) {
 
   observeEvent( input$in_com_ly, {
     # in_com_ly <- 'Dispersal kernels'
-    # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridos')
+    # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridors')
     #tempFolder <- '/data/temp/scenario_folder'
 
     in_com_ly <- input$in_com_ly
     layer_type_compare <- switch(in_com_ly,
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
-                                 'Corridos' = 'out_lcc_.+.tif$')
+                                 'Corridors' = 'out_lcc_.+.tif$')
 
     # tempFolder <- '/data/temp/scenario_folder'
     avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
@@ -5469,7 +5470,7 @@ if (FALSE){
               column(3,
                      selectInput("in_com_ly", label = "Layers:", selected = '',
                                  choices = c('', #'Surface resistance',
-                                             'Dispersal kernels', 'Corridos'))
+                                             'Dispersal kernels', 'Corridors'))
               ),
               column(3,
                      verbatimTextOutput("vout_com")
