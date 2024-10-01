@@ -265,7 +265,36 @@ shp2xy <- function(shapefile, outxy, tempDir,
     xy$XCOORD <- xy_coord$x
     xy$YCOORD <- xy_coord$y
   }
+
   xy$Subpop_mortperc <- 0
+
+  if (!is.null(mortrast) | !is.null(survrast) ){
+    if (!is.null(mortrast)){
+      rast_path <- mortrast
+      mort <- TRUE
+    } else if( !is.null(survrast)){
+      rast_path <- survrast
+      mort <- FALSE
+    }
+
+    if(file.exists(rast_path)){
+      rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
+      if(!is.null(rcdpop)){
+        extVals <- terra::extract(rcdpop, xy[, c('XCOORD','XCOORD')])
+        extVals <- extVals[, 1]
+        #extVals <- (20:200)
+        rng <- range(extVals, na.rm = TRUE)
+        if( all(!is.na(rng)) ){
+          extVals2 <- (extVals - min(rng))/(max(rng) - min(rng))
+          if(!mort){
+            extVals2 <- max(extVals2) - extVals2
+          }
+          xy$Subpop_mortperc <- extVals2
+        }
+      }
+    }
+  }
+
   xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
   xynew <- as.data.frame(xy)
   xynew <- xynew[, c('Subpopulation', 'X', 'Y', 'Subpop_mortperc', 'ID', 'sex')]

@@ -1686,7 +1686,7 @@ server <- function(input, output, session) {
     # pref <- 'SLW'
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
-    shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
+    shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif)
     rv$ptsxy <- newxy
     # rv$cdm <- 'cdmat.csv'
     (pref <- sessionIDgen(only3 = TRUE))
