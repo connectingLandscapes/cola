@@ -1686,10 +1686,17 @@ server <- function(input, output, session) {
     # pref <- 'SLW'
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
-    shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif)
+    prefMort <- ''
+    if( input$cdpop_mort){
+      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif)
+      prefMort <- 'mort'
+    } else {
+      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
+    }
+
     rv$ptsxy <- newxy
     # rv$cdm <- 'cdmat.csv'
-    (pref <- sessionIDgen(only3 = TRUE))
+    (pref <- paste0(prefMort, sessionIDgen(only3 = TRUE)))
 
     output$vout_cdp <- isolate(renderText({
 
@@ -2208,7 +2215,7 @@ server <- function(input, output, session) {
     # try(file.remove(inFiles$datapath))
     #if(devug){save(inFiles, file = paste0(tempFolder, '/shpfiles.RData'))}
 
-    inShp <<- loadShp(inFiles, tempFolder, rv$inEdiSessID)
+    inShp <<- loadShp(inFiles, tempFolder, rv$inEdiSessID, rastTemp = rv$tif)
     print( ' =================== print( inShp$shp ')
     print( inShp$shp )
 
@@ -5166,6 +5173,7 @@ if (FALSE){
                                    htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
                          ))),
                 column(width = 2,
+                       checkboxInput('cdpop_mort', 'Mortality from resistance?', value = TRUE, width = NULL),
                        actionButton("run_cdpop", 'Run CDPOP')),
                 column(width = 4,
                        selectizeInput(inputId = 'cdpop_ans_yy', 'Generation to plot:', choices = c(''), )),

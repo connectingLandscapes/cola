@@ -260,7 +260,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 
   xy$ID <- 1:nrow(xy)
   xy$Subpopulation <- 1#:nrow(xy)
-  if (! 'X' %in% names(xy) ){
+  if ( any(!cc('XCOORD', 'YCOORD') %in% names(xy))  ){
     xy_coord <- data.frame(geom(xy))
     xy$XCOORD <- xy_coord$x
     xy$YCOORD <- xy_coord$y
@@ -280,7 +280,8 @@ shp2xy <- function(shapefile, outxy, tempDir,
     if(file.exists(rast_path)){
       rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
       if(!is.null(rcdpop)){
-        extVals <- terra::extract(rcdpop, xy[, c('XCOORD','XCOORD')])
+        print(head(xy))
+        extVals <- terra::extract(rcdpop, xy[, c('XCOORD','YCOORD')])
         extVals <- extVals[, 1]
         #extVals <- (20:200)
         rng <- range(extVals, na.rm = TRUE)

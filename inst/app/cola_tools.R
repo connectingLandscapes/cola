@@ -970,8 +970,11 @@ loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- 
         # if (is.na(outshp$shp@proj4string@projargs)){
         outshp$mssg <- 'No projection in shapefile'
       } else {
-        if(terra::same.crs(outshp$shp, rastTemp)){
-          outshp$shp <- terra::project(outshp$shp, crs(rastTemp))
+        if (!is.null(rastTemp)){
+
+          if(terra::same.crs(outshp$shp, rastTemp)){
+            outshp$shp <- terra::project(outshp$shp, crs(rastTemp))
+          }
         }
       }
 
