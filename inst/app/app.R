@@ -547,7 +547,7 @@ server <- function(input, output, session) {
 
   #test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
   replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
-                             att = FALSE, rastCRS = NA, lineBuffW = 1){
+                             att = FALSE, rastCRS = NA, lineBuffW = 1, gdal = TRUE){
 
     #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
     ## Polygon to write
@@ -592,13 +592,46 @@ server <- function(input, output, session) {
 
     #rft <- rast(rasterizedPath); plot(rft)
 
-    (cmdCalc <- paste0('gdal_calc.py --overwrite ',
-                       ' -A ', rastPath, # original
-                       ' -B ', rasterizedPath,
-                       ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
-                       ' --outfile ', replacedPath))
+    if (gdal){
+      # Use gdal calc in linux
+      (cmdCalc <- paste0('gdal_calc.py --overwrite ',
+                         ' -A ', rastPath, # original
+                         ' -B ', rasterizedPath,
+                         ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
+                         ' --outfile ', replacedPath))
 
-    runCMD <- system(cmdCalc, intern = TRUE)
+      runCMD <- system(cmdCalc, intern = TRUE)
+    } else {
+      ## Run analysis on Windows
+
+      # Use terra::rast
+      # gdalCalc <- file.path(dirname(Sys.getenv('COLA_PYTHON_PATH')), 'Scripts', 'gdal_calc.py')
+      # if (file.exists(gdalCalc)){
+      #
+      #   testFile <- gsub('\\\\', '/', paste0(tempfile(), '.tif'))
+      #   (gc_cmd <- paste0(gdalCalc, ' -A ',
+      #                     system.file(package = 'cola', 'sampledata/sampleTif.tif'),
+      #                     ' --outfile=', testFile, ' --calc="(A*2)"' ))
+      #   cat(gc_cmd)
+      #
+      #   out_gc <- (system(gc_cmd, intern = TRUE, show.output.on.console = TRUE))
+      #
+      #   (a <- system2(gc_cmd, timeout = 10, wait = TRUE))
+      #   (b <- shell(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
+      # }
+
+      # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
+      # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'
+      A <- terra::rast(rastPath)
+      B <- terra::rast(rasterizedPath)
+      # plot(A)
+      # plot(B)
+
+      newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )
+      # plot(newRast)
+
+      terra::writeRaster(newRast, filename = replacedPath)
+    }
 
     # plot(rast(rastPath))
     # plot(rast(rasterizedPath), main = 'Rasterized')
@@ -4200,13 +4233,15 @@ server <- function(input, output, session) {
           #filename)
           #)
           #zip_file <- file.path(tempdir(), filename)
-          print(paste0('Making temp zip file: ', zip_file))
+          # print(paste0('Making temp zip file: ', zip_file))
 
-          com_files <- list.files(path = rv$cdpFolder,
+
+          com_files <- c(rv$ptsxy,
+                         list.files(path = rv$cdpFolder,
                                   recursive = TRUE,
                                   all.files = TRUE, include.dirs = TRUE,
                                   #pattern = "out_simpts_",
-                                  full.names = TRUE)
+                                  full.names = TRUE))
           print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
 
 
