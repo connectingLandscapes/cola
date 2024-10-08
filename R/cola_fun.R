@@ -268,6 +268,15 @@ shp2xy <- function(shapefile, outxy, tempDir,
 
   xy$Subpop_mortperc <- 0
 
+  xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
+  xynew <- as.data.frame(xy)
+  xynew <- xynew[, c('Subpopulation', 'X', 'Y', 'Subpop_mortperc', 'ID', 'sex')]
+  xynew[, paste0('Fitness_', c('AA', 'Aa', 'aa', 'AABB', 'AaBB', 'aaBB', 'AABb', 'AaBb',
+                               'aaBb', 'AAbb', 'Aabb', 'aabb'))] <- 0
+  xynew$Fitness_AA <- 50
+  xynew$Fitness_aa <- 100
+  xynew$Fitness_Aa <- 16
+
   if (!is.null(mortrast) | !is.null(survrast) ){
     if (!is.null(mortrast)){
       rast_path <- mortrast
@@ -280,7 +289,6 @@ shp2xy <- function(shapefile, outxy, tempDir,
     if(file.exists(rast_path)){
       rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
       if(!is.null(rcdpop)){
-        print(head(xy))
         extVals <- terra::extract(rcdpop, xy[, c('XCOORD','YCOORD')])
         extVals <- extVals[, 1]
         #extVals <- (20:200)
@@ -291,43 +299,33 @@ shp2xy <- function(shapefile, outxy, tempDir,
             extVals2 <- max(extVals2) - extVals2
           }
           xy$Subpop_mortperc <- extVals2
+          cat('  Exctracing raster values for mortality')
+          vals2add <- xynew$Subpop_mortperc
+
+          if (!is.null(mortrast)){
+            if(file.exists(mortrast)){
+              #rx <- terra::rast(mortrast)
+              #exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
+              #vect2add <- as.numeric(exct[, 2])
+              #vect2add <- vect2add/max(vect2add)*100
+              xynew$Subpop_mortperc <- vals2add
+            }
+          } else if ( !is.null(survrast) ){
+            if ( file.exists(survrast)) {
+              #rx <- terra::rast(survrast)
+              #exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
+              #vect2add <- as.numeric(exct[, 2])
+              vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
+              xynew$Subpop_mortperc <- vals2add
+            }
+          }
         }
       }
     }
   }
 
-  xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
-  xynew <- as.data.frame(xy)
-  xynew <- xynew[, c('Subpopulation', 'X', 'Y', 'Subpop_mortperc', 'ID', 'sex')]
-  xynew[, paste0('Fitness_', c('AA', 'Aa', 'aa', 'AABB', 'AaBB', 'aaBB', 'AABb', 'AaBb',
-                               'aaBb', 'AAbb', 'Aabb', 'aabb'))] <- 0
-  xynew$Fitness_AA <- 50
-  xynew$Fitness_aa <- 100
-  xynew$Fitness_Aa <- 16
+  print(head(xynew))
 
-
-  if ( !is.null(mortrast) | !is.null(survrast) ){
-    cat('  Exctracing raster values for mortality')
-    vals2add <- xy$Subpop_mortperc
-    if (!is.null(mortrast)){
-      if(file.exists(mortrast)){
-        rx <- terra::rast(mortrast)
-        exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
-        vect2add <- as.numeric(exct[, 2])
-        vect2add <- vect2add/max(vect2add)*100
-        xy$Subpop_mortperc <- vals2add
-      }
-    }
-
-  } else if ( !is.null(survrast) ){
-    if ( file.exists(survrast)) {
-      rx <- terra::rast(survrast)
-      exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
-      vect2add <- as.numeric(exct[, 2])
-      vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
-      xy$Subpop_mortperc <- vals2add
-    }
-  }
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
