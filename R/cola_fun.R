@@ -304,7 +304,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
             extVals2 <- max(extVals2) - extVals2
           }
 
-          vals2add <- xy$Subpop_mortperc <- extVals2
+          vals2add <- xy$Subpop_mortperc <- extVals2 * 100
 
           if (!is.null(mortrast)){
             if(file.exists(mortrast)){
