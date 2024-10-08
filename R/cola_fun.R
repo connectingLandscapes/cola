@@ -242,10 +242,10 @@ shp2xy <- function(shapefile, outxy, tempDir,
   # See xyED16.csv for an example xyfilename. The column order is necessary with a header file.
 
 
-  # tempDir = "/tmp/RtmpiD9uhw/colaMJJ2024070817062505"
-  # tempDir = "/mnt/c/temp/tempCola/"
-  # shapefile = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.shp'
-  #shapefile = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp'
+  # tempDir = "/data/tempR//colaCQB2024100723374605"
+  # shapefile = '/data/tempR//colaCQB2024100723374605/out_simpts_JGX2024100723382705.shp'
+  # mortrast = '/data/tempR//colaCQB2024100723374605/out_surface_RQR2024100723384605.tif'
+  # shapefile = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp'
   # outxy = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.csv'
   # df <- foreign::read.dbf(gsub('\\..+', '.dbf', shapefile))
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
@@ -278,6 +278,8 @@ shp2xy <- function(shapefile, outxy, tempDir,
   xynew$Fitness_Aa <- 16
 
   if (!is.null(mortrast) | !is.null(survrast) ){
+    vals2add <- 0
+
     if (!is.null(mortrast)){
       rast_path <- mortrast
       mort <- TRUE
@@ -288,19 +290,21 @@ shp2xy <- function(shapefile, outxy, tempDir,
 
     if(file.exists(rast_path)){
       rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
+      names(rcdpop) <- 'rcdpop'
       if(!is.null(rcdpop)){
+        cat('  Extracing raster values for mortality\n')
         extVals <- terra::extract(rcdpop, xy[, c('XCOORD','YCOORD')])
-        extVals <- extVals[, 1]
+        extVals <- extVals$rcdpop # [, 2]
         #extVals <- (20:200)
         rng <- range(extVals, na.rm = TRUE)
-        if( all(!is.na(rng)) ){
+        if( any(!is.na(rng)) ){
+          cat('    --- At least some values OK \n')
           extVals2 <- (extVals - min(rng))/(max(rng) - min(rng))
           if(!mort){
             extVals2 <- max(extVals2) - extVals2
           }
-          xy$Subpop_mortperc <- extVals2
-          cat('  Extracing raster values for mortality\n')
-          vals2add <- xynew$Subpop_mortperc
+
+          vals2add <- xy$Subpop_mortperc <- extVals2
 
           if (!is.null(mortrast)){
             if(file.exists(mortrast)){
@@ -308,6 +312,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
               #exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
               #vect2add <- as.numeric(exct[, 2])
               #vect2add <- vect2add/max(vect2add)*100
+              vals2add <- vals2add
               xynew$Subpop_mortperc <- vals2add
             }
           } else if ( !is.null(survrast) ){
@@ -315,13 +320,14 @@ shp2xy <- function(shapefile, outxy, tempDir,
               #rx <- terra::rast(survrast)
               #exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
               #vect2add <- as.numeric(exct[, 2])
-              vect2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
+              vals2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
               xynew$Subpop_mortperc <- vals2add
             }
           }
         }
       }
     }
+    xynew$Subpop_mortperc <- vals2add
   }
 
   print(head(xynew))
