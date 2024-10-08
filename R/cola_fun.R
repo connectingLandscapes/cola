@@ -260,7 +260,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 
   xy$ID <- 1:nrow(xy)
   xy$Subpopulation <- 1#:nrow(xy)
-  if ( any(!cc('XCOORD', 'YCOORD') %in% names(xy))  ){
+  if ( any(!c('XCOORD', 'YCOORD') %in% names(xy))  ){
     xy_coord <- data.frame(geom(xy))
     xy$XCOORD <- xy_coord$x
     xy$YCOORD <- xy_coord$y
