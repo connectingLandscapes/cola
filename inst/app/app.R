@@ -2423,8 +2423,8 @@ server <- function(input, output, session) {
   isolate(observeEvent(input$rpl, {
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
 
-    if(os != 'Windows' & input$in_edi_val != 0 & input$in_edi_val != "0" &
-       rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
+    if( input$in_edi_val != 0 & input$in_edi_val != "0" &
+        rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
 
       output$ll_map_edi <- leaflet::renderLeaflet({
 
@@ -2490,14 +2490,23 @@ server <- function(input, output, session) {
                       append=FALSE,
                       overwrite_layer = TRUE)
 
-
         ## Burn the value of the polygon into the rast
-        burned <<- replaceRastShp(polPath = polPath,
-                                  lineBuffW = as.numeric(input$in_edi_wid),
-                                  att = input$in_edi_che,
-                                  burnval = 'val2burn',
-                                  rastPath = rv$tif,
-                                  rastCRS = NA)
+
+        if( os == 'Windows'){
+          burned <<- replaceRastShp(polPath = polPath,
+                                    lineBuffW = as.numeric(input$in_edi_wid),
+                                    att = input$in_edi_che,
+                                    burnval = 'val2burn',
+                                    rastPath = rv$tif,
+                                    rastCRS = NA, gdal = FALSE)
+        } else if (os != 'Windows'){
+          burned <<- replaceRastShp(polPath = polPath,
+                                    lineBuffW = as.numeric(input$in_edi_wid),
+                                    att = input$in_edi_che,
+                                    burnval = 'val2burn',
+                                    rastPath = rv$tif,
+                                    rastCRS = NA, gdal = TRUE)
+        }
 
         pdebug(devug=devug,sep='\n',pre='-',"burned")
 
@@ -2720,7 +2729,7 @@ server <- function(input, output, session) {
                                  smax = as.numeric(input$in_points_4),
                                  npoints = as.numeric(input$in_points_5),
                                  issuit = 'Yes'
-                                 )
+        )
       }
 
       # inPts <<- switch (in_points_ly,
@@ -3820,7 +3829,7 @@ server <- function(input, output, session) {
 
     (
       cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2  )
-      )
+    )
 
     if (cond ){
 
@@ -4238,10 +4247,10 @@ server <- function(input, output, session) {
 
           com_files <- c(rv$ptsxy,
                          list.files(path = rv$cdpFolder,
-                                  recursive = TRUE,
-                                  all.files = TRUE, include.dirs = TRUE,
-                                  #pattern = "out_simpts_",
-                                  full.names = TRUE))
+                                    recursive = TRUE,
+                                    all.files = TRUE, include.dirs = TRUE,
+                                    #pattern = "out_simpts_",
+                                    full.names = TRUE))
           print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
 
 
