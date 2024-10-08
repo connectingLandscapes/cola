@@ -1690,6 +1690,7 @@ server <- function(input, output, session) {
     if( input$cdpop_mort){
       shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif)
       prefMort <- 'mort'
+      cat('  Extracing raster values for mortality\n')
     } else {
       shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
     }

@@ -299,7 +299,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
             extVals2 <- max(extVals2) - extVals2
           }
           xy$Subpop_mortperc <- extVals2
-          cat('  Exctracing raster values for mortality')
+          cat('  Extracing raster values for mortality\n')
           vals2add <- xynew$Subpop_mortperc
 
           if (!is.null(mortrast)){
