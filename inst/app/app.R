@@ -2008,17 +2008,15 @@ server <- function(input, output, session) {
 
         in_sur_7 <- ifelse(input$in_sur_7 == '', yes = -9999, no = input$in_sur_7)
 
-
-
         hs2rs_file <- s2res_py(py = py,
                                intif = rv$hs,
                                outtif = outs2r,
-                               param3 = as.numeric(input$in_sur_3),
-                               param4 = as.numeric(input$in_sur_4),
-                               param5 = as.numeric(input$in_sur_5),
-                               param6 = as.numeric(input$in_sur_6),
-                               param7 = in_sur_7,
-                               param8 = 'None')
+                               minval = as.numeric(input$in_sur_3),
+                               maxval = as.numeric(input$in_sur_4),
+                               maxout = as.numeric(input$in_sur_5),
+                               shape = as.numeric(input$in_sur_6),
+                               nodata = in_sur_7,
+                               prj = 'None')
 
         if(!is.na(hs2rs_file$file)){
 
@@ -2960,7 +2958,7 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
       cdmat_file <- cdmat_py (py = py, inshp = rv$pts, intif = rv$tif,
-                              outcsv = outcdmat, param4 = as.numeric(input$in_dist_3))
+                              outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
       rv$cdm <- cdmat_file$file
       tElapMat <- Sys.time() - tStartMat
       textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
@@ -3170,9 +3168,9 @@ server <- function(input, output, session) {
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
         out_lcc <- lcc_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_lcc,
-                          param4 = as.numeric(input$in_lcc_4),
-                          param5 = as.numeric(input$in_lcc_5),
-                          param6 = as.numeric(input$in_lcc_6))
+                          maxdist = as.numeric(input$in_lcc_4),
+                          smooth = as.numeric(input$in_lcc_5),
+                          tolerance = as.numeric(input$in_lcc_6))
 
         # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
 
@@ -3242,9 +3240,9 @@ server <- function(input, output, session) {
                                inshp = rv$pts,
                                intif = rv$tif,
                                outtif = out_lcc,
-                               param4 = as.numeric(input$in_lcc_4),
-                               param5 = as.numeric(input$in_lcc_5),
-                               param6 = as.numeric(input$in_lcc_6))
+                               maxdist = as.numeric(input$in_lcc_4),
+                               smooth = as.numeric(input$in_lcc_5),
+                               tolerance = as.numeric(input$in_lcc_6))
 
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
@@ -3427,9 +3425,9 @@ server <- function(input, output, session) {
 
         tStartCrk <- Sys.time()
         out_crk <<- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
-                           param4 = as.numeric(input$in_crk_4),
-                           param5 = (input$in_crk_5),
-                           param6 = as.numeric(input$in_crk_6))
+                           maxdist = as.numeric(input$in_crk_4),
+                           shape = (input$in_crk_5),
+                           volume = as.numeric(input$in_crk_6))
         #out_crk_no_data <- gdal_nodata
 
         tElapCrk <- Sys.time() - tStartCrk
@@ -3648,9 +3646,9 @@ server <- function(input, output, session) {
                                  outshppatch = out_pri_shp_patch,
                                  outtif = out_pri_tif,
                                  outtifpatch = out_pri_tif_patch,
-                                 param7 = as.numeric(input$in_pri_5), # 0.5
-                                 param8 = as.numeric(input$in_lcc_6)), error = function(e) e)
-      ## missing param7 and 8 by user
+                                 threshold = as.numeric(input$in_pri_5), # 0.5
+                                 tolerance = as.numeric(input$in_lcc_6)), error = function(e) e)
+      ## missing threshold and 8 by user
 
 
       #out_crk_no_data <- gdal_nodata

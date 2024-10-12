@@ -25,10 +25,15 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @title  Makes a population structure map from CDPOP results interpolation
 #' @description Takes CDPOP results and generates a raster interpolation
 #' @param py Python location
-#' @param cdpopscript Python location
-#' @return Path with the resulting TIF raster
+#' @param pyscript Python script location
+#' @param grids String, List of CDPOP grid.csv files containing population genetic structure
+#' @param template String. Path/filename of a template raster used for interpolation
+#' @param method String. Interpolation method. One of 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'.
+#' @param neighbors String. Number of neighbors to use for interpolation. Either a positive integer < the total number of occupied points or 'all'.
+#' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
+#' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
-#' runCDPOP( )
+#' cdpop_mapstruct( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -75,7 +80,8 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
                    list.files(path = dirname(grids), full.names = TRUE))
 
-  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
+  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
+                             newFiles, NA),
                newFiles = newFiles,
                log =  intCMD) )
 }
@@ -85,9 +91,15 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @description Takes CDPOP results and generates a raster interpolation
 #' @param py Python location
 #' @param cdpopscript Python location
-#' @return Path with the resulting TIF raster
+#' @param grids String. Vector with the CDPOP output files to be interpolated
+#' @param template String. Raster template for interpolating the files
+#' @param method String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'
+#' @param bandwiths String.
+#' @param type String.
+#' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
+#' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
-#' runCDPOP( )
+#' cdpop_mapdensity( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -123,16 +135,21 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
                log =  intCMD) )
-
 }
 
 
 
 #' @title  Run CDPOP model
 #' @description Run CDPOP model
-#' @param py Python location
-#' @param py Python location
-#' @return Path with CDPOP results
+#' @param py String. Python location
+#' @param cdpopscript String. Python location
+#' @param inputvars String.
+#' @param agevars String.
+#' @param cdmat String.
+#' @param xy String.
+#' @param tempfolder String.
+#' @param prefix String.
+#' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
 #' runCDPOP( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -222,9 +239,14 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 }
 
 
-#' @title  Shapefile to CDPOP xy
-#' @description Convert Shapefile into xy file
-#' @param shapefile String. Path to the file
+#' @title  shapefile to CDPOP XY
+#' @description Converts Shapefile into xy file
+#' @param shapefile String. Path to the shapefile
+#' @param outxy String. Path to the resulting .xy file
+#' @param tempDir String. Path to the working directory
+#' @param mortrast String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.
+#' @param survrast String. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
+#' @return String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 #' @examples
 #' shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -401,47 +423,48 @@ adaptFilePath <- function(path){
 #' @param pyscript Python script location
 #' @param intif String. File path to the input raster.
 #' @param outtif String. File path of the output surface resistance
-#' @param param3 Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.
-#' @param param4 Numeric. The upper value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.
-#' @param param5 Numeric. This is the maximum resistance value after transformation from suitability. Default value is 100.  Minimum value is set to 1.
-#' @param param6 Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.
-#' @param param7 Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.
-#' @param param8 Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param minval Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.
+#' @param maxval Numeric. The upper value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.
+#' @param maxout Numeric. This is the maximum resistance value after transformation from suitability. Default value is 100.  Minimum value is set to 1.
+#' @param shape Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.
+#' @param nodata Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.
+#' @param prj string. Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
+#'
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', param3 = 0, param4 = 1, param5 = 10,  param6 = 1,  param7 = NULL, param8 = 'None')
+#' srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 #' hs_rast <- terra::rast(hs)
 #' plot(hs_rast, main = 'Habitat suitability')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 s2res_py <- function(intif, outtif,
-                     param3, param4, param5, param6,
-                     param7 = NULL, param8 = 'None',
+                     minval, maxval, maxout, shape,
+                     nodata = NULL, prj = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/s2res.py')){
-  # param3 = 0
-  # param4 =  100
-  # param5 = 100
-  # param6 = 1
-  # param7 = -9999
-  # param8 = 'None'
+  # minval = 0
+  # maxval =  100
+  # maxout = 100
+  # shape = 1
+  # nodata = -9999
+  # prj = 'None'
 
   ## Guess NA value if not provided
-  if(is.null(param7)){
-    param7 <- guessNoData(intif)
+  if(is.null(nodata)){
+    nodata <- guessNoData(intif)
   }
 
   ## Create CMD
   (cmd_s2res <- paste0(py, ' ', pyscript, ' ',
                        intif, ' ', outtif, ' ',
-                       format(param3, scientific=F), ' ',
-                       format(param4, scientific=F), ' ',
-                       format(param5, scientific=F), ' ',
-                       format(param6, scientific=F), ' ',
-                       format(param7, scientific=F), ' ',
-                       param8))
+                       format(minval, scientific=F), ' ',
+                       format(maxval, scientific=F), ' ',
+                       format(maxout, scientific=F), ' ',
+                       format(shape, scientific=F), ' ',
+                       format(nodata, scientific=F), ' ',
+                       prj))
 
   cat('\n\tCMD Surface : ')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
@@ -456,14 +479,14 @@ s2res_py <- function(intif, outtif,
 
 #' @title  Create random points
 #' @description Create random points
-#' @param rvect Python location
-#' @param npts Python location
-#' @param rmin Python location
-#' @param rmax Python location
+#' @param rvect Raster. Raster object co be sampled
+#' @param npts Numeric. Number of points
+#' @param rmin Numeric. Raster minimum values o¿to consider
+#' @param rmax Numeric. Raster maximun value to consider
 #' @return Path with CDPOP results
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' pts30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', param3 = 0, param4 = 1, param5 = 10,  param6 = 1,  param7 = NULL, param8 = 'None')
+#' newPoints <- randPtsFun(terra::rast(hs), 10, 0.2, 0.8)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -502,9 +525,9 @@ points_py <- function(intif, outshp,
                       smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
                       py = Sys.getenv("COLA_PYTHON_PATH"),
                       pyscript = system.file(package = 'cola', 'python/create_source_points.py')){
-  # param3 = 2
-  # param4 =  95
-  # param5 = 50
+  # smin = 2
+  # smax =  95
+  # npoints = 50
   # pyscript <- system.file(package = 'cola', 'python/create_source_points.py'
   (cmd_pts <- paste0(py, ' ', pyscript, ' ', intif, ' ', outshp, ' ',
                      format(smin, scientific=F), ' ',
@@ -533,12 +556,12 @@ points_py <- function(intif, outshp,
 #' @export
 
 cdmat_py <- function(inshp, intif, outcsv,
-                     param4,
-                     param5 = Sys.getenv("COLA_NCORES"),
-                     param6 = 'None',
+                     maxdist,
+                     ncores = Sys.getenv("COLA_NCORES"),
+                     crs = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/create_cdmat.py')){
-  # param4 = 100000
+  # maxdist = 100000
   # create_cdmat.py
   # [1] source points
   # [2] resistance surface
@@ -550,11 +573,11 @@ cdmat_py <- function(inshp, intif, outcsv,
   # inshp =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_simpts_XYA2024070817112705.shp'
   # intif =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_surface_HWP2024070817115305.tif'
   # outcsv = '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_cdmatrix_KQI.csv'
-  # param4 = 100000; param5 = 1; param6 = 'None'
+  # maxdist = 100000; param5 = 1; param6 = 'None'
 
   # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
-                       ' ', param4, ' ', param5, ' ', param6))
+                       ' ', maxdist, ' ', ncores, ' ', crs))
 
   cat('\n\n\tCMD cdmat: ')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
@@ -569,8 +592,8 @@ cdmat_py <- function(inshp, intif, outcsv,
 }
 
 
-#' @title  Create least cost corridors
-#' @description Run CDPOP model
+#' @title  Corridors
+#' @description Calculate corridors
 #' @param py Python location
 #' @param py Python location
 #' @return Path with CDPOP results
@@ -581,8 +604,8 @@ cdmat_py <- function(inshp, intif, outcsv,
 #' @export
 
 lcc_py <- function(inshp, intif, outtif,
-                   param4, param5, param6,
-                   param7 = as.numeric(Sys.getenv('COLA_NCORES')), param8 = 'None',
+                   maxdist, smooth, tolerance,
+                   ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/lcc.py')){
   # param3 = 25000
@@ -593,17 +616,17 @@ lcc_py <- function(inshp, intif, outtif,
   # [5] corridor smoothing factor (in number of cells)
   # [6] corridor tolerance (in cost distance units)
 
-  # if(is.null(param7)){
-  #   param7 <- guessNoData(intif)
+  # if(is.null(param8)){
+  #   param8 <- guessNoData(intif)
   # }
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
                      inshp, ' ', intif, ' ', outtif, ' ',
-                     format(param4, scientific=F), ' ',
-                     format(param5, scientific=F), ' ',
-                     format(param6, scientific=F), " ",
-                     format(param7, scientific=F), " ",
-                     param8))
+                     format(maxdist, scientific=F), ' ',
+                     format(smooth, scientific=F), ' ',
+                     format(tolerance, scientific=F), " ",
+                     format(ncores, scientific=F), " ",
+                     crs))
   cat('\n\tCMD LCC: ')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
@@ -627,9 +650,9 @@ lcc_py <- function(inshp, intif, outtif,
 #' @export
 
 lccHeavy_py <- function(inshp, intif, outtif,
-                        param4, param5, param6,
-                        param7 = as.numeric(Sys.getenv('COLA_NCORES')),
-                        param8 = 'None', tempFolder = rootPath,
+                        maxdist, smooth, tolerance,
+                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                        crs = 'None', tempFolder = rootPath,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscript = system.file(package = 'cola', 'python/lcc_heavy.py')){
 
@@ -653,11 +676,11 @@ lccHeavy_py <- function(inshp, intif, outtif,
 
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
-                     format(param4, scientific=F), ' ',
-                     format(param5, scientific=F), ' ',
-                     format(param6, scientific=F), " ",
-                     format(param7, scientific=F), " ",
-                     param8, " ",
+                     format(maxdist, scientific=F), ' ',
+                     format(smooth, scientific=F), ' ',
+                     format(tolerance, scientific=F), " ",
+                     format(ncores, scientific=F), " ",
+                     crs, " ",
                      h5file1, " ",
                      h5file2, " ",
                      '50'
@@ -683,8 +706,9 @@ lccHeavy_py <- function(inshp, intif, outtif,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
 crk_py <- function(inshp, intif, outtif,
-                   param4, param5, param6,
-                   param7 = as.numeric(Sys.getenv('COLA_NCORES')), param8 = 'None',
+                   maxdist, shape, volume,
+                   ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                   crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/crk.py')){
 
@@ -698,11 +722,11 @@ crk_py <- function(inshp, intif, outtif,
   # [8] proj
 
   (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
-                     format(param4, scientific=F), ' ', # [4] distance threshold
-                     format(param5, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-                     format(param6, scientific=F), ' ', # [6] kernel volume
-                     format(param7, scientific=F), ' ', # [7] cores
-                     param8) # [8] proj
+                     format(maxdist, scientific=F), ' ', # [4] distance threshold
+                     format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
+                     format(volume, scientific=F), ' ', # [6] kernel volume
+                     format(ncores, scientific=F), ' ', # [7] cores
+                     crs) # [8] proj
   )
   cat('\n\tCMD Kernel: ')
   print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
@@ -728,7 +752,7 @@ pri_py <- function(tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshppoint, outshppol, outshppatch,
                    outtifpatch, outtif,
-                   param7 = 0.5, param8 = 1000,
+                   threshold = 0.5, tolerance = 1000,
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py')){
 
@@ -788,8 +812,8 @@ pri_py <- function(tif, incrk, inlcc,
                       outshppatch, ' ',
                       outtifpatch, ' ',
                       outtif, ' ',
-                      format(param7, scientific=F), " ",
-                      format(param8, scientific=F)))
+                      format(threshold, scientific=F), " ",
+                      format(tolerance, scientific=F)))
 
 
   cat('\n\tCMD prio: ')
