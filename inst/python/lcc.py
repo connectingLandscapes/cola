@@ -22,6 +22,7 @@ import geopandas as gpd
 import numpy as np
 from pathlib import Path
 from scipy.ndimage import gaussian_filter
+from scipy.signal import convolve
 import time
 
 def main() -> None:
@@ -250,13 +251,30 @@ def main() -> None:
     # If radius is 0, don't smooth
     # Use rule of thumb for setting sigma from here:
     # https://dsp.stackexchange.com/questions/10057/gaussian-blur-standard-deviation-radius-and-kernel-size
+    # Updated to use original UNICOR implementation, also see here
+    # https://code.activestate.com/recipes/576764-convolving-gaussian/
+    def gauss_kern(size, sizey=None):
+    	'''
+    	Returns a normalized 2D gauss kernel array for convolutions
+    	'''
+    	size = int(size)
+    	if not sizey:
+    		sizey = size
+    	else:
+    		sizey = int(sizey)
+    	x, y = np.mgrid[-size:size+1, -sizey:sizey+1]
+    	g = np.exp(-(x**2/float(size) + y**2/float(sizey)))
+    	return g / g.sum(), g
     if gRad == 0:
         lccSmooth = dArr
     else:
-        sigma = (gRad-1)/4
+        #sigma = (gRad-1)/4
+        #sigma = gRad/2
         # Sigma should be at least 1
-        sigma = np.max([1,sigma])
-        lccSmooth = gaussian_filter(dArr, sigma=sigma, radius=gRad)
+        #sigma = np.max([1,sigma])
+        gnorm,g = gauss_kern(gRad)
+        lccSmooth = convolve(dArr, gnorm, mode='same')
+        #lccSmooth = gaussian_filter(dArr, sigma=sigma, radius=gRad)
 
     #%% 
     # Add a dimension to the array (the rasterio profile expects
