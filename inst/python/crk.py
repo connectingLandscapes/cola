@@ -205,9 +205,9 @@ def main() -> None:
         # Set nan to 0
         ccArr[np.isnan(ccArr)] = 0
     
-    # Multiplier
+    # Multiply if kernel volume not 1
     if kvol > 1:
-        ccArr = kvol * 3/(np.pi*ccArr**2)
+        ccArr = ccArr*(kvol * 3/(np.pi*dThreshold**2))
     elif kvol < 1:
         raise Exception('Kernel volume should be >= 1.')
     
