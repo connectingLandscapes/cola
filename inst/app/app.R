@@ -486,162 +486,7 @@ server <- function(input, output, session) {
     }
   }
 
-  #test <- burnShp(polDraw, burnval, rastPath, rastCRS)
-  burnShp <- function(polPath, burnval = 'val2burn',
-                      rastPath, rastCRS = NA,  att = FALSE, lineBuffW = 1){
-    # rastPath <- '/data/temp/XZ2024041911393405file9c152374e9a2/in_edit_DJ2024041911410705file9c15429f450d.tif'
-    # rast <-terra::rast(rastPath)
-    # burnval = -10
-    # (load(file = '/data/tempR/draw.RData')) # polDraw
 
-    #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
-
-    #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-    (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
-
-    file.copy(rastPath, rasterizedPath, overwrite = TRUE)
-
-    #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
-    #str(polDraw) #polDraw$type # FeatureCollection
-
-    rt <- terra::rast(rastPath)
-    rastRes <- res(rt)
-
-    if( is.na(rastCRS)){
-      ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
-      #gi <- rgdal::GDALinfo(rastPath)
-      #gi2 <- sf::gdal_crs(rastPath)
-      #gi <- strsplit(x = gdalUtilities::gdalinfo(rastPath), '\n')
-      #prj <- attr(x = gi, "projection")
-      prj <- terra::crs(rt, proj = TRUE)
-      (rastCRS <- st_crs(rt))
-      # if(!is.na(prj)){
-      #   pol2save@proj4string@projargs <- prj
-      # }
-      #ogr2ogr -f "ESRI Shapefile" -t_srs EPSG:NEW_EPSG_NUMBER -s_srs EPSG:OLD_EPSG_NUMBER output.shp input.shp
-      #EPSG:4326
-    }
-
-    gdalUtilities::gdal_rasterize(
-      src_datasource = polPath,
-      at = att,
-      dst_filename = rasterizedPath,
-      add = TRUE,
-      a = 'val2burn') #as.numeric(burnval)
-
-    #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
-    # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
-    #                                      dst_filename = rastPath,
-    #                                      add = TRUE, a = 'val2burn')
-    # plot(raster(rastPath))
-    # plot(raster(rasterizedPath), main = 'Rasterized')
-    # plot(sf::read_sf(polPath), add = TRUE)
-    # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
-
-    return(rasterizedPath)
-    # } else {
-    #   return(NA)
-    # }
-  }
-
-
-  #test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
-  replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
-                             att = FALSE, rastCRS = NA, lineBuffW = 1, gdal = TRUE){
-
-    #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
-    ## Polygon to write
-    #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-    ## Raster with new features
-    (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
-    ## Raster to create
-    (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
-
-
-    rt <- terra::rast(rastPath)
-    (rastRes <- res(rt))
-    if( is.na(rastCRS)){
-      prj <- terra::crs(rt, proj = TRUE)
-      (rastCRS <- st_crs(rt))
-    }
-
-    # pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
-    # # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-    # pol2Rastx <- st_as_sf( pol2Rast)
-    # # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
-    #
-    # pol2Rastx$val2burn <- as.numeric(burnval)
-    # sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
-    #               layer = tools::file_path_sans_ext(basename(polPath)),
-    #               driver = 'ESRI Shapefile',
-    #               append = FALSE,
-    #               overwrite_layer = TRUE)
-
-
-    ## Rasterize polygons
-    rastExtent <- as.character(as.vector(terra::ext(rt))[c('xmin', 'ymin', 'xmax', 'ymax')])
-    gdalUtilities::gdal_rasterize(
-      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-      # tr = rastRes,
-      ts = c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
-      src_datasource = polPath,
-      at = att,
-      dst_filename = rasterizedPath,
-      add = FALSE,
-      a = 'val2burn') #as.numeric(burnval)
-
-    #rft <- rast(rasterizedPath); plot(rft)
-
-    if (gdal){
-      # Use gdal calc in linux
-      (cmdCalc <- paste0('gdal_calc.py --overwrite ',
-                         ' -A ', rastPath, # original
-                         ' -B ', rasterizedPath,
-                         ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
-                         ' --outfile ', replacedPath))
-
-      runCMD <- system(cmdCalc, intern = TRUE)
-    } else {
-      ## Run analysis on Windows
-
-      # Use terra::rast
-      # gdalCalc <- file.path(dirname(Sys.getenv('COLA_PYTHON_PATH')), 'Scripts', 'gdal_calc.py')
-      # if (file.exists(gdalCalc)){
-      #
-      #   testFile <- gsub('\\\\', '/', paste0(tempfile(), '.tif'))
-      #   (gc_cmd <- paste0(gdalCalc, ' -A ',
-      #                     system.file(package = 'cola', 'sampledata/sampleTif.tif'),
-      #                     ' --outfile=', testFile, ' --calc="(A*2)"' ))
-      #   cat(gc_cmd)
-      #
-      #   out_gc <- (system(gc_cmd, intern = TRUE, show.output.on.console = TRUE))
-      #
-      #   (a <- system2(gc_cmd, timeout = 10, wait = TRUE))
-      #   (b <- shell(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
-      # }
-
-      # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
-      # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'
-      A <- terra::rast(rastPath)
-      B <- terra::rast(rasterizedPath)
-      # plot(A)
-      # plot(B)
-
-      newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )
-      # plot(newRast)
-
-      terra::writeRaster(newRast, filename = replacedPath)
-    }
-
-    # plot(rast(rastPath))
-    # plot(rast(rasterizedPath), main = 'Rasterized')
-    # plot(sf::read_sf(polPath), add = TRUE, col = NA, border = 'red')
-    # plot(rast(replacedPath), main = 'Replaced')
-    # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
-
-    return(replacedPath)
-    #} else { return(NA) }
-  }
 
   makeLL <- function(){
     # https://rstudio.github.io/leaflet/morefeatures.html
@@ -2459,8 +2304,6 @@ server <- function(input, output, session) {
           polPath <- rv$sce
           pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
 
-
-
         } else {
 
           ## Uses draw polygon
@@ -2477,8 +2320,6 @@ server <- function(input, output, session) {
           pdebug(devug=devug,sep='\n',pre='-', "'Sce draw'", "polPath", polPath)
 
         }
-
-
 
         ## Write polygon
         sf::st_write( obj = pol2Rastx,
