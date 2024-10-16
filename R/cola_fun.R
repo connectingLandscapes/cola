@@ -1029,10 +1029,10 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-#test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
 replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
                            att = FALSE, rastCRS = NA, lineBuffW = 1, gdal = TRUE){
 
+  #test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
 
   # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
   # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
@@ -1046,7 +1046,7 @@ replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
   (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
 
 
-  # rt <- terra::rast(rastPath)
+  rt <- terra::rast(rastPath)
   # (rastRes <- res(rt))
 
   gi <- gdalUtilities::gdalinfo(rastPath)
