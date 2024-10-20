@@ -627,7 +627,7 @@ lcc_py <- function(inshp, intif, outtif,
                      format(tolerance, scientific=F), " ",
                      format(ncores, scientific=F), " ",
                      crs))
-  cat('\n\tCMD LCC: ')
+  cat('\n\tCMD LCC: \n')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
 
@@ -685,8 +685,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      h5file2, " ",
                      '50'
   ))
-  cat('\n\tCMD LCC: ')
-  print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  cat('\n\tCMD LCC:\n', cmd_lcc)
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -728,8 +728,8 @@ crk_py <- function(inshp, intif, outtif,
                      format(ncores, scientific=F), ' ', # [7] cores
                      crs) # [8] proj
   )
-  cat('\n\tCMD Kernel: ')
-  print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  cat('\n\tCMD Kernel:\n',cmd_crk)
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -954,6 +954,7 @@ lcc_compare_py <- function(intif, intifs,
 #' @export
 
 burnShp <- function(polPath, burnval = 'val2burn',
+                    colu = FALSE,
                     rastPath, rastCRS = NA,  att = FALSE, lineBuffW = 1){
   # test <- burnShp(polDraw, burnval, rastPath, rastCRS)
   # rastPath <- '/data/temp/XZ2024041911393405file9c152374e9a2/in_edit_DJ2024041911410705file9c15429f450d.tif'
@@ -971,8 +972,8 @@ burnShp <- function(polPath, burnval = 'val2burn',
   #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
   #str(polDraw) #polDraw$type # FeatureCollection
 
-  rt <- terra::rast(rastPath)
-  rastRes <- res(rt)
+  # rt <- terra::rast(rastPath)
+  # rastRes <- res(rt)
 
   if( is.na(rastCRS)){
     ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
@@ -991,12 +992,30 @@ burnShp <- function(polPath, burnval = 'val2burn',
     #EPSG:4326
   }
 
-  gdalUtilities::gdal_rasterize(
-    src_datasource = polPath,
-    at = att,
-    dst_filename = rasterizedPath,
-    add = TRUE,
-    a = 'val2burn') #as.numeric(burnval)
+  # polPath <- '/data/tempR//colaQMX2024101612582905//Aproj_ADB_FeasibilityAlignment.shp'
+  # rasterizedPath <- '/data/tempR//colaQMX2024101612582905//in_edit_fixed_RKS2024101613001505_rasterized.tif'
+  # att = TRUE; burnval = '200'
+
+  if( colu ) {
+    print(' Add vals -- column')
+    gdalUtilities::gdal_rasterize(
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = TRUE,
+      a = burnval) #as.numeric(burnval)
+
+  } else {
+    print(' Add vals -- value')
+    gdalUtilities::gdal_rasterize(
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = TRUE,
+      burn = burnval) #as.numeric(burnval)
+  }
+
+
 
   #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
   # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
@@ -1024,15 +1043,15 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
-#' replaceRastShp( )
+#' replacePixels( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
-                           att = FALSE, rastCRS = NA, lineBuffW = 1, gdal = TRUE){
+replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
+                           att = FALSE, rastCRS = NA, gdal = TRUE){
 
-  #test <- replaceRastShp(polDraw, burnval, rastPath, rastCRS)
+  #test <- replacePixels(polDraw, burnval, rastPath, rastCRS)
 
   # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
   # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
@@ -1046,16 +1065,16 @@ replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
   (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
 
 
-  rt <- terra::rast(rastPath)
+  rtp <- terra::rast(rastPath)
   # (rastRes <- res(rt))
 
-  gi <- gdalUtilities::gdalinfo(rastPath)
+  # rastPath <- '/data/tempR//colaZTL2024101522171205//in_edit_fixed_ILK2024101522172305.tif'
+  gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
   rastRes0 <- grep('Pixel Size', strsplit(gi, '\n')[[1]], value = TRUE)
   base::options(scipen = 999)
   (rastRes <- (strsplit(x = gsub(pattern = '.+\\(|\\)|-', '', rastRes0), ',')[[1]]))
   ts0 <- grep('Size is', strsplit(gi, '\n')[[1]], value = TRUE)
   (ts <- (strsplit(x = gsub(pattern = 'Size is | ', '', ts0), ',')[[1]]))
-
   base::options(scipen=0, digits=7)
 
   if( is.na(rastCRS)){
@@ -1077,17 +1096,38 @@ replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
 
 
   ## Rasterize polygons
-  rastExtent <- as.character(as.vector(terra::ext(rt))[c('xmin', 'ymin', 'xmax', 'ymax')])
+  rastExtent <- as.character(as.vector(terra::ext(rtp))[c('xmin', 'ymin', 'xmax', 'ymax')])
 
-  gdalUtilities::gdal_rasterize(
-    te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-    tr = rastRes,
-    ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
-    src_datasource = polPath,
-    at = att,
-    dst_filename = rasterizedPath,
-    add = FALSE,
-    a = 'val2burn') #as.numeric(burnval)
+  cat(' --- GdalRasterize: \n ++ te:', rastExtent)
+  cat('\n ++ tr ', rastRes)
+  cat('\n ++ ts ', ts)
+  cat('\n ++ polPath ', polPath)
+  cat('\n ++ rasterizedPath ', rasterizedPath)
+  cat('\n ++ burnval ', burnval)
+
+  if (colu){
+    ## Use a column/attribute
+    gdalUtilities::gdal_rasterize(
+      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+      tr = rastRes,
+      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = FALSE,
+      a = burnval) #as.numeric(burnval)
+  } else{
+    ## Use a single value
+    gdalUtilities::gdal_rasterize(
+      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+      tr = rastRes,
+      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = FALSE,
+      burn = burnval) #as.numeric(burnval)
+  }
 
   #rft <- rast(rasterizedPath); plot(rft)
 
@@ -1141,3 +1181,4 @@ replaceRastShp <- function(polPath, burnval = 'val2burn', rastPath,
   return(replacedPath)
   #} else { return(NA) }
 }
+

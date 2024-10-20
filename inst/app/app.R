@@ -556,7 +556,8 @@ server <- function(input, output, session) {
       if(rv$tifready){
         grps <- c(grps, "Surface resistance")
 
-        # pdebug(devug=devug,pre='\n  MakeLL - TIF', sep='\n','rv$tiforig','rv$tif0', 'rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
+        pdebug(devug=FALSE,pre='\n  MakeLL - TIF', sep='\n',
+               'rv$tiforig','rv$tif0', 'rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
 
         if (!(rv$tif0 == rv$tiforig)){
           rv$tif2s <- resampIfNeeded(rv$tiforig)
@@ -571,6 +572,10 @@ server <- function(input, output, session) {
                                             domain = rv$tif_rng2 + 0.0,
                                             na.color = "transparent")
         # pdebug(devug=devug,pre='\n  MakeLL - TIF', sep='\n','rv$tiforig','rv$tif0', ' rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
+
+        pdebug(devug=devug,pre='\n  MakeLL - TIF', sep='\n',
+               'rv$tiforig','rv$tif0', 'rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
+
 
         ll0 <- ll0 %>%
           addRasterImage(rv$tif2s_sp, colors = rv$tif_pal2,
@@ -1879,7 +1884,6 @@ server <- function(input, output, session) {
           rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                         domain = rng_rstif, na.color = "transparent")
 
-
           # rv$llmap rv$hsready rv$tifready rv$ptsready #  rv$llmap
           #rv$llmap <<- rv$llmap %>%
           #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
@@ -2071,7 +2075,7 @@ server <- function(input, output, session) {
   observeEvent(input$in_edi_shp, {
 
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
-    pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+    pdebug(devug=devug,sep='\n',pre='\n---- EDI - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
 
     rv$log <- paste0(rv$log, '\nLoading scenario shapefile');updateVTEXT(rv$log) # _______
 
@@ -2096,7 +2100,7 @@ server <- function(input, output, session) {
     print( ' =================== print( inShp$shp ')
     print( inShp$shp )
 
-    save(inShp, inFiles, file = paste0(tempFolder, '/debug_edi_shp.RData'))
+    save(inShp, inFiles, file = paste0(tempFolder, '/debug_edi_shp_inShp_inFiles.RData'))
 
     if ( any(class(inShp$shp) %in% 'sf') ){
       # if(class(inShp$shp) == 'SpatialPointsDataFrame'){
@@ -2151,7 +2155,6 @@ server <- function(input, output, session) {
       # (load('/data/tempR/draw4pol.RData'))
       # (load('/home/shiny/cola/inst/app/sce_debug_edi_shp.RData')); print (sce)
 
-
       ## Not required as string or numeric is passed to the
       # if (in_edi_val %in% colnames(sce)){
       #     num2Burn <- in_edi_val
@@ -2166,13 +2169,22 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log,  # _______
                          '\n -- Creating scenario');updateVTEXT(rv$log) #
 
+
+        #### .................
+
+        #input <- list(in_edi_val = '8')
         num2Burn <<- input$in_edi_val
+        val2Burn <<- input$in_edi_val
+        isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
         lineBuffW <<- input$in_edi_wid
+        useColumn <<- FALSE
+
 
         # num2Burn <- 'try'
         # in_edi_val <- input$in_edi_val
         # #in_edi_val <- 'ID'
-        pdebug(devug=devug,sep='\n',pre='-',"num2Burn", "input$in_edi_val", "rv$tif")
+        pdebug(devug=devug,sep='\n',
+               pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
 
         ## Define if use shape or draw
         if( isTRUE(rv$sceready) ){
@@ -2182,19 +2194,22 @@ server <- function(input, output, session) {
           # pol2use <- sce # polPath
 
           ## Assign column
-          if(num2Burn %in% colnames(pol2Rastx)){ # num2Burn <- 'ID'
-            pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
-          } else {
-            pol2Rastx$val2burn <- as.numeric(num2Burn)
+          if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
+            isValidVal <- TRUE
+            useColumn <<- TRUE
+            #   pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+            # } else {
+            #   validVal <- FALSE
+            #   pol2Rastx$val2burn <- num2Burn
+
           }
+          polPath <<- rv$sce
+          # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
 
-          polPath <- rv$sce
-          print(paste0(' ----- SAVE: ', tempFolder, '/polPath_pol2Rastx.RData'))
-          save(pol2Rastx, polPath, num2Burn, file = paste0(tempFolder, '/polPath_pol2Rastx.RData'))
-          polPath <- paste0(tools::file_path_sans_ext(basename(polPath)), '_scepol.shp')
 
-        } else {
+        } else if( !is.null(polDraw) ) {
 
+          print(' Replace -- draw')
           ## Uses draw polygon
           rt <- terra::rast(rv$tif)
           rastRes <- res(rt)
@@ -2203,32 +2218,39 @@ server <- function(input, output, session) {
           pol2Rast <- draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW )
           # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
           pol2Rastx <- st_as_sf( pol2Rast)
-          pol2Rastx$val2burn <- as.numeric(num2Burn)
+          pol2Rastx$val2burn <- num2Burn
 
-          polPath <- gsub('.tif$', '_scepol.shp', rv$tif)
+          polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
+
+          ## Write polygon
+          sf::st_write( obj = pol2Rastx,
+                        dsn = dirname(polPath),
+                        layer = tools::file_path_sans_ext(basename(polPath)),
+                        driver = 'ESRI Shapefile',
+                        append = FALSE,
+                        overwrite_layer = TRUE)
         }
 
-        print(paste0('polPath:', polPath ))
 
-        ## Write polygon
-
-        sf::st_write( obj = pol2Rastx,
-                      dsn = dirname(polPath),
-                      layer = tools::file_path_sans_ext(basename(polPath)),
-                      driver = 'ESRI Shapefile',
-                      append = FALSE,
-                      overwrite_layer = TRUE)
+        if( isValidVal ){
+          ## Burn the value of the polygon into the rast
+          ## if the value to burn is either a number or a column
+          pdebug(devug=devug,sep='\n',pre='-- Sum pixel',
+                 "polPath", 'val2burn')
 
 
-        ## Burn the value of the polygon into the rast
-        burned <<- burnShp(polPath = polPath,
-                           burnval = 'val2burn',
-                           rastPath = rv$tif,
-                           lineBuffW = as.numeric(input$in_edi_wid),
-                           att = input$in_edi_che,
-                           rastCRS = NA)
+          ## Burn the value of the polygon into the rast
+          burned <<- burnShp(polPath = polPath,
+                             burnval = input$in_edi_val, #val2burn,
+                             rastPath = rv$tif,
+                             lineBuffW = as.numeric(input$in_edi_wid),
+                             att = input$in_edi_che,
+                             colu = useColumn,
+                             rastCRS = NA)
 
-        pdebug(devug=devug,sep='\n',pre='-',"burned")
+        }
+        # pdebug(devug=devug,sep='\n',pre='-',"burned")
+
 
         if(!is.na(burned)){
           rv$log <- paste0(rv$log,  # _______
@@ -2257,6 +2279,9 @@ server <- function(input, output, session) {
           rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
           updateVTEXT(rv$log)
         }
+
+        #### .................
+
       })
     }
   })
@@ -2279,33 +2304,48 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log,  # _______
                          '\n -- Creating scenario');updateVTEXT(rv$log) #
 
+        #input <- list(in_edi_val = '8')
         num2Burn <<- input$in_edi_val
+        val2Burn <<- input$in_edi_val
+        isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
         lineBuffW <<- input$in_edi_wid
+        useColumn <<- FALSE
+
 
         # num2Burn <- 'try'
         # in_edi_val <- input$in_edi_val
         # #in_edi_val <- 'ID'
-        pdebug(devug=devug,sep='\n',pre='-',"num2Burn", "input$in_edi_val", "rv$tif")
+        pdebug(devug=devug,sep='\n',
+               pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
 
         ## Define if use shape or draw
         if( isTRUE(rv$sceready) ){
+
+          print(' Replace -- shapefile')
 
           ## Uses shapefile
           pol2Rastx <- rv$sce_sp # polPath
           # pol2use <- sce # polPath
 
           ## Assign column
-          if(num2Burn %in% colnames(pol2Rastx)){ # num2Burn <- 'ID'
-            pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
-          } else {
-            pol2Rastx$val2burn <- num2Burn
+          if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
+            isValidVal <- TRUE
+            useColumn <<- TRUE
+            #   pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+            # } else {
+            #   validVal <- FALSE
+            #   pol2Rastx$val2burn <- num2Burn
+
           }
+          polPath <<- rv$sce
 
-          polPath <- rv$sce
-          pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
+          # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
 
-        } else {
+          print(' Replace -- shapefile2')
 
+        } else if( !is.null(polDraw) ) {
+
+          print(' Replace -- draw')
           ## Uses draw polygon
           rt <- terra::rast(rv$tif)
           rastRes <- res(rt)
@@ -2316,60 +2356,76 @@ server <- function(input, output, session) {
           pol2Rastx <- st_as_sf( pol2Rast)
           pol2Rastx$val2burn <- num2Burn
 
-          polPath <- gsub('.tif$', '_scepol.shp', rv$tif)
-          pdebug(devug=devug,sep='\n',pre='-', "'Sce draw'", "polPath", polPath)
+          polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
 
+          ## Write polygon
+          sf::st_write( obj = pol2Rastx,
+                        dsn = dirname(polPath),
+                        layer = tools::file_path_sans_ext(basename(polPath)),
+                        driver = 'ESRI Shapefile',
+                        append = FALSE,
+                        overwrite_layer = TRUE)
         }
 
-        ## Write polygon
-        sf::st_write( obj = pol2Rastx,
-                      dsn = dirname(polPath),
-                      layer = tools::file_path_sans_ext(basename(polPath)),
-                      driver = 'ESRI Shapefile',
-                      append=FALSE,
-                      overwrite_layer = TRUE)
 
-        ## Burn the value of the polygon into the rast
+        if( isValidVal ){
+          ## Burn the value of the polygon into the rast
+          ## if the value to burn is either a number or a column
+          pdebug(devug=devug,sep='\n',pre='-- Replace pixel',
+                 "polPath", polPath)
 
-        if( os == 'Windows'){
-          burned <<- replaceRastShp(polPath = polPath,
-                                    lineBuffW = as.numeric(input$in_edi_wid),
-                                    att = input$in_edi_che,
-                                    burnval = 'val2burn',
-                                    rastPath = rv$tif,
-                                    rastCRS = NA, gdal = FALSE)
-        } else if (os != 'Windows'){
-          burned <<- replaceRastShp(polPath = polPath,
-                                    lineBuffW = as.numeric(input$in_edi_wid),
-                                    att = input$in_edi_che,
-                                    burnval = 'val2burn',
-                                    rastPath = rv$tif,
-                                    rastCRS = NA, gdal = TRUE)
-        }
+          if( os == 'Windows'){
+            burned <<- replacePixels(polPath = polPath,
+                                     # lineBuffW = as.numeric(input$in_edi_wid),
+                                     att = input$in_edi_che,
+                                     burnval = val2Burn,
+                                     colu = useColumn,
+                                     rastPath = rv$tif,
+                                     rastCRS = NA,
+                                     gdal = FALSE)
 
-        pdebug(devug=devug,sep='\n',pre='-',"burned")
+          } else if (os != 'Windows'){
+            burned <<- replacePixels(polPath = polPath,
+                                     # lineBuffW = as.numeric(input$in_edi_wid),
+                                     att = input$in_edi_che,
+                                     colu = useColumn,
+                                     burnval = val2Burn,
+                                     rastPath = rv$tif,
+                                     rastCRS = NA,
+                                     gdal = TRUE)
+          }
+          pdebug(devug=devug,sep='\n',pre='-',"burned")
 
-        if(!is.na(burned)){
-          rv$log <- paste0(rv$log,  # _______
-                           ' ... DONE');updateVTEXT(rv$log) #
+          if(!is.na(burned)){
+            rv$log <- paste0(rv$log,  # _______
+                             ' ... DONE');updateVTEXT(rv$log) #
 
-          rv$tifready <- TRUE
-          rv$tif <- burned
-          rv$tiforig <- burned
-          rv$tif_sp <- terra::rast(burned)
+            rv$tifready <- TRUE
+            rv$tif <<- burned
+            rv$tiforig <<- burned
+            rv$tif_sp <<- terra::rast(burned)
 
-          rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
-          #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+            rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
+            #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
 
-          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                                        domain = rng_rstif, na.color = "transparent")
+            rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                                          domain = rng_rstif, na.color = "transparent")
 
-          makeLL( )
+            makeLL( )
+
+          } else {
+            rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
+            updateVTEXT(rv$log)
+          }
+
 
         } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
-          updateVTEXT(rv$log)
+          rv$log <- paste0(rv$log,  # _______
+                           '\n Editing scenario: "', val2Burn , '" not a column or valid value');updateVTEXT(rv$log) #
         }
+
+
+
       })
     }
   })
