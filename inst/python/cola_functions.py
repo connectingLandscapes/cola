@@ -18,6 +18,7 @@ from numba import njit, prange
 from scipy.sparse import tril
 from shapely.geometry import MultiPolygon
 import geopandas as gpd
+import tables as tb
     
 #%%
 def asciiToGeoTiff(infile, outfile, crs=None):
@@ -827,6 +828,35 @@ def read2flt32array(upCRS, rg):
                 profile['count'] = 1
     return(r, profile)
 
+def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
+    """
+    Function to calculate corridors/paths from pairs of distance arrays
+    stored in an hdf file. Takes a batch of node pairs as input (as an array).
+    For use in joblib parallel processing script lcc_joblib.py.
+    The other inputs, nodidsLen, dahdf, 
+    ----------
+    x : numpy array
+        two column array of integer node ids
+    Returns
+    -------
+    ccounts : numpy array
+        array holding corridor counts
+    """
+    # Empty array to hold corridor counts
+    ccounts = np.zeros((1,nodeidsLen))
+    # Open hdf5 file holding distances
+    h5f = tb.open_file(dahdf, 'r')
+    # Loop through pairs and calculate corridors
+    for i in sBatches[x]:
+        lcc = h5f.root.dset[i[0],:] + h5f.root.dset[i[1],:]
+        lcc[np.isinf(lcc)] = np.nan
+        lcpVal = np.nanmin(lcc)
+        lcc = np.where(lcc <= lcpVal + corrTolerance, 1, 0)
+        lcc[np.isnan(lcc)] = 0
+        ccounts += lcc
+    h5f.close()
+    return(ccounts)
+    
 def groupby_multipoly(df, by, aggfunc="first"):
     data = df.drop(labels=df.geometry.name, axis=1)
     aggregated_data = data.groupby(by=by).agg(aggfunc)
