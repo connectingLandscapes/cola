@@ -21,7 +21,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 from pathlib import Path
-from scipy.ndimage import gaussian_filter
+#from scipy.ndimage import gaussian_filter
 from scipy.signal import convolve
 import time
 
