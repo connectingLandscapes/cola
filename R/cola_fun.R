@@ -627,7 +627,7 @@ lcc_py <- function(inshp, intif, outtif,
                      format(tolerance, scientific=F), " ",
                      format(ncores, scientific=F), " ",
                      crs))
-  cat('\n\tCMD LCC: ')
+  cat('\n\tCMD LCC: \n')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
 
@@ -685,8 +685,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      h5file2, " ",
                      '50'
   ))
-  cat('\n\tCMD LCC: ')
-  print(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  cat('\n\tCMD LCC:\n', cmd_lcc)
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -704,7 +704,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
 #' runCDPOP( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#'
+#' @export
 crk_py <- function(inshp, intif, outtif,
                    maxdist, shape, volume,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
@@ -728,8 +728,8 @@ crk_py <- function(inshp, intif, outtif,
                      format(ncores, scientific=F), ' ', # [7] cores
                      crs) # [8] proj
   )
-  cat('\n\tCMD Kernel: ')
-  print(cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  cat('\n\tCMD Kernel:\n',cmd_crk)
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
@@ -747,7 +747,7 @@ crk_py <- function(inshp, intif, outtif,
 #' runCDPOP( )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#'
+#' @export
 pri_py <- function(tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshppoint, outshppol, outshppatch,
@@ -840,7 +840,7 @@ pri_py <- function(tif, incrk, inlcc,
 #' crk_compare_py( )
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
-#'
+#' @export
 crk_compare_py <- function(intif, intifs,
                            outcsvabs, outcsvrel,
                            outpngabs, outpngrel,
@@ -894,7 +894,7 @@ crk_compare_py <- function(intif, intifs,
 #' crk_compare_py( )
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
-#'
+#' @export
 lcc_compare_py <- function(intif, intifs,
                            outcsvabs, outcsvrel,
                            outpngabs, outpngrel,
@@ -936,5 +936,249 @@ lcc_compare_py <- function(intif, intifs,
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                log =  intCMD) )
+}
+
+
+#' @title  Add values to  maps of least cost paths
+#' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+#' @param polpath String. Location of the vector layer
+#' @param burnval String. Value to burn. Can be a number or a attribute/column name
+#' @param rastPath String. Location of the raster layer
+#' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
+#' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
+#' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
+#' @examples
+#' burnShp( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+burnShp <- function(polPath, burnval = 'val2burn',
+                    colu = FALSE,
+                    rastPath, rastCRS = NA,  att = FALSE, lineBuffW = 1){
+  # test <- burnShp(polDraw, burnval, rastPath, rastCRS)
+  # rastPath <- '/data/temp/XZ2024041911393405file9c152374e9a2/in_edit_DJ2024041911410705file9c15429f450d.tif'
+  # rast <-terra::rast(rastPath)
+  # burnval = -10
+  # (load(file = '/data/tempR/draw.RData')) # polDraw
+
+  #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
+
+  #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
+
+  file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+
+  #load(file = '/data/temp/2lines.RData') # polDraw #load(file = '/data/temp/4geom.RData') # polDraw
+  #str(polDraw) #polDraw$type # FeatureCollection
+
+  # rt <- terra::rast(rastPath)
+  # rastRes <- res(rt)
+
+  if( is.na(rastCRS)){
+    ## rastPath <- '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif'
+    #gi <- rgdal::GDALinfo(rastPath)
+    #gi2 <- sf::gdal_crs(rastPath)
+    #gi <- strsplit(x = gdalUtilities::gdalinfo(rastPath), '\n')
+    #prj <- attr(x = gi, "projection")
+
+    # prj <- terra::crs(rt, proj = TRUE)
+    # (rastCRS <- st_crs(rt))
+
+    # if(!is.na(prj)){
+    #   pol2save@proj4string@projargs <- prj
+    # }
+    #ogr2ogr -f "ESRI Shapefile" -t_srs EPSG:NEW_EPSG_NUMBER -s_srs EPSG:OLD_EPSG_NUMBER output.shp input.shp
+    #EPSG:4326
+  }
+
+  # polPath <- '/data/tempR//colaQMX2024101612582905//Aproj_ADB_FeasibilityAlignment.shp'
+  # rasterizedPath <- '/data/tempR//colaQMX2024101612582905//in_edit_fixed_RKS2024101613001505_rasterized.tif'
+  # att = TRUE; burnval = '200'
+
+  if( colu ) {
+    print(' Add vals -- column')
+    gdalUtilities::gdal_rasterize(
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = TRUE,
+      a = burnval) #as.numeric(burnval)
+
+  } else {
+    print(' Add vals -- value')
+    gdalUtilities::gdal_rasterize(
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = TRUE,
+      burn = burnval) #as.numeric(burnval)
+  }
+
+
+
+  #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+  # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
+  #                                      dst_filename = rastPath,
+  #                                      add = TRUE, a = 'val2burn')
+  # plot(raster(rastPath))
+  # plot(raster(rasterizedPath), main = 'Rasterized')
+  # plot(sf::read_sf(polPath), add = TRUE)
+  # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+
+  return(rasterizedPath)
+  # } else {
+  #   return(NA)
+  # }
+}
+
+
+#' @title  Add values to  maps of least cost paths
+#' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+#' @param polpath String. Location of the vector layer
+#' @param burnval String. Value to burn. Can be a number or a attribute/column name
+#' @param rastPath String. Location of the raster layer
+#' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
+#' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
+#' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
+#' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
+#' @examples
+#' replacePixels( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
+                           att = FALSE, rastCRS = NA, gdal = TRUE){
+
+  #test <- replacePixels(polDraw, burnval, rastPath, rastCRS)
+
+  # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
+  # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
+
+  #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
+  ## Polygon to write
+  #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+  ## Raster with new features
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
+  ## Raster to create
+  (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
+
+
+  rtp <- terra::rast(rastPath)
+  # (rastRes <- res(rt))
+
+  # rastPath <- '/data/tempR//colaZTL2024101522171205//in_edit_fixed_ILK2024101522172305.tif'
+  gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+  rastRes0 <- grep('Pixel Size', strsplit(gi, '\n')[[1]], value = TRUE)
+  base::options(scipen = 999)
+  (rastRes <- (strsplit(x = gsub(pattern = '.+\\(|\\)|-', '', rastRes0), ',')[[1]]))
+  ts0 <- grep('Size is', strsplit(gi, '\n')[[1]], value = TRUE)
+  (ts <- (strsplit(x = gsub(pattern = 'Size is | ', '', ts0), ',')[[1]]))
+  base::options(scipen=0, digits=7)
+
+  if( is.na(rastCRS)){
+    #prj <- terra::crs(rt, proj = TRUE)
+    #(rastCRS <- st_crs(rt))
+  }
+
+  # pol2Rast <- draws2Features(polDraw, distLineBuf = min(rastRes), rastCRS = rastCRS)
+  # # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+  # pol2Rastx <- st_as_sf( pol2Rast)
+  # # plot(pol2Rastx, add = TRUE, border = 'blue', col = NA)
+  #
+  # pol2Rastx$val2burn <- as.numeric(burnval)
+  # sf::st_write( obj = pol2Rastx, dsn = dirname(polPath),
+  #               layer = tools::file_path_sans_ext(basename(polPath)),
+  #               driver = 'ESRI Shapefile',
+  #               append = FALSE,
+  #               overwrite_layer = TRUE)
+
+
+  ## Rasterize polygons
+  rastExtent <- as.character(as.vector(terra::ext(rtp))[c('xmin', 'ymin', 'xmax', 'ymax')])
+
+  cat(' --- GdalRasterize: \n ++ te:', rastExtent)
+  cat('\n ++ tr ', rastRes)
+  cat('\n ++ ts ', ts)
+  cat('\n ++ polPath ', polPath)
+  cat('\n ++ rasterizedPath ', rasterizedPath)
+  cat('\n ++ burnval ', burnval)
+
+  if (colu){
+    ## Use a column/attribute
+    gdalUtilities::gdal_rasterize(
+      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+      tr = rastRes,
+      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = FALSE,
+      a = burnval) #as.numeric(burnval)
+  } else{
+    ## Use a single value
+    gdalUtilities::gdal_rasterize(
+      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+      tr = rastRes,
+      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+      src_datasource = polPath,
+      at = att,
+      dst_filename = rasterizedPath,
+      add = FALSE,
+      burn = burnval) #as.numeric(burnval)
+  }
+
+  #rft <- rast(rasterizedPath); plot(rft)
+
+  if (gdal){
+    # Use gdal calc in linux
+    (cmdCalc <- paste0('gdal_calc.py --overwrite ',
+                       ' -A ', rastPath, # original
+                       ' -B ', rasterizedPath,
+                       ' --calc "((B == 0 ) * A ) + ((B != 0 ) * B )"',
+                       ' --outfile ', replacedPath))
+
+    runCMD <- system(cmdCalc, intern = TRUE)
+  } else {
+    ## Run analysis on Windows
+
+    # Use terra::rast
+    # gdalCalc <- file.path(dirname(Sys.getenv('COLA_PYTHON_PATH')), 'Scripts', 'gdal_calc.py')
+    # if (file.exists(gdalCalc)){
+    #
+    #   testFile <- gsub('\\\\', '/', paste0(tempfile(), '.tif'))
+    #   (gc_cmd <- paste0(gdalCalc, ' -A ',
+    #                     system.file(package = 'cola', 'sampledata/sampleTif.tif'),
+    #                     ' --outfile=', testFile, ' --calc="(A*2)"' ))
+    #   cat(gc_cmd)
+    #
+    #   out_gc <- (system(gc_cmd, intern = TRUE, show.output.on.console = TRUE))
+    #
+    #   (a <- system2(gc_cmd, timeout = 10, wait = TRUE))
+    #   (b <- shell(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
+    # }
+
+    # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
+    # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'
+    A <- terra::rast(rastPath)
+    B <- terra::rast(rasterizedPath)
+    # plot(A)
+    # plot(B)
+
+    newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )
+    # plot(newRast)
+
+    terra::writeRaster(newRast, filename = replacedPath)
+  }
+
+  # plot(rast(rastPath))
+  # plot(rast(rasterizedPath), main = 'Rasterized')
+  # plot(sf::read_sf(polPath), add = TRUE, col = NA, border = 'red')
+  # plot(rast(replacedPath), main = 'Replaced')
+  # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
+
+  return(replacedPath)
+  #} else { return(NA) }
 }
 

@@ -6,6 +6,8 @@
 ## Errors -- only works for shiny server
 if (TRUE){
 
+  dataFolder <- ifelse(exists('dataFolder'), dataFolder, '')
+  path_error <- ifelse(exists('path_error'), path_error, '')
   logFilePath <<- base::paste0(dataFolder, '/cola_logFolders.txt')
   allLogs <- base::list.files(path = path_error, pattern = 'cola|connec')
 
@@ -305,7 +307,8 @@ tif2rsg <- function(path, outdir = NULL){
   if (file.exists(path)){
     tif <- raster(path)
 
-    (outdir <- ifelse(is.null(outdir), basename(path), gsub(pattern = basename(outdir), x = outdir, replacement = '') ))
+    (outdir <- ifelse(is.null(outdir), yes = dirname(path), no = gsub(pattern = basename(outdir), x = outdir, replacement = '') ))
+    (outdir <- ifelse(outdir == '', '.', outdir))
     fname <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.asc')
     fname_rsg <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.rsg')
 
