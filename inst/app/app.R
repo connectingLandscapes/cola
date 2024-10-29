@@ -3133,7 +3133,7 @@ server <- function(input, output, session) {
         out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-        out_lcc <- lccHeavy_py(py = py, tempFolder = tempFolder,
+        out_lcc <- lccJoblib_py(py = py, tempFolder = tempFolder,
                                inshp = rv$pts,
                                intif = rv$tif,
                                outtif = out_lcc,

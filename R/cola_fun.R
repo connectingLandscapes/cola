@@ -695,6 +695,69 @@ lccHeavy_py <- function(inshp, intif, outtif,
                log =  intCMD) )
 }
 
+
+
+#' @title  Create least cost corridors using parallel computing
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+lccJoblib_py <- function(inshp, intif, outtif,
+                        maxdist, smooth, tolerance,
+                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                        crs = 'None',
+                        maxram = 6,
+                        tempFolder = rootPath,
+                        py = Sys.getenv("COLA_PYTHON_PATH"),
+                        pyscript = system.file(package = 'cola', 'python/lcc_joblib.py')){
+
+  # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
+  # param3 = 25000
+  # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+  # [2] resistance surface
+  # [3] output file name
+  # [4] distance threshold (should be in meters*)
+  # [5] corridor smoothing factor (in number of cells)
+  # [6] corridor tolerance (in cost distance units)
+  # [7] number of cores
+  # [8] projection if missing
+  # [9] first h5 temp file
+  # [10] second h5 temp file
+  # [11] Max GB ram allowed
+
+  tempH5 <- sessionIDgen()
+  h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
+
+
+  (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
+                     inshp, ' ', intif, ' ', outtif, ' ',
+                     format(maxdist, scientific=F), ' ',
+                     format(smooth, scientific=F), ' ',
+                     format(tolerance, scientific=F), " ",
+                     format(ncores, scientific=F), " ",
+                     crs, " ",
+                     h5file1, " ",
+                     h5file2, " ",
+                     maxram
+  ))
+  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  cat('\n\tCMD LCC joblib:\n', cmd_lcc)
+  cat('\n')
+
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  file.remove(c(h5file1, h5file2))
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               log =  intCMD) )
+}
+
+
 #' @title  Create cumulative resistance kernels
 #' @description Run CDPOP model
 #' @param py Python location
@@ -816,8 +879,8 @@ pri_py <- function(tif, incrk, inlcc,
                       format(tolerance, scientific=F)))
 
 
-  cat('\n\tCMD prio: ')
-  print(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
+  cat('\n\tCMD prio: \n')
+  cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
   cat('\n')
 
 
@@ -875,8 +938,8 @@ crk_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
-  cat('\n\tCMD Compare CRK: ')
-  print(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
+  cat('\n\tCMD Compare CRK: \n')
+  cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE),
@@ -929,8 +992,8 @@ lcc_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield)
   )
-  cat('\n\tCMD Comp LCC: ')
-  print(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
+  cat('\n\tCMD Comp LCC: \n ')
+  cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)

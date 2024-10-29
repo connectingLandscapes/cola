@@ -14,7 +14,7 @@ cola_params <<- list(
                    'rasterio', 'pytables',
                    'pandas',  'cython', 'numba' ,
                    'networkit', 'fiona', 'shapely',
-                   'kdepy',
+                   'kdepy', 'joblib',
                    'scikit-image'),
   yml = TRUE,
   ## Number steps
