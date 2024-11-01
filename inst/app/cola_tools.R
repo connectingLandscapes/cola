@@ -309,7 +309,7 @@ tif2rsg <- function(path, outdir = NULL){
 
     (outdir <- ifelse(is.null(outdir), yes = dirname(path), no = gsub(pattern = basename(outdir), x = outdir, replacement = '') ))
     (outdir <- ifelse(outdir == '', '.', outdir))
-    fname <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.asc')
+    fname <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '_temp.asc')
     fname_rsg <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.rsg')
 
     writeRaster(x = tif, format = 'ascii', overwrite = TRUE, filename = fname )
