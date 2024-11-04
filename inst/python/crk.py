@@ -41,18 +41,22 @@ def main() -> None:
     # Distance threshold (in cost distance units)
     dThreshold = sys.argv[4] # 500000
     
-    # Transform. Can be either linear, gaussian, inverse, or inversesquare
+    # Kernel shape transform. Can be either linear, gaussian, inverse, or inversesquare
     tForm = sys.argv[5] # linear
     
-    # Kernel volume. Set to 1 if no kernel volume multiplier is desired.
-    kvol = sys.argv[6]
+    # Should kernel volume be transformed? yes or no. Default is no.
+    tkv = sys.argv[6]
+    
+    # Kernel volume. Ignored if tkv is no.
+    # If tkv is yes, then use user input.
+    kvol = sys.argv[7]
     
     # Number of threads to use. 
-    nThreads = sys.argv[7] # Default 1.
+    nThreads = sys.argv[8] # Default 1.
 
     # User provided CRS if using ascii or other file without projection info
     # Provide as epsg or esri string e.g. "ESRI:102028"
-    upCRS = sys.argv[8] # Default None
+    upCRS = sys.argv[9] # Default None
 
     # Convert kernel volume to float or integer
     try:
@@ -205,11 +209,20 @@ def main() -> None:
         # Set nan to 0
         ccArr[np.isnan(ccArr)] = 0
     
-    # Multiply if kernel volume not 1
-    if kvol > 1:
+    # Transform kernel volume?
+    # From UNICOR help guide
+    # When „const_kernel_vol‟ is False, then the „kernel_volume‟ parameter
+    # is used on the transformed kernel resistant distance following
+    # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
+    # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+    if tkv == "yes":
         ccArr = ccArr*(kvol * 3/(np.pi*dThreshold**2))
-    elif kvol < 1:
-        raise Exception('Kernel volume should be >= 1.')
+
+    # Multiply if kernel volume not 1
+    #if kvol > 1:
+    #    ccArr = ccArr*(kvol * 3/(np.pi*dThreshold**2))
+    #elif kvol < 1:
+    #    raise Exception('Kernel volume should be >= 1.')
     
     # Sum kernels
     ccArr = np.sum(ccArr, axis=0)
