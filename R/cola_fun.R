@@ -769,7 +769,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 crk_py <- function(inshp, intif, outtif,
-                   maxdist, shape, transform = 'yes', volume,
+                   maxdist, shape, transf = 'yes', volume,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
