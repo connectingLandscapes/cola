@@ -20,11 +20,11 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
 
 > Resources
 
- * For installation, go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
+ * For installation, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 
- * For installation known issues, go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)
+ * For installation known issues, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)
 
- * For the functions documentation and examples, go [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_colafun.md)
+ * For the functions documentation and examples, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_colafun.md)
 
  * Access here the live [Decision support system dashboard (DSS)](http://34.44.31.4:3838/connecting-landscapes)
  
