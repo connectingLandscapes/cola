@@ -3323,6 +3323,7 @@ server <- function(input, output, session) {
         tStartCrk <- Sys.time()
         out_crk <<- crk_py(py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
                            maxdist = as.numeric(input$in_crk_4),
+                           transf = (input$in_crk_t),
                            shape = (input$in_crk_5),
                            volume = as.numeric(input$in_crk_6))
         #out_crk_no_data <- gdal_nodata
@@ -5213,7 +5214,11 @@ if (FALSE){
               column(2, textInput("in_crk_4", "Max. dispersal distance (meters):", '200000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
-                                    selected = 'linear')),
+                                    selected = 'linear'),
+                     selectInput(inputId = "in_crk_t", label = "Transform?:",
+                                 choices =  c( 'yes', 'no'), # 'RH',
+                                 selected = 'yes')),
+              # (input$in_crk_t)
               column(1, textInput("in_crk_6", "Kernel volume:", '1')),
               column(2, selectInput("in_crk_sr", "Source layer:", '', choices = '')),
               column(2, textInput('name_crk', label = 'New layer name:', value = "",
