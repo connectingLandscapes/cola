@@ -787,7 +787,7 @@ crk_py <- function(inshp, intif, outtif,
   (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(maxdist, scientific=F), ' ', # [4] distance threshold
                      format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-                     transf, ' ',#
+                     transf, ' ', #
                      format(volume, scientific=F), ' ', # [6] kernel volume
                      format(ncores, scientific=F), ' ', # [7] cores
                      crs) # [8] proj
