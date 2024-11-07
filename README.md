@@ -18,7 +18,10 @@ For recent examples of how the individual tools have been used for wildlife rese
 Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and suggestions.
 
 
+
 > Resources
+
+ * [User manual](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?tab=t.0)
 
  * For installation, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 
