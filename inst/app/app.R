@@ -4674,9 +4674,25 @@ if (FALSE){
                   )),
                 tabPanel(
                   "How it works",
-                  includeMarkdown(
-                    system.file(package = 'cola', 'docs/md_use.md')
-                  )),
+                  # includeMarkdown(
+                  #   system.file(package = 'cola', 'docs/md_use.md')
+                  # )
+                  tags$a(href="https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?tab=t.0",
+                         "Check the latests verios of the manual here!"),
+                  # h3('Check the latests verios of the manual here'),
+                  tags$div(
+                    class = "container",
+                    rowx(
+                      #col(6, htmlOutput('pdfviewer')),
+                      colx(6, tags$iframe(style="height:600px; width:100%",
+                                          #src="http://localhost/ressources/pdf/R-Intro.pdf"
+                                          #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                          src="manual.pdf"
+                      )
+                      )
+                    )
+                  )
+                ),
 
                 tabPanel(
                   "Performance",
@@ -5042,7 +5058,7 @@ if (FALSE){
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_distB',  fill = TRUE))
                                 ))),
-                       column(3, textInput("in_dist_3", "Distance threshold (meters):", '200000')),
+                       column(3, textInput("in_dist_3", "Distance threshold (cost units):", '200000')),
                        column(2, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
@@ -5211,7 +5227,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
-              column(2, textInput("in_crk_4", "Max. dispersal distance (meters):", '200000')),
+              column(2, textInput("in_crk_4", "Max. dispersal distance (cost units):", '200000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear'),
@@ -5258,7 +5274,7 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(1, textInput("in_lcc_4", "Max. dispersal distance (meters):", '800000')),
+              column(1, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '800000')),
               column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
               column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
               column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
@@ -5509,7 +5525,7 @@ if (FALSE){
 
                      tabsetPanel(
                        type = "pills",
-                       tabPanel( "Abosolute", highcharter::highchartOutput("hccomp1")  #, height = "800px")
+                       tabPanel( "Absolute", highcharter::highchartOutput("hccomp1")  #, height = "800px")
                                  %>% shinycssloaders::withSpinner(color="#0dc5c1")),
                        tabPanel( "Relative", highcharter::highchartOutput("hccomp2") %>%
                                    shinycssloaders::withSpinner(color="#0dc5c1")),
