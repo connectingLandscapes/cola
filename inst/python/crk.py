@@ -216,7 +216,8 @@ def main() -> None:
     # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
     # When „const_kernel_vol‟ is True, then no volume transformation is applied.
     if tkv == "yes":
-        ccArr = ccArr*(kvol * 3/(np.pi*dThreshold**2))
+        vol_const = kvol * 3/(np.pi*dThreshold**2)
+        ccArr = ccArr*vol_const      
 
     # Multiply if kernel volume not 1
     #if kvol > 1:
