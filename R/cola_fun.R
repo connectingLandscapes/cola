@@ -652,7 +652,7 @@ lcc_py <- function(inshp, intif, outtif,
 lccHeavy_py <- function(inshp, intif, outtif,
                         maxdist, smooth, tolerance,
                         ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                        crs = 'None', tempFolder = rootPath,
+                        crs = 'None', tempFolder = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscript = system.file(package = 'cola', 'python/lcc_heavy.py')){
 
@@ -670,10 +670,12 @@ lccHeavy_py <- function(inshp, intif, outtif,
   # [10] second h5 temp file
   # [11] Max GB ram allowed
 
-  tempH5 <- sessionIDgen()
+  if (is.null(tempFolder)){
+    tempFolder <- tempdir()
+  }
+  tempH5 <- basename(tempfile())
   h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
   h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
-
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(maxdist, scientific=F), ' ',
@@ -713,7 +715,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
                         ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                         crs = 'None',
                         maxram = 6,
-                        tempFolder = rootPath,
+                        tempFolder = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscript = system.file(package = 'cola', 'python/lcc_joblib.py')){
 
@@ -731,7 +733,10 @@ lccJoblib_py <- function(inshp, intif, outtif,
   # [10] second h5 temp file
   # [11] Max GB ram allowed
 
-  tempH5 <- sessionIDgen()
+  if (is.null(tempFolder)){
+    tempFolder <- tempdir()
+  }
+  tempH5 <- basename(tempfile())
   h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
   h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
 
