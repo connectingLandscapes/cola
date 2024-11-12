@@ -637,7 +637,7 @@ server <- function(input, output, session) {
         }
         rv$lcc2s_sp <- terra::rast(rv$lcc2s)
         rv$lcc_rng2 <- getMxMn(rv$lcc2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
-        rv$lcc_pal2 <-leaflet::colorNumeric(palette = lcc_pal_name, reverse = TRUE,
+        rv$lcc_pal2 <-leaflet::colorNumeric(palette = 'plasma', reverse = TRUE,
                                             domain = rv$lcc_rng2 + 0.0,
                                             na.color = "transparent")
 
@@ -3606,6 +3606,95 @@ server <- function(input, output, session) {
     }
   })
 
+
+  ## load your LCC
+  observeEvent(input$in_pri_lcc, {
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+
+    rv$lccorig <- paste0(tempFolder, '/in_out_lcc_', rv$inLccSessID, '.tif')
+    file.copy(input$in_pri_lcc$datapath, rv$lccorig);
+
+    try(file.remove(input$in_pri_lcc$datapath))
+
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+    tifFixed <- paste0(tempFolder, '/in_out_crk_fixed', rv$inLccSessID, '.tif')
+
+    newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$lccorig,
+                                      outrasterpath = tifFixed)
+
+    rv$lcc <- ifelse(is.na(newtifPath_lcc), yes =  rv$lccorig,
+                     no = newtifPath_lcc)
+
+    if (file.exists( rv$lcc)){
+      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+      rv$lccready <- TRUE
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+
+        rv$lcc_sp <- terra::rast(rv$lcc)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
+
+        rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$lcc_pal <<- leaflet::colorNumeric(palette = "plasma",
+                                             reverse = TRUE,
+                                             domain = rng_newtif+0.0,
+                                             na.color = "transparent")
+
+        makeLL( )
+      })
+    }
+  })
+
+
+  ## load your crk
+  observeEvent(input$in_pri_crk, {
+
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+
+    rv$crkorig <- paste0(tempFolder, '/in_out_crk_', rv$inLccSessID, '.tif')
+    file.copy(input$in_pri_crk$datapath, rv$crkorig);
+
+    try(file.remove(input$in_pri_crk$datapath))
+
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+    tifFixed <- paste0(tempFolder, '/in__out_crk_fixed', rv$inLccSessID, '.tif')
+
+    newtifPath_crk <<- fitRaster2cola(inrasterpath = rv$crkorig,
+                                      outrasterpath = tifFixed)
+
+    rv$crk <- ifelse(is.na(newtifPath_crk), yes =  rv$crkorig,
+                     no = newtifPath_crk)
+
+    if (file.exists( rv$crk)){
+      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+      rv$crkready <- TRUE
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+
+        rv$crk_sp <- terra::rast(rv$crk)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+
+        rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$crk_pal <<- leaflet::colorNumeric(palette = 'inferno',
+                                             reverse = TRUE,
+                                             domain = rng_newtif+0.0,
+                                             na.color = "transparent")
+
+        makeLL( )
+      })
+    }
+  })
+
+
+
   ####### > COMPARE  ------------------
 
   ## Load shp
@@ -4469,7 +4558,7 @@ if (FALSE){
 
           # https://fontawesome.com/search?q=edit&o=r&m=free
 
-          shinydashboard::menuItem(HTML(paste("Habitat suitability <>", "  resistance surface", sep="<br/>")),
+          shinydashboard::menuItem(HTML(paste("Habitat suitability to", "resistance surface", sep="<br/>")),
                                    tabName = "tab_surface", icon = icon("right-left")),
 
           conditionalPanel( 'input.sidebarid == "tab_surface"',
@@ -4606,6 +4695,26 @@ if (FALSE){
           #shinydashboard::menuItem("Mapping", tabName = "tab_maping", icon = icon("map")),
           shinydashboard::menuItem("Connectivity - prioritization",
                                    tabName = "tab_priori", icon = icon("trophy")),
+          conditionalPanel( 'input.sidebarid == "tab_priori"',
+                            div(style = "margin-top: -10px"),
+                            textInput('name_pri_lcc', label = '', value = "",
+                                      width = NULL, placeholder = 'Corridors name:'),
+                            div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_pri_lcc', 'Load corridors',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -50px"),
+                            textInput('name_pri_crk', label = '', value = "",
+                                      width = NULL, placeholder = 'Kernels name:'),
+                            div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_pri_crk', 'Load kernels',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'), multiple=FALSE),                            div(style = "margin-top: -30px"),
+                            #actionButton("dist_shp", "Load points!"),
+
+          ),
+
+
 
           shinydashboard::menuItem("Compare results", tabName = "tab_compare", icon = icon("clone")),
           conditionalPanel( 'input.sidebarid == "tab_compare"',
@@ -4618,7 +4727,20 @@ if (FALSE){
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
-                            div(style = "margin-top: -30px")
+                            div(style = "margin-top: -10px"),
+                            textInput('name_com_lcc', label = '', value = "",
+                                      width = NULL, placeholder = 'Corridors name:'),
+                            div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_com_lcc', 'Load corridors',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -50px"),
+                            textInput('name_com_crk', label = '', value = "",
+                                      width = NULL, placeholder = 'Kernels name:'),
+                            div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_com_crk', 'Load kernels',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'), multiple=FALSE)
           ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
@@ -4752,39 +4874,40 @@ if (FALSE){
                       DT::dataTableOutput(outputId =  "perftable")
                     )
                   )
-                ),
-                # https://stackoverflow.com/questions/61284247/is-there-a-way-to-display-a-gif-file-in-r-shiny
-                tabPanel("Showcase",
-                         includeMarkdown(
-                           system.file(package = 'cola', 'docs/md_showcase.md')),
-                         fluidRow(
-                           # img(src=file.path(rootPath, 'showcase.gif')
-                           #     #, align = "left",height='250px',width='500px'
-                           # )
-                           fluidPage(
-                             leaflet::leafletOutput("ll_map_show", height = "600px") %>%
-                               shinycssloaders::withSpinner(color="#0dc5c1")
-                           )
-                         )
-                ),
-                tabPanel("ShowcasePriv",
-                         fluidRow(
-                           fluidRow(
-                             column(6,
-                                    shiny::fileInput('in_priv_rdata', 'Load your R spatial objects',
-                                                     buttonLabel = 'Search RDATA', placeholder = 'No file',
-                                                     accept=c('.RData'), multiple=FALSE)),
-                             column(6, )),
-
-                           # img(src=file.path(rootPath, 'showcase.gif')
-                           #     #, align = "left",height='250px',width='500px'
-                           # )
-                           fluidPage(
-                             leaflet::leafletOutput("ll_map_showPriv", height = "600px") %>%
-                               shinycssloaders::withSpinner(color="#0dc5c1")
-                           )
-                         )
                 )
+                #,
+                # https://stackoverflow.com/questions/61284247/is-there-a-way-to-display-a-gif-file-in-r-shiny
+                # tabPanel("Showcase",
+                #          includeMarkdown(
+                #            system.file(package = 'cola', 'docs/md_showcase.md')),
+                #          fluidRow(
+                #            # img(src=file.path(rootPath, 'showcase.gif')
+                #            #     #, align = "left",height='250px',width='500px'
+                #            # )
+                #            fluidPage(
+                #              leaflet::leafletOutput("ll_map_show", height = "600px") %>%
+                #                shinycssloaders::withSpinner(color="#0dc5c1")
+                #            )
+                #          )
+                # ),
+                # tabPanel("ShowcasePriv",
+                #          fluidRow(
+                #            fluidRow(
+                #              column(6,
+                #                     shiny::fileInput('in_priv_rdata', 'Load your R spatial objects',
+                #                                      buttonLabel = 'Search RDATA', placeholder = 'No file',
+                #                                      accept=c('.RData'), multiple=FALSE)),
+                #              column(6, )),
+                #
+                #            # img(src=file.path(rootPath, 'showcase.gif')
+                #            #     #, align = "left",height='250px',width='500px'
+                #            # )
+                #            fluidPage(
+                #              leaflet::leafletOutput("ll_map_showPriv", height = "600px") %>%
+                #                shinycssloaders::withSpinner(color="#0dc5c1")
+                #            )
+                #          )
+                # )
               )
             )),
 
@@ -5233,7 +5356,7 @@ if (FALSE){
                                     selected = 'linear'),
                      selectInput(inputId = "in_crk_t", label = "Transform?:",
                                  choices =  c( 'yes', 'no'), # 'RH',
-                                 selected = 'yes')),
+                                 selected = 'no')),
               # (input$in_crk_t)
               column(1, textInput("in_crk_6", "Kernel volume:", '1')),
               column(2, selectInput("in_crk_sr", "Source layer:", '', choices = '')),
