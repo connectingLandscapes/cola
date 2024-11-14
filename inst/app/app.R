@@ -221,6 +221,19 @@
 #  >> SERVER ---------------------------------------------------------------------------
 server <- function(input, output, session) {
 
+  shinyjs::disable("name_sur") # out_par_surA
+  shinyjs::disable("in_pts_hs") # out_par_surA
+  shinyjs::disable("name_pts") #
+  shinyjs::disable("name_dst") #
+  shinyjs::disable("in_crk_sr") #
+  shinyjs::disable("name_crk") #
+  shinyjs::disable("in_lcc_sr") #
+  shinyjs::disable("name_lcc") #
+  shinyjs::disable("in_pri_crk_name") #
+  shinyjs::disable("in_pri_lcc_name") #
+
+
+
   getRastVal <- function(clk, grp){
     #clk <- list(lat = 5.9999, lng = 116.89)
     # $lat [1] 5.9999 | $lng     [1] 116.89
@@ -3431,6 +3444,70 @@ server <- function(input, output, session) {
 
   ####### > PRIORI  ------------------
 
+
+  observeEvent(input$in_pri_tif, {
+    pdebug(devug=devug,
+           sep='\n',pre='\n---- LCC - TIF\n',
+           'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+
+    # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
+
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+
+    rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+    file.copy(input$in_pri_tif$datapath, rv$tiforig);
+
+    # try(file.remove(input$in_lcc_tif$datapath))
+
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+    tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+    pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
+
+    # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
+    #            tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
+    # tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
+
+    newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
+                                      outrasterpath = tifFixed)
+
+    rv$tif <- ifelse(is.na(newtifPath_lcc),
+                     yes =  rv$tiforig,
+                     no = newtifPath_lcc)
+
+    #rv$tif <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+    #rv$tif <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+
+
+    pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
+
+
+    if (file.exists( rv$tif)){
+      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+      rv$tifready <- TRUE
+
+
+      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
+
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+
+        rv$tif_sp <- terra::rast(rv$tif)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                             domain = rng_newtif+0.0, na.color = "transparent")
+
+        makeLL( )
+      })
+    }
+  })
+
+
   observeEvent(input$pri_slider, {
     if(rv$crkready){
 
@@ -3444,59 +3521,62 @@ server <- function(input, output, session) {
       # rv$crk2s_sp
       # bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character()
 
-
       pri_slider <<- input$pri_slider
-      # if(is.null(rv$crk_quan) | !exists('crk_quan')){
-      #   rv$crk_quan0 <-
-      #       t(global(rv$crk2s_sp, fun=quantile,
-      #              probs = seq(0.1, 1, 0.01))
-      #                )
-      #   rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
-      #   brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
-      #   stp <<- diff(range(brks)) / 10 # length(brks)
-      #
-      #   crk_quan <<-  rev(rv$crk_quan)
-      #   #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
-      #   updateSliderInput(inputId = 'pri_slider', value = median(brks),
-      #                     min = min(brks),max = max(brks), step = stp)
-      # }
 
-      observe({
-        pri_slider <<- input$pri_slider
-      })
-      print(' --crk_quan')
-      print(crk_quan)
-      print(' --brks')
-      print(as.character(brks))
+      if(!is.null(rv$crk_quan) | exists('crk_quan')){
 
-      print(' --pri_slider:')
-      print(as.character(pri_slider))
+        # if(is.null(rv$crk_quan) | !exists('crk_quan')){
+        #   rv$crk_quan0 <-
+        #       t(global(rv$crk2s_sp, fun=quantile,
+        #              probs = seq(0.1, 1, 0.01))
+        #                )
+        #   rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+        #   brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
+        #   stp <<- diff(range(brks)) / 10 # length(brks)
+        #
+        #   crk_quan <<-  rev(rv$crk_quan)
+        #   #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+        #   updateSliderInput(inputId = 'pri_slider', value = median(brks),
+        #                     min = min(brks),max = max(brks), step = stp)
+        # }
 
-      #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
-      (posC <<- which(as.character(round(brks*100)) ==
-                        as.character(round(pri_slider*100)))[1])
-      # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
-      newmin <-  crk_quan[posC]
-      print('newmin::')
-      print(newmin)
-      cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+        observe({
+          pri_slider <<- input$pri_slider
+        })
+        print(' --crk_quan')
+        print(crk_quan)
+        print(' --brks')
+        print(as.character(brks))
 
-      if(newmin == 0){newDm <- 0.01}
-      newDm <<-  c(newmin, max(rv$crk_rng))
-      cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+        print(' --pri_slider:')
+        print(as.character(pri_slider))
 
-      rv$crk_pal2 <- leaflet::colorNumeric(
-        palette = "plasma", reverse = TRUE,
-        domain = newDm, na.color = "transparent")
+        #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
+        (posC <<- which(as.character(round(brks*100)) ==
+                          as.character(round(pri_slider*100)))[1])
+        # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
+        newmin <-  crk_quan[posC]
+        print('newmin::')
+        print(newmin)
+        cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
-      leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
-        addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                       colors = rv$crk_pal2, opacity = .7)
+        if(newmin == 0){newDm <- 0.01}
+        newDm <<-  c(newmin, max(rv$crk_rng))
+        cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
 
-      # output$ll_map_pri_prev <- leaflet::renderLeaflet({
-      #   leaflet::leaflet()  %>% addTiles() %>%
-      #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
-      # })
+        rv$crk_pal2 <- leaflet::colorNumeric(
+          palette = "plasma", reverse = TRUE,
+          domain = newDm, na.color = "transparent")
+
+        leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+          addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                         colors = rv$crk_pal2, opacity = .7)
+
+        # output$ll_map_pri_prev <- leaflet::renderLeaflet({
+        #   leaflet::leaflet()  %>% addTiles() %>%
+        #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
+        # })
+      }
     }
   })
 
@@ -4410,6 +4490,7 @@ server <- function(input, output, session) {
     ## Download surface
     output$tifDwn <- downloadHandler(
       filename =  paste0('sur_',
+                         #ifelse(exists('inSurSessID'), inSurSessID, rv$inSurSessID),
                          ifelse(!is.null(rv$inSurSessID), rv$inSurSessID, rv$sessionID),
                          '.tif'),
       content = function(filename) {
@@ -4424,7 +4505,10 @@ server <- function(input, output, session) {
 
     ## Download csv
     output$csvDwn <- downloadHandler(
-      filename =  paste0('cdmat_', rv$inDistSessID , '.csv'),
+      filename =  paste0('cdmat_',
+                         ifelse(!is.null(rv$inDistSessID), rv$inDistSessID, rv$sessionID),
+                         # rv$inDistSessID ,
+                         '.csv'),
       content = function(filename) {
         if(!is.null( rv$cdm) ){
           write.csv(rv$cdm_sp,
@@ -4434,7 +4518,10 @@ server <- function(input, output, session) {
 
     ## Download lcc
     output$lccDwn <- downloadHandler(
-      filename =  paste0('lcc_', rv$inLccSessID , '.tif'),
+      filename =  paste0('lcc_',
+                         ifelse(!is.null(rv$inLccSessID), rv$inLccSessID, rv$sessionID),
+                         #rv$inLccSessID ,
+                         '.tif'),
       content = function(filename) {
         if(!is.null( rv$lcc) ){
           terra::writeRaster(rv$lcc_sp,
@@ -4447,7 +4534,10 @@ server <- function(input, output, session) {
 
     ## Download crk
     output$crkDwn <- downloadHandler(
-      filename =  paste0('crk_', rv$inCrkSessID , '.tif'),
+      filename =  paste0('crk_',
+                         ifelse(!is.null(rv$inCrkSessID), rv$inCrkSessID, rv$sessionID),
+                         # rv$inCrkSessID ,
+                         '.tif'),
       content = function(filename) {
         if(!is.null( rv$crk) ){
           terra::writeRaster(rv$crk_sp,
@@ -4460,7 +4550,10 @@ server <- function(input, output, session) {
 
     ## Download edit surface
     output$editifDwn <- downloadHandler(
-      filename =  paste0('scenarioSurfRes_', rv$inEdiSessID2 , '.tif'),
+      filename =  paste0('scenarioSurfRes_',
+                         ifelse(!is.null(rv$inEdiSessID2), rv$inEdiSessID2, rv$sessionID),
+                         # rv$inEdiSessID2 ,
+                         '.tif'),
       content = function(filename) {
         if(!is.null( rv$tif) ){
           terra::writeRaster(rv$tif_sp,
@@ -4543,7 +4636,7 @@ if (FALSE){
 
     ####  title ----
     header = shinydashboard::dashboardHeader(
-      title = "ConnectingLandscapes v0"
+      title = "ConnectingLandscapes v.1"
       #,enable_rightsidebar = TRUE, rightSidebarIcon = "info-circle"
     ),
 
@@ -4563,8 +4656,7 @@ if (FALSE){
 
           conditionalPanel( 'input.sidebarid == "tab_surface"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_tif_sur', label = '', value = "",
-                                      width = NULL, placeholder = 'Habitat suitability name:'),
+                            # textInput('name_tif_sur', label = '', value = "", width = NULL, placeholder = 'Habitat suitability name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_sur_tif', 'Load Suitability',
                                              buttonLabel = 'Search', placeholder = 'No file',
@@ -4578,8 +4670,7 @@ if (FALSE){
                                    tabName = "tab_edit", icon = icon("pencil")),
           conditionalPanel( 'input.sidebarid == "tab_edit"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_tif_edi', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_tif_edi', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_edi_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4597,8 +4688,7 @@ if (FALSE){
           shinydashboard::menuItem("Create source points", tabName = "tab_points", icon = icon("map-pin")),
           conditionalPanel( 'input.sidebarid == "tab_points"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_hs_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_hs_pts', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -20px"),
                             shiny::fileInput('in_points_hs', 'Suitability TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4610,8 +4700,7 @@ if (FALSE){
                             # conditionalPanel( 'input.sidebarid == "tab_points"',
                             div(style = "margin-top: -10px"),
 
-                            textInput('name_tif_pts', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_tif_pts', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_points_tif', 'Resistance TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4624,15 +4713,13 @@ if (FALSE){
           shinydashboard::menuItem("Cost distance matrix", tabName = "tab_distance", icon = icon("border-all")),
           conditionalPanel( 'input.sidebarid == "tab_distance"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_tif_dst', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_tif_dst', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_dist_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -30px"),
-                            textInput('name_pts_dst', label = '', value = "",
-                                      width = NULL, placeholder = 'Points name:'),
+                            # textInput('name_pts_dst', label = '', value = "", width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_dist_shp', 'Load points files', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -4651,15 +4738,13 @@ if (FALSE){
                                    tabName = "tab_kernels", icon = icon("bezier-curve")),
           conditionalPanel( 'input.sidebarid == "tab_kernels"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_tif_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_tif_crk', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_crk_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
-                            textInput('name_pts_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Points name:'),
+                            # textInput('name_pts_crk', label = '', value = "", width = NULL, placeholder = 'Points name:'),
                             shiny::fileInput('in_crk_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -4671,15 +4756,13 @@ if (FALSE){
           shinydashboard::menuItem("Connectivity - corridors", tabName = "tab_corridors", icon = icon("route")),
           conditionalPanel( 'input.sidebarid == "tab_corridors"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_tif_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Surface resistance name:'),
+                            # textInput('name_tif_lcc', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_lcc_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
-                            textInput('name_pts_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Points name:'),
+                            # textInput('name_pts_lcc', label = '', value = "", width = NULL, placeholder = 'Points name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
@@ -4697,15 +4780,21 @@ if (FALSE){
                                    tabName = "tab_priori", icon = icon("trophy")),
           conditionalPanel( 'input.sidebarid == "tab_priori"',
                             div(style = "margin-top: -10px"),
-                            textInput('name_pri_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Corridors name:'),
+                            # textInput('name_tif_pri', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_pr_tif', 'Load Resistance',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'),
+                                             #accept= '.zip',
+                                             multiple=FALSE),
+                           div(style = "margin-top: -50px"),
+                            # textInput('name_pri_lcc', label = '', value = "", width = NULL, placeholder = 'Corridors name:'),
+                            # div(style = "margin-top: -10px"),
                             shiny::fileInput('in_pri_lcc', 'Load corridors',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
-                            textInput('name_pri_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Kernels name:'),
+                            # textInput('name_pri_crk', label = '', value = "", width = NULL, placeholder = 'Kernels name:'),
                             div(style = "margin-top: -10px"),
                             shiny::fileInput('in_pri_crk', 'Load kernels',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
@@ -4719,32 +4808,33 @@ if (FALSE){
           shinydashboard::menuItem("Compare results", tabName = "tab_compare", icon = icon("clone")),
           conditionalPanel( 'input.sidebarid == "tab_compare"',
                             # div(style = "margin-top: -30px"),
-                            div(style = "margin-top: -10px"),
-                            textInput('field_shp_com', label = '', value = "",
-                                      width = NULL, placeholder = 'Shapefile name'),
-                            div(style = "margin-top: -10px"),
+                            # div(style = "margin-top: -10px"),
+                            # textInput('field_shp_com', label = '', value = "",
+                            #           width = NULL, placeholder = 'Shapefile name'),
+                            # div(style = "margin-top: -10px"),
                             shiny::fileInput('in_com_shp', 'Load polygon', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
-                            div(style = "margin-top: -10px"),
-                            textInput('name_com_lcc', label = '', value = "",
-                                      width = NULL, placeholder = 'Corridors name:'),
-                            div(style = "margin-top: -10px"),
+                            div(style = "margin-top: -40px"),
+                            # textInput('name_com_lcc', label = '', value = "",
+                            #           width = NULL, placeholder = 'Corridors name:'),
                             shiny::fileInput('in_com_lcc', 'Load corridors',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
-                            div(style = "margin-top: -50px"),
-                            textInput('name_com_crk', label = '', value = "",
-                                      width = NULL, placeholder = 'Kernels name:'),
-                            div(style = "margin-top: -10px"),
+                            # div(style = "margin-top: -50px"),
+                            # textInput('name_com_crk', label = '', value = "",
+                            #           width = NULL, placeholder = 'Kernels name:'),
+                            div(style = "margin-top: -40px"),
                             shiny::fileInput('in_com_crk', 'Load kernels',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
-                                             accept=c('.tif'), multiple=FALSE)
+                                             accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -40px")
+
           ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
-          shinydashboard::menuItem("PDF", tabName = "tab_pdf", icon = icon("code-fork")),
+          shinydashboard::menuItem("Slides", tabName = "tab_pdf", icon = icon("file")),
           shinydashboard::menuItem("Run locally", tabName = "tab_local", icon = icon("code-fork"))
           #,
           #menuItem("Local paths", tabName = "tab_paths", icon = icon("python"))
@@ -4944,7 +5034,7 @@ if (FALSE){
                               textInput("in_sur_7", "No Data:", '-9999')
                        ),
                        column(6,
-                              selectInput("in_pts_hs", "Source layer:", '50', choices = '')
+                               selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
                        ),
                        column(3,
                               tags$table(
@@ -4955,8 +5045,7 @@ if (FALSE){
                                 ))
                        ),
                      ),
-                     textInput('name_sur', label = 'New layer name:', value = "",
-                               width = '100%', placeholder = 'NameOfNewLayertoCreate')
+                     textInput('name_sur', label = 'New layer name:', value = "", width = '100%', placeholder = 'NameOfNewLayertoCreate')
                      #tags$tr(tags$td(style = "width: 20%", align = "center",),
               ),
 
@@ -5243,7 +5332,7 @@ if (FALSE){
               ),
 
               fluidRow(
-                column(width = 4,
+                column(width = 2,
                        tags$table(
                          style = "width: 100%", align = "left",
                          tags$tr(
@@ -5253,13 +5342,14 @@ if (FALSE){
                                    htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
                          ))),
                 column(width = 2,
-                       checkboxInput('cdpop_mort', 'Mortality from resistance?', value = TRUE, width = NULL),
+                       checkboxInput('cdpop_mort', 'Mortality from resistance?', value = TRUE, width = NULL)),
+                column(width = 2,
                        actionButton("run_cdpop", 'Run CDPOP')),
-                column(width = 4,
+                column(width = 1, downloadButton('cdpDwn', 'Download')),
+                column(width = 3,
                        selectizeInput(inputId = 'cdpop_ans_yy', 'Generation to plot:', choices = c(''), )),
                 column(width = 2,
-                       actionButton("mapcdpop", "Load generation map"),
-                       downloadButton('cdpDwn', 'Download'))
+                       actionButton("mapcdpop", "Load generation map"))
               ),
 
               fluidRow(
@@ -5351,12 +5441,11 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_crkA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB',  fill = TRUE)),
               column(2, textInput("in_crk_4", "Max. dispersal distance (cost units):", '200000')),
-              column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
+              column(1, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
-                                    selected = 'linear'),
-                     selectInput(inputId = "in_crk_t", label = "Transform?:",
-                                 choices =  c( 'yes', 'no'), # 'RH',
-                                 selected = 'no')),
+                                    selected = 'linear')),
+              column(1, selectInput(inputId = "in_crk_t", label = "Transform?:",
+                                 choices =  c( 'yes', 'no'), selected = 'no')),
               # (input$in_crk_t)
               column(1, textInput("in_crk_6", "Kernel volume:", '1')),
               column(2, selectInput("in_crk_sr", "Source layer:", '', choices = '')),
@@ -5450,8 +5539,8 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_prioB',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioC',  fill = TRUE)),
               column(2, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
-              column(2, selectInput("in_pri_lcc", "Source layer:", '50', choices = '')),
-              column(2, selectInput("in_pri_crk", "Source layer:", '50', choices = '')),
+              column(2, selectInput("in_pri_lcc_name", "Source layer:", '50', choices = '')),
+              column(2, selectInput("in_pri_crk_name", "Source layer:", '50', choices = '')),
               column(2, textInput('name_pri', label = 'New layer name:', value = "",
                                   width = '100%', placeholder = 'Name new layer')),
               # column(4, textInput("in_pri_6", "Corridor tolerance:", '1000')),

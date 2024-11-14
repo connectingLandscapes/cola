@@ -215,7 +215,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE, onlyIndividual = TRUE,
+setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
+                        yml = FALSE, onlyIndividual = TRUE, ask = TRUE,
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
@@ -232,9 +233,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE
 
   if (!require(reticulate)){
 
-    user_permission <- utils::askYesNo("Install `reticulate` package?")
+    user_permission <- FALSE
+    if (ask){
+      user_permission <- utils::askYesNo("Install `reticulate` package?")
+    }
 
-    if (isTRUE(user_permission)) {
+    if (isTRUE(user_permission) | !ask) {
       cat(sep = '', '    Installing `reticulate`\n')
       install.packages('reticulate')
     } else {
@@ -300,8 +304,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE, yml = FALSE
   if ( is.null(miniBase) ){
 
     #.onLoad(libname = 'reticulate', pkgname = envName)
-    user_permission <- utils::askYesNo("Install miniconda? downloads 80MB and takes some minutes")
-    if (isTRUE(user_permission)) {
+    user_permission <- FALSE
+    if(ask){
+      user_permission <- utils::askYesNo("Install miniconda? downloads 80MB and takes some minutes")
+    }
+
+    if (isTRUE(user_permission) | !ask) {
       reticulate::install_miniconda()
 
       (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
