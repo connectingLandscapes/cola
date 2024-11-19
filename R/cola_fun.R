@@ -254,7 +254,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 shp2xy <- function(shapefile, outxy, tempDir,
-                   mortrast = NULL, survrast = NULL){
+                   mortrast = NULL, survrast = NULL, porcEmpty = 0){
 
   # The n-(x,y) grid location values. This is a comma delimited file with 5 column headings:
   # (Subpopulation)- a unique identifier for  each individual corresponding to a unique subpopulation
@@ -273,7 +273,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
   # shapefile<- system.file(package = 'cola', 'sampledata/xy.csv')
 
-  # shapefile<- 'C:/temp/cola/colaSFY2024081405054705//out_simpts_XMT2024081405055805.shp'
+  #  shapefile<- 'C:/temp/cola/colaFFF2024111800273705/np_baseline_200points.shp'
   # survrast <- 'C:/temp/cola/colaSFY2024081405054705//in_surface_fixed_XMT2024081405055805.tif'
   # outxy <- 'C:/temp/cola/colaSFY2024081405054705//outxy.xy'
   # tempDir = "C:/temp/cola/colaSFY2024081405054705/"
@@ -299,6 +299,14 @@ shp2xy <- function(shapefile, outxy, tempDir,
   xynew$Fitness_aa <- 100
   xynew$Fitness_Aa <- 16
 
+  # porcEmpty <- 10
+  if (porcEmpty > 0){
+    nEmpty <- round( (porcEmpty/100) * nrow(xy))
+    posEmpty <- sample(x = 1:nrow(xy), size = nEmpty, replace = FALSE)
+    xynew$ID[posEmpty] <- 'NA'
+    xynew$sex[posEmpty] <- 'NA'
+  }
+
   if (!is.null(mortrast) | !is.null(survrast) ){
     vals2add <- 0
 
@@ -311,15 +319,16 @@ shp2xy <- function(shapefile, outxy, tempDir,
     }
 
     if(file.exists(rast_path)){
+      # rast_path <- 'C:/temp/cola/colaFFF2024111800273705/in_dist_fixed_MBU2024111800275205.tif'
       rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
       names(rcdpop) <- 'rcdpop'
       if(!is.null(rcdpop)){
         cat('  Extracing raster values for mortality\n')
         extVals <- terra::extract(rcdpop, xy[, c('XCOORD','YCOORD')])
-        extVals <- extVals$rcdpop # [, 2]
+        extVals <- extVals2 <- extVals$rcdpop # [, 2]
         #extVals <- (20:200)
         rng <- range(extVals, na.rm = TRUE)
-        if( any(!is.na(rng)) ){
+        if( any(!is.na(rng)) & length(unique(rng)) > 1 ){
           cat('    --- At least some values OK \n')
           extVals2 <- (extVals - min(rng))/(max(rng) - min(rng))
           if(!mort){
@@ -353,7 +362,6 @@ shp2xy <- function(shapefile, outxy, tempDir,
   }
 
   print(head(xynew))
-
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)

@@ -231,7 +231,11 @@ server <- function(input, output, session) {
   shinyjs::disable("name_lcc") #
   shinyjs::disable("in_pri_crk_name") #
   shinyjs::disable("in_pri_lcc_name") #
-
+  shinyjs::disable("cdpop_ans_yy") #
+  shinyjs::disable("mapcdpop") #
+  shinyjs::disable("addcolumn") #
+  shinyjs::disable("removecolumn") #
+  shinyjs::disable("Splitcolumn") #
 
 
   getRastVal <- function(clk, grp){
@@ -586,7 +590,7 @@ server <- function(input, output, session) {
                                             na.color = "transparent")
         # pdebug(devug=devug,pre='\n  MakeLL - TIF', sep='\n','rv$tiforig','rv$tif0', ' rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
 
-        pdebug(devug=devug,pre='\n  MakeLL - TIF', sep='\n',
+        pdebug(devug=FALSE,pre='\n  MakeLL - TIF', sep='\n',
                'rv$tiforig','rv$tif0', 'rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
 
 
@@ -901,7 +905,23 @@ server <- function(input, output, session) {
     layersList = NULL,
     sessionID = sessionID,  tempFolder = tempFolder,
 
-    data = NULL, orig = NULL, refresh = 0,
+    data = NULL,
+    orig = NULL,
+    # data = datatable( system.file(package = 'cola', 'sampledata/invars.csv'),
+    #                  editable = TRUE,
+    #                  options = list(
+    #                    paging =TRUE,
+    #                    pageLength =  nrow(rv$data)
+    #                  )),
+    #   ,
+    # orig = datatable(system.file(package = 'cola', 'sampledata/invars.csv'),
+    #                  editable = TRUE,
+    #                  options = list(
+    #                    paging =TRUE,
+    #                    pageLength =  nrow(rv$data)
+    #                  )),
+
+    refresh = 0,
     cdpopRun = NULL, out_cdpop_files = c(''),
 
     log = paste0('Your session ID: ', sessionID, '\nWaiting for inputs ... '),
@@ -1382,6 +1402,10 @@ server <- function(input, output, session) {
     checkEnv()
   })
 
+  observeEvent(input$in_cdpop_pardef, {
+    rv$data <- t(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
+  })
+
   observeEvent(input$in_cdpop_par, {
     if(devug){ print('cdpop_par: '); print(input$in_cdpop_par)}
     file <- input$in_cdpop_par
@@ -1581,10 +1605,41 @@ server <- function(input, output, session) {
     #            cdm = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_cdmatrix_XUV2024080118421705.csv')
     # pref <- 'SLW'
 
+    ## no params provided
+    if (is.null(rv$data)){
+      print(' // No provided invars:')
+      cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
+    } else {
+      print(' // Provided invars:')
+      cdpop_invars <- t(rv$data)
+    }
+    print(cdpop_invars)
+    #print(read.csv(cdpop_invars))
+
+    if (is.numeric(as.numeric(input$in_dist_3))){
+      cdpop_invars$matemovethresh <- as.numeric(input$in_dist_3)
+      cdpop_invars$Matemovethresh <- as.numeric(input$in_dist_3)
+      cdpop_invars$Fdispmovethresh <- as.numeric(input$in_dist_3)
+      cdpop_invars$Mdispmovethresh <- as.numeric(input$in_dist_3)
+    }
+
+    # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
+    invars_file_path <- file.path(tempFolder, 'invars_edited.csv')
+    write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
+
     newxy <- gsub('.shp', '.csv', x = rv$pts)
     prefMort <- ''
+
+    perc_emp <- 0
+    in_cdp_pr <- as.numeric(input$in_cdp_pr)
+    if(is.numeric(in_cdp_pr)){
+      if(in_cdp_pr > 0 & in_cdp_pr < 100){
+        perc_emp <- in_cdp_pr
+      }
+    }
+
     if( input$cdpop_mort){
-      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif)
+      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif, porcEmpty = perc_emp)
       prefMort <- 'mort'
       cat('  Extracing raster values for mortality\n')
     } else {
@@ -1599,13 +1654,13 @@ server <- function(input, output, session) {
 
       tStartCDP <- Sys.time()
 
-      cdpop_ans <<- cdpop_py(inputvars = NULL, agevars = NULL,
+      cdpop_ans <<- cdpop_py(inputvars = invars_file_path,
+                             agevars = NULL,
                              cdmat = rv$cdm, xy = rv$ptsxy,
                              tempFolder = tempFolder, prefix = pref)
       #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
       rv$cdpop_ans <<- cdpop_ans
       cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
-
 
       tStopCDP <- Sys.time() - tStartCDP
       textElapCDP <- paste(round(as.numeric(tStopCDP), 2), attr(tStopCDP, 'units'))
@@ -1618,103 +1673,124 @@ server <- function(input, output, session) {
       # rv <- list()
       # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
       cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
-      rv$cdpop_out <- read.csv(cdpop_out)
-      rv$cdpFolder <- dirname(dirname(cdpop_out))
 
-      cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
-                           function(x){
-                             #x = rv$cdpop_out$Population_Age1.
-                             as.numeric(gsub('\\|.+|\\|', '', x))
-                           }
-      )
-
-      cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-      cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
-      cdpop_grids_Num <- sort(cdpop_grids_Num)
-
-      output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
-                        type = "line", dashStyle = "DashDot", name = 'Population'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Population')) %>%
-          hc_xAxis(title = list(text = 'Generation')) %>%
-          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-
-      })
-
-      output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                        type = "line", dashStyle = "DashDot", name = 'Alleles'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Alleles')) %>%
-          hc_xAxis(title = list(text = 'Generation')) %>%
-          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-      })
-
-      output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-        highchart() %>% hc_exporting(enabled = TRUE) %>%
-          hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                        type = "line", dashStyle = "DashDot", name = 'He'
-                        #, hcaes(x = 'Year', y = 'Population')
-          ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                              type = "line", dashStyle = "DashDot", name = 'Ho'
-                              #, hcaes(x = 'Year', y = 'Population')
-          ) %>%
-          hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-          hc_xAxis(title = list(text = 'Generation')) %>%
-          hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-      }) #
-
-      updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                           choices = cdpop_grids_Num,
-                           selected = tail(cdpop_grids_Num, 1), server = TRUE)
+      if(length(cdpop_out) != 0){
 
 
-      # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+        rv$cdpop_out <- read.csv(cdpop_out)
+        rv$cdpFolder <- dirname(dirname(cdpop_out))
 
-      densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
-                                  method = 'average',
-                                  bandwidths = 'None', type = 'count', crs = 'None')
-      # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+        cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+                             function(x){
+                               #x = rv$cdpop_out$Population_Age1.
+                               as.numeric(gsub('\\|.+|\\|', '', x))
+                             }
+        )
 
-      struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
-                                 method = 'thin_plate_spline',
-                                 neighbors = 'all', crs = 'None')
+        cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+        cdpop_grids <- cdpop_grids[order( cdpop_grids_Num )]
+        cdpop_grids_Num <- sort(cdpop_grids_Num)
 
-      rv$struRA <- struRA <- rast(struMap$newFiles[1])
-      rv$struRB <- struRB <- rast(struMap$newFiles[2])
-      rv$densR <- densR <- rast(densMap$file)
+        output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+          highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
+                          type = "line", dashStyle = "DashDot", name = 'Population'
+                          #, hcaes(x = 'Year', y = 'Population')
+            ) %>%
+            hc_yAxis(title = list(text = 'Population')) %>%
+            hc_xAxis(title = list(text = 'Generation')) %>%
+            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
 
-      rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-      rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-      rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+        })
 
-      llcdp <<- leaflet() %>% addTiles() %>%
-        addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-        addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
-        addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-        addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-        addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-        addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
-        leaflet::addLayersControl(
-          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-          overlayGroups = c('Alleles', "Heterozygosity", "Density"),
-          options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
-        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+        output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+          highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                          type = "line", dashStyle = "DashDot", name = 'Alleles'
+                          #, hcaes(x = 'Year', y = 'Population')
+            ) %>%
+            hc_yAxis(title = list(text = 'Alleles')) %>%
+            hc_xAxis(title = list(text = 'Generation')) %>%
+            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+        })
+
+        output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+          highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                          type = "line", dashStyle = "DashDot", name = 'He'
+                          #, hcaes(x = 'Year', y = 'Population')
+            ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                                type = "line", dashStyle = "DashDot", name = 'Ho'
+                                #, hcaes(x = 'Year', y = 'Population')
+            ) %>%
+            hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+            hc_xAxis(title = list(text = 'Generation')) %>%
+            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+        }) #
+
+        shinyjs::enable("cdpop_ans_yy") #
+        updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                             choices = cdpop_grids_Num,
+                             selected = head(cdpop_grids_Num, 1), server = TRUE)
+
+
+        # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+
+        densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
+                                    method = 'average',
+                                    bandwidths = 'None', type = 'count', crs = 'None')
+        # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+        struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
+                                   method = 'thin_plate_spline',
+                                   neighbors = 'all', crs = 'None')
+
+        rv$struRA <- struRA <- rast(struMap$newFiles[1])
+        rv$struRB <- struRB <- rast(struMap$newFiles[2])
+        rv$densR <- densR <- rast(densMap$file)
+
+        rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+        rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+        rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+
+        #rv <- list(pts = '')
+        newxyshp <- terra::vect(rv$pts)
+
+        llcdp <<- leaflet() %>% addTiles() %>%
+          addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+          addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
+          addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+          addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+          addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+          addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
+          leaflet::addLayersControl(
+            baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+            overlayGroups = c('Alleles', "Heterozygosity", "Density"),
+            options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+          leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+      }
     })
 
   }))
 
-  # observeEvent(mapcdpop, {
-  #   input$cdpop_ans_yy
-  #   if(input$cdpop_ans_yy != ''){
-  #     rv$cdpop_ans
-  #   }
-  # })
+  observeEvent(input$mapcdpop, {
+    input$cdpop_ans_yy
+    if(input$cdpop_ans_yy != ''){
+
+      pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
+
+      densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
+                                  method = 'average',
+                                  bandwidths = 'None', type = 'count', crs = 'None')
+      # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+      struMap <- cdpop_mapstruct(grids = cdpop_grids[pos2plot], template = rv$tif,
+                                 method = 'thin_plate_spline',
+                                 neighbors = 'all', crs = 'None')
+
+
+    }
+  })
 
 
   observeEvent(input$cdpop_check3, {
@@ -2875,6 +2951,7 @@ server <- function(input, output, session) {
 
 
       if(file.exists(outcdmat)){
+        if(devug) {print(' CDMatrix done')}
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
         rv$cdm_nvalid <- validCels <- sum(headMat > 1, na.rm = T)/2
         params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
@@ -4641,7 +4718,7 @@ if (FALSE){
     ),
 
 
-    ####  sidebar ----
+    #### SIDEBAR ----
     sidebar =
       shinydashboard::dashboardSidebar(
         shinydashboard::sidebarMenu(
@@ -4689,7 +4766,7 @@ if (FALSE){
           conditionalPanel( 'input.sidebarid == "tab_points"',
                             div(style = "margin-top: -10px"),
                             # textInput('name_hs_pts', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
-                            div(style = "margin-top: -20px"),
+                            # div(style = "margin-top: -20px"),
                             shiny::fileInput('in_points_hs', 'Suitability TIF:',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
@@ -5332,7 +5409,7 @@ if (FALSE){
               ),
 
               fluidRow(
-                column(width = 2,
+                column(width = 4,
                        tags$table(
                          style = "width: 100%", align = "left",
                          tags$tr(
@@ -5342,14 +5419,14 @@ if (FALSE){
                                    htmlOutput(outputId = 'out_par_cdpoB',  fill = TRUE))
                          ))),
                 column(width = 2,
+                       numericInput("in_cdp_pr", label = "Percentage of empty coords:", value = 0)
+                ),
+                column(width = 2,
                        checkboxInput('cdpop_mort', 'Mortality from resistance?', value = TRUE, width = NULL)),
                 column(width = 2,
                        actionButton("run_cdpop", 'Run CDPOP')),
-                column(width = 1, downloadButton('cdpDwn', 'Download')),
-                column(width = 3,
-                       selectizeInput(inputId = 'cdpop_ans_yy', 'Generation to plot:', choices = c(''), )),
-                column(width = 2,
-                       actionButton("mapcdpop", "Load generation map"))
+                column(width = 2, downloadButton('cdpDwn', 'Download'))
+
               ),
 
               fluidRow(
@@ -5362,6 +5439,13 @@ if (FALSE){
                        leaflet::leafletOutput("ll_map_cdp", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")
                 ),
                 column(width = 6,
+                       fluidRow(
+                         column(width = 6,
+                                selectizeInput(inputId = 'cdpop_ans_yy', 'Generation to plot:', choices = c(''), )),
+                         column(width = 6,
+                                actionButton("mapcdpop", "Load generation map"))
+                       ),
+
                        tabsetPanel(
                          type = "pills",
                          tabPanel( "Population", highcharter::highchartOutput("hccdpop1")
@@ -5399,23 +5483,24 @@ if (FALSE){
                   fluidRow(
                     column(
                       width = 3,
-                      fileInput("in_cdpop_par", "Choose CSV File", accept = ".csv"),
-                      checkboxInput("header", "Header", TRUE),
+                      actionButton("in_cdpop_pardef", "Load default invars parameters file"),
                     ),
                     column(
                       width = 5,
-                      textInput("textbox", label="Input the value to replace:"),
-                      actionButton("replacevalues", label = 'Replace values'),
-                      #uiOutput("selectUI"),
-                      actionButton("deleteRows", "Delete Rows"),
-                      actionButton("addcolumn", "Add Column"),
-                      actionButton("removecolumn", "Remove last column"),
-                      actionButton("Splitcolumn", "SplitColumn"),
-                      actionButton("Undo", 'Undo')
+                      fileInput("in_cdpop_par", "invars CSV File", accept = ".csv"),
+                      # textInput("textbox", label="Input the value to replace:"),
+                      # actionButton("replacevalues", label = 'Replace values'),
+                      # uiOutput("selectUI"),
+                      # actionButton("deleteRows", "Delete Rows"),
+                      # actionButton("addcolumn", "Add Column"),
+                      # actionButton("removecolumn", "Remove last column"),
+                      # actionButton("Splitcolumn", "SplitColumn"),
+                      # actionButton("Undo", 'Undo')
                     ),
                     column( width = 4,
-                            actionButton("cdpop_check1", "Check files"),
-                            shinydashboard::valueBoxOutput("cdpop_box1")
+                      checkboxInput("header", "Header", TRUE),
+                            # actionButton("cdpop_check1", "Check files"),
+                            # shinydashboard::valueBoxOutput("cdpop_box1")
                     ),
                   ),
                   fluidRow(
@@ -5580,67 +5665,6 @@ if (FALSE){
             ) # close box
           ),
 
-          #### UI PDF ----
-          shinydashboard::tabItem(
-            tabName = 'tab_pdf',
-            mainPanel(
-              tags$div(
-                class = "container",
-                rowx(
-                  colx(3, textInput("pdfurl", "PDF URL"))
-                ),
-                rowx(
-                  #col(6, htmlOutput('pdfviewer')),
-                  colx(6, tags$iframe(style="height:600px; width:100%",
-                                      #src="http://localhost/ressources/pdf/R-Intro.pdf"
-                                      #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
-                                      src="pdf.pdf"
-                  )
-                  )
-                )
-              )
-            )
-          ),
-
-          #### UI GENETICS ----
-
-          shinydashboard::tabItem(
-            tabName = 'tab_genetics',
-            h2(' Landscape genetics'),
-            h6('    Comming soon ... stay tuned')
-          ),
-
-          #### UI LOCAL --------
-          shinydashboard::tabItem(
-            tabName = 'tab_local',
-            h2(' Running this locally'),
-            #h6('    Comming soon ... stay tuned'),
-            includeMarkdown(
-              system.file(package = 'cola', 'docs/md_cola_install.md')
-            ),
-            h2(' '),
-            fluidRow(
-              column(width = 10,
-                     selectizeInput(width = "100%",
-                                    "sel_error", "Select log file:",
-                                    choices = list.files(path = path_error,
-                                                         pattern = 'cola|connec'
-                                    )),
-              ),
-              column(width = 2,
-                     br(),
-                     actionButton("read_error", HTML("Read file")))
-            ),
-            verbatimTextOutput("outerror"),
-
-            shinydashboard::box(
-              width = 12, solidHeader = T, collapsible = T,
-              title = "", status = "primary", collapsed = TRUE,
-              column(4, textInput("sessInput", "", '')),
-              column(4, actionButton("sessPath", "Run")),
-              column(4, verbatimTextOutput("sessLog"))
-            )
-          ),
 
           #### UI COMPARE ------
           shinydashboard::tabItem(
@@ -5760,7 +5784,7 @@ if (FALSE){
             #   )
             # )
 
-
+            br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
               title = "Comparisson info", status = "primary", collapsed = TRUE
@@ -5782,6 +5806,71 @@ if (FALSE){
 
           )
           ,
+
+
+          #### UI PDF ----
+          shinydashboard::tabItem(
+            tabName = 'tab_pdf',
+            mainPanel(
+              tags$div(
+                class = "container",
+                # rowx(
+                #   colx(3, textInput("pdfurl", "PDF URL"))
+                # ),
+                rowx(
+                  #col(6, htmlOutput('pdfviewer')),
+                  colx(6, tags$iframe(style="height:600px; width:100%",
+                                      #src="http://localhost/ressources/pdf/R-Intro.pdf"
+                                      #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                      src="pdf.pdf"
+                  )
+                  )
+                )
+              )
+            )
+          ),
+
+          #### UI GENETICS ----
+
+          shinydashboard::tabItem(
+            tabName = 'tab_genetics',
+            h2(' Landscape genetics'),
+            h6('    Comming soon ... stay tuned')
+          ),
+
+          #### UI LOCAL --------
+          shinydashboard::tabItem(
+            tabName = 'tab_local',
+            h2(' Running this DSSclocally'),
+            #h6('    Comming soon ... stay tuned'),
+            includeMarkdown(
+              system.file(package = 'cola', 'docs/md_cola_install.md')
+            ),
+            h2(' '),
+            fluidRow(
+              column(width = 10,
+                     selectizeInput(width = "100%",
+                                    "sel_error", "Select log file:",
+                                    choices = list.files(path = path_error,
+                                                         pattern = 'cola|connec'
+                                    )),
+              ),
+              column(width = 2,
+                     br(),
+                     actionButton("read_error", HTML("Read file")))
+            ),
+            verbatimTextOutput("outerror"),
+
+            shinydashboard::box(
+              width = 12, solidHeader = T, collapsible = T,
+              title = "", status = "primary", collapsed = TRUE,
+              column(4, textInput("sessInput", "", '')),
+              column(4, actionButton("sessPath", "Run")),
+              column(4, verbatimTextOutput("sessLog"))
+            )
+          ),
+
+
 
           #### UI COORDS ----
           shinydashboard::tabItem(
@@ -5817,6 +5906,7 @@ if (FALSE){
             # https://shiny.posit.co/r/articles/build/selectize/
             leaflet::leafletOutput("ll_coord", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
             ,
+            br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
               title = "Coordinates parameters info", status = "primary", collapsed = TRUE
