@@ -3979,13 +3979,18 @@ server <- function(input, output, session) {
                                  #'Surface resistance' = 'out_surface_.+.tif$',
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
                                  'Corridors' = 'out_lcc_.+.tif$')
-
+    layer_type_compare2 <<- layer_type_compare
     # tempFolder <- '/data/tempR//colaGPW2024100117131905';
+    # tempFolder <- 'C:/temp/cola/colaTPC2024111903213605';
     # layer_type_compare <- 'out_crk_.+.tif$'
     (avail_layers <- list.files(path = tempFolder,
                                 pattern = layer_type_compare,
                                 full.names = TRUE))
     (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+    if(any( length(grep('resam.tif$', avail_layers, invert = FALSE))) ) {
+      print(1)
+      (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+    }
     # avail_layers <- rev(avail_layers)
     avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
 
@@ -4058,6 +4063,7 @@ server <- function(input, output, session) {
       if (!is.null(comp_out) & file.exists(comp_out$file)){
 
         output$ll_map_com <- leaflet::renderLeaflet({
+
           csvAbs <- read.csv(outComCsvAbs)
           csvAbs$val <- csvAbs[, 2]
           csvRel <- read.csv(outComCsvRel)
@@ -4094,21 +4100,29 @@ server <- function(input, output, session) {
 
 
           #outComFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/compJJV2024073022250605'
+          # outComFolder <- 'C:/temp/cola/colaWYC2024111905173905/comp_crk_PLN2024111905332505'
           com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
           com_rast <- lapply(as.list(com_tifs), terra::rast)
           com_stack <- do.call(c, com_rast)
           #terra::NAflag(com_stack) <- 0
-          com_rng <- terra::global(com_stack, fun="range")
-          com_rng2 <- range(com_rng)
+          com_rng <- terra::global(com_stack, fun="range", na.rm = TRUE)
+          com_rng2 <- range(com_rng, na.rm = TRUE)
+          # com_rng2 <- c(-1, 2)
+          if( any ( com_rng2 < 0) ) {
+            ori_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
+          }
+          cat (' ori_rng for comp: ', ori_rng2[1], '  ', ori_rng2[2])
 
-          com_pal <- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                           domain = com_rng2+0.001, na.color = "transparent")
+
+          com_pal <- leaflet::colorNumeric(palette = "RdBu", reverse = TRUE,
+                                           domain = com_rng2, na.color = "transparent")
           # "viridis", "magma", "inferno", or "plasma".
 
           ori_rast <- lapply(as.list(avail_layers), terra::rast)
           ori_stack <- do.call(c, ori_rast)
           ori_rng <- terra::global(ori_stack, fun="range")
-          ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
+          #ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
+          ori_rng2 <- range(ori_rng, na.rm = TRUE)
 
           ori_pal <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                            domain = ori_rng2+0.001, na.color = "transparent")
@@ -4184,8 +4198,6 @@ server <- function(input, output, session) {
 
           ## Compare layers
           # terra::NAflag(com_stack) <- 0
-          com_pal <- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                           domain = com_rng2+0.001, na.color = "transparent")
 
           for (x2 in 1:length(names(com_stack)) ){ # x2 <- 1
             #xr2 <- com_stack[[x2]]
@@ -4259,6 +4271,8 @@ server <- function(input, output, session) {
     # tempFolder <- '/data/temp/scenario_folder'
     avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
                                full.names = TRUE)
+    (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+
 
     mssg2Display <- paste0(length(avail_layers), ' layer(s) found for ', in_com_ly, ': ',
                            paste0(basename(avail_layers), collapse = ' '))
@@ -4496,9 +4510,11 @@ server <- function(input, output, session) {
                                   full.names = TRUE)
           otherFiles <- list.files(full.names = TRUE, include.dirs = FALSE,
                                    path = dirname(rv$comFolder),
-                                   pattern = gsub('comp_|_.+', '', basename(rv$comFolder)))
+                                   pattern = layer_type_compare2
+                                     # gsub('comp_|_.+', '', basename(rv$comFolder))
+                                   )
 
-          # print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
+          print(paste0('incluiding: ', paste0(c(com_files, otherFiles), collapse = ' ')))
 
 
           if (os == 'Windows'){
