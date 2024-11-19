@@ -274,6 +274,7 @@ for i, j in enumerate(nlist):
     
     # Apply no data mask
     comp[ndmask == -9999] = -9999
+    comp[comp == 0] = -9999
     
     # Add a dimension to the array (the rasterio profile expects
     # a dimension corresponding to number of bands)
