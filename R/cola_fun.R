@@ -264,11 +264,11 @@ shp2xy <- function(shapefile, outxy, tempDir,
   # See xyED16.csv for an example xyfilename. The column order is necessary with a header file.
 
 
-  # tempDir = "/data/tempR//colaCQB2024100723374605"
-  # shapefile = '/data/tempR//colaCQB2024100723374605/out_simpts_JGX2024100723382705.shp'
-  # mortrast = '/data/tempR//colaCQB2024100723374605/out_surface_RQR2024100723384605.tif'
-  # shapefile = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp'
-  # outxy = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.csv'
+  # tempDir = "C:/temp/cola/colaXAQ2024111901384105"
+  # shapefile = "C:/temp/cola//colaXAQ2024111901384105/out_simpts_RKF2024111901384805.shp"
+  # mortrast = "C:/temp/cola//colaXAQ2024111901384105/out_surface_DDG2024111901385505.tif"
+  # outxy = 'C:/temp/cola//colaXAQ2024111901384105/xy.csv'
+  #
   # df <- foreign::read.dbf(gsub('\\..+', '.dbf', shapefile))
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
   # shapefile<- system.file(package = 'cola', 'sampledata/xy.csv')
@@ -299,7 +299,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
   xynew$Fitness_aa <- 100
   xynew$Fitness_Aa <- 16
 
-  # porcEmpty <- 10
+  # porcEmpty <- 50
   if (porcEmpty > 0){
     nEmpty <- round( (porcEmpty/100) * nrow(xy))
     posEmpty <- sample(x = 1:nrow(xy), size = nEmpty, replace = FALSE)

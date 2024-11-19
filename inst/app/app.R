@@ -907,19 +907,6 @@ server <- function(input, output, session) {
 
     data = NULL,
     orig = NULL,
-    # data = datatable( system.file(package = 'cola', 'sampledata/invars.csv'),
-    #                  editable = TRUE,
-    #                  options = list(
-    #                    paging =TRUE,
-    #                    pageLength =  nrow(rv$data)
-    #                  )),
-    #   ,
-    # orig = datatable(system.file(package = 'cola', 'sampledata/invars.csv'),
-    #                  editable = TRUE,
-    #                  options = list(
-    #                    paging =TRUE,
-    #                    pageLength =  nrow(rv$data)
-    #                  )),
 
     refresh = 0,
     cdpopRun = NULL, out_cdpop_files = c(''),
@@ -993,6 +980,7 @@ server <- function(input, output, session) {
     crk_sp = NULL, # spatial object
     pritif_sp = NULL, # spatial object
     cdm_sp = NULL, # csv
+    cdp_sp = NULL,
 
     ## Spatial objects to show
     hs2s_sp = NULL, # spatial object
@@ -1522,10 +1510,12 @@ server <- function(input, output, session) {
   observeEvent(input$replacevalues, {
     rv$data <- fillvalues(rv$data, input$textbox, input$selectcolumn)
   })
+
   observeEvent(input$removecolumn, {
     #rv$data <- removecolumn(rv$data,input$selectcolumn)
     rv$data <- removecolumn(rv$data)
   })
+
   observeEvent(input$addcolumn, {
     rv$data <- addcolumn(rv$data)
   })
@@ -1646,6 +1636,14 @@ server <- function(input, output, session) {
       shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
     }
 
+    ##
+    # rv <- list(cdp_sp =  terra::vect(read.csv('C:/temp/cola/colaHXP2024111823532905/xy.csv'),
+    #                     geom = c('X', 'Y'), crs = crs))
+
+
+    rv$cdp_sp <- terra::vect(
+      read.csv(newxy), geom = c('X', 'Y'), crs = terra::crs(rv$tif))
+
     rv$ptsxy <- newxy
     # rv$cdm <- 'cdmat.csv'
     (pref <- paste0(prefMort, sessionIDgen(only3 = TRUE)))
@@ -1668,6 +1666,7 @@ server <- function(input, output, session) {
     }))
     # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
+    isolate(
     output$ll_map_cdp <- leaflet::renderLeaflet({
 
       # rv <- list()
@@ -1753,8 +1752,15 @@ server <- function(input, output, session) {
         rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
         rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
 
-        #rv <- list(pts = '')
-        newxyshp <- terra::vect(rv$pts)
+        # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
+        # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
+        # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
+        # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
+        # # newxyshp <- terra::vect(rv$pts)
+        #
+        # # llvect <- rv$cdp_sp
+        # llvect <- terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
+        # leaflet() %>% addCircleMarkers(data = llvect)
 
         llcdp <<- leaflet() %>% addTiles() %>%
           addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
@@ -1770,14 +1776,21 @@ server <- function(input, output, session) {
           leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
       }
     })
+    )
+  })
+  )
 
-  }))
-
-  observeEvent(input$mapcdpop, {
+  isolate(observeEvent(input$mapcdpop, {
     input$cdpop_ans_yy
     if(input$cdpop_ans_yy != ''){
 
       pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
+
+      newname <- paste0(dirname(cdpop_grids), '/',
+                        'count_average_grid', cdpop_grids[pos2plot],'.tif')
+      print(paste(' ||| Plotting ', newname))
+      # if (file.exists(paste0()))
+      output$ll_map_cdp <- leaflet::renderLeaflet({
 
       densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
                                   method = 'average',
@@ -1788,9 +1801,31 @@ server <- function(input, output, session) {
                                  method = 'thin_plate_spline',
                                  neighbors = 'all', crs = 'None')
 
+      rv$struRA <- struRA <- rast(struMap$newFiles[1])
+      rv$struRB <- struRB <- rast(struMap$newFiles[2])
+      rv$densR <- densR <- rast(densMap$file)
+
+      rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+      rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+      rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+
+      llcdp <<- leaflet() %>% addTiles() %>%
+        addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+        addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
+        addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+        addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+        addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+        addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
+        leaflet::addLayersControl(
+          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          overlayGroups = c('Alleles', "Heterozygosity", "Density"),
+          options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+
+      })
 
     }
-  })
+  }))
 
 
   observeEvent(input$cdpop_check3, {
@@ -3434,6 +3469,11 @@ server <- function(input, output, session) {
           # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
           # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
           params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+          rv$crk_quan <- crk_quan
 
           rv$crkready <- TRUE
           rv$crk <- out_crk$file
@@ -3492,19 +3532,24 @@ server <- function(input, output, session) {
               domain = rv$crk_rng + 0.01 , na.color = "transparent")
 
             if(is.null(rv$crk_quan) | !exists('crk_quan')){
-              rv$crk_quan0 <-
-                t(global(rv$crk2s_sp, fun=quantile,
-                         probs = seq(0.1, 1, 0.01))
-                )
-              rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
-              brks <<- as.numeric(gsub('X|\\.', '', names(rv$crk_quan)))/100
-              stp <<- diff(range(brks)) / 10 # length(brks)
+              cat('  Calculating quantiles')
 
-              crk_quan <<-  rev(rv$crk_quan)
+              # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
+
+              qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
+              brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
+              rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
+
+
+              # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+              #stp <<- diff(range(brks)) / 10 # length(brks)
+
+              # crk_quan <<-  rev(rv$crk_quan)
               #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
-              updateSliderInput(inputId = 'pri_slider', value = median(brks),
-                                min = min(brks),max = max(brks), step = stp)
+              # updateSliderInput(inputId = 'pri_slider', value = median(brks),
+              #                   min = min(brks),max = max(brks), step = stp)
             }
+
 
             # leafletProxy("ll_map_pri_prev") %>%
             llcrk2 <- leaflet::leaflet()  %>% addTiles() %>%
@@ -3620,20 +3665,25 @@ server <- function(input, output, session) {
         observe({
           pri_slider <<- input$pri_slider
         })
-        print(' --crk_quan')
-        print(crk_quan)
-        print(' --brks')
-        print(as.character(brks))
+
+        # print(' --crk_quan')
+        # print(crk_quan)
+        # print(' --brks')
+        # print(as.character(brks))
 
         print(' --pri_slider:')
         print(as.character(pri_slider))
 
         #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
-        (posC <<- which(as.character(round(brks*100)) ==
-                          as.character(round(pri_slider*100)))[1])
-        # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
-        newmin <-  crk_quan[posC]
-        print('newmin::')
+        ## if 0.9 is selected, then only top 10% pixels are shown
+        (posC <<- which(as.character(round(rv$crk_quan$q)) ==
+                          as.character(round(pri_slider)))[1])
+
+        (posC <<- which(rv$crk_quan$q == pri_slider))
+
+                # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
+        newmin <-  rv$crk_quan$value[posC]
+        print('newmin:: ')
         print(newmin)
         cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
@@ -4058,7 +4108,7 @@ server <- function(input, output, session) {
           ori_rast <- lapply(as.list(avail_layers), terra::rast)
           ori_stack <- do.call(c, ori_rast)
           ori_rng <- terra::global(ori_stack, fun="range")
-          ori_rng2 <- range(ori_rng)
+          ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
 
           ori_pal <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                            domain = ori_rng2+0.001, na.color = "transparent")
@@ -5486,7 +5536,11 @@ if (FALSE){
                       actionButton("in_cdpop_pardef", "Load default invars parameters file"),
                     ),
                     column(
-                      width = 5,
+                      width = 3,
+                      actionButton("in_cdpop_save", "Save edited params file"),
+                    ),
+                    column(
+                      width = 4,
                       fileInput("in_cdpop_par", "invars CSV File", accept = ".csv"),
                       # textInput("textbox", label="Input the value to replace:"),
                       # actionButton("replacevalues", label = 'Replace values'),
@@ -5497,7 +5551,7 @@ if (FALSE){
                       # actionButton("Splitcolumn", "SplitColumn"),
                       # actionButton("Undo", 'Undo')
                     ),
-                    column( width = 4,
+                    column( width = 2,
                       checkboxInput("header", "Header", TRUE),
                             # actionButton("cdpop_check1", "Check files"),
                             # shinydashboard::valueBoxOutput("cdpop_box1")
@@ -5636,7 +5690,7 @@ if (FALSE){
             fluidPage(
               column(4,
 
-                     sliderInput(inputId = 'pri_slider',label =  'Percentile:', 0.1, 1, 0.5, step = 0.1),
+                     sliderInput(inputId = 'pri_slider',label =  'Percentile:', 0.01, 0.99, 0.5, step = 0.01),
                      tags$head(tags$style("#vout_pri{overflow-y:scroll; max-height: 70px}")),
 
                      leaflet::leafletOutput("ll_map_pri_prev", height = "500px") %>%shinycssloaders::withSpinner(color="#0dc5c1") ),
