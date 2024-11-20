@@ -1637,10 +1637,10 @@ server <- function(input, output, session) {
     }
 
     ##
-     # setwd('C:/temp/cola//colaDFO2024111923445505/'); list.files()
-     # rv <- list(tif_sp = terra::rast('out_surface_LTL2024111923450805.tif'))
-      # newxy <- 'xy.csv'
-      # rv$cdp_sp <- sf::st_as_sf(read.csv('xy.csv'), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp))
+    # setwd('C:/temp/cola//colaDFO2024111923445505/'); list.files()
+    # rv <- list(tif_sp = terra::rast('out_surface_LTL2024111923450805.tif'))
+    # newxy <- 'xy.csv'
+    # rv$cdp_sp <- sf::st_as_sf(read.csv('xy.csv'), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp))
 
     # pdebug(devug, pre = '\n --- ', sep = '\n', 'read.csv(newxy)', 'terra::crs(rv$tif_sp)')
 
@@ -1672,155 +1672,155 @@ server <- function(input, output, session) {
     # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
     isolate(
-    output$ll_map_cdp <- leaflet::renderLeaflet({
+      output$ll_map_cdp <- leaflet::renderLeaflet({
 
-      # rv <- list()
-      # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
-      cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
+        # rv <- list()
+        # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
+        cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
 
-      if(length(cdpop_out) != 0){
+        if(length(cdpop_out) != 0){
 
-        shinyjs::enable("cdpop_ans_yy") #
-        shinyjs::enable("mapcdpop") #
+          shinyjs::enable("cdpop_ans_yy") #
+          shinyjs::enable("mapcdpop") #
 
 
-        rv$cdpop_out <- read.csv(cdpop_out)
-        rv$cdpFolder <- dirname(dirname(cdpop_out))
+          rv$cdpop_out <- read.csv(cdpop_out)
+          rv$cdpFolder <- dirname(dirname(cdpop_out))
 
-        cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
-                             function(x){
-                               #x = rv$cdpop_out$Population_Age1.
-                               as.numeric(gsub('\\|.+|\\|', '', x))
-                             }
-        )
+          cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+                               function(x){
+                                 #x = rv$cdpop_out$Population_Age1.
+                                 as.numeric(gsub('\\|.+|\\|', '', x))
+                               }
+          )
 
-        cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-        cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
-        cdpop_grids_Num <<- sort(cdpop_grids_Num)
+          cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+          cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
+          cdpop_grids_Num <<- sort(cdpop_grids_Num)
 
-        output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-          highchart() %>% hc_exporting(enabled = TRUE) %>%
-            hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
-                          type = "line", dashStyle = "DashDot", name = 'Population'
-                          #, hcaes(x = 'Year', y = 'Population')
+          output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+            highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
+                            type = "line", dashStyle = "DashDot", name = 'Population'
+                            #, hcaes(x = 'Year', y = 'Population')
+              ) %>%
+              hc_yAxis(title = list(text = 'Population')) %>%
+              hc_xAxis(title = list(text = 'Generation')) %>%
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+
+          })
+
+          output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+            highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                            type = "line", dashStyle = "DashDot", name = 'Alleles'
+                            #, hcaes(x = 'Year', y = 'Population')
+              ) %>%
+              hc_yAxis(title = list(text = 'Alleles')) %>%
+              hc_xAxis(title = list(text = 'Generation')) %>%
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+          })
+
+          output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+            highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                            type = "line", dashStyle = "DashDot", name = 'He'
+                            #, hcaes(x = 'Year', y = 'Population')
+              ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                                  type = "line", dashStyle = "DashDot", name = 'Ho'
+                                  #, hcaes(x = 'Year', y = 'Population')
+              ) %>%
+              hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+              hc_xAxis(title = list(text = 'Generation')) %>%
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+          }) #
+
+          shinyjs::enable("cdpop_ans_yy") #
+          updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                               choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
+                               selected = head(cdpop_grids_Num, 1), server = TRUE)
+
+
+          xcdpDensMeth <- 'average'
+          xcdpDensBand <- 'None'
+          xcdpDensType <- 'count'
+
+          xcdpStruMeth <- 'average'
+          xcdpDensBand <- 'None'
+          xcdpDensType <- 'count'
+
+
+          preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
+          # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
+
+          densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
+                                      method = xcdpDensMeth,
+                                      bandwidths = xcdpDensBand,
+                                      type = xcdpDensType, crs = 'None')
+          # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+          struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
+                                     method = 'thin_plate_spline',
+                                     neighbors = 'all', crs = 'None')
+
+          print(' --- densMap ')
+          print(densMap)
+
+          print(' --- struMap ')
+          print(struMap)
+
+          rv$struRA <- struRA <- rast(struMap$newFiles[1])
+          rv$struRB <- struRB <- rast(struMap$newFiles[2])
+          rv$densR <- densR <- rast(densMap$file)
+
+          rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+          rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+          rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+
+          # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
+          # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
+          # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
+          # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
+          # # newxyshp <- terra::vect(rv$pts)
+          #
+          # # llvect <- rv$cdp_sp
+          # llvect <- terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
+          # leaflet() %>% addCircleMarkers(data = llvect)
+          # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+
+          cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
+          cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
+          cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
+          cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
+          cdpxy$id <- 'Points'
+
+          llcdp <<- leaflet() %>% addTiles() %>%
+            addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
+                             #, layerId = cdpxy$id
             ) %>%
-            hc_yAxis(title = list(text = 'Population')) %>%
-            hc_xAxis(title = list(text = 'Generation')) %>%
-            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            addLegend("bottomright", group = 'Points',
+                      colors = c("blue",  "red", "grey"),
+                      labels = c("Male", "Female", "Empty"),
+                      title = "Individuals",
+                      opacity = 1) %>%
 
-        })
+            addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+            addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
+            addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+            addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+            addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+            addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
 
-        output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-          highchart() %>% hc_exporting(enabled = TRUE) %>%
-            hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                          type = "line", dashStyle = "DashDot", name = 'Alleles'
-                          #, hcaes(x = 'Year', y = 'Population')
-            ) %>%
-            hc_yAxis(title = list(text = 'Alleles')) %>%
-            hc_xAxis(title = list(text = 'Generation')) %>%
-            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-        })
+            addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
+            addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
+            leaflet::addLayersControl(
+              baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+              overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
+              options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+            leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
 
-        output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-          highchart() %>% hc_exporting(enabled = TRUE) %>%
-            hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                          type = "line", dashStyle = "DashDot", name = 'He'
-                          #, hcaes(x = 'Year', y = 'Population')
-            ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                                type = "line", dashStyle = "DashDot", name = 'Ho'
-                                #, hcaes(x = 'Year', y = 'Population')
-            ) %>%
-            hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-            hc_xAxis(title = list(text = 'Generation')) %>%
-            hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-        }) #
-
-        shinyjs::enable("cdpop_ans_yy") #
-        updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                             choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
-                             selected = head(cdpop_grids_Num, 1), server = TRUE)
-
-
-        xcdpDensMeth <- 'average'
-        xcdpDensBand <- 'None'
-        xcdpDensType <- 'count'
-
-        xcdpStruMeth <- 'average'
-        xcdpDensBand <- 'None'
-        xcdpDensType <- 'count'
-
-
-        preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
-        # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-
-        densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
-                                    method = xcdpDensMeth,
-                                    bandwidths = xcdpDensBand,
-                                    type = xcdpDensType, crs = 'None')
-        # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
-
-        struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
-                                   method = 'thin_plate_spline',
-                                   neighbors = 'all', crs = 'None')
-
-        print(' --- densMap ')
-        print(densMap)
-
-        print(' --- struMap ')
-        print(struMap)
-
-        rv$struRA <- struRA <- rast(struMap$newFiles[1])
-        rv$struRB <- struRB <- rast(struMap$newFiles[2])
-        rv$densR <- densR <- rast(densMap$file)
-
-        rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-        rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-        rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
-
-        # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
-        # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
-        # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
-        # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
-        # # newxyshp <- terra::vect(rv$pts)
-        #
-        # # llvect <- rv$cdp_sp
-        # llvect <- terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
-        # leaflet() %>% addCircleMarkers(data = llvect)
-        # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
-
-        cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
-        cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
-        cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
-        cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
-        cdpxy$id <- 'Points'
-
-        llcdp <<- leaflet() %>% addTiles() %>%
-          addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
-                           #, layerId = cdpxy$id
-          ) %>%
-          addLegend("bottomright", group = 'Points',
-                    colors = c("blue",  "red", "grey"),
-                    labels = c("Male", "Female", "Empty"),
-                    title = "Individuals",
-                    opacity = 1) %>%
-
-          addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-          addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
-          addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-          addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-          addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-          addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
-
-          addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
-          addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
-          leaflet::addLayersControl(
-            baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-            overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
-            options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
-          leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
-
-      }
-    })
+        }
+      })
     )
   })
   )
@@ -1851,9 +1851,9 @@ server <- function(input, output, session) {
 
         if ( !file.exists(preintnameA)){
           densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
-                                    method = 'average',
-                                    bandwidths = 'None', type = 'count', crs = 'None')
-        # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+                                      method = 'average',
+                                      bandwidths = 'None', type = 'count', crs = 'None')
+          # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
 
         } else {
           densMap$file <- preintnameA
@@ -1872,45 +1872,45 @@ server <- function(input, output, session) {
         }
 
 
-      rv$struRA <- struRA <- rast(struMap$newFiles[1])
-      rv$struRB <- struRB <- rast(struMap$newFiles[2])
-      rv$densR <- densR <- rast(densMap$file)
+        rv$struRA <- struRA <- rast(struMap$newFiles[1])
+        rv$struRB <- struRB <- rast(struMap$newFiles[2])
+        rv$densR <- densR <- rast(densMap$file)
 
-      rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-      rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-      rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+        rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+        rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+        rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
 
 
-      cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
-      cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
-      cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
-      cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
-      cdpxy$id <- 'Points'
+        cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
+        cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
+        cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
+        cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
+        cdpxy$id <- 'Points'
 
-      llcdp <<- leaflet() %>% addTiles() %>%
-        addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
-                         #, layerId = cdpxy$id
-                         ) %>%
-        addLegend("bottomright", group = 'Points',
-                  colors = c("blue",  "red", "grey"),
-                  labels = c("Male", "Female", "Empty"),
-                  title = "Individuals",
-                  opacity = 1) %>%
+        llcdp <<- leaflet() %>% addTiles() %>%
+          addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
+                           #, layerId = cdpxy$id
+          ) %>%
+          addLegend("bottomright", group = 'Points',
+                    colors = c("blue",  "red", "grey"),
+                    labels = c("Male", "Female", "Empty"),
+                    title = "Individuals",
+                    opacity = 1) %>%
 
-        addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-        addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
-        addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-        addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-        addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-        addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
+          addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+          addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
+          addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+          addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+          addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+          addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
 
-        addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
-        addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
-        leaflet::addLayersControl(
-          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-          overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
-          options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
-        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+          addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
+          addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
+          leaflet::addLayersControl(
+            baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+            overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
+            options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
+          leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
 
       })
     }
@@ -3349,12 +3349,12 @@ server <- function(input, output, session) {
         tStartLcc <- Sys.time()
         #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
         out_lcc <- lccJoblib_py(py = py, tempFolder = tempFolder,
-                               inshp = rv$pts,
-                               intif = rv$tif,
-                               outtif = out_lcc,
-                               maxdist = as.numeric(input$in_lcc_4),
-                               smooth = as.numeric(input$in_lcc_5),
-                               tolerance = as.numeric(input$in_lcc_6))
+                                inshp = rv$pts,
+                                intif = rv$tif,
+                                outtif = out_lcc,
+                                maxdist = as.numeric(input$in_lcc_4),
+                                smooth = as.numeric(input$in_lcc_5),
+                                tolerance = as.numeric(input$in_lcc_6))
 
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
@@ -3613,7 +3613,7 @@ server <- function(input, output, session) {
             ## Refresh prio tab
             rv$crk2s <- resampIfNeeded(rv$crk)
             rv$crk2s_sp <- terra::rast(rv$crk2s)
-            cat('adding CRK for prio:', rv$crk2s, '\n')
+            # cat('adding CRK for prio:', rv$crk2s, '\n')
 
             bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
 
@@ -3723,6 +3723,7 @@ server <- function(input, output, session) {
   observeEvent(input$pri_slider, {
     if(rv$crkready){
 
+      Sys.sleep(.2)
       # rv <- list(crk = '/data/tempR//colaVMQ2024081501510005//out_crk_PPH2024081501513905.tif')
       # rv$crk_sp <- terra::rast(rv$crk);
       # input <- list(pri_slider = 0.2)
@@ -3761,38 +3762,37 @@ server <- function(input, output, session) {
         # print(' --brks')
         # print(as.character(brks))
 
-        print(' --pri_slider:')
-        print(as.character(pri_slider))
+        cat(' --pri_slider:', as.character(pri_slider), '\n' )
 
         #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
         ## if 0.9 is selected, then only top 10% pixels are shown
-        (posC <<- which(as.character(round(rv$crk_quan$q)) ==
-                          as.character(round(pri_slider)))[1])
+        # (posC <<- which(as.character(round(rv$crk_quan$q)) ==
+        #                   as.character(round(pri_slider)))[1])
 
         (posC <<- which(rv$crk_quan$q == pri_slider))
+        if(any(length(posC))){
 
-                # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
-        newmin <-  rv$crk_quan$value[posC]
-        print('newmin:: ')
-        print(newmin)
-        cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+          # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
+          newmin <-  rv$crk_quan$value[posC]
+          cat( '  pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
-        if(newmin == 0){newDm <- 0.01}
-        newDm <<-  c(newmin, max(rv$crk_rng))
-        cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+          if(newmin == 0){newDm <- 0.01}
+          newDm <<-  c(newmin, max(rv$crk_rng))
+          cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
 
-        rv$crk_pal2 <- leaflet::colorNumeric(
-          palette = "plasma", reverse = TRUE,
-          domain = newDm, na.color = "transparent")
+          rv$crk_pal2 <- leaflet::colorNumeric(
+            palette = "plasma", reverse = TRUE,
+            domain = newDm, na.color = "transparent")
 
-        leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
-          addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                         colors = rv$crk_pal2, opacity = .7)
+          leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+            addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                           colors = rv$crk_pal2, opacity = .7)
 
-        # output$ll_map_pri_prev <- leaflet::renderLeaflet({
-        #   leaflet::leaflet()  %>% addTiles() %>%
-        #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
-        # })
+          # output$ll_map_pri_prev <- leaflet::renderLeaflet({
+          #   leaflet::leaflet()  %>% addTiles() %>%
+          #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
+          # })
+        }
       }
     }
   })
@@ -4601,8 +4601,8 @@ server <- function(input, output, session) {
           otherFiles <- list.files(full.names = TRUE, include.dirs = FALSE,
                                    path = dirname(rv$comFolder),
                                    pattern = layer_type_compare2
-                                     # gsub('comp_|_.+', '', basename(rv$comFolder))
-                                   )
+                                   # gsub('comp_|_.+', '', basename(rv$comFolder))
+          )
 
           print(paste0('incluiding: ', paste0(c(com_files, otherFiles), collapse = ' ')))
 
@@ -5020,7 +5020,7 @@ if (FALSE){
                                              accept=c('.tif'),
                                              #accept= '.zip',
                                              multiple=FALSE),
-                           div(style = "margin-top: -50px"),
+                            div(style = "margin-top: -50px"),
                             # textInput('name_pri_lcc', label = '', value = "", width = NULL, placeholder = 'Corridors name:'),
                             # div(style = "margin-top: -10px"),
                             shiny::fileInput('in_pri_lcc', 'Load corridors',
@@ -5267,7 +5267,7 @@ if (FALSE){
                               textInput("in_sur_7", "No Data:", '-9999')
                        ),
                        column(6,
-                               selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
+                              selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
                        ),
                        column(3,
                               tags$table(
@@ -5658,7 +5658,7 @@ if (FALSE){
                       # actionButton("Undo", 'Undo')
                     ),
                     column( width = 2,
-                      checkboxInput("header", "Header", TRUE),
+                            checkboxInput("header", "Header", TRUE),
                             # actionButton("cdpop_check1", "Check files"),
                             # shinydashboard::valueBoxOutput("cdpop_box1")
                     ),
@@ -5690,7 +5690,7 @@ if (FALSE){
                                     choices =  c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
               column(1, selectInput(inputId = "in_crk_t", label = "Transform?:",
-                                 choices =  c( 'yes', 'no'), selected = 'no')),
+                                    choices =  c( 'yes', 'no'), selected = 'no')),
               # (input$in_crk_t)
               column(1, textInput("in_crk_6", "Kernel volume:", '1')),
               column(2, selectInput("in_crk_sr", "Source layer:", '', choices = '')),
