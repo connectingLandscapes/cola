@@ -1812,7 +1812,7 @@ server <- function(input, output, session) {
           addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
 
           addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
-          addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
+          addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
           leaflet::addLayersControl(
             baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
             overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
