@@ -4204,7 +4204,7 @@ server <- function(input, output, session) {
           cat (' ori_rng for comp: ', ori_rng2[1], '  ', ori_rng2[2])
 
 
-          com_pal <- leaflet::colorNumeric(palette = "RdBu", reverse = TRUE,
+          com_pal <- leaflet::colorNumeric(palette = "RdBu", reverse = FALSE,
                                            domain = com_rng2, na.color = "transparent")
           # "viridis", "magma", "inferno", or "plasma".
 
