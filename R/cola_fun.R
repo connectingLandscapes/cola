@@ -67,7 +67,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', neighbors, ' ', crs))
-  cat('\n\tCMD interpol: ')
+  cat('\n\tCMD interpol: \n')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
 
@@ -121,7 +121,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', bandwidths, ' ', type, ' ', crs))
-  cat('\n\tCMD interpol: ')
+  cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
 
@@ -211,7 +211,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
-  cat('\n\tCMD CDPOP: ')
+  cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
@@ -474,7 +474,7 @@ s2res_py <- function(intif, outtif,
                        format(nodata, scientific=F), ' ',
                        prj))
 
-  cat('\n\tCMD Surface : ')
+  cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
   cat('\n')
 
@@ -542,7 +542,7 @@ points_py <- function(intif, outshp,
                      format(smax, scientific=F), ' ',
                      format(npoints, scientific=F), ' ',
                      issuit, ' ', upcrs))
-  cat('\n\tCMD Points: ')
+  cat('\n\tCMD Points: \n')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
 
@@ -587,7 +587,7 @@ cdmat_py <- function(inshp, intif, outcsv,
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', maxdist, ' ', ncores, ' ', crs))
 
-  cat('\n\n\tCMD cdmat: ')
+  cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
   cat('\n')
 
