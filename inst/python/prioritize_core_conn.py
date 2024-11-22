@@ -219,7 +219,9 @@ def main() -> None:
 
     # Check if no connecting corridors
     if ecc.shape[0] == 0:
-        raise Exception('There are no corridors connecting your patches.')
+        print('There are no corridors connecting your patches.')
+        sys.exit(0)
+        #raise Exception('There are no corridors connecting your patches.')
 
     #%%
     # Read in original cost surface
