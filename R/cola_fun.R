@@ -67,7 +67,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', neighbors, ' ', crs))
-  cat('\n\tCMD interpol: ')
+  cat('\n\tCMD interpol: \n')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
 
@@ -121,7 +121,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', bandwidths, ' ', type, ' ', crs))
-  cat('\n\tCMD interpol: ')
+  cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
 
@@ -211,7 +211,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
-  cat('\n\tCMD CDPOP: ')
+  cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE, ignore.stdout = TRUE), error = function(e) NULL)
@@ -254,7 +254,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 shp2xy <- function(shapefile, outxy, tempDir,
-                   mortrast = NULL, survrast = NULL){
+                   mortrast = NULL, survrast = NULL, porcEmpty = 0){
 
   # The n-(x,y) grid location values. This is a comma delimited file with 5 column headings:
   # (Subpopulation)- a unique identifier for  each individual corresponding to a unique subpopulation
@@ -264,16 +264,16 @@ shp2xy <- function(shapefile, outxy, tempDir,
   # See xyED16.csv for an example xyfilename. The column order is necessary with a header file.
 
 
-  # tempDir = "/data/tempR//colaCQB2024100723374605"
-  # shapefile = '/data/tempR//colaCQB2024100723374605/out_simpts_JGX2024100723382705.shp'
-  # mortrast = '/data/tempR//colaCQB2024100723374605/out_surface_RQR2024100723384605.tif'
-  # shapefile = '/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_simpts_DXO2024073113023405.shp'
-  # outxy = '/mnt/c/temp/tempCola/out_simpts_XYA2024070817112705.csv'
+  # tempDir = "C:/temp/cola/colaXAQ2024111901384105"
+  # shapefile = "C:/temp/cola//colaXAQ2024111901384105/out_simpts_RKF2024111901384805.shp"
+  # mortrast = "C:/temp/cola//colaXAQ2024111901384105/out_surface_DDG2024111901385505.tif"
+  # outxy = 'C:/temp/cola//colaXAQ2024111901384105/xy.csv'
+  #
   # df <- foreign::read.dbf(gsub('\\..+', '.dbf', shapefile))
   # xyorig <- system.file(package = 'cola', 'sampledata/xy.csv')
   # shapefile<- system.file(package = 'cola', 'sampledata/xy.csv')
 
-  # shapefile<- 'C:/temp/cola/colaSFY2024081405054705//out_simpts_XMT2024081405055805.shp'
+  #  shapefile<- 'C:/temp/cola/colaFFF2024111800273705/np_baseline_200points.shp'
   # survrast <- 'C:/temp/cola/colaSFY2024081405054705//in_surface_fixed_XMT2024081405055805.tif'
   # outxy <- 'C:/temp/cola/colaSFY2024081405054705//outxy.xy'
   # tempDir = "C:/temp/cola/colaSFY2024081405054705/"
@@ -299,6 +299,14 @@ shp2xy <- function(shapefile, outxy, tempDir,
   xynew$Fitness_aa <- 100
   xynew$Fitness_Aa <- 16
 
+  # porcEmpty <- 50
+  if (porcEmpty > 0){
+    nEmpty <- round( (porcEmpty/100) * nrow(xy))
+    posEmpty <- sample(x = 1:nrow(xy), size = nEmpty, replace = FALSE)
+    xynew$ID[posEmpty] <- 'NA'
+    xynew$sex[posEmpty] <- 'NA'
+  }
+
   if (!is.null(mortrast) | !is.null(survrast) ){
     vals2add <- 0
 
@@ -311,15 +319,16 @@ shp2xy <- function(shapefile, outxy, tempDir,
     }
 
     if(file.exists(rast_path)){
+      # rast_path <- 'C:/temp/cola/colaFFF2024111800273705/in_dist_fixed_MBU2024111800275205.tif'
       rcdpop <- tryCatch(terra::rast(rast_path), error = function(e) NULL)
       names(rcdpop) <- 'rcdpop'
       if(!is.null(rcdpop)){
         cat('  Extracing raster values for mortality\n')
         extVals <- terra::extract(rcdpop, xy[, c('XCOORD','YCOORD')])
-        extVals <- extVals$rcdpop # [, 2]
+        extVals <- extVals2 <- extVals$rcdpop # [, 2]
         #extVals <- (20:200)
         rng <- range(extVals, na.rm = TRUE)
-        if( any(!is.na(rng)) ){
+        if( any(!is.na(rng)) & length(unique(rng)) > 1 ){
           cat('    --- At least some values OK \n')
           extVals2 <- (extVals - min(rng))/(max(rng) - min(rng))
           if(!mort){
@@ -353,7 +362,6 @@ shp2xy <- function(shapefile, outxy, tempDir,
   }
 
   print(head(xynew))
-
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
@@ -466,7 +474,7 @@ s2res_py <- function(intif, outtif,
                        format(nodata, scientific=F), ' ',
                        prj))
 
-  cat('\n\tCMD Surface : ')
+  cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
   cat('\n')
 
@@ -534,7 +542,7 @@ points_py <- function(intif, outshp,
                      format(smax, scientific=F), ' ',
                      format(npoints, scientific=F), ' ',
                      issuit, ' ', upcrs))
-  cat('\n\tCMD Points: ')
+  cat('\n\tCMD Points: \n')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
 
@@ -579,7 +587,7 @@ cdmat_py <- function(inshp, intif, outcsv,
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ', maxdist, ' ', ncores, ' ', crs))
 
-  cat('\n\n\tCMD cdmat: ')
+  cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
   cat('\n')
 
