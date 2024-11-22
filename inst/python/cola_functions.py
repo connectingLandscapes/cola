@@ -91,7 +91,7 @@ def arrayToGeoTiff(inarray, outfile, profile, crs=None, driver=None, res=None, d
         profile['transform'][4] = -res
     if dtype:
         profile.update(dtype=dtype)
-    profile.update(tiled=True, compress='lzw')
+    profile.update(tiled=False, compress='lzw')
     with rio.open(outfile, 'w', **profile) as dst:
         dst.write(inarray)
 
