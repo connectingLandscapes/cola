@@ -1,7 +1,7 @@
 ![](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner_short.png?raw=true)
 
 
-### Connecting Landscapes (CoLa) Decision support sysem (SS)
+### Connecting Landscapes (CoLa) Decision support sysem (DSS)
 
 Increasing loss and fragmentation of habitats has resulted in an urgent need to identify areas for conservation that also maintain and enhance ecological connectivity of protected areas. The Connecting Landscapes (***CoLa***) toolkit integrates and enhances numerous landscape genetics and habitat connectivity tools (Landguth and Cushman 2010, Landguth et al. 2012) to aid in identifying connectivity conservation priorities and areas of potential human wildlife conflict.
 
