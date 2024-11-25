@@ -4,15 +4,15 @@
 ##### *Scan this code*
 ![QRcode](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/qr_Thailand.png?raw=true)
 
-![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand?Nov26/banner.png?raw=true)
+![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/banner.png?raw=true)
 
 
 # Agenda
 
-1. Intro by David McDonald. [Slides](https://drive.google.com/open?id=1oAsKZAhw81zyzPKbyS0ehC6fG1ZYir1y&usp=drive_fs)
-2. Concepts by Dawn Burnham. [Slides](https://docs.google.com/presentation/d/1nvz7o9J4YcKl4p9okQ_1BGo8AiVj5awr?rtpof=true&usp=drive_fs)
+1. Intro by David McDonald. [Slides](https://drive.google.com/open?id=1vXwKkMjzyMCBqrUlJE1aXAX-R0cI0GBL&usp=drive_fs)
+2. Concepts by Dawn Burnham. [Slides](https://docs.google.com/presentation/d/1w5Q8qcPY2uDfEvUX7x5cKyrVs9eAiKQl?rtpof=true&usp=drive_fs)
 3. Study case by Eric Ash.
-4. CoLa tutorial by Patrick Janz & Ivan Gonzalez. [Slides](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
+4. CoLa tutorial by Patrick Janz & Ivan Gonzalez. [Slides](https://docs.google.com/presentation/d/1iyGnXMZJpD5DmUhrU6104JDJy--CUuEm/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
 
 # Practical session
 
