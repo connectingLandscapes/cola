@@ -9,7 +9,7 @@ Creates a continuous surface of cumulative paths that connects a set of points. 
 | | | | | | | | |
 | Source points |      | inshp|       | String|      |File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file|
 | Surface resistance |   |intif|     | String|      | File path to the input raster. Requires a projected file with square pixels. Not LonLat projection allowed|
-| Output raster filename| |  |outtif|  | string| |File path of the output raster layer written in GeoTiff format.|
+| Output raster filename|  |outtif|  | string| |File path of the output raster layer written in GeoTiff format.|
 |Max. dispersal distance in cost units| |maxdist| | Numeric| | This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.|
 | | | | | | | | |
 |Kernel shape| |shape| | Numeric| | String. This determines how the probability of dispersal declines with distance from the focal point. 'linear' implements the function 1 - (1/dThreshold) * d * where dThreshold is the specified distance threshold and d is the distance from the focal point. 'gaussian' implements the function exp(-1*((d^2)/(2*(dispScale^2)))) where d is the distance from the focal point and dispScale is equal to dThreshold/4. In future versions, users will be able to specify dispScale. |

@@ -247,11 +247,7 @@ server <- function(input, output, session) {
     
     (avgrp <- length(setdiff(grp, c("OpenStreetMap", "Esri.WorldImagery", "draw")))>0)
     if(!is.null(clk) & !is.null(grp) & avgrp ){
-<<<<<<< Updated upstream
       
-=======
-
->>>>>>> Stashed changes
       rw2add <- NULL
       #if( any( c("Habitat suitability", "Surface resistance", "Corridors", "Kernels", "Prioritization") %in% grp)) {
       coords <- cbind(clk$lng, clk$lat)
@@ -261,17 +257,10 @@ server <- function(input, output, session) {
       # rv$tiforig <- '/data/temp/XC2024012300322305file1392143e34bb6//out_surface_PF2024012300322605file13921692a78bb.tif'
       # # rv$hs_sp <- terra::rast(rv$h)
       # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
-<<<<<<< Updated upstream
       
       #}
       
       
-=======
-
-      #}
-
-
->>>>>>> Stashed changes
       if("Habitat suitability" %in%  grp){
         rast_sp <- rv$hs_sp
         rast_prj <- terra::crs(rast_sp, proj = TRUE)
@@ -336,11 +325,7 @@ server <- function(input, output, session) {
                                                            st_coordinates(pt_) ) ) )
         )
       }
-<<<<<<< Updated upstream
       
-=======
-
->>>>>>> Stashed changes
       text <- 'none'
       if(!is.null(rw2add)){
         if( nrow(rw2add) > 0){
@@ -1662,11 +1647,7 @@ server <- function(input, output, session) {
     # rv <- list(tif_sp = terra::rast('out_surface_LTL2024111923450805.tif'))
     # newxy <- 'xy.csv'
     # rv$cdp_sp <- sf::st_as_sf(read.csv('xy.csv'), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp))
-<<<<<<< Updated upstream
     
-=======
-
->>>>>>> Stashed changes
     # pdebug(devug, pre = '\n --- ', sep = '\n', 'read.csv(newxy)', 'terra::crs(rv$tif_sp)')
     
     rv$cdp_sp <- st_transform(
@@ -1698,7 +1679,6 @@ server <- function(input, output, session) {
     
     isolate(
       output$ll_map_cdp <- leaflet::renderLeaflet({
-<<<<<<< Updated upstream
         
         # rv <- list()
         # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
@@ -1713,41 +1693,17 @@ server <- function(input, output, session) {
           rv$cdpop_out <- read.csv(cdpop_out)
           rv$cdpFolder <- dirname(dirname(cdpop_out))
           
-=======
-
-        # rv <- list()
-        # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
-        cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
-
-        if(length(cdpop_out) != 0){
-
-          shinyjs::enable("cdpop_ans_yy") #
-          shinyjs::enable("mapcdpop") #
-
-
-          rv$cdpop_out <- read.csv(cdpop_out)
-          rv$cdpFolder <- dirname(dirname(cdpop_out))
-
->>>>>>> Stashed changes
           cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
                                function(x){
                                  #x = rv$cdpop_out$Population_Age1.
                                  as.numeric(gsub('\\|.+|\\|', '', x))
                                }
           )
-<<<<<<< Updated upstream
           
           cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
           cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
           cdpop_grids_Num <<- sort(cdpop_grids_Num)
           
-=======
-
-          cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-          cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
-          cdpop_grids_Num <<- sort(cdpop_grids_Num)
-
->>>>>>> Stashed changes
           output$hccdpop1 <- highcharter::renderHighchart({ # cpu
             highchart() %>% hc_exporting(enabled = TRUE) %>%
               hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
@@ -1757,15 +1713,9 @@ server <- function(input, output, session) {
               hc_yAxis(title = list(text = 'Population')) %>%
               hc_xAxis(title = list(text = 'Generation')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-<<<<<<< Updated upstream
             
           })
           
-=======
-
-          })
-
->>>>>>> Stashed changes
           output$hccdpop2 <- highcharter::renderHighchart({ # cpu
             highchart() %>% hc_exporting(enabled = TRUE) %>%
               hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
@@ -1776,11 +1726,7 @@ server <- function(input, output, session) {
               hc_xAxis(title = list(text = 'Generation')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           })
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           output$hccdpop3 <- highcharter::renderHighchart({ # cpu
             highchart() %>% hc_exporting(enabled = TRUE) %>%
               hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
@@ -1794,16 +1740,11 @@ server <- function(input, output, session) {
               hc_xAxis(title = list(text = 'Generation')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           }) #
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           shinyjs::enable("cdpop_ans_yy") #
           updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
                                choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
                                selected = head(cdpop_grids_Num, 1), server = TRUE)
-<<<<<<< Updated upstream
           
           
           xcdpDensMeth <- 'average'
@@ -1818,28 +1759,11 @@ server <- function(input, output, session) {
           preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
           # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
           
-=======
-
-
-          xcdpDensMeth <- 'average'
-          xcdpDensBand <- 'None'
-          xcdpDensType <- 'count'
-
-          xcdpStruMeth <- 'average'
-          xcdpDensBand <- 'None'
-          xcdpDensType <- 'count'
-
-
-          preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
-          # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-
->>>>>>> Stashed changes
           densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
                                       method = xcdpDensMeth,
                                       bandwidths = xcdpDensBand,
                                       type = xcdpDensType, crs = 'None')
           # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
-<<<<<<< Updated upstream
           
           struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
                                      method = 'thin_plate_spline',
@@ -1859,27 +1783,6 @@ server <- function(input, output, session) {
           rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
           rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
           
-=======
-
-          struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
-                                     method = 'thin_plate_spline',
-                                     neighbors = 'all', crs = 'None')
-
-          print(' --- densMap ')
-          print(densMap)
-
-          print(' --- struMap ')
-          print(struMap)
-
-          rv$struRA <- struRA <- rast(struMap$newFiles[1])
-          rv$struRB <- struRB <- rast(struMap$newFiles[2])
-          rv$densR <- densR <- rast(densMap$file)
-
-          rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-          rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-          rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
-
->>>>>>> Stashed changes
           # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
           # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
           # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
@@ -1890,21 +1793,13 @@ server <- function(input, output, session) {
           # llvect <- terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
           # leaflet() %>% addCircleMarkers(data = llvect)
           # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
           cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
           cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
           cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
           cdpxy$id <- 'Points'
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           llcdp <<- leaflet() %>% addTiles() %>%
             addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
                              #, layerId = cdpxy$id
@@ -1914,22 +1809,14 @@ server <- function(input, output, session) {
                       labels = c("Male", "Female", "Empty"),
                       title = "Individuals",
                       opacity = 1) %>%
-<<<<<<< Updated upstream
             
-=======
-
->>>>>>> Stashed changes
             addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
             addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
             addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
             addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
             addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
             addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
-<<<<<<< Updated upstream
             
-=======
-
->>>>>>> Stashed changes
             addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
             addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
             leaflet::addLayersControl(
@@ -1937,17 +1824,12 @@ server <- function(input, output, session) {
               overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
               options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
             leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
         }
       })
     )
   })
   )
-<<<<<<< Updated upstream
   
   isolate(observeEvent(input$mapcdpop, {
     input$cdpop_ans_yy
@@ -1956,22 +1838,11 @@ server <- function(input, output, session) {
       
       pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
       
-=======
-
-  isolate(observeEvent(input$mapcdpop, {
-    input$cdpop_ans_yy
-    if(input$cdpop_ans_yy != ''){
-
-
-      pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
-
->>>>>>> Stashed changes
       newname <- paste0(dirname(cdpop_grids), '/',
                         'count_average_grid', cdpop_grids[pos2plot],'.tif')
       print(paste(' ||| Plotting pos2plot ', pos2plot))
       # if (file.exists(paste0()))
       output$ll_map_cdp <- leaflet::renderLeaflet({
-<<<<<<< Updated upstream
         
         cat(' -- Printing: ' , cdpop_grids[pos2plot], '\n')
         
@@ -1984,38 +1855,16 @@ server <- function(input, output, session) {
         #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/alleles_tps_None_grid0.tif'
         
         
-=======
-
-        cat(' -- Printing: ' , cdpop_grids[pos2plot], '\n')
-
-
-        preintnameA <- paste0(dirname(cdpop_grids[pos2plot]), '/count_average_',cdpop_grids[pos2plot],'tif')
-        preintnameB <- paste0(dirname(cdpop_grids[pos2plot]), '/alleles_tps_None_',cdpop_grids[pos2plot],'tif')
-
-        # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-        #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/grid0.csv'
-        #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/alleles_tps_None_grid0.tif'
-
-
->>>>>>> Stashed changes
         if ( !file.exists(preintnameA)){
           densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
                                       method = 'average',
                                       bandwidths = 'None', type = 'count', crs = 'None')
           # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
-<<<<<<< Updated upstream
           
         } else {
           densMap$file <- preintnameA
         }
         
-=======
-
-        } else {
-          densMap$file <- preintnameA
-        }
-
->>>>>>> Stashed changes
         if ( !file.exists(preintnameB)){
           struMap <- cdpop_mapstruct(grids = cdpop_grids[pos2plot], template = rv$tif,
                                      method = 'thin_plate_spline',
@@ -2024,7 +1873,6 @@ server <- function(input, output, session) {
           struMap <- list(newFiles = c( preintnameB,## Alleles
                                         paste0(dirname(cdpop_grids[pos2plot]), '/heterozygosity_tps_None_',cdpop_grids[pos2plot],'tif')
                                         # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-<<<<<<< Updated upstream
                                         
           ))
         }
@@ -2039,32 +1887,12 @@ server <- function(input, output, session) {
         rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
         
         
-=======
-
-          ))
-        }
-
-
-        rv$struRA <- struRA <- rast(struMap$newFiles[1])
-        rv$struRB <- struRB <- rast(struMap$newFiles[2])
-        rv$densR <- densR <- rast(densMap$file)
-
-        rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-        rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-        rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
-
-
->>>>>>> Stashed changes
         cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
         cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
         cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
         cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
         cdpxy$id <- 'Points'
-<<<<<<< Updated upstream
         
-=======
-
->>>>>>> Stashed changes
         llcdp <<- leaflet() %>% addTiles() %>%
           addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
                            #, layerId = cdpxy$id
@@ -2074,22 +1902,14 @@ server <- function(input, output, session) {
                     labels = c("Male", "Female", "Empty"),
                     title = "Individuals",
                     opacity = 1) %>%
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
           addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
           addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
           addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
           addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
           addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
           addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
           leaflet::addLayersControl(
@@ -2097,11 +1917,7 @@ server <- function(input, output, session) {
             overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
             options =  leaflet::layersControlOptions(collapsed = FALSE)) %>%
           leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
-<<<<<<< Updated upstream
         
-=======
-
->>>>>>> Stashed changes
       })
     }
   })
@@ -3545,11 +3361,7 @@ server <- function(input, output, session) {
                                 maxdist = as.numeric(input$in_lcc_4),
                                 smooth = as.numeric(input$in_lcc_5),
                                 tolerance = as.numeric(input$in_lcc_6))
-<<<<<<< Updated upstream
         
-=======
-
->>>>>>> Stashed changes
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
         
@@ -3964,11 +3776,7 @@ server <- function(input, output, session) {
                           as.character(round(pri_slider)))[1])
         
         (posC <<- which(rv$crk_quan$q == pri_slider))
-<<<<<<< Updated upstream
         
-=======
-
->>>>>>> Stashed changes
         # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
         newmin <-  rv$crk_quan$value[posC]
         print('newmin:: ')
@@ -4801,11 +4609,7 @@ server <- function(input, output, session) {
                                    pattern = layer_type_compare2
                                    # gsub('comp_|_.+', '', basename(rv$comFolder))
           )
-<<<<<<< Updated upstream
           
-=======
-
->>>>>>> Stashed changes
           print(paste0('incluiding: ', paste0(c(com_files, otherFiles), collapse = ' ')))
           
           
@@ -5063,7 +4867,6 @@ if (FALSE){
   font-family: "Lucida Sans", sans-serif;
   color: red;
 }'
-<<<<<<< Updated upstream
   
   
   ui <- shinydashboard::dashboardPage(
@@ -5072,16 +4875,6 @@ if (FALSE){
     
     
     
-=======
-
-
-  ui <- shinydashboard::dashboardPage(
-    ## Activate enable / disable buttons
-    shinyjs::useShinyjs(),
-
-
-
->>>>>>> Stashed changes
     ####  title ----
     header = shinydashboard::dashboardHeader(
       title = "ConnectingLandscapes v.1"
@@ -5333,7 +5126,7 @@ if (FALSE){
               bsTooltip(id = 'name_sur', title = 'Name of the output'),
               bsTooltip(id = 'h2r', title = 'Run the function'),
               bsTooltip(id = 'tifDwn', title = 'Download TIF raster layer'),
-              bsTooltip(id = 'h2rsample', title = 'Load sample data'),
+              bsTooltip(id = 'h2rsample', title = 'Load sample data from Ash et al., in review, 2020, 2022'),
               bsTooltip(id = 'in_sur_tif', title = 'Load habitat suitability georreferenced raster. Not LonLat projection allowed'),
               bsTooltip(id = 'in_edi_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
               bsTooltip(id = 'in_edi_shp', title = 'Load polygon for editing your surface resistance'),
@@ -5407,11 +5200,7 @@ if (FALSE){
               bsTooltip(id = 'coo_tif', title = 'Assign selected coordinate system to the raster layer'),
               bsTooltip(id = 'sel_crs2', title = 'Select a coordinates system'),
               bsTooltip(id = 'coo_pts', title = 'Assign selected coordinate system to the vector layer'),
-<<<<<<< Updated upstream
               
-=======
-
->>>>>>> Stashed changes
               #includeMarkdown("md_intro.md")
               tabsetPanel(
                 type = "pills",
@@ -5633,30 +5422,18 @@ if (FALSE){
               width = 12, solidHeader = T, collapsible = T,
               title = "Habitat 2 resistance parameters info", status = "primary", collapsed = TRUE
               ,
-<<<<<<< Updated upstream
               
               includeMarkdown(system.file(package = 'cola', 'docs/fun_s2res_py.md'))
               
               #fluidRow(
               
-=======
-
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_s2res_py.md'))
-
-              #fluidRow(
-
->>>>>>> Stashed changes
               # column(width = 4,
               #        h6('Min-grid *Change to Min. value-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
               #    Max-grid *Change to Max. value-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
               #    ')),
               # column(width = 4, h5('Hallo')),
               # column(width = 4, h5('Hello'))
-<<<<<<< Updated upstream
               
-=======
-
->>>>>>> Stashed changes
               #)
             ) # close box
           ),
@@ -5723,11 +5500,7 @@ if (FALSE){
             fluidPage(
               leaflet::leafletOutput("ll_map_edi", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1")),
-<<<<<<< Updated upstream
             
-=======
-
->>>>>>> Stashed changes
             br()
             #             ,
             #             shinydashboard::box(
@@ -5783,17 +5556,10 @@ if (FALSE){
               ,
               
               #fluidRow(
-<<<<<<< Updated upstream
               
               #)
               includeMarkdown(system.file(package = 'cola', 'docs/fun_points_py.md'))
               
-=======
-
-              #)
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_points_py.md'))
-
->>>>>>> Stashed changes
             ) # close box
           ),
           
@@ -5851,11 +5617,7 @@ if (FALSE){
               title = "Distance matrix 2 resistance parameters info", status = "primary", collapsed = TRUE
               ,
               includeMarkdown(system.file(package = 'cola', 'docs/fun_cdmat_py.md'))
-<<<<<<< Updated upstream
               
-=======
-
->>>>>>> Stashed changes
             ) # close box
           ),
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
@@ -6021,15 +5783,9 @@ if (FALSE){
               width = 12, solidHeader = T, collapsible = T,
               title = "Kernels parameters info", status = "primary", collapsed = TRUE
               ,
-<<<<<<< Updated upstream
               
               includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
               
-=======
-
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
-
->>>>>>> Stashed changes
             )
           ),
           
@@ -6046,11 +5802,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
-<<<<<<< Updated upstream
               
-=======
-
->>>>>>> Stashed changes
               column(3, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '600000')),
               column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
               column(1, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
@@ -6129,15 +5881,9 @@ if (FALSE){
               width = 12, solidHeader = T, collapsible = T,
               title = "Priorization parameters info", status = "primary", collapsed = TRUE
               ,
-<<<<<<< Updated upstream
               
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_pri_py.md'))
               
-=======
-
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
-
->>>>>>> Stashed changes
             ) # close box
           ),
           
@@ -6169,13 +5915,8 @@ if (FALSE){
               #)
               
             ) ,
-<<<<<<< Updated upstream
             
             
-=======
-
-
->>>>>>> Stashed changes
             # fluidRow(
             #   column(2, br()),
             # ),
@@ -6271,18 +6012,11 @@ if (FALSE){
               width = 12, solidHeader = T, collapsible = T,
               title = "Priorization parameters info", status = "primary", collapsed = TRUE
               ,
-              includeMarkdown(system.file(package = 'cola', 'docs/fun_pri_py.md'))
-<<<<<<< Updated upstream
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_lcc_compare_py.md'))
               
             ) # close box
             
             
-=======
-
-            ) # close box
-
-
->>>>>>> Stashed changes
           )
           ,
           
@@ -6393,7 +6127,15 @@ if (FALSE){
               
               #fluidRow(
               column(width = 4,
-                     h6('Load your ASCII or RSG raster or XY or CSV points formats. Then select the best CRS for your file, and hit the button "assign coords"'))
+                     h6('Load your ASCII or RSG raster or XY or CSV points formats. Then select the best CRS for your file, and hit the button "assign coords"
+-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 Max-grid *Change to Max. value
+-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+
+                 ')),
+              column(width = 4, h5('Hallo')),
+              column(width = 4, h5('Hello'))
               #)
             ) # close box
           ),
