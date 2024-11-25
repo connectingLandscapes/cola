@@ -2,7 +2,7 @@
 ## Bangkok, Thailand. November 26th 2024
 
 ##### *Scan this code*
-![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/Thailand?Nov26/qr_Thailand.png)
+![QRcode](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/qr_Thailand.png?raw=true)
 
 ![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand?Nov26/banner.png?raw=true)
 
