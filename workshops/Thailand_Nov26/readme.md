@@ -54,7 +54,8 @@ Check some papers developed in this topic [here](https://u.pcloud.link/publink/s
 
 ## LINE chat group
 
-Join the chat group for general questions
-![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/qr_line.jpg?raw=true)
+Join the chat group for general questions by scanning the code
+
+![line](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/qr_line.jpg?raw=true)
 
 
