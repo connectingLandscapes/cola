@@ -28,20 +28,20 @@
 
 # More resources
 
-Check some papers developed in this topic [here] (https://u.pcloud.link/publink/show?code=kZdTk05ZTYW2emf9gep6ahhBKd9NOQ9LcTsV)
+Check some papers developed in this topic [here](https://u.pcloud.link/publink/show?code=kZdTk05ZTYW2emf9gep6ahhBKd9NOQ9LcTsV)
 
 
 ## Related Papers - Connectivity and Movement
-- Greenspan et al 2021 - Large felid habitat connectivity in the transboundary Dawna-Tanintharyi landscape of Myanmar and Thailand [link](https://doi.org/10.1007/s10980-021-01316-5)
-- Phumanee et al 2021 - Tiger density, movements, and immigration outside of a tiger source site in Thailand [link](https://doi.org/10.1111/csp2.560)
-- Simcharoen et al 2022 - Exploratory dispersal movements by young tigers in Thailand’s Western Forest Complex the challenges of securing a territory [link](https://doi.org/10.1007/s13364-021-00602-6)
-- Suttidate et al 2021 - Habitat connectivity for endangered Indochinese tigers in Thailand [link](https://doi.org/10.1016/j.gecco.2021.e01718) 
-- Tantipisanuh et al 2024 - Identifying wildlife corridors to restore population connectivity: An integration approach involving multiple data sources [link](https://doi.org/10.1016/j.gecco.2024.e03015)
+- Greenspan et al 2021 - Large felid habitat connectivity in the transboundary Dawna-Tanintharyi landscape of Myanmar and Thailand ([link](https://doi.org/10.1007/s10980-021-01316-5))
+- Phumanee et al 2021 - Tiger density, movements, and immigration outside of a tiger source site in Thailand ([link](https://doi.org/10.1111/csp2.560))
+- Simcharoen et al 2022 - Exploratory dispersal movements by young tigers in Thailand’s Western Forest Complex the challenges of securing a territory ([link](https://doi.org/10.1007/s13364-021-00602-6))
+- Suttidate et al 2021 - Habitat connectivity for endangered Indochinese tigers in Thailand ([link](https://doi.org/10.1016/j.gecco.2021.e01718)) 
+- Tantipisanuh et al 2024 - Identifying wildlife corridors to restore population connectivity: An integration approach involving multiple data sources ([link](https://doi.org/10.1016/j.gecco.2024.e03015))
 
 ## Related Papers - Other
-- Gray et al 2023 - Restoring Asia’s roar Opportunities for tiger recovery across the historic range [link](https://www.frontiersin.org/articles/10.3389/fcosc.2023.1124340/full)
-- Duangchantrasiri et al 2024 - Rigorous assessment of a unique tiger recovery in Southeast Asia based on photographic capture-recapture modeling of population dynamics [link](https://doi.org/10.1016/j.gecco.2024.e03016)
-- Kyaw et al 2021 - Investigating Carnivore Guild Structure: Spatial and Temporal Relationships amongst Threatened Felids in Myanmar [link](https://doi.org/10.3390/ijgi10120808)
+- Gray et al 2023 - Restoring Asia’s roar Opportunities for tiger recovery across the historic range ([link](https://www.frontiersin.org/articles/10.3389/fcosc.2023.1124340/full))
+- Duangchantrasiri et al 2024 - Rigorous assessment of a unique tiger recovery in Southeast Asia based on photographic capture-recapture modeling of population dynamics ([link](https://doi.org/10.1016/j.gecco.2024.e03016))
+- Kyaw et al 2021 - Investigating Carnivore Guild Structure: Spatial and Temporal Relationships amongst Threatened Felids in Myanmar ([link](https://doi.org/10.3390/ijgi10120808))
 
 ## Land cover and road data
 
