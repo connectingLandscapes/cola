@@ -52,4 +52,9 @@ Check some papers developed in this topic [here](https://u.pcloud.link/publink/s
 - World Database of Protected Areas ([link](https://www.protectedplanet.net/en/search-areas?geo_type=region))
 - IUCN Red List ([link](https://www.iucnredlist.org/)) 
 
+## LINE chat group
+
+Join the chat group for general questions
+![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Thailand_Nov26/qr_line.jpg?raw=true)
+
 
