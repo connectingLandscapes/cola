@@ -202,11 +202,11 @@ else:
     # Pivot for grouped barplot
     pivot_df = csum.pivot(index='Scenario',columns='PolyID',values='crksum')
     
-    # Write to file
-    pivot_df.to_csv(table1, index=True)
-    
     # Remove polygons with zero values across all scenarios
     pivot_df = pivot_df.loc[:,(pivot_df.sum(axis=0) != 0)]
+
+    # Write to file
+    pivot_df.to_csv(table1, index=True)
 
     # Barplot
     ax = pivot_df.plot.bar(rot=0, title="Core Movement Potential", fontsize=16)
@@ -286,6 +286,3 @@ for i, j in enumerate(nlist):
     # Write to file
     otiff = Path(odir) / ('s' + str(i+1) + '_crk_comp.tif' )
     cf.arrayToGeoTiff(comp, otiff, profile)
-
-
-    
