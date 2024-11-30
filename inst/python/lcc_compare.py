@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed May  1 06:57:13 2024
-
+Script to calculate lcc sums for each raster 
+and graph as a barplot. If the first raster is a baseline, compare
+subsequent rasters by calculating % of baseline.
 @author: pj276
 """
 
@@ -199,6 +201,7 @@ else:
     # Absolute values
     # Pivot for grouped barplot
     pivot_df = csum.pivot(index='Scenario',columns='PolyID',values='lccsum')
+
     # Remove polygons with zero values across all scenarios
     pivot_df = pivot_df.loc[:,(pivot_df.sum(axis=0) != 0)]
 
