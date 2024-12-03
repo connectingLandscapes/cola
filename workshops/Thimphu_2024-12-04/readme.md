@@ -21,9 +21,9 @@
 
  1. Get to this link (15 seconds) for the *Server 1*: (http://34.44.31.4:3838/connecting-landscapes/).  Wait for 15 seconds to load. Open on a new tab.
 
-			*Server 2* (during workshop hours): (http://34.44.133.188:3838/connecting-landscapes/)
+	*Server 2* (during workshop hours): (http://34.44.133.188:3838/connecting-landscapes/)
 			
-			*Server 3* (during workshop hours): (http://34.31.66.92:3838/connecting-landscapes/)
+	*Server 3* (during workshop hours): (http://34.31.66.92:3838/connecting-landscapes/)
 
 2. Follow the next steps: [Tutorial or slides here](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
 
