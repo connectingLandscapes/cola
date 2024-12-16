@@ -427,8 +427,8 @@ adaptFilePath <- function(path){
 
 #' @title  Suitability surface to resistance surface
 #' @description Transforms suitability to resistance surface
-#' @param py Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
-#' @param pyscript Python script location
+#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
+#' @param pyscript String. Python script location
 #' @param intif String. File path to the input raster.
 #' @param outtif String. File path of the output surface resistance
 #' @param minval Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.
@@ -519,13 +519,27 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 }
 
 
-#' @title  Transforms suitability to resistance surface
-#' @description Run CDPOP model
-#' @param py Python location
-#' @param py Python location
-#' @return Path with CDPOP results
+#' @title  Simulate spatial points
+#' @description Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
+#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
+#' @param pyscript String. Python script location
+#' @param inshp  String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file|
+#' @param outif Output point layer| |  |outtif|  | ¿string| |File path to the output point layer. Written in ESRI Shapefile format.|
+#' @param intif Surface resistance |   |intif|     | String|      | File path to the input raster. Requires a projected file with square pixels. Not LonLat projection allowed|
+#' @param minval Minimum value| |minval| | Numeric| | The lower value of the pixels in the raster to consider to simulate the points.
+#' @param maxval |Maximum value| |maxval| | Numeric| | The upper value of the pixels in the raster to consider to simulate the points.
+#' @param npoints |Number of points | |npoints|  |Numeric|  | Number of points to simulate.
+#' @param issuit |Is it suitable?| | | issuit|  |String|  |‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
+#' @param upcrs Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @return Path with the created shapefile
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' library(terra)
+#' hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+#' # hs_path <- 'C:/path/to/raster.tif'
+#' points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
+#' # points_path <- 'C:/path/to/points.shp'
+#' pts_result <- points_py(intif = hs_path, outshp = 'out_pts.shp', minval = 0.2, maxval = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -553,12 +567,24 @@ points_py <- function(intif, outshp,
 }
 
 #' @title  Creates CDmatrix for CDPOP model
-#' @description Run CDPOP model
+#' @description Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outcsv String. Output csv file name. Path of the output csv matrix
+#' @param maxdist Numeric. Max. dispersal distance in cost units. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.
+#' @param ncores numeric Numberof cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster [2] has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param intif String.
 #' @param py Python location
-#' @param py Python location
-#' @return Path with CDPOP results
+#' @param pyscript Python script location
+#' @return Path with the CSV matrix
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+#' # hs_path <- 'C:/path/to/raster.tif'
+#' points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
+#' # points_path <- 'C:/path/to/points.shp'
+#' mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -585,7 +611,9 @@ cdmat_py <- function(inshp, intif, outcsv,
 
   # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
-                       ' ', maxdist, ' ', ncores, ' ', crs))
+                       ' ',
+                       format(maxdist, scientific=F), ' ',
+                       ncores, ' ', crs))
 
   cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
@@ -603,7 +631,7 @@ cdmat_py <- function(inshp, intif, outcsv,
 #' @title  Corridors
 #' @description Calculate corridors
 #' @param py Python location
-#' @param py Python location
+#' @param pyscript Python script location
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -649,6 +677,7 @@ lcc_py <- function(inshp, intif, outtif,
 #' @title  Create least cost corridors for heavy rasters
 #' @description Run CDPOP model
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples
@@ -710,6 +739,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
 #' @title  Create least cost corridors using parallel computing
 #' @description Run CDPOP model
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples
@@ -772,8 +802,9 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
 
 #' @title  Create cumulative resistance kernels
-#' @description Run CDPOP model
+#' @description Cumulative resistant kernels
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples
@@ -818,6 +849,7 @@ crk_py <- function(inshp, intif, outtif,
 #' @title  Runs prioritization
 #' @description Run CDPOP model
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples
@@ -911,6 +943,7 @@ pri_py <- function(tif, incrk, inlcc,
 #' @title  Compare maps of cumulative resistance kernels
 #' @description This tool compares the cumulative resistance kernels
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples
@@ -965,6 +998,7 @@ crk_compare_py <- function(intif, intifs,
 #' @title  Compare maps of least cost paths
 #' @description This tool compares the least cost paths
 #' @param py Python location
+#' @param pyscript Python script location
 #' @param py Python location
 #' @return Path with CDPOP results
 #' @examples

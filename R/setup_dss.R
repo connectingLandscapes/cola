@@ -37,7 +37,7 @@ setup_cola_dss <- function(
   'gdalUtilities',
 
   ## Shiny
-  'shiny',  ## Before shiny plugins
+  'shiny',  'shinyBS',## Before shiny plugins
   "shinydashboard",  "shinycssloaders",
   'shinydashboardPlus', 'shinyjs',
   'shinyWidgets', 'dashboardthemes',
@@ -109,6 +109,7 @@ setup_cola_dss <- function(
   library(rmarkdown)
   library(sf)
   library(shiny)
+  library(shinyBS)
   library(shinydashboard)
   library(shinydashboardPlus)
   library(shinyjs)

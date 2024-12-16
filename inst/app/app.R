@@ -27,6 +27,7 @@
   library(rmarkdown)
   library(sf)
   library(shiny)
+  library(shinyBS)
   library(shinydashboard)
   library(shinydashboardPlus)
   library(shinyjs)
@@ -247,6 +248,8 @@ server <- function(input, output, session) {
     (avgrp <- length(setdiff(grp, c("OpenStreetMap", "Esri.WorldImagery", "draw")))>0)
     if(!is.null(clk) & !is.null(grp) & avgrp ){
 
+      rw2add <- NULL
+      #if( any( c("Habitat suitability", "Surface resistance", "Corridors", "Kernels", "Prioritization") %in% grp)) {
       coords <- cbind(clk$lng, clk$lat)
       pt0 <-  st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
       #grp <- 'Habitat suitability'
@@ -255,11 +258,11 @@ server <- function(input, output, session) {
       # # rv$hs_sp <- terra::rast(rv$h)
       # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
 
-      rw2add <- NULL
+      #}
+
 
       if("Habitat suitability" %in%  grp){
         rast_sp <- rv$hs_sp
-
         rast_prj <- terra::crs(rast_sp, proj = TRUE)
         pt_ <- sf::st_transform(pt0, crs = rast_prj)
         rw2add <- rbind.data.frame(
@@ -323,12 +326,15 @@ server <- function(input, output, session) {
         )
       }
 
-      text<-paste0('<strong>', rw2add$lay, ':</strong> ', round(rw2add$val, 3), collapse = '<br>')
+      text <- 'none'
+      if(!is.null(rw2add)){
+        if( nrow(rw2add) > 0){
+          text<-paste0('<strong>', rw2add$lay, ':</strong> ', round(rw2add$val, 3), collapse = '<br>')
+        }
+      }
     } else {
       text <- 'none'
     }
-
-
     return(text)
   }
 
@@ -3613,7 +3619,7 @@ server <- function(input, output, session) {
             ## Refresh prio tab
             rv$crk2s <- resampIfNeeded(rv$crk)
             rv$crk2s_sp <- terra::rast(rv$crk2s)
-            # cat('adding CRK for prio:', rv$crk2s, '\n')
+            cat('adding CRK for prio:', rv$crk2s, '\n')
 
             bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
 
@@ -3723,7 +3729,6 @@ server <- function(input, output, session) {
   observeEvent(input$pri_slider, {
     if(rv$crkready){
 
-      Sys.sleep(.2)
       # rv <- list(crk = '/data/tempR//colaVMQ2024081501510005//out_crk_PPH2024081501513905.tif')
       # rv$crk_sp <- terra::rast(rv$crk);
       # input <- list(pri_slider = 0.2)
@@ -3762,37 +3767,38 @@ server <- function(input, output, session) {
         # print(' --brks')
         # print(as.character(brks))
 
-        cat(' --pri_slider:', as.character(pri_slider), '\n' )
+        print(' --pri_slider:')
+        print(as.character(pri_slider))
 
         #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
         ## if 0.9 is selected, then only top 10% pixels are shown
-        # (posC <<- which(as.character(round(rv$crk_quan$q)) ==
-        #                   as.character(round(pri_slider)))[1])
+        (posC <<- which(as.character(round(rv$crk_quan$q)) ==
+                          as.character(round(pri_slider)))[1])
 
         (posC <<- which(rv$crk_quan$q == pri_slider))
-        if(any(length(posC))){
 
-          # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
-          newmin <-  rv$crk_quan$value[posC]
-          cat( '  pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+        # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
+        newmin <-  rv$crk_quan$value[posC]
+        print('newmin:: ')
+        print(newmin)
+        cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
-          if(newmin == 0){newDm <- 0.01}
-          newDm <<-  c(newmin, max(rv$crk_rng))
-          cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+        if(newmin == 0){newDm <- 0.01}
+        newDm <<-  c(newmin, max(rv$crk_rng))
+        cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
 
-          rv$crk_pal2 <- leaflet::colorNumeric(
-            palette = "plasma", reverse = TRUE,
-            domain = newDm, na.color = "transparent")
+        rv$crk_pal2 <- leaflet::colorNumeric(
+          palette = "plasma", reverse = TRUE,
+          domain = newDm, na.color = "transparent")
 
-          leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
-            addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                           colors = rv$crk_pal2, opacity = .7)
+        leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+          addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                         colors = rv$crk_pal2, opacity = .7)
 
-          # output$ll_map_pri_prev <- leaflet::renderLeaflet({
-          #   leaflet::leaflet()  %>% addTiles() %>%
-          #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
-          # })
-        }
+        # output$ll_map_pri_prev <- leaflet::renderLeaflet({
+        #   leaflet::leaflet()  %>% addTiles() %>%
+        #     addRasterImage(x = rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7)
+        # })
       }
     }
   })
@@ -4197,14 +4203,28 @@ server <- function(input, output, session) {
           #terra::NAflag(com_stack) <- 0
           com_rng <- terra::global(com_stack, fun="range", na.rm = TRUE)
           com_rng2 <- range(com_rng, na.rm = TRUE)
-          # com_rng2 <- c(-1, 2)
-          if( any ( com_rng2 < 0) ) {
-            ori_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
-          }
-          cat (' ori_rng for comp: ', ori_rng2[1], '  ', ori_rng2[2])
+
+          papalette <- 'RdBu'
+          #com_rng2 <- c(-1, -5)
+          print(com_rng2)
+          if( any ( com_rng2 < 0) &  any(com_rng2 > 0 ) ) {
+            com_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
+            papalette <- 'RdBu'
+            rrev <- FALSE
+
+          } else if ( all(com_rng2 < 0) )  {
+            com_rng2 <- min(range(com_rng2)) * c(0, 1)
+            papalette <- 'Reds'
+            rrev <- TRUE
+          } else if( all(com_rng2 > 0)){
+            com_rng2 <- max(range(com_rng2)) * c(1, 0)
+            papalette <- 'Blues'
+            rrev <- FALSE
+
+          }; cat (' ori_rng for comp: ', com_rng2[1], '  ', com_rng2[2], ' | Palette; ', papalette)
 
 
-          com_pal <- leaflet::colorNumeric(palette = "RdBu", reverse = FALSE,
+          com_pal <- leaflet::colorNumeric(palette = papalette, reverse = rrev,
                                            domain = com_rng2, na.color = "transparent")
           # "viridis", "magma", "inferno", or "plasma".
 
@@ -4862,9 +4882,11 @@ if (FALSE){
   color: red;
 }'
 
+
   ui <- shinydashboard::dashboardPage(
     ## Activate enable / disable buttons
     shinyjs::useShinyjs(),
+
 
 
     ####  title ----
@@ -5109,6 +5131,90 @@ if (FALSE){
           shinydashboard::tabItem(
             'tab_home',
             fluidPage(
+              bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
+              bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
+              bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
+              bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a lesser increase in resistance as suitability declines.'),
+              bsTooltip(id = 'in_sur_7', title = 'The no data value of the input file'),
+              bsTooltip(id = 'in_pts_hs', title = 'Name of the layer to use'),
+              bsTooltip(id = 'name_sur', title = 'Name of the output'),
+              bsTooltip(id = 'h2r', title = 'Run the function'),
+              bsTooltip(id = 'tifDwn', title = 'Download TIF raster layer'),
+              bsTooltip(id = 'h2rsample', title = 'Load sample data from Ash et al., in review, 2020, 2022'),
+              bsTooltip(id = 'in_sur_tif', title = 'Load habitat suitability georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_edi_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_edi_shp', title = 'Load polygon for editing your surface resistance'),
+              bsTooltip(id = 'in_edi_val', title = 'Value to add/replace the resistance layer'),
+              bsTooltip(id = 'in_edi_wid', title = 'Width to buffer lines geometries in pixel units'),
+              bsTooltip(id = 'in_edi_che', title = 'Rasterize all touched pixels?'),
+              bsTooltip(id = 'edi', title = 'Add values to the raster layers'),
+              bsTooltip(id = 'rpl', title = 'Value to assign on the overlapping pixels '),
+              bsTooltip(id = 'editifDwn', title = 'Download TIF raster layer'),
+              bsTooltip(id = 'in_points_3', title = 'The lower value of the pixels in the raster to consider to simulate the points.'),
+              bsTooltip(id = 'in_points_4', title = 'The upper value of the pixels in the raster to consider to simulate the points.'),
+              bsTooltip(id = 'in_points_5', title = 'Number of points to simulate'),
+              bsTooltip(id = 'in_points_ly', title = 'Layer to use for simulating the points'),
+              bsTooltip(id = 'name_pts', title = 'Name of the output'),
+              bsTooltip(id = 'points_py', title = 'Simulate points'),
+              bsTooltip(id = 'ptsDwn', title = 'Download TIF raster layer'),
+              bsTooltip(id = 'in_points_hs', title = 'Load habitat suitability resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_points_tif', title = 'Load vectorial point layer'),
+              bsTooltip(id = 'in_dist_3', title = 'Cost distance threshold'),
+              bsTooltip(id = 'name_dst', title = 'New matrix name'),
+              bsTooltip(id = 'dist_py', title = 'Calculate cost-distance matrix'),
+              bsTooltip(id = 'csvDwn', title = 'Download CSV matrix'),
+              bsTooltip(id = 'in_dist_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_dist_shp', title = 'Load vectorial point layer'),
+              bsTooltip(id = 'cdpop_mort', title = 'Use mortality from the resistance layer? Values will be scaled between 0 and 100%'),
+              bsTooltip(id = 'run_cdpop', title = 'Tun CDPOP simulation'),
+              bsTooltip(id = 'cdpDwn', title = 'Download ZIP resulting files'),
+              bsTooltip(id = 'cdpop_ans_yy', title = 'The generation you want to plot'),
+              bsTooltip(id = 'mapcdpop', title = 'Interpolate the selected generation into a map'),
+              bsTooltip(id = 'in_cdp_pr', title = 'Percentage of current points to randomly be empty. Empty locations can be filled by new individuals'),
+              bsTooltip(id = 'in_cdpop_par', title = 'Load CDPOP CSV parameters files'),
+              bsTooltip(id = 'in_cdpop_pardef', title = 'Load default CDPOP CSV parameters files'),
+              bsTooltip(id = 'in_crk_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_crk_shp', title = 'Load vectorial point layer'),
+              bsTooltip(id = 'in_crk_4', title = 'This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.'),
+              bsTooltip(id = 'in_crk_5', title = 'This determines how the probability of dispersal declines with distance from the focal point. "linear" implements the function 1 - (1/dThreshold) * d where dThreshold is the specified distance threshold and d is the distance from the focal point. "gaussian" implements the function exp(-1*((d**2)/(2*(dispScale**2)))) where d is the distance from the focal point and dispScale is equal to dThreshold/4.'),
+              bsTooltip(id = 'in_crk_t', title = 'Transform the kernel volume as done in UNICOR'),
+              bsTooltip(id = 'in_crk_6', title = 'If 1, the default, the resistant kernel value at the origin is 1 and no kernel volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is determined by the equation kVol * 3/(pi*dThreshold**2) where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.'),
+              bsTooltip(id = 'in_crk_sr', title = 'Resistance layer to use for kernels'),
+              bsTooltip(id = 'name_crk', title = 'Name of the new layer'),
+              bsTooltip(id = 'crk', title = 'Run the cumulative resistance kernels'),
+              bsTooltip(id = 'crkDwn', title = 'Download TIF raster layer'),
+              bsTooltip(id = 'in_lcc_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_lcc_shp', title = 'Load vectorial point layer'),
+              bsTooltip(id = 'in_lcc_4', title = 'This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.'),
+              bsTooltip(id = 'in_lcc_5', title = 'The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.'),
+              bsTooltip(id = 'in_lcc_6', title = 'This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.'),
+              bsTooltip(id = 'in_lcc_sr', title = 'Corridors to use'),
+              bsTooltip(id = 'name_lcc', title = 'New corridors  layer name'),
+              bsTooltip(id = 'lcc', title = 'Get corridors'),
+              bsTooltip(id = 'lcc2', title = 'Run memory safe corridors. Slower but safer for big landscapes'),
+              bsTooltip(id = 'lccDwn', title = 'Download TIF raster layer'),
+              bsTooltip(id = 'pri_slider', title = 'Threshold slided'),
+              bsTooltip(id = 'in_pri_5', title = 'Threshold to convert kernels into patches'),
+              bsTooltip(id = 'in_pri_lcc_name', title = 'Kernel layer to use'),
+              bsTooltip(id = 'in_pri_crk_name', title = 'Corridor layer to use'),
+              bsTooltip(id = 'name_pri', title = 'New results name'),
+              bsTooltip(id = 'pri', title = 'Run the comparisson modue'),
+              bsTooltip(id = 'in_pr_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_pri_lcc', title = 'Load corridors georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_pri_crk', title = 'Load kernels georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_com_ly', title = 'The type of layer to comapre'),
+              bsTooltip(id = 'com_py', title = 'Run the comparisson modue'),
+              bsTooltip(id = 'comDwn', title = 'Download ZIP compressed TIF raster layers'),
+              bsTooltip(id = 'in_com_shp', title = 'Load vectorial polygon layer for summarizing the comparisson'),
+              bsTooltip(id = 'in_com_lcc', title = 'Load corridors georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_com_crk', title = 'Load kernels georreferenced raster. Not LonLat projection allowed'),
+              bsTooltip(id = 'in_uncrs_tif', title = 'Load raster layer'),
+              bsTooltip(id = 'in_uncrs_pts', title = 'Load vectorial point layer'),
+              bsTooltip(id = 'sel_crs', title = 'Select a coordinates system'),
+              bsTooltip(id = 'coo_tif', title = 'Assign selected coordinate system to the raster layer'),
+              bsTooltip(id = 'sel_crs2', title = 'Select a coordinates system'),
+              bsTooltip(id = 'coo_pts', title = 'Assign selected coordinate system to the vector layer'),
+
               #includeMarkdown("md_intro.md")
               tabsetPanel(
                 type = "pills",
@@ -5331,17 +5437,17 @@ if (FALSE){
               title = "Habitat 2 resistance parameters info", status = "primary", collapsed = TRUE
               ,
 
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_s2res_py.md'))
+
               #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+              # column(width = 4,
+              #        h6('Min-grid *Change to Min. value-Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+              #    Max-grid *Change to Max. value-Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+              #    ')),
+              # column(width = 4, h5('Hallo')),
+              # column(width = 4, h5('Hello'))
 
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
               #)
             ) # close box
           ),
@@ -5409,25 +5515,26 @@ if (FALSE){
               leaflet::leafletOutput("ll_map_edi", height = "600px") %>%
                 shinycssloaders::withSpinner(color="#0dc5c1")),
 
-            br(),
-            shinydashboard::box(
-              width = 12, solidHeader = T, collapsible = T,
-              title = "Editing resistance parameters info", status = "primary", collapsed = TRUE
-              ,
-
-              #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
-            ) # close box
+            br()
+            #             ,
+            #             shinydashboard::box(
+            #               width = 12, solidHeader = T, collapsible = T,
+            #               title = "Editing resistance parameters info", status = "primary", collapsed = TRUE
+            #               ,
+            #
+            #               #fluidRow(
+            #               column(width = 4,
+            #                      h6('Min-grid *Change to Min. value
+            # -Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+            #
+            #                  Max-grid *Change to Max. value
+            # -Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+            #
+            #                  ')),
+            #               column(width = 4, h5('Hallo')),
+            #               column(width = 4, h5('Hello'))
+            #               #)
+            #             ) # close box
           ),
 
           #### UI POINTS ----
@@ -5463,17 +5570,10 @@ if (FALSE){
               ,
 
               #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
               #)
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_points_py.md'))
+
             ) # close box
           ),
 
@@ -5503,7 +5603,7 @@ if (FALSE){
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_distB',  fill = TRUE))
                                 ))),
-                       column(3, textInput("in_dist_3", "Distance threshold (cost units):", '200000')),
+                       column(3, textInput("in_dist_3", "Distance threshold (cost units):", '600000')),
                        column(2, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
@@ -5530,19 +5630,8 @@ if (FALSE){
               width = 12, solidHeader = T, collapsible = T,
               title = "Distance matrix 2 resistance parameters info", status = "primary", collapsed = TRUE
               ,
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_cdmat_py.md'))
 
-              #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
             ) # close box
           ),
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
@@ -5709,11 +5798,8 @@ if (FALSE){
               title = "Kernels parameters info", status = "primary", collapsed = TRUE
               ,
 
-              #fluidRow(
-              column(width = 4, h5('Hola')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
+
             )
           ),
 
@@ -5731,10 +5817,10 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA',  fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB',  fill = TRUE)),
 
-              column(1, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '800000')),
+              column(3, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '600000')),
               column(1, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
-              column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
-              column(2, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
+              column(1, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
+              column(1, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
               column(2, textInput('name_lcc', label = 'New layer name:', value = "",
                                   width = '100%', placeholder = 'Name new layer')),
               column(1, actionButton("lcc", "Get corridors", icon = icon("play")),
@@ -5810,18 +5896,8 @@ if (FALSE){
               title = "Priorization parameters info", status = "primary", collapsed = TRUE
               ,
 
-              #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_pri_py.md'))
 
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
             ) # close box
           ),
 
@@ -5853,6 +5929,8 @@ if (FALSE){
               #)
 
             ) ,
+
+
             # fluidRow(
             #   column(2, br()),
             # ),
@@ -5943,26 +6021,15 @@ if (FALSE){
             #     ) %>%shinycssloaders::withSpinner(color="#0dc5c1"))
             #   )
             # )
-
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Comparisson info", status = "primary", collapsed = TRUE
+              title = "Priorization parameters info", status = "primary", collapsed = TRUE
               ,
+              includeMarkdown(system.file(package = 'cola', 'docs/fun_lcc_compare_py.md'))
 
-              #fluidRow(
-              column(width = 4,
-                     h6('Min-grid *Change to Min. value
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
-              #)
             ) # close box
+
 
           )
           ,
@@ -6074,7 +6141,7 @@ if (FALSE){
 
               #fluidRow(
               column(width = 4,
-                     h6('Min-grid *Change to Min. value
+                     h6('Load your ASCII or RSG raster or XY or CSV points formats. Then select the best CRS for your file, and hit the button "assign coords"
 -Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
 
                  Max-grid *Change to Max. value
