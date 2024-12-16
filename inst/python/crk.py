@@ -151,7 +151,7 @@ def main() -> None:
             if any(cinds[:,1] < 0):
                 cinds = cinds[cinds[:,1] >= 0]
             # Check for individual points with no data
-            checkND = r[np.array(cinds[:,0]),np.array(cinds[:,1])]
+            checkND = r[np.array(cinds[:,0], dtype=int),np.array(cinds[:,1], dtype=int)]
             if -9999 in checkND:
                 cinds = cinds[checkND != -9999,:]
             # If there are no points after removing no data vals,
@@ -215,6 +215,11 @@ def main() -> None:
     # is used on the transformed kernel resistant distance following
     # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
     # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+    # **I think the UNICOR help on this might be reversed because this is the code
+	#	if const_kernal_vol:		
+    #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
+    #    else:
+    #        vol_const = 1.
     if tkv == "yes":
         vol_const = kvol * 3/(np.pi*dThreshold**2)
         ccArr = ccArr*vol_const      
