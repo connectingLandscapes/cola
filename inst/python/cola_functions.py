@@ -194,7 +194,7 @@ def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
         nG.addEdge(ro[i], co[i], w=dat[i], addMissing=False, checkMultiEdge=False)
     # Iterate through nodes and remove if nodata
     for u in nG.iterNodes():
-        if A[u] == -9999:
+        if A[u] < 1:
             nG.removeNode(u)
     # Get original node ids
     nid = [u for u in nG.iterNodes()]
