@@ -1396,9 +1396,6 @@ server <- function(input, output, session) {
     checkEnv()
   })
 
-  observeEvent(input$in_cdpop_pardef, {
-    rv$data <- t(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
-  })
 
   observeEvent(input$in_cdpop_par, {
     if(devug){ print('cdpop_par: '); print(input$in_cdpop_par)}
@@ -1591,6 +1588,26 @@ server <- function(input, output, session) {
     }
   })
 
+  isolate(observeEvent(input$in_cdpop_save, {
+    ## no params provided
+    if (is.null(rv$data)){
+      cat(' // No provided invars. Using default\n')
+      cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
+    } else {
+      cat(' // Provided invars\n')
+      cdpop_invars <- t(rv$data)
+      colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
+    }
+    invars_file_path <- file.path(tempFolder, 'invars_edited.csv')
+    cat(' Saving CDPOP invars: ', invars_file_path, '\n')
+    write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
+  }))
+
+  observeEvent(input$in_cdpop_pardef, {
+    rv$data <- t(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
+  })
+
+
   isolate(observeEvent(input$run_cdpop, {
 
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
@@ -1603,13 +1620,14 @@ server <- function(input, output, session) {
 
     ## no params provided
     if (is.null(rv$data)){
-      print(' // No provided invars:')
+      print(' // No existing CDPOP invars')
       cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
     } else {
-      print(' // Provided invars:')
-      cdpop_invars <- t(rv$data)
+      print(' // Existing CDPOP invars')
+      cdpop_invars <- as.data.frame(t(rv$data))
+      colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
     }
-    print(cdpop_invars)
+    # print(cdpop_invars)
     #print(read.csv(cdpop_invars))
 
     if (is.numeric(as.numeric(input$in_dist_3))){
@@ -1635,9 +1653,9 @@ server <- function(input, output, session) {
     }
 
     if( input$cdpop_mort){
+      cat('  Extracing raster values for mortality\n')
       shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif, porcEmpty = perc_emp)
       prefMort <- 'mort'
-      cat('  Extracing raster values for mortality\n')
     } else {
       shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
     }
@@ -1662,7 +1680,6 @@ server <- function(input, output, session) {
     output$vout_cdp <- isolate(renderText({
 
       tStartCDP <- Sys.time()
-
       cdpop_ans <<- cdpop_py(inputvars = invars_file_path,
                              agevars = NULL,
                              cdmat = rv$cdm, xy = rv$ptsxy,
