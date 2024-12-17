@@ -124,19 +124,20 @@ def main() -> None:
 
     # Networkit gives inaccessible nodes the max float 64 value.
     # Set these to nan.
-    #ccArr[ccArr == np.finfo(np.float64).max] = np.nan
+    ccArr[ccArr == np.finfo(np.float64).max] = 998877665544332211
     #ccArr = ccArr.astype('float32')
     
     # If distance threshold is > zero, apply thresholding
     if dThreshold > 0:
         # Set values beyond threshold value to max float 64 values
-        ccArr[ccArr > dThreshold] = np.finfo(np.float64).max
+        ccArr[ccArr > dThreshold] = 998877665544332211
+        #ccArr[ccArr > dThreshold] = np.nan
 
     # Networkit sets the distance between 
     # two inaccessible points to zero.    
     # Find cells where off diagonal elements
     # are 0 and set to max for float64
-    ccArr[np.where(np.logical_and(~np.eye(ccArr.shape[0],dtype=bool), ccArr == 0))] = np.finfo(np.float64).max
+    ccArr[np.where(np.logical_and(~np.eye(ccArr.shape[0],dtype=bool), ccArr == 0))] = 998877665544332211
         
     # Save distance array to csv
     ccArr = pd.DataFrame(ccArr)
