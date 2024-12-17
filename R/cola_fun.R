@@ -172,7 +172,10 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # file.copy('invars.csv', '/home/user/cola/inst/examples/invars.csv')
   # file.copy('age.csv', '/home/user/cola/inst/examples/agevars.csv')
   if ( is.null(inputvars) ){
+    cat(' // Using default CDPOP invars.csv\n')
     (inputvars <- system.file(package = 'cola', 'sampledata/invars.csv'))
+  } else {
+    cat(' // Using provided CDPOP ', inputvars,'\n')
   }
 
   if ( is.null(agevars) ){
@@ -361,7 +364,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
     xynew$Subpop_mortperc <- vals2add
   }
 
-  print(head(xynew))
+  # print(head(xynew))
 
   # ## Write CSV
   write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
