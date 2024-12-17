@@ -3586,6 +3586,8 @@ server <- function(input, output, session) {
           # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
 
           crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
           rv$crk_quan <- crk_quan
 
           rv$crkready <- TRUE
@@ -3784,8 +3786,8 @@ server <- function(input, output, session) {
         # print(' --brks')
         # print(as.character(brks))
 
-        print(' --pri_slider:')
-        print(as.character(pri_slider))
+        # print(' --pri_slider:')
+        # print(as.character(pri_slider))
 
         #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
         ## if 0.9 is selected, then only top 10% pixels are shown
@@ -3796,19 +3798,26 @@ server <- function(input, output, session) {
 
         # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
         newmin <-  rv$crk_quan$value[posC]
-        print('newmin:: ')
-        print(newmin)
-        cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+        # print('newmin:: ');  print(newmin)
+        # cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
         if(newmin == 0){newDm <- 0.01}
         newDm <<-  c(newmin, max(rv$crk_rng))
-        cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+        # cat('newDmn min: ', newmin, '  newDmn CRK: ', newDm, '\n')
+
+        updateTextInput(session, "in_pri_5",
+                        value = input$pri_slider)
 
         rv$crk_pal2 <- leaflet::colorNumeric(
           palette = "plasma", reverse = TRUE,
           domain = newDm, na.color = "transparent")
 
+        oldLim <- input$ll_map_pri_prev_bounds
+        #save(oldLim, file = 'bounds.RData')
+
         leafletProxy("ll_map_pri_prev") %>%  clearImages()  %>% # remove(layerId = 'kernel') %>%
+          fitBounds(oldLim$west, oldLim$south, oldLim$east, oldLim$north) %>%
+          setView(lng = input$ll_map_pri_prev_center$lng, lat = input$ll_map_pri_prev_center$lat, zoom = input$ll_map_pri_prev_zoom) %>%
           addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
                          colors = rv$crk_pal2, opacity = .7)
 
