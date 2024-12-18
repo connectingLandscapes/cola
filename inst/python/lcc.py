@@ -216,7 +216,7 @@ def main() -> None:
     #%%
     # Iterate through target nodes and calculate paths to nodes within the threshold distance
     # plus the tolerance
-    print("Calculating corridors", flush=True)
+    print("Calculating " + len(reOrder) + " corridors", flush=True)
     # Create zeros array to hold corridor sums
     lccSum = np.zeros((ccArr.shape[1],))
     # Iterate through source target pairs and calculate distances
