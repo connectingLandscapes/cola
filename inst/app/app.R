@@ -3136,9 +3136,10 @@ server <- function(input, output, session) {
 
       if(file.exists(outcdmat)){
         if(devug) {print(' CDMatrix done')}
-        #outcdmat <- 'C:/cola//colaYAG2024121813212805//out_cdmatrix_QRN2024121813262805.csv'
+        #outcdmat <- 'C:/cola//colaWHJ2024121817582505//out_cdmatrix_UCJ2024121818093405.csv'
+
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
-        rv$cdm_nvalid <- validCels <- sum(headMat != 0 | headMat != 99887766543211, na.rm = T)/2
+        rv$cdm_nvalid <- validCels <- sum(headMat != 0 & headMat != 99887766543211, na.rm = T)/2
                                             #grepl(pattern = "99887766554433", as.matrix(headMat) )
         #rv$cdm_nvalid <- validCels <- sum(!headMat %in% c(0,99887766543211), na.rm = T)/2
 
@@ -4233,9 +4234,9 @@ server <- function(input, output, session) {
 
           csvAbs <- read.csv(outComCsvAbs)
           csvAbs$val <- csvAbs[, 2]
-          csvAbs$col <- '#20854EFF'
+          csvAbs$col <- '#482173FF'
           csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
-          csvAbs$col[1] <- '#20854EFF'
+          csvAbs$col[1] <- '#482173FF'
 
           csvRel <- read.csv(outComCsvRel)
           csvRel$val <- csvRel[, 2]
@@ -4265,7 +4266,8 @@ server <- function(input, output, session) {
               #               type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
               # hc_xAxis(categories = csvAbs$Scenario) %>%
               hc_title( text = "Corridor Movement Comparison") %>%
-              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
+              hc_yAxis(title = list(text = paste(in_com_ly, " Sum")))
           })
 
 
@@ -4276,7 +4278,9 @@ server <- function(input, output, session) {
               hc_title( text = "Relative Corridor Movement Comparison") %>%
               # hc_xAxis(categories = csvRel$Scenario) %>%
               # hc_add_series(data = csvRel, name = 'Relative difference', type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
-              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
+              hc_yAxis(title = list(text = "% Change Relative to Baseline"))
+
           })
 
 
