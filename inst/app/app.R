@@ -3136,8 +3136,12 @@ server <- function(input, output, session) {
 
       if(file.exists(outcdmat)){
         if(devug) {print(' CDMatrix done')}
+        #outcdmat <- 'C:/cola//colaYAG2024121813212805//out_cdmatrix_QRN2024121813262805.csv'
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
-        rv$cdm_nvalid <- validCels <- sum(headMat > 1, na.rm = T)/2
+        rv$cdm_nvalid <- validCels <- sum(headMat != 0 | headMat != 99887766543211, na.rm = T)/2
+                                            #grepl(pattern = "99887766554433", as.matrix(headMat) )
+        #rv$cdm_nvalid <- validCels <- sum(!headMat %in% c(0,99887766543211), na.rm = T)/2
+
         params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
 
         rv$log <- paste0(rv$log,
@@ -4225,10 +4229,19 @@ server <- function(input, output, session) {
           # outComCsvAbs <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compAbs.csv'
           # outComCsvRel <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compRel.csv'
 
+          #mypal <- c("#BC3C29FF", "#0072B5FF", "#E18727FF","#20854EFF", "#7876B1FF", "#6F99ADFF","#FFDC91FF","#EE4C97FF")
+
           csvAbs <- read.csv(outComCsvAbs)
           csvAbs$val <- csvAbs[, 2]
+          csvAbs$col <- '#20854EFF'
+          csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
+          csvAbs$col[1] <- '#20854EFF'
+
           csvRel <- read.csv(outComCsvRel)
           csvRel$val <- csvRel[, 2]
+          csvRel$col <- '#0072B5FF'
+          csvRel$col <- ifelse(csvRel$val >= 0, "#0072B5FF", "#BC3C29FF")
+
 
           output$png1 <- renderImage({
             ## Following three lines CREATE a NEW image. You do not need them
@@ -4246,20 +4259,23 @@ server <- function(input, output, session) {
 
 
           output$hccomp1 <- highcharter::renderHighchart({
-            hcchart1 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
-              hc_add_series(data = csvAbs, name = 'Absolute values',
-                            type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
-              hc_xAxis(categories = csvAbs$Scenario) %>%
+            hcchart1 <<- hchart(csvAbs, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
+              hc_exporting(enabled = TRUE) %>%
+              # hc_add_series(data = csvAbs, name = 'Absolute values',
+              #               type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+              # hc_xAxis(categories = csvAbs$Scenario) %>%
               hc_title( text = "Corridor Movement Comparison") %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           })
 
+
+
           output$hccomp2 <- highcharter::renderHighchart({
-            hcchart2 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+            hcchart2 <<- hchart(csvRel, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
+              hc_exporting(enabled = TRUE) %>%
               hc_title( text = "Relative Corridor Movement Comparison") %>%
-              hc_xAxis(categories = csvRel$Scenario) %>%
-              hc_add_series(data = csvRel, name = 'Relative difference',
-                            type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+              # hc_xAxis(categories = csvRel$Scenario) %>%
+              # hc_add_series(data = csvRel, name = 'Relative difference', type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           })
 
