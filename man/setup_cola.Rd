@@ -8,10 +8,12 @@ setup_cola(
   envName = "cola",
   nSteps = 5,
   force = FALSE,
-  yml = TRUE,
-  libs2Install = c("gdal", "h5py", "numexpr", "rasterio", "pytables", "pandas", "cython",
-    "numba", "networkit", "fiona", "shapely", "geopandas", "kdepy", "scikit-image",
-    "kdepy")
+  yml = FALSE,
+  onlyIndividual = TRUE,
+  ask = TRUE,
+  libs2Install = c("geopandas", "gdal", "h5py", "numexpr", "rasterio", "pytables",
+    "pandas", "cython", "numba", "networkit", "fiona", "shapely", "kdepy",
+    "scikit-image", "kdepy")
 )
 }
 \arguments{
@@ -22,6 +24,8 @@ setup_cola(
 \item{force}{Force miniconda installation? Passed to `reticulate::install_miniconda()`}
 
 \item{yml}{Use YML file to build the conda environment? Default TRUE}
+
+\item{onlyIndividual}{Try installing libraries one by one? Default FALSE}
 
 \item{libs2Install}{The name of python libraries}
 }

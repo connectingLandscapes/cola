@@ -20,6 +20,8 @@ lcc_compare_py(
 }
 \arguments{
 \item{py}{Python location}
+
+\item{pyscript}{Python script location}
 }
 \value{
 Path with CDPOP results

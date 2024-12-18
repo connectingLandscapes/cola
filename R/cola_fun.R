@@ -587,7 +587,7 @@ points_py <- function(intif, outshp,
 #' # hs_path <- 'C:/path/to/raster.tif'
 #' points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
 #' # points_path <- 'C:/path/to/points.shp'
-#' mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv)
+#' mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export

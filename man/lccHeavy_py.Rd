@@ -8,18 +8,20 @@ lccHeavy_py(
   inshp,
   intif,
   outtif,
-  param4,
-  param5,
-  param6,
-  param7 = as.numeric(Sys.getenv("COLA_NCORES")),
-  param8 = "None",
-  tempFolder = rootPath,
+  maxdist,
+  smooth,
+  tolerance,
+  ncores = as.numeric(Sys.getenv("COLA_NCORES")),
+  crs = "None",
+  tempFolder = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc_heavy.py")
 )
 }
 \arguments{
 \item{py}{Python location}
+
+\item{pyscript}{Python script location}
 }
 \value{
 Path with CDPOP results
