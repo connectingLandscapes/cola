@@ -2,29 +2,31 @@
 % Please edit documentation in R/cola_fun.R
 \name{lcc_py}
 \alias{lcc_py}
-\title{Create least cost corridors}
+\title{Corridors}
 \usage{
 lcc_py(
   inshp,
   intif,
   outtif,
-  param4,
-  param5,
-  param6,
-  param7 = as.numeric(Sys.getenv("COLA_NCORES")),
-  param8 = "None",
+  maxdist,
+  smooth,
+  tolerance,
+  ncores = as.numeric(Sys.getenv("COLA_NCORES")),
+  crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc.py")
 )
 }
 \arguments{
 \item{py}{Python location}
+
+\item{pyscript}{Python script location}
 }
 \value{
 Path with CDPOP results
 }
 \description{
-Run CDPOP model
+Calculate corridors
 }
 \examples{
 runCDPOP( )

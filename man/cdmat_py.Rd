@@ -8,24 +8,43 @@ cdmat_py(
   inshp,
   intif,
   outcsv,
-  param4,
-  param5 = Sys.getenv("COLA_NCORES"),
-  param6 = "None",
+  maxdist,
+  ncores = Sys.getenv("COLA_NCORES"),
+  crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/create_cdmat.py")
 )
 }
 \arguments{
+\item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
+
+\item{intif}{String.}
+
+\item{outcsv}{String. Output csv file name. Path of the output csv matrix}
+
+\item{maxdist}{Numeric. Max. dispersal distance in cost units. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.}
+
+\item{ncores}{numeric Numberof cores. Number of CPU cores to run the analysis}
+
+\item{crs}{String. Projection string. String. Projection information in the case the input raster [2] has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
+
 \item{py}{Python location}
+
+\item{pyscript}{Python script location}
 }
 \value{
-Path with CDPOP results
+Path with the CSV matrix
 }
 \description{
-Run CDPOP model
+Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
 }
 \examples{
-runCDPOP( )
+library(cola)
+hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+# hs_path <- 'C:/path/to/raster.tif'
+points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
+# points_path <- 'C:/path/to/points.shp'
+mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv')
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

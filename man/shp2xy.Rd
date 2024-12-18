@@ -2,15 +2,33 @@
 % Please edit documentation in R/cola_fun.R
 \name{shp2xy}
 \alias{shp2xy}
-\title{Shapefile to CDPOP xy}
+\title{shapefile to CDPOP XY}
 \usage{
-shp2xy(shapefile, outxy, tempDir)
+shp2xy(
+  shapefile,
+  outxy,
+  tempDir,
+  mortrast = NULL,
+  survrast = NULL,
+  porcEmpty = 0
+)
 }
 \arguments{
-\item{shapefile}{String. Path to the file}
+\item{shapefile}{String. Path to the shapefile}
+
+\item{outxy}{String. Path to the resulting .xy file}
+
+\item{tempDir}{String. Path to the working directory}
+
+\item{mortrast}{String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.}
+
+\item{survrast}{String. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.}
+}
+\value{
+String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 }
 \description{
-Convert Shapefile into xy file
+Converts Shapefile into xy file
 }
 \examples{
 shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')

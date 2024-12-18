@@ -2,25 +2,38 @@
 % Please edit documentation in R/cola_fun.R
 \name{cdpop_py}
 \alias{cdpop_py}
-\title{Runs CDOPOP2}
+\title{Run CDPOP model}
 \usage{
 cdpop_py(
-  outshp,
-  outtif,
-  param5 = 0.5,
-  param6 = 1000,
-  tif,
-  incrk,
-  inlcc,
-  maskedcsname = paste0(tempfile(), ".tif"),
-  py = Sys.getenv("COLA_PYTHON_PATH")
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  cdpopscript = system.file(package = "cola", "CDPOP/src/CDPOP.py"),
+  inputvars = NULL,
+  agevars = NULL,
+  cdmat = NULL,
+  xy = NULL,
+  tempFolder,
+  prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE))
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{py}{String. Python location}
+
+\item{cdpopscript}{String. Python location}
+
+\item{inputvars}{String.}
+
+\item{agevars}{String.}
+
+\item{cdmat}{String.}
+
+\item{xy}{String.}
+
+\item{prefix}{String.}
+
+\item{tempfolder}{String.}
 }
 \value{
-Path with CDPOP results
+List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 }
 \description{
 Run CDPOP model

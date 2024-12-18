@@ -7,12 +7,12 @@
 s2res_py(
   intif,
   outtif,
-  param3,
-  param4,
-  param5,
-  param6,
-  param7 = NULL,
-  param8 = "None",
+  minval,
+  maxval,
+  maxout,
+  shape,
+  nodata = NULL,
+  prj = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/s2res.py")
 )
@@ -22,21 +22,21 @@ s2res_py(
 
 \item{outtif}{String. File path of the output surface resistance}
 
-\item{param3}{Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.}
+\item{minval}{Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.}
 
-\item{param4}{Numeric. The upper value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.}
+\item{maxval}{Numeric. The upper value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.}
 
-\item{param5}{Numeric. This is the maximum resistance value after transformation from suitability. Default value is 100.  Minimum value is set to 1.}
+\item{maxout}{Numeric. This is the maximum resistance value after transformation from suitability. Default value is 100.  Minimum value is set to 1.}
 
-\item{param6}{Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.}
+\item{shape}{Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.}
 
-\item{param7}{Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.}
+\item{nodata}{Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.}
 
-\item{param8}{Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
+\item{prj}{string. Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions}
+\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions}
 
-\item{pyscript}{Python script location}
+\item{pyscript}{String. Python script location}
 }
 \value{
 Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
@@ -45,8 +45,9 @@ Creates a raster layer with a minimum value of 1 and maximum value given the par
 Transforms suitability to resistance surface
 }
 \examples{
+
 hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', param3 = 0, param4 = 1, param5 = 10,  param6 = 1,  param7 = NULL, param8 = 'None')
+srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 hs_rast <- terra::rast(hs)
 plot(hs_rast, main = 'Habitat suitability')
 }

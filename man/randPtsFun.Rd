@@ -7,13 +7,13 @@
 randPtsFun(rvect, npts, rmin, rmax)
 }
 \arguments{
-\item{rvect}{Python location}
+\item{rvect}{Raster. Raster object co be sampled}
 
-\item{npts}{Python location}
+\item{npts}{Numeric. Number of points}
 
-\item{rmin}{Python location}
+\item{rmin}{Numeric. Raster minimum values o¿to consider}
 
-\item{rmax}{Python location}
+\item{rmax}{Numeric. Raster maximun value to consider}
 }
 \value{
 Path with CDPOP results
@@ -23,7 +23,7 @@ Create random points
 }
 \examples{
 hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-pts30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', param3 = 0, param4 = 1, param5 = 10,  param6 = 1,  param7 = NULL, param8 = 'None')
+newPoints <- randPtsFun(terra::rast(hs), 10, 0.2, 0.8)
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

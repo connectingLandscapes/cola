@@ -2,30 +2,55 @@
 % Please edit documentation in R/cola_fun.R
 \name{points_py}
 \alias{points_py}
-\title{Transforms suitability to resistance surface}
+\title{Simulate spatial points}
 \usage{
 points_py(
   intif,
   outshp,
-  param3,
-  param4,
-  param5,
-  param6 = "None",
+  smin,
+  smax,
+  npoints,
+  issuit = "Yes",
+  upcrs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/create_source_points.py")
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{intif}{Surface resistance |   |intif|     | String|      | File path to the input raster. Requires a projected file with square pixels. Not LonLat projection allowed|}
+
+\item{npoints}{|Number of points | |npoints|  |Numeric|  | Number of points to simulate.}
+
+\item{issuit}{|Is it suitable?| | | issuit|  |String|  |‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values}
+
+\item{upcrs}{Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
+
+\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions}
+
+\item{pyscript}{String. Python script location}
+
+\item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file|}
+
+\item{outif}{Output point layer| |  |outtif|  | ¿string| |File path to the output point layer. Written in ESRI Shapefile format.|}
+
+\item{minval}{Minimum value| |minval| | Numeric| | The lower value of the pixels in the raster to consider to simulate the points.}
+
+\item{maxval}{|Maximum value| |maxval| | Numeric| | The upper value of the pixels in the raster to consider to simulate the points.}
 }
 \value{
-Path with CDPOP results
+Path with the created shapefile
 }
 \description{
-Run CDPOP model
+Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
 }
 \examples{
-runCDPOP( )
+library(cola)
+library(terra)
+hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+# hs_path <- 'C:/path/to/raster.tif'
+points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
+# points_path <- 'C:/path/to/points.shp'
+pts_result <- points_py(intif = hs_path, outshp = 'out_pts.shp', minval = 0.2, maxval = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

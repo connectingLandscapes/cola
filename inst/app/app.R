@@ -117,81 +117,83 @@
   ## Showcase -----
   sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
 
-  if( base::file.exists(sh_object) ){
-    ss <- base::load(sh_object)
-  } else {
+  if( FALSE) {
+    if( base::file.exists(sh_object) ){
+      ss <- base::load(sh_object)
+    } else {
 
-    sh_hs <- terra::rast(base::paste0(showcasePath, '/HabSui_res375m.tif'))
-    sh_sr <- terra::rast(base::paste0(showcasePath, '/Resistance_res375m.tif'))
-    sh_pt <- sf::st_read(base::paste0(showcasePath, '/SourcePoints_50.shp'))
-    #sh_pt <- spTransform(sh_pt, crs = sf::st_crs('EPSG:4326'))
-    sh_pt <- sf::st_transform(sh_pt, crs = sf::st_crs('EPSG:4326'))
-    sh_pt[, c('ln', 'lt')] <- st_coordinates(sh_pt)
-    sh_crk <- terra::rast(paste0(showcasePath, '/CRK_SP50_DT250k_v1.tif'))
-    sh_lcc <- terra::rast(paste0(showcasePath, '/LCC_SP50_DT1mln_CSF5CT5.tif'))
-
-
-    sh_hs_pal <-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                      domain= base::range(sh_hs[], na.rm = TRUE) + 0.0,
-                                      na.color = "transparent")
-    sh_sr_pal <-leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                      domain = base::range(sh_sr[], na.rm = TRUE)+ 0.0,
-                                      na.color = "transparent")
-    sh_crk_pal <-leaflet::colorNumeric(palette = "inferno", reverse = TRUE,
-                                       domain= base::range(sh_crk[], na.rm = TRUE)+ 0.0,
-                                       na.color = "transparent")
-    sh_lcc_pal <-leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                       domain= base::range(sh_lcc[], na.rm = TRUE)+ 0.0,
-                                       na.color = "transparent")
-
-    # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
-
-    ll_sh <- leaflet::leaflet() %>% leaflet::addTiles() %>%
-      leaflet::addMeasure( position = "topright",
-                           primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                           activeColor = "#3D535D",completedColor = "#7D4479") %>%
-      leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE) %>%
-
-      addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
-
-      addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7,
-                     group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
-      addRasterImage(sh_sr, colors = sh_sr_pal, opacity = .7,
-                     group = "SurfaceResistance", layerId = "SurfaceResistance") %>%
-      addRasterImage(sh_lcc, colors = sh_lcc_pal, opacity = .7,
-                     group = "Corridors", layerId = "Corridors") %>%
-      addRasterImage(sh_crk, colors = sh_crk_pal, opacity = .7,
-                     group = "Kernels", layerId = "Kernels") %>%
-
-      # addCircleMarkers(sh_pt, group = "draw") %>%
-      # ll_sh %>%
-      addLegend(pal =  sh_hs_pal, values = base::range(sh_hs[], na.rm = TRUE),
-                group = "HabitatSuitability", layerId = "HabitatSuitability",
-                position = 'bottomleft', title = "Hab. suitability")  %>%
-
-      addLegend(pal = sh_crk_pal, values = base::range(sh_crk[], na.rm = TRUE),
-                group = "Kernels", layerId = "Kernels",
-                position = 'bottomleft', title = "Kernels")  %>%
-
-      addLegend(pal =  sh_sr_pal, values = base::range(sh_sr[], na.rm = TRUE),
-                group = "SurfaceResistance", layerId = "SurfaceResistance",
-                position = 'bottomleft', title = "Sur. resistance")  %>%
-
-      addLegend(pal = sh_lcc_pal, values = base::range(sh_lcc[], na.rm = TRUE),
-                group = "Corridors", layerId = "Corridors",
-                position = 'bottomleft', title = "Corridors")  %>%
+      sh_hs <- terra::rast(base::paste0(showcasePath, '/HabSui_res375m.tif'))
+      sh_sr <- terra::rast(base::paste0(showcasePath, '/Resistance_res375m.tif'))
+      sh_pt <- sf::st_read(base::paste0(showcasePath, '/SourcePoints_50.shp'))
+      #sh_pt <- spTransform(sh_pt, crs = sf::st_crs('EPSG:4326'))
+      sh_pt <- sf::st_transform(sh_pt, crs = sf::st_crs('EPSG:4326'))
+      sh_pt[, c('ln', 'lt')] <- st_coordinates(sh_pt)
+      sh_crk <- terra::rast(paste0(showcasePath, '/CRK_SP50_DT250k_v1.tif'))
+      sh_lcc <- terra::rast(paste0(showcasePath, '/LCC_SP50_DT1mln_CSF5CT5.tif'))
 
 
-      leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-      leaflet::addLayersControl(
-        baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-        overlayGroups = c('Points',
-                          'HabitatSuitability',
-                          'SurfaceResistance',
-                          'Kernels',
-                          'Corridors'
-        ),
-        options =  leaflet::layersControlOptions(collapsed = FALSE))
+      sh_hs_pal <-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                        domain= base::range(sh_hs[], na.rm = TRUE) + 0.0,
+                                        na.color = "transparent")
+      sh_sr_pal <-leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                        domain = base::range(sh_sr[], na.rm = TRUE)+ 0.0,
+                                        na.color = "transparent")
+      sh_crk_pal <-leaflet::colorNumeric(palette = "inferno", reverse = TRUE,
+                                         domain= base::range(sh_crk[], na.rm = TRUE)+ 0.0,
+                                         na.color = "transparent")
+      sh_lcc_pal <-leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+                                         domain= base::range(sh_lcc[], na.rm = TRUE)+ 0.0,
+                                         na.color = "transparent")
+
+      # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
+
+      ll_sh <- leaflet::leaflet() %>% leaflet::addTiles() %>%
+        leaflet::addMeasure( position = "topright",
+                             primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                             activeColor = "#3D535D",completedColor = "#7D4479") %>%
+        leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE) %>%
+
+        addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
+
+        addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7,
+                       group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
+        addRasterImage(sh_sr, colors = sh_sr_pal, opacity = .7,
+                       group = "SurfaceResistance", layerId = "SurfaceResistance") %>%
+        addRasterImage(sh_lcc, colors = sh_lcc_pal, opacity = .7,
+                       group = "Corridors", layerId = "Corridors") %>%
+        addRasterImage(sh_crk, colors = sh_crk_pal, opacity = .7,
+                       group = "Kernels", layerId = "Kernels") %>%
+
+        # addCircleMarkers(sh_pt, group = "draw") %>%
+        # ll_sh %>%
+        addLegend(pal =  sh_hs_pal, values = base::range(sh_hs[], na.rm = TRUE),
+                  group = "HabitatSuitability", layerId = "HabitatSuitability",
+                  position = 'bottomleft', title = "Hab. suitability")  %>%
+
+        addLegend(pal = sh_crk_pal, values = base::range(sh_crk[], na.rm = TRUE),
+                  group = "Kernels", layerId = "Kernels",
+                  position = 'bottomleft', title = "Kernels")  %>%
+
+        addLegend(pal =  sh_sr_pal, values = base::range(sh_sr[], na.rm = TRUE),
+                  group = "SurfaceResistance", layerId = "SurfaceResistance",
+                  position = 'bottomleft', title = "Sur. resistance")  %>%
+
+        addLegend(pal = sh_lcc_pal, values = base::range(sh_lcc[], na.rm = TRUE),
+                  group = "Corridors", layerId = "Corridors",
+                  position = 'bottomleft', title = "Corridors")  %>%
+
+
+        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+        leaflet::addLayersControl(
+          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          overlayGroups = c('Points',
+                            'HabitatSuitability',
+                            'SurfaceResistance',
+                            'Kernels',
+                            'Corridors'
+          ),
+          options =  leaflet::layersControlOptions(collapsed = FALSE))
+    }
 
     # save(ll_sh, file = sh_object)
 
@@ -1176,7 +1178,7 @@ server <- function(input, output, session) {
 
         llcrs <- llmap
 
-        if(!is.null(rv$tif_uncrs_extent)){
+        if(!is.null(rv$tif_uncrs_extent) & exists(crs_selected)){
           # tif_uncrs_extent_p <- SpatialPolygonsDataFrame(
           #   rv$tif_uncrs_extent, data.frame(ID = 1))
           tif_uncrs_extent_p <- sf::st_as_sf(rv$tif_uncrs_extent)
@@ -1190,7 +1192,7 @@ server <- function(input, output, session) {
         }
 
 
-        if(!is.null(rv$pts_uncrs_extent)){
+        if(!is.null(rv$pts_uncrs_extent) & exists(crs_selected2)){
           pts_uncrs_extent_p <- sf::st_as_sf(rv$pts_uncrs_extent)
           st_crs(pts_uncrs_extent_p) <- (crs_selected2)
           pts_uncrs_extent_p <- sf::st_transform(pts_uncrs_extent_p,
@@ -1222,13 +1224,47 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$coo_pts, {
-    if(!is.null(rv$pts_uncrs_extent)){
+    if(!is.null(rv$pts_uncrs_extent) & exists(crs_selected2)){
 
     }
   })
 
   observeEvent(input$coo_tif, {
-    if(!is.null(rv$tif_uncrs_extent)){
+
+    if(!is.null(rv$tif_uncrs) & exists(crs_selected2)){
+
+      # rv$tif_uncrs
+      # rv$tif_uncrs_extent
+      # st_crs(rv$tif_uncrs) <- crs_selected
+      #
+      # ##
+      #
+      # if(is.null(rv$inLccSessID)){
+      #   (inLccSessID <- sessionIDgen())
+      #   rv$inLccSessID <- inLccSessID
+      # }
+      #
+      # rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+      # file.copy(input$in_lcc_tif$datapath, rv$tiforig);
+      #
+      # newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
+      #                                   outrasterpath = tifFixed)
+      #
+      # rv$tif <- ifelse(is.na(newtifPath_lcc),
+      #                  yes =  rv$tiforig,
+      #                  no = newtifPath_lcc)
+      #
+      #
+      # rv$tif_sp <- terra::rast(rv$tif)
+      # params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+      #
+      # rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+      # #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+      # rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+      #                                      domain = rng_newtif+0.0, na.color = "transparent")
+      #
+      # makeLL( )
+
 
     }
   })
@@ -4186,6 +4222,9 @@ server <- function(input, output, session) {
 
         output$ll_map_com <- leaflet::renderLeaflet({
 
+          # outComCsvAbs <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compAbs.csv'
+          # outComCsvRel <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compRel.csv'
+
           csvAbs <- read.csv(outComCsvAbs)
           csvAbs$val <- csvAbs[, 2]
           csvRel <- read.csv(outComCsvRel)
@@ -4202,19 +4241,23 @@ server <- function(input, output, session) {
 
           output$png2 <- renderImage({
             list(src = outComPngRel, contentType = 'image/png', width = 400, height = 300,
-                 alt = "This is alternate text")
+                 alt = "Absolute values")
           }, deleteFile = TRUE)
 
 
           output$hccomp1 <- highcharter::renderHighchart({
             hcchart1 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
-              hc_add_series(data = csvAbs,
+              hc_add_series(data = csvAbs, name = 'Absolute values',
                             type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+              hc_xAxis(categories = csvAbs$Scenario) %>%
+              hc_title( text = "Corridor Movement Comparison") %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
           })
 
           output$hccomp2 <- highcharter::renderHighchart({
             hcchart2 <<- highchart() %>% hc_exporting(enabled = TRUE) %>%
+              hc_title( text = "Relative Corridor Movement Comparison") %>%
+              hc_xAxis(categories = csvRel$Scenario) %>%
               hc_add_series(data = csvRel, name = 'Relative difference',
                             type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
               hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
@@ -6167,15 +6210,10 @@ if (FALSE){
 
               #fluidRow(
               column(width = 4,
-                     h6('Load your ASCII or RSG raster or XY or CSV points formats. Then select the best CRS for your file, and hit the button "assign coords"
--Minimum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 Max-grid *Change to Max. value
--Maximum suitability value. This is automatically derived from the input file. To change it, type in a new value.
-
-                 ')),
-              column(width = 4, h5('Hallo')),
-              column(width = 4, h5('Hello'))
+                     h6('Load your ASCII or RSG raster or XY or CSV points formats. Then select the best CRS for your file, and hit the button "assign coords"'))
+              # ,
+              # column(width = 4, h5('Hallo')),
+              # column(width = 4, h5('Hello'))
               #)
             ) # close box
           ),
