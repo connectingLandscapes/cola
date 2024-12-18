@@ -96,10 +96,10 @@ if shpZones == 'None':
     csum.to_csv(table1, index=False)
     
     # Barplot
-    ax = csum.plot.bar(x='Scenario', y='lccsum', rot=0, color="darkblue", title="Corridor Movement Potential", fontsize=16)
-    ax.title.set_size(16)
-    ax.xaxis.label.set_size(16)
-    ax.set_ylabel('Corridor Sum', fontsize=16)
+    ax = csum.plot.bar(x='Scenario', y='lccsum', rot=0, color="darkblue", title="Corridor Movement Potential", fontsize=18)
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(18)
+    ax.set_ylabel('Corridor Sum', fontsize=18)
     ax.get_legend().remove()
     fig = ax.get_figure()
     plt.gcf().set_size_inches(6, 5)
@@ -114,8 +114,8 @@ if shpZones == 'None':
     # Drop first row from original dataframe
     csum = csum.drop([0])
     
-    # Calculate basesum/scenario ratio
-    csum['lcccomp'] = csum['lccsum']/basesum*100
+    # Calculate basesum/scenario ratio then subtract 100 for percent change
+    csum['lcccomp'] = (csum['lccsum']/basesum*100)-100
     
     # Drop lccsum
     csum = csum.drop('lccsum', axis=1)
@@ -124,14 +124,13 @@ if shpZones == 'None':
     csum.to_csv(table2, index=False)
     
     # Barplot
-    ax = csum.plot.bar(x='Scenario', y='lcccomp', rot=0, color="darkblue", title="Corridor Movement Scenario Comparison", fontsize=16)
-    ax.title.set_size(16)
-    ax.xaxis.label.set_size(16)
-    ax.set_ylabel('% of Baseline', fontsize=16)
-    #ax.text(0, 0, "{:.2f}".format(99.921600))
-    for p in ax.patches:
-        #ax.annotate(str(p.get_height()), (p.get_x() * 1.005, p.get_height() * 1.005))
-        ax.annotate("{:.2f}".format(p.get_height()), ((p.get_x() + p.get_width()/2.75), p.get_height() * 1.005))
+    ax = csum.plot.bar(x='Scenario', y='lcccomp', rot=0, color="darkblue", title="Corridor Movement Comparison", fontsize=16)
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(18)
+    ax.set_ylabel('% Change Relative to Baseline', fontsize=18)
+    # Bar labels
+    ax.bar_label(ax.containers[0], fmt=lambda x: f'{x:.2f}', fontsize=18, label_type='edge')
+    ax.margins(y=0.1)
     ax.get_legend().remove()
     fig = ax.get_figure()
     plt.gcf().set_size_inches(6, 5)
@@ -209,10 +208,10 @@ else:
     pivot_df.to_csv(table1, index=True)
     
     # Barplot
-    ax = pivot_df.plot.bar(rot=0, title="Corridor Movement Potential", fontsize=16)
-    ax.title.set_size(16)
-    ax.xaxis.label.set_size(16)
-    ax.set_ylabel('Corridor Sum', fontsize=16)
+    ax = pivot_df.plot.bar(rot=0, title="Corridor Movement Potential", fontsize=18)
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(18)
+    ax.set_ylabel('Corridor Sum', fontsize=18)
     #ax.get_legend().remove()
     ax.legend(loc='upper center', bbox_to_anchor=(1.05, 1.05),
           ncol=1, fancybox=True, shadow=True)
@@ -229,21 +228,20 @@ else:
     # Drop first row from original dataframe
     pivot_df = pivot_df.drop(['S0'])
     pivot_df = pivot_df.T
-    pivot_df = pivot_df.divide(basesum, axis=0)*100
+    pivot_df = (pivot_df.divide(basesum, axis=0)*100)-100
     pivot_df = pivot_df.T
 
     # Write to file
     pivot_df.to_csv(table2, index=True)
     
     # Barplot
-    ax = pivot_df.plot.bar(rot=0, title="Corridor Movement Scenario Comparison", fontsize=16, color=colormaps['tab20'].colors)
-    ax.title.set_size(16)
-    ax.xaxis.label.set_size(16)
-    ax.set_ylabel('% of Baseline', fontsize=16)
-    for p in ax.patches:
-        if p.get_height() != 100:
-            #ax.annotate(str(p.get_height()), (p.get_x() * 1.005, p.get_height() * 1.005))
-            ax.annotate("{:.3f}".format(p.get_height()), ((p.get_x() + p.get_width()/2.75), p.get_height() * 1.005))
+    ax = pivot_df.plot.bar(rot=0, title="Corridor Movement Comparison", fontsize=18, color=colormaps['tab20'].colors)
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(18)
+    ax.set_ylabel('% Change Relative to Baseline', fontsize=18)
+    # Bar labels
+    ax.bar_label(ax.containers[0], fmt=lambda x: f'{x:.2f}', fontsize=18, label_type='edge')
+    ax.margins(y=0.1)
     #ax.get_legend().remove()
     ax.legend(loc='upper center', bbox_to_anchor=(1.05, 1.05),
           ncol=1, fancybox=True, shadow=True)
