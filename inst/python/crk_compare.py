@@ -96,7 +96,8 @@ if shpZones == 'None':
     csum.to_csv(table1, index=False)
     
     # Barplot
-    ax = csum.plot.bar(x='Scenario', y='crksum', rot=0, color="darkblue", title="Core Movement Potential", fontsize=18)
+    colors = ['#440154FF' if value == 'S0' else '#0072B5FF' for value in csum['Scenario']]
+    ax = csum.plot.bar(x='Scenario', y='crksum', rot=0, color=colors, title="Core Movement Potential", fontsize=18)
     ax.title.set_size(18)
     ax.xaxis.label.set_size(18)
     ax.set_ylabel('Kernel Sum', fontsize=18)
@@ -124,7 +125,8 @@ if shpZones == 'None':
     csum.to_csv(table2, index=False)
     
     # Barplot
-    ax = csum.plot.bar(x='Scenario', y='crkcomp', rot=0, color="darkblue", title="Core Movement Comparison", fontsize=16)
+    colors = ['#BC3C29FF' if value < 0 else '#0072B5FF' for value in csum['crkcomp']]
+    ax = csum.plot.bar(x='Scenario', y='crkcomp', rot=0, color=colors, title="Core Movement Comparison", fontsize=16)
     ax.title.set_size(18)
     ax.xaxis.label.set_size(18)
     ax.set_ylabel('% Change Relative to Baseline', fontsize=18)
