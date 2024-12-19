@@ -1,12 +1,11 @@
 Package: cola
 Type: Package
-Title: Connecting landscapes
-Version: 0.1.0
+Title: Connecting Landscapes
+Version: 1.0.1
 Author: Ivan Gonzalez & Patrick Jantz
 Maintainer: Ivan Gonzalez <gonzalezgarzonivan@gmail.com>
 Description: Set of tools for creating corridors, nodes, and others landscape
-    connectivity procedures. Also provides a dashboard for running all the tools
-    Use four spaces when indenting paragraphs within the Description.
+    connectivity procedures. Also provides a dashboard for running all the tools under a graphical user interface.    
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
