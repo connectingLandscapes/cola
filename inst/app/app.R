@@ -105,7 +105,7 @@
   (py <- Sys.getenv("COLA_PYTHON_PATH"))
   # Sys.getenv("COLA_SCRIPTS_PATH")
 
-  devug <<- TRUE
+  devug <<- FALSE
 
   (showcasePath <<- base::paste0(rootPath, '/sampledata')); dir.exists(showcasePath)
 
@@ -1656,10 +1656,10 @@ server <- function(input, output, session) {
 
     ## no params provided
     if (is.null(rv$data)){
-      print(' // No existing CDPOP invars')
+      cat(' // No existing CDPOP invars\n')
       cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
     } else {
-      print(' // Existing CDPOP invars')
+      cat(' // Existing CDPOP invars\n')
       cdpop_invars <- as.data.frame(t(rv$data))
       colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
     }
@@ -1822,11 +1822,11 @@ server <- function(input, output, session) {
                                      method = 'thin_plate_spline',
                                      neighbors = 'all', crs = 'None')
 
-          print(' --- densMap ')
-          print(densMap)
-
-          print(' --- struMap ')
-          print(struMap)
+          # print(' --- densMap ')
+          # print(densMap)
+          #
+          # print(' --- struMap ')
+          # print(struMap)
 
           rv$struRA <- struRA <- rast(struMap$newFiles[1])
           rv$struRB <- struRB <- rast(struMap$newFiles[2])
@@ -3123,7 +3123,7 @@ server <- function(input, output, session) {
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$distPy_sessID', 'outcdmat') # _____________
 
       rv$log <- paste0(rv$log, '\nGenerating matrix - ');updateVTEXT(rv$log) # _______
-      Sys.sleep(1)
+      #Sys.sleep(1)
       tStartMat <- Sys.time()
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
@@ -3135,7 +3135,7 @@ server <- function(input, output, session) {
 
 
       if(file.exists(outcdmat)){
-        if(devug) {print(' CDMatrix done')}
+        if(devug) {cat(' CDMatrix done \n')}
         #outcdmat <- 'C:/cola//colaWHJ2024121817582505//out_cdmatrix_UCJ2024121818093405.csv'
 
         rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
@@ -4234,8 +4234,8 @@ server <- function(input, output, session) {
 
           csvAbs <- read.csv(outComCsvAbs)
           csvAbs$val <- csvAbs[, 2]
-          csvAbs$col <- '#482173FF'
-          csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
+          csvAbs$col <- "#0072B5FF"
+          #csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
           csvAbs$col[1] <- '#482173FF'
 
           csvRel <- read.csv(outComCsvRel)
@@ -5229,7 +5229,7 @@ if (FALSE){
               bsTooltip(id = 'name_sur', title = 'Name of the output'),
               bsTooltip(id = 'h2r', title = 'Run the function'),
               bsTooltip(id = 'tifDwn', title = 'Download TIF raster layer'),
-              bsTooltip(id = 'h2rsample', title = 'Load sample data from Ash et al., in review, 2020, 2022'),
+              bsTooltip(id = 'h2rsample', title = 'Load sample data from Hearn et al. 2018. Biol. Conserv. 222(2018), 232-240. '),
               bsTooltip(id = 'in_sur_tif', title = 'Load habitat suitability georreferenced raster. Not LonLat projection allowed'),
               bsTooltip(id = 'in_edi_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
               bsTooltip(id = 'in_edi_shp', title = 'Load polygon for editing your surface resistance'),
