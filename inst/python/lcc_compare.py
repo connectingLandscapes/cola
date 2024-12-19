@@ -125,7 +125,7 @@ if shpZones == 'None':
     csum.to_csv(table2, index=False)
     
     # Barplot
-    colors = ['#BC3C29FF' if value < 0 else '#0072B5FF' for value in csum['crkcomp']]
+    colors = ['#BC3C29FF' if value < 0 else '#0072B5FF' for value in csum['lcccomp']]
     ax = csum.plot.bar(x='Scenario', y='lcccomp', rot=0, color=colors, title="Corridor Movement Comparison", fontsize=16)
     ax.title.set_size(18)
     ax.xaxis.label.set_size(18)
