@@ -66,7 +66,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (cmd_inter <- paste0(py, ' ', pyscript, ' ',
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
-                       method, ' ', neighbors, ' ', crs))
+                       method, ' ', neighbors, ' ', crs, '> cdpop_mapstruct.txt'))
   cat('\n\tCMD interpol: \n')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
@@ -83,7 +83,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
                              newFiles, NA),
                newFiles = newFiles,
-               log =  intCMD) )
+               log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
 }
 
 
@@ -116,11 +116,14 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   if( !type %in% c('count', 'density')){
     stop('Not valid output: count or density')
   }
+  logname <- paste0(tools::file_path_sans_ext(template), '_cdpop_mapdensity.txt')
   ### Create CMD
   (cmd_inter <- paste0(py, ' ', pyscript, ' ',
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
-                       method, ' ', bandwidths, ' ', type, ' ', crs))
+                       method, ' ', bandwidths, ' ', type, ' ', crs, ' > ',
+                       logname)
+
   cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
@@ -134,7 +137,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                    list.files(path = dirname(grids), full.names = TRUE))
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -193,6 +196,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   datapath <- tempFolder # datapath = tempFolder
   timeMarkCDPOP <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE))
   (cdpopPath <- paste0(prefix, '__')) # timeMarkCDPOP
+  logname <- paste0(tools::file_path_sans_ext(prefix), '_cdpop.txt')
 
   # inputvars <- read.csv('invars.csv')
   # agevars <- read.csv('age.csv')
@@ -213,7 +217,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE)
 
 
-  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath))
+  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath, ' > ', logname))
   cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
 
@@ -221,7 +225,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
-  ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath)
+  ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath,
+                  log =  paste0(intCMD, ' -- ', read.delim(logname)) )
   return(ans2ret)
 
   # (gridFiles <- grep(pattern = '/grid.+csv$', x = newFiles, value = TRUE))
@@ -442,7 +447,6 @@ adaptFilePath <- function(path){
 #' @param prj string. Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
-#'
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
 #' srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 #' hs_rast <- terra::rast(hs)
@@ -467,6 +471,8 @@ s2res_py <- function(intif, outtif,
     nodata <- guessNoData(intif)
   }
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
   ## Create CMD
   (cmd_s2res <- paste0(py, ' ', pyscript, ' ',
                        intif, ' ', outtif, ' ',
@@ -475,7 +481,7 @@ s2res_py <- function(intif, outtif,
                        format(maxout, scientific=F), ' ',
                        format(shape, scientific=F), ' ',
                        format(nodata, scientific=F), ' ',
-                       prj))
+                       prj, '> ', logfile))
 
   cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
@@ -485,7 +491,7 @@ s2res_py <- function(intif, outtif,
                              intern = TRUE, ignore.stdout = TRUE),
                      error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 #' @title  Create random points
@@ -554,18 +560,22 @@ points_py <- function(intif, outshp,
   # smax =  95
   # npoints = 50
   # pyscript <- system.file(package = 'cola', 'python/create_source_points.py'
+
+  logname <- paste0(tools::file_path_sans_ext(outshp), '.txt')
+
+
   (cmd_pts <- paste0(py, ' ', pyscript, ' ', intif, ' ', outshp, ' ',
                      format(smin, scientific=F), ' ',
                      format(smax, scientific=F), ' ',
                      format(npoints, scientific=F), ' ',
-                     issuit, ' ', upcrs))
+                     issuit, ' ', upcrs, ' > ', logname))
   cat('\n\tCMD Points: \n')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 
 }
 
@@ -611,12 +621,13 @@ cdmat_py <- function(inshp, intif, outcsv,
   # intif =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_surface_HWP2024070817115305.tif'
   # outcsv = '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_cdmatrix_KQI.csv'
   # maxdist = 100000; param5 = 1; param6 = 'None'
+  logname <- paste0(tools::file_path_sans_ext(outcsv), '.txt')
 
   # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ',
                        format(maxdist, scientific=F), ' ',
-                       ncores, ' ', crs))
+                       ncores, ' ', crs, ' > ', logname))
 
   cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
@@ -627,7 +638,7 @@ cdmat_py <- function(inshp, intif, outcsv,
 
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
 }
 
 
@@ -658,6 +669,7 @@ lcc_py <- function(inshp, intif, outtif,
   # if(is.null(param8)){
   #   param8 <- guessNoData(intif)
   # }
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
                      inshp, ' ', intif, ' ', outtif, ' ',
@@ -665,7 +677,7 @@ lcc_py <- function(inshp, intif, outtif,
                      format(smooth, scientific=F), ' ',
                      format(tolerance, scientific=F), " ",
                      format(ncores, scientific=F), " ",
-                     crs))
+                     crs, ' > ', logname))
   cat('\n\tCMD LCC: \n')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
@@ -673,7 +685,7 @@ lcc_py <- function(inshp, intif, outtif,
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -717,6 +729,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
   h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
   h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(maxdist, scientific=F), ' ',
                      format(smooth, scientific=F), ' ',
@@ -725,8 +739,9 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      crs, " ",
                      h5file1, " ",
                      h5file2, " ",
-                     '50'
+                     '50', ' > ', logname
   ))
+
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n\tCMD LCC:\n', cmd_lcc)
   cat('\n')
@@ -734,7 +749,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -781,6 +796,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
   h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
                      inshp, ' ', intif, ' ', outtif, ' ',
@@ -791,7 +807,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
                      crs, " ",
                      h5file1, " ",
                      h5file2, " ",
-                     maxram
+                     maxram, ' > ', logname
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n\tCMD LCC joblib:\n', cmd_lcc)
@@ -800,7 +816,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -831,13 +847,15 @@ crk_py <- function(inshp, intif, outtif,
   # [7] cores
   # [8] proj
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
   (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
                      format(maxdist, scientific=F), ' ', # [4] distance threshold
                      format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
                      transf, ' ', #
                      format(volume, scientific=F), ' ', # [6] kernel volume
                      format(ncores, scientific=F), ' ', # [7] cores
-                     crs) # [8] proj
+                     crs, ' > ', logname) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
   cat('\n\tCMD Kernel:\n',cmd_crk)
@@ -845,7 +863,7 @@ crk_py <- function(inshp, intif, outtif,
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -914,6 +932,9 @@ pri_py <- function(tif, incrk, inlcc,
   # outshp <- '/data/temp/LA2024011522400305file1a50376cab710d//out_pri_EX2024011522411005file1a5037c8aef66.shp'
   # outtif <- '/data/temp/LA2024011522400305file1a50376cab710d//out_pri_EX2024011522411005file1a5037c8aef66.tif'
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
+
   (cmd_prio <- paste0(py, ' ',
                       pyscript, ' ',
                       tif, ' ',
@@ -925,7 +946,7 @@ pri_py <- function(tif, incrk, inlcc,
                       outtifpatch, ' ',
                       outtif, ' ',
                       format(threshold, scientific=F), " ",
-                      format(tolerance, scientific=F)))
+                      format(tolerance, scientific=F)), ' > ', logname)
 
 
   cat('\n\tCMD prio: \n')
@@ -938,7 +959,7 @@ pri_py <- function(tif, incrk, inlcc,
   return(
     list(tif = ifelse(file.exists(outtif), outtif, NA),
          shp = ifelse(file.exists(outshppoint), outshppoint, NA),
-         log = intCMD)
+         log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
   )
 }
 
@@ -977,6 +998,8 @@ crk_compare_py <- function(intif, intifs,
   # [5] out folder with pairwise comparisson
   # [6] shapefile to regionalize
   # [7] shapefile attribute/column name to aggregate
+  logname <- paste0(tools::file_path_sans_ext(outfolder), '.txt')
+
   dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
 
   (cmd_crk_comp <- paste0(py, ' ', pyscript, ' ',
@@ -986,7 +1009,7 @@ crk_compare_py <- function(intif, intifs,
                           outpngabs, ' ',
                           outpngrel, ' ',
                           outfolder, ' ',
-                          inshp, ' ', shpfield)
+                          inshp, ' ', shpfield, ' > ', logname)
   )
   cat('\n\tCMD Compare CRK: \n')
   cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
@@ -995,7 +1018,7 @@ crk_compare_py <- function(intif, intifs,
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE, ignore.stdout = TRUE),
                      error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 #' @title  Compare maps of least cost paths
@@ -1033,6 +1056,8 @@ lcc_compare_py <- function(intif, intifs,
   # [6] shapefile to regionalize
   # [7] shapefile attribute/column name to aggregate
   dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
+  logname <- paste0(tools::file_path_sans_ext(outfolder), '.txt')
+
 
   (cmd_lcc_comp <- paste0(py, ' ', pyscript, ' ',
                           intif, ' ', intifs, ' ',
@@ -1041,7 +1066,7 @@ lcc_compare_py <- function(intif, intifs,
                           outpngabs, ' ',
                           outpngrel, ' ',
                           outfolder, ' ',
-                          inshp, ' ', shpfield)
+                          inshp, ' ', shpfield, ' > ', logname)
   )
   cat('\n\tCMD Comp LCC: \n ')
   cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
@@ -1049,7 +1074,7 @@ lcc_compare_py <- function(intif, intifs,
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
-               log =  intCMD) )
+               log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -1112,21 +1137,25 @@ burnShp <- function(polPath, burnval = 'val2burn',
 
   if( colu ) {
     print(' Add vals -- column')
+    err <- tryCatch(
     gdalUtilities::gdal_rasterize(
       src_datasource = polPath,
       at = att,
       dst_filename = rasterizedPath,
       add = TRUE,
       a = burnval) #as.numeric(burnval)
+    , error = function(e) e)
 
   } else {
     print(' Add vals -- value')
+    err <- tryCatch(
     gdalUtilities::gdal_rasterize(
       src_datasource = polPath,
       at = att,
       dst_filename = rasterizedPath,
       add = TRUE,
       burn = burnval) #as.numeric(burnval)
+    , error = function(e) e)
   }
 
 
@@ -1212,36 +1241,44 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   ## Rasterize polygons
   rastExtent <- as.character(as.vector(terra::ext(rtp))[c('xmin', 'ymin', 'xmax', 'ymax')])
 
-  cat(' --- GdalRasterize: \n ++ te:', rastExtent)
-  cat('\n ++ tr ', rastRes)
-  cat('\n ++ ts ', ts)
-  cat('\n ++ polPath ', polPath)
-  cat('\n ++ rasterizedPath ', rasterizedPath)
-  cat('\n ++ burnval ', burnval)
+  # cat(' --- GdalRasterize: \n ++ te:', rastExtent)
+  # cat('\n ++ tr ', rastRes)
+  # cat('\n ++ ts ', ts)
+  # cat('\n ++ polPath ', polPath)
+  # cat('\n ++ rasterizedPath ', rasterizedPath)
+  # cat('\n ++ burnval ', burnval)
 
   if (colu){
     ## Use a column/attribute
-    gdalUtilities::gdal_rasterize(
-      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-      tr = rastRes,
-      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
-      src_datasource = polPath,
-      at = att,
-      dst_filename = rasterizedPath,
-      add = FALSE,
-      a = burnval) #as.numeric(burnval)
+    err <- tryCatch(
+      gdalUtilities::gdal_rasterize(
+        te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+        tr = rastRes,
+        ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+        src_datasource = polPath,
+        at = att,
+        dst_filename = rasterizedPath,
+        add = FALSE,
+        a = burnval) #as.numeric(burnval)
+      , error = function(e) e)
   } else{
     ## Use a single value
-    gdalUtilities::gdal_rasterize(
-      te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-      tr = rastRes,
-      ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
-      src_datasource = polPath,
-      at = att,
-      dst_filename = rasterizedPath,
-      add = FALSE,
-      burn = burnval) #as.numeric(burnval)
+    err <- tryCatch(
+      gdalUtilities::gdal_rasterize(
+        te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
+        tr = rastRes,
+        ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
+        src_datasource = polPath,
+        at = att,
+        dst_filename = rasterizedPath,
+        add = FALSE,
+        burn = burnval) #as.numeric(burnval)
+      , error = function(e) e)
   }
+
+  g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
+  cat(g2)
+
 
   #rft <- rast(rasterizedPath); plot(rft)
 
