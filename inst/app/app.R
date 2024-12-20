@@ -3397,10 +3397,8 @@ server <- function(input, output, session) {
     }
     #pdebug(devug=devug, ... = 'condDist') # _____________
 
-    if(is.null(rv$inLccSessID)){
       (inLccSessID <<- sessionIDgen())
       rv$inLccSessID <- inLccSessID
-    }
 
 
     if( condDist == 1){
@@ -4296,6 +4294,7 @@ server <- function(input, output, session) {
           papalette <- 'RdBu'
           #com_rng2 <- c(-1, -5)
           print(com_rng2)
+          com_rng2[!is.infinite(com_rng2)] <- 0
           if( any ( com_rng2 < 0) &  any(com_rng2 > 0 ) ) {
             com_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
             papalette <- 'RdBu'
