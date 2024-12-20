@@ -217,6 +217,7 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = TRUE, ask = TRUE,
+                        dss = FALSE,
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
@@ -707,7 +708,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         file.copy(renv, file.path(home, ".Renviron_backup"), overwrite = TRUE)
       }
 
-      if (!file.exists(renv)) {
+      if ( !file.exists(renv) ) {
         file.create(renv)
       }
 
@@ -755,28 +756,28 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       Renviron[posB] <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
 
       pos <- grep('COLA_DATA_PATH', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_DATA_PATH='
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DATA_PATH='}
 
       pos <- grep('COLA_NCORES', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_NCORES=1'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_NCORES=1'}
 
       pos <- grep('COLA_DSS_UPL_MB', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_DSS_UPL_MB=250'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DSS_UPL_MB=250'}
 
       pos <- grep('COLA_VIZ_THRES_PIX', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_THRES_PIX=1000000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_THRES_PIX=1000000'}
 
       pos <- grep('COLA_VIZ_RES_NCOL', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_RES_NCOL=1000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NCOL=1000'}
 
       pos <- grep('COLA_VIZ_RES_NROW', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_RES_NROW=1000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NROW=1000'}
 
 
       #cat(Renviron, sep = '\n')
@@ -785,7 +786,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
-
+      if(dss){
+        ## Step4. Set paths ----------------------------------------------
+        cat (sep = '', '  + Extra step   Installing DSS GUI\n')
+        cola::setup_cola_dss()
+      }
 
       cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n\tPlease restart R to update the new settings\n')
 

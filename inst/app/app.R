@@ -4142,8 +4142,8 @@ server <- function(input, output, session) {
                                  'Corridors' = 'out_lcc_.+.tif$')
     layer_type_compare2 <<- layer_type_compare
     # tempFolder <- '/data/tempR//colaGPW2024100117131905';
-    # tempFolder <- 'C:/temp/cola/colaTPC2024111903213605';
-    # layer_type_compare <- 'out_crk_.+.tif$'
+    # tempFolder <- 'C:/tempR/RtmpqMdjZ4/colaFYJ2024122012523105';
+    # layer_type_compare <- 'out_lcc_.+.tif$'
     (avail_layers <- list.files(path = tempFolder,
                                 pattern = layer_type_compare,
                                 full.names = TRUE))
@@ -4165,6 +4165,7 @@ server <- function(input, output, session) {
     }
 
     (outComFolder <- paste0(tempFolder, '/comp', prefcomp, compID))
+    # outComFolder <- 'C:/tempR/RtmpqMdjZ4/colaFYJ2024122012523105/comp_lcc_RIJ2024122012555405'
 
     rv$comFolder <- outComFolder
     (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
@@ -4253,7 +4254,7 @@ server <- function(input, output, session) {
 
           output$png2 <- renderImage({
             list(src = outComPngRel, contentType = 'image/png', width = 400, height = 300,
-                 alt = "Absolute values")
+                 alt = "Relative values")
           }, deleteFile = TRUE)
 
 
@@ -4293,8 +4294,10 @@ server <- function(input, output, session) {
 
           papalette <- 'RdBu'
           #com_rng2 <- c(-1, -5)
-          print(com_rng2)
-          com_rng2[!is.infinite(com_rng2)] <- 0
+          #print(com_rng2)
+          com_rng2[is.infinite(com_rng2)] <- 0
+          rrev <- FALSE
+
           if( any ( com_rng2 < 0) &  any(com_rng2 > 0 ) ) {
             com_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
             papalette <- 'RdBu'
