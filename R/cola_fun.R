@@ -481,7 +481,7 @@ s2res_py <- function(intif, outtif,
                        format(maxout, scientific=F), ' ',
                        format(shape, scientific=F), ' ',
                        format(nodata, scientific=F), ' ',
-                       prj, '> ', logfile))
+                       prj, '> ', logname))
 
   cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
