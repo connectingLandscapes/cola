@@ -122,7 +122,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', bandwidths, ' ', type, ' ', crs, ' > ',
-                       logname)
+                       logname))
 
   cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
@@ -946,7 +946,7 @@ pri_py <- function(tif, incrk, inlcc,
                       outtifpatch, ' ',
                       outtif, ' ',
                       format(threshold, scientific=F), " ",
-                      format(tolerance, scientific=F)), ' > ', logname)
+                      format(tolerance, scientific=F), ' > ', logname))
 
 
   cat('\n\tCMD prio: \n')
@@ -954,12 +954,16 @@ pri_py <- function(tif, incrk, inlcc,
   cat('\n')
 
 
-  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_prio, intern = TRUE, ignore.stdout = TRUE),
+                     error = function(e) e$message)
+
+  cat('\n\tlog CMD prio: \n')
   print(intCMD)
   return(
     list(tif = ifelse(file.exists(outtif), outtif, NA),
          shp = ifelse(file.exists(outshppoint), outshppoint, NA),
-         log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+         log =  paste0(intCMD, ' -- ', read.delim(logname))
+    )
   )
 }
 
@@ -1276,6 +1280,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
       , error = function(e) e)
   }
 
+  # rasterizedPath <- 'C:/cola/colaGLO2024121820390005/out_crk_EGL2024121820455305.tif'
   g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
   cat(g2)
 
