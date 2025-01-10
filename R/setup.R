@@ -712,8 +712,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         file.create(renv)
       }
 
-
-      origRenviron <- readLines(renv)
+      {
       # if( !any(grep('COLA_PYTHON_PATH', origRenviron)) ){
       #
       #   ## Readfile
@@ -743,8 +742,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       #
       # } else {
       # }
+      }
 
-
+      origRenviron <- readLines(renv)
       Renviron <- origRenviron
 
       posA <- grep('COLA_PYTHON_PATH', Renviron)
@@ -754,6 +754,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       posB <- grep('COLA_SCRIPTS_PATH', Renviron)
       (posB <- ifelse(length(posB) == 0, length(Renviron) + 1, posB))
       Renviron[posB] <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
+
+
 
       pos <- grep('COLA_DATA_PATH', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))

@@ -485,7 +485,8 @@ s2res_py <- function(intif, outtif,
                        format(maxout, scientific=F), ' ',
                        format(shape, scientific=F), ' ',
                        format(nodata, scientific=F), ' ',
-                       prj, ' > ', logname))
+                       prj# , ' > ', logname
+                       ))
 
   cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
@@ -494,6 +495,7 @@ s2res_py <- function(intif, outtif,
   intCMD <- tryCatch(shell( cmd_s2res ,
                             intern = TRUE, ignore.stdout = TRUE),
                      error = function(e) e$message)
+
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
