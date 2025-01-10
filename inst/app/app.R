@@ -2096,9 +2096,9 @@ server <- function(input, output, session) {
         #rng_newtif <- c(newtif@data@min, newtif@data@max)
         rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
 
-        updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
+        updateTextInput(session, inputId = "in_sur_3",
+                        value = max(rv$hs_rng[1], 0, na.rm = TRUE))
         updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
-
 
         rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
                                                      domain = rng_newtif, na.color = "transparent")
