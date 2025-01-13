@@ -504,8 +504,8 @@ server <- function(input, output, session) {
         gdalUtilities::gdalwarp(srcfile = rastPath,
                                 ts = c(options('COLA_VIZ_RES_NCOL'), options('COLA_VIZ_RES_NROW')),
                                 dstfile = resamPath)
-        print(paste(' ---- >>>> Resampling to ',
-                    options('COLA_VIZ_RES_NCOL'),' - ', options('COLA_VIZ_RES_NROW')))
+        cat(paste(' ---- >>>> Resampling to ',
+                    options('COLA_VIZ_RES_NCOL'),' - ', options('COLA_VIZ_RES_NROW'), '\n'))
       }
       #}
       return(resamPath)
@@ -2144,6 +2144,9 @@ server <- function(input, output, session) {
                                         shape = as.numeric(input$in_sur_6),
                                         nodata = in_sur_7,
                                         prj = 'None'), error = function(e) list(err = e, file = ''))
+        cat("\n --- Surf. resistance out:\n")
+        print(hs2rs_file)
+
 
         if(!is.na(hs2rs_file$file)){
 
@@ -2887,6 +2890,9 @@ server <- function(input, output, session) {
                                           smax = as.numeric(input$in_points_4),
                                           npoints = as.numeric(input$in_points_5),
                                           issuit = 'No'), error = function(e) list(err = e, file = ''))
+        cat("\n --- Points out: \n")
+        print(points_file)
+
       }
 
       if(in_points_ly == 'HabitatSuitability'){
@@ -2902,6 +2908,9 @@ server <- function(input, output, session) {
                                           npoints = as.numeric(input$in_points_5),
                                           issuit = 'Yes'
         ), error = function(e) list(err = e, file = ''))
+      cat("\n --- Points out: \n")
+      print(points_file)
+
       }
 
       # inPts <<- switch (in_points_ly,
@@ -3131,8 +3140,11 @@ server <- function(input, output, session) {
       tStartMat <- Sys.time()
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
-      cdmat_file <- cdmat_py (py = py, inshp = rv$pts, intif = rv$tif,
+      cdmat_file <- cdmat_py(py = py, inshp = rv$pts, intif = rv$tif,
                               outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
+      cat("\n --- CDM Matrix out:")
+      print(cdmat_file)
+
       rv$cdm <- cdmat_file$file
       tElapMat <- Sys.time() - tStartMat
       textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
@@ -3352,6 +3364,9 @@ server <- function(input, output, session) {
                                    smooth = as.numeric(input$in_lcc_5),
                                    tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
 
+        cat("\n --- LCC out:\n")
+        print(out_lcc)
+
         # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
 
         tElapLcc <- Sys.time() - tStartLcc
@@ -3421,6 +3436,9 @@ server <- function(input, output, session) {
                                          maxdist = as.numeric(input$in_lcc_4),
                                          smooth = as.numeric(input$in_lcc_5),
                                          tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
+        cat("\n --- LCC out:\n")
+        print(out_lcc)
+
 
         tElapLcc <- Sys.time() - tStartLcc
         textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
@@ -3609,6 +3627,9 @@ server <- function(input, output, session) {
                                     volume = as.numeric(input$in_crk_6)), error = function(e) list(err = e, file = ''))
         #out_crk_no_data <- gdal_nodata
 
+        cat("\n --- CRK out:\n")
+        print(out_crk)
+
         tElapCrk <- Sys.time() - tStartCrk
         textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
 
@@ -3681,7 +3702,7 @@ server <- function(input, output, session) {
             ## Refresh prio tab
             rv$crk2s <- resampIfNeeded(rv$crk)
             rv$crk2s_sp <- terra::rast(rv$crk2s)
-            cat('adding CRK for prio:', rv$crk2s, '\n')
+            # cat('adding CRK for prio:', rv$crk2s, '\n')
 
             bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
 
@@ -3719,11 +3740,9 @@ server <- function(input, output, session) {
         })
       )
     }
-
   })
 
   ####### > PRIORI ------------------
-
 
   observeEvent(input$in_pri_tif, {
     pdebug(devug=devug,
@@ -3760,17 +3779,13 @@ server <- function(input, output, session) {
     #rv$tif <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
     #rv$tif <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
 
-
     pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
-
 
     if (file.exists( rv$tif)){
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
       rv$tifready <- TRUE
 
-
       pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
-
 
       output$ll_map_pri <- leaflet::renderLeaflet({
 
@@ -3786,7 +3801,6 @@ server <- function(input, output, session) {
       })
     }
   })
-
 
   observeEvent(input$pri_slider, {
     if(rv$crkready){
@@ -3919,7 +3933,8 @@ server <- function(input, output, session) {
                                  threshold = as.numeric(input$in_pri_5), # 0.5
                                  tolerance = as.numeric(input$in_lcc_6)),  error = function(e) list(log = as.character(e), file = '', shp = NA))
       ## missing threshold and 8 by user
-
+      cat("\n --- Prio out:\n")
+      print(out_pri)
 
       #out_crk_no_data <- gdal_nodata
 
@@ -4218,6 +4233,9 @@ server <- function(input, output, session) {
                            outfolder = outComFolder,
                            inshp = inCompShp,
                            shpfield = inCompShpField), error = function(e) NULL)
+          cat("\n --- LCC Compare out:\n")
+          print(comp_out)
+
 
         } else if(in_com_ly == 'Dispersal kernels'){
 
@@ -4231,17 +4249,21 @@ server <- function(input, output, session) {
                            outfolder = outComFolder,
                            inshp = inCompShp,
                            shpfield = inCompShpField), error = function(e) NULL)
+          cat("\n --- CRK Comp out:\n")
+          print(comp_out)
+
 
         }
+        com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
 
-        cat(" --- Comp out:")
-        print(comp_out)
+        # cat("\n --- Comp out:\n")
+        # print(comp_out)
 
         if (is.null(comp_out)){
 
           rv$log <- paste0(rv$log, ' -- Comparisson failed');
 
-        } else if (!is.null(comp_out)){
+        } else if (!is.null(comp_out) ){
           if(file.exists(comp_out$file)){
 
             output$ll_map_com <- leaflet::renderLeaflet({
@@ -5204,7 +5226,7 @@ if (FALSE){
           ),
 
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
-          shinydashboard::menuItem("Slides", tabName = "tab_pdf", icon = icon("file")),
+          shinydashboard::menuItem("App demo slides", tabName = "tab_pdf", icon = icon("file")),
           shinydashboard::menuItem("Run locally", tabName = "tab_local", icon = icon("code-fork"))
           #,
           #menuItem("Local paths", tabName = "tab_paths", icon = icon("python"))
@@ -5342,6 +5364,24 @@ if (FALSE){
                   )),
                 tabPanel(
                   "How it works",
+
+                  h3('The diagram of the DSS elements'),
+                  tags$div(
+                    class = "container",
+                    rowx(
+                      #col(6, htmlOutput('pdfviewer')),
+                      colx(6, tags$iframe(style="height:600px; width:100%",
+                                          #src="http://localhost/ressources/pdf/R-Intro.pdf"
+                                          #src="/home/shiny/connecting-landscapes/R/pdf_logoA.pdf"
+                                          src="diagram.pdf"
+                      )
+                      )
+                    )
+                  )
+                ),
+
+                tabPanel(
+                  "Users's manual",
                   # includeMarkdown(
                   #  system.file(package = 'cola', 'docs/md_use.md')
                   # )
@@ -5457,8 +5497,6 @@ if (FALSE){
               )
             )),
 
-
-
           #### UI HS 2 SR ----
           shinydashboard::tabItem(
             tabName = 'tab_surface',
@@ -5476,6 +5514,22 @@ if (FALSE){
 
             fluidRow(
               column(2,
+                     fluidRow(br(),
+                            tags$table(
+                              style = "width: 100%", align = "left",
+                              tags$tr(tags$td(style = "width: 25%", align = "center",
+                                              htmlOutput(outputId = 'out_par_surA', fill = TRUE))
+                              )),
+                            br(),
+                            br(),
+                            ),
+                     fluidRow(
+                            column(12,
+                              textInput("in_sur_7", "No Data:", '-9999')
+                     ))
+              ),
+
+              column(2,
                      textInput("in_sur_3", "Min. val:", '0'),
                      textInput("in_sur_4", "Max. val:", '100')
               ),
@@ -5484,23 +5538,16 @@ if (FALSE){
                      textInput("in_sur_6", "Shape:", '1')
               ),
 
-              column(6,
-                     fluidRow(
-                       column(3,
-                              textInput("in_sur_7", "No Data:", '-9999')
-                       ),
-                       column(6,
+
+              column(4,
+               #      fluidRow(
+                       # column(3,
+                       # ),
+                       # column(6,
                               selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
-                       ),
-                       column(3,
-                              tags$table(
-                                style = "width: 100%", align = "left",
-                                tags$tr(
-                                  tags$td(style = "width: 25%", align = "center",
-                                          htmlOutput(outputId = 'out_par_surA', fill = TRUE))
-                                ))
-                       ),
-                     ),
+                       # ),
+                     #)
+                     ,
                      textInput('name_sur', label = 'New layer name:', value = "", width = '100%', placeholder = 'NameOfNewLayertoCreate')
                      #tags$tr(tags$td(style = "width: 20%", align = "center",),
               ),
@@ -5604,6 +5651,7 @@ if (FALSE){
             # ),
 
             fluidPage(
+              column(2, tags$table(style = "width: 100%", align = "left", tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))),
               column(2,
                      h6(paste("Use a positive or negative single value other than 0.",
                               "Please remove existing polygons before running again. "))),
@@ -5617,13 +5665,6 @@ if (FALSE){
               column(1, actionButton("edi", HTML("Add vals"), icon = icon("play"))),
               column(1, actionButton("rpl", HTML("Replace vals"), icon = icon("play"))),
 
-              column(2,
-                     tags$table(
-                       style = "width: 100%", align = "left",
-                       tags$tr(
-                         tags$td(style = "width: 25%", align = "center",
-                                 htmlOutput(outputId = 'out_par_ediA', fill = TRUE)),
-                       ))),
               column(1, downloadButton('editifDwn', 'Download'))
 
             ),
@@ -5665,6 +5706,7 @@ if (FALSE){
             ),
 
             fluidPage(
+              column(1, htmlOutput(outputId = 'out_par_ptsA', fill = TRUE)),
               column(1, textInput("in_points_3", "Min-grid:", '2')),
               column(1, textInput("in_points_4", "Max-grid:", '95')),
               column(2, textInput("in_points_5", "# of points:", '50')),
@@ -5673,7 +5715,6 @@ if (FALSE){
                                   width = '100%', placeholder = 'Name new layer')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(1, htmlOutput(outputId = 'out_par_ptsA', fill = TRUE)),
               column(1, actionButton("points_py", "Create points", icon = icon("play"))),
               column(width = 1, br()),
               column(1, downloadButton('ptsDwn', 'Download'))
@@ -6185,10 +6226,9 @@ if (FALSE){
           shinydashboard::tabItem(
             tabName = 'tab_local',
 
+            h2(' Running this DSS locally'),
             tags$a(href="https://docs.google.com/presentation/d/1d2TgZGqDut8_HRP-xZnRnmA3W0OzP3-U/edit#slide=id.g3246e69e3fe_0_4",
                    "Check the latests installation slides!"),
-
-            h2(' Running this DSS locally'),
             #h6('  Comming soon ... stay tuned'),
             includeMarkdown(
               system.file(package = 'cola', 'docs/md_cola_install.md')

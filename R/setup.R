@@ -794,7 +794,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         cola::setup_cola_dss()
       }
 
-      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n\tPlease restart R to update the new settings\n')
+      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n',
+           '\tPlease restart R to update the new settings\n',
+           '\tCustomize your local parameteres on the file:\n',
+           '\t \tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))')
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")

@@ -1,4 +1,5 @@
 ############################ installing #################################
+detach("package:cola", unload=TRUE)
 .rs.restartR()
 remove.packages('cola')
 .rs.restartR()
@@ -7,7 +8,7 @@ library(devtools)
 .rs.restartR()
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
 
-su shiny; 
+su shiny;
 cd /home/shiny/cola; git pull
 R -e "devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')"
 sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
@@ -67,7 +68,7 @@ lcc_result <- lccJoblib_py(inshp = points_path, intif = hs_path, outtif = 'out_l
 
 plot(rast('out_lcc2.tif'))
 
-gdalUtilities::gdalwarp(srcfile = 'C:/Users/gonza/Downloads/clip_xsp_ext_tiger_resistance.tif', 
+gdalUtilities::gdalwarp(srcfile = 'C:/Users/gonza/Downloads/clip_xsp_ext_tiger_resistance.tif',
                         dstfile = 'C:/Users/gonza/Downloads/clip_xsp_ext_tiger_resistanceNodata.tif',
                         tr = c(250, 250),
                         srcnodata = 128,
@@ -80,14 +81,14 @@ gdalLog <- capture.output(gdalUtilities::gdalinfo(datasetname = 'out_crk_QKQ2024
 ansList <- list()
 del0 <- F
 for(n in 1:length(nbands)){ # n <- 1
-  
+
   (bucxml <- as.numeric(sub('buckets.+', '', grep('buckets ', gdalLog, value = TRUE)))[n])
   (minxml <- as.numeric(gsub('.+from | to.+', '', grep('buckets ', gdalLog, value = TRUE)) )[n] )
   (maxxml <- as.numeric(gsub('.+to |:', '', grep('buckets ', gdalLog, value = TRUE)))[n] )
-  (histxml <- as.numeric(strsplit(split = '[[:space:]]', gsub("^ |^  ", "", 
+  (histxml <- as.numeric(strsplit(split = '[[:space:]]', gsub("^ |^  ", "",
                                                               gdalLog[grep('buckets', gdalLog)[n]+1]
   ))[[1]]))
-  
+
   labs <- seq(from = minxml, to = maxxml, length.out = bucxml)
   # length(histxml)
   xdf <- unique(diff(labs))[1]
@@ -95,16 +96,16 @@ for(n in 1:length(nbands)){ # n <- 1
                     nwlab = labs + xdf,
                     # nwlab = c(ceiling(labs[1]), round(labs[2:(bucxml-1)]), floor(labs[bucxml])),
                     val = histxml)
-  
-  
+
+
   hist2 <- aggregate(df2$val, by = list(df2$id), sum)
   result <- data.frame(id = hist2$Group.1, count = hist2$x, stringsAsFactors = FALSE)
-  
+
   ## Delete 0 count values
   if(del0){
     result <- subset(result, count > 0)
   }
-}  
+}
 
 
 library(terra)
