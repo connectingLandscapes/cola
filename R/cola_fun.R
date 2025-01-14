@@ -66,7 +66,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (cmd_inter <- paste0(py, ' ', pyscript, ' ',
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
-                       method, ' ', neighbors, ' ', crs, ' >cdpop_mapstruct.txt'))
+                       method, ' ', neighbors, ' ', crs, ' 2>&1'))
   cat('\n\tCMD interpol: \n')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
@@ -123,8 +123,9 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (cmd_inter <- paste0(py, ' ', pyscript, ' ',
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
-                       method, ' ', bandwidths, ' ', type, ' ', crs, ' > ',
-                       logname))
+                       method, ' ', bandwidths, ' ', type, ' ', crs
+                       , ' 2>&1 ' #, logname
+                       ))
 
   cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
@@ -220,7 +221,9 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE)
 
 
-  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath, ' > ', logname))
+  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath
+                 , ' 2>&1 ' #, logname
+                 ))
   cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
 
@@ -485,7 +488,8 @@ s2res_py <- function(intif, outtif,
                        format(maxout, scientific=F), ' ',
                        format(shape, scientific=F), ' ',
                        format(nodata, scientific=F), ' ',
-                       prj# , ' > ', logname
+                       prj
+                       , ' 2>&1 ' #, logname
                        ))
 
   cat('\n\tCMD Surface : \n')
@@ -574,7 +578,9 @@ points_py <- function(intif, outshp,
                      format(smin, scientific=F), ' ',
                      format(smax, scientific=F), ' ',
                      format(npoints, scientific=F), ' ',
-                     issuit, ' ', upcrs, ' > ', logname))
+                     issuit, ' ', upcrs
+                     , ' 2>&1 '# , logname
+                     ))
   cat('\n\tCMD Points: \n')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
@@ -635,7 +641,10 @@ cdmat_py <- function(inshp, intif, outcsv,
   (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
                        ' ',
                        format(maxdist, scientific=F), ' ',
-                       ncores, ' ', crs, ' > ', logname))
+                       ncores, ' ', crs
+                       , ' 2>&1 '
+                       # , logname
+                       ))
 
   cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
@@ -686,7 +695,10 @@ lcc_py <- function(inshp, intif, outtif,
                      format(smooth, scientific=F), ' ',
                      format(tolerance, scientific=F), " ",
                      format(ncores, scientific=F), " ",
-                     crs, ' > ', logname))
+                     crs
+                     , ' 2>&1 ' #, logname
+                     ))
+
   cat('\n\tCMD LCC: \n')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
@@ -749,8 +761,9 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      crs, " ",
                      h5file1, " ",
                      h5file2, " ",
-                     '50', ' > ', logname
-  ))
+                     '50'
+                     , ' 2>&1 ' #, logname
+                     ))
 
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n\tCMD LCC:\n', cmd_lcc)
@@ -818,7 +831,9 @@ lccJoblib_py <- function(inshp, intif, outtif,
                      crs, " ",
                      h5file1, " ",
                      h5file2, " ",
-                     maxram, ' > ', logname
+                     maxram
+                     , ' 2>&1 ' #, logname
+
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n\tCMD LCC joblib:\n', cmd_lcc)
@@ -867,7 +882,9 @@ crk_py <- function(inshp, intif, outtif,
                      transf, ' ', #
                      format(volume, scientific=F), ' ', # [6] kernel volume
                      format(ncores, scientific=F), ' ', # [7] cores
-                     crs, ' > ', logname) # [8] proj
+                     crs
+                     , ' 2>&1 ' #, logname
+                     ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
   cat('\n\tCMD Kernel:\n',cmd_crk)
@@ -959,7 +976,9 @@ pri_py <- function(tif, incrk, inlcc,
                       outtifpatch, ' ',
                       outtif, ' ',
                       format(threshold, scientific=F), " ",
-                      format(tolerance, scientific=F), ' > ', logname))
+                      format(tolerance, scientific=F)
+                      , ' 2>&1 ' #, logname
+                      ))
 
 
   cat('\n\tCMD prio: \n')
@@ -1025,7 +1044,9 @@ crk_compare_py <- function(intif, intifs,
                           outpngabs, ' ',
                           outpngrel, ' ',
                           outfolder, ' ',
-                          inshp, ' ', shpfield, ' > ', logname)
+                          inshp, ' ', shpfield
+                          , ' 2>&1 ' #, logname
+                          )
   )
   cat('\n\tCMD Compare CRK: \n')
   cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
@@ -1083,7 +1104,9 @@ lcc_compare_py <- function(intif, intifs,
                           outpngabs, ' ',
                           outpngrel, ' ',
                           outfolder, ' ',
-                          inshp, ' ', shpfield, ' > ', logname)
+                          inshp, ' ', shpfield
+                          , ' 2>&1 ' #, logname
+                          )
   )
   cat('\n\tCMD Comp LCC: \n ')
   cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
