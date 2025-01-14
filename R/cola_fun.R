@@ -73,7 +73,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
-  intCMD <- tryCatch(shell( cmd_inter ,
+  intCMD <- tryCatch(system( cmd_inter ,
                             intern = TRUE),
                      error = function(e) e$message)
   #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
@@ -131,7 +131,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   cat('\n')
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
-  intCMD <- tryCatch(shell( cmd_inter ,
+  intCMD <- tryCatch(system( cmd_inter ,
                             intern = TRUE),
                      error = function(e) e$message)
   #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
@@ -224,7 +224,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
 
-  CMDcp <- tryCatch(shell(cmd, intern = TRUE), error = function(e) NULL)
+  CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
@@ -492,7 +492,7 @@ s2res_py <- function(intif, outtif,
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
   cat('\n')
 
-  intCMD <- tryCatch(shell( cmd_s2res , intern = TRUE),
+  intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
                      error = function(e) e$message)
 
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
@@ -579,7 +579,7 @@ points_py <- function(intif, outshp,
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_pts, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -641,7 +641,7 @@ cdmat_py <- function(inshp, intif, outcsv,
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_cdmat, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
 
 
@@ -692,7 +692,7 @@ lcc_py <- function(inshp, intif, outtif,
   cat('\n')
 
 
-  intCMD <- tryCatch(shell(cmd_lcc, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -756,7 +756,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
   cat('\n\tCMD LCC:\n', cmd_lcc)
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_lcc, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -824,7 +824,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   cat('\n\tCMD LCC joblib:\n', cmd_lcc)
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_lcc, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -873,7 +873,7 @@ crk_py <- function(inshp, intif, outtif,
   cat('\n\tCMD Kernel:\n',cmd_crk)
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_crk, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -967,7 +967,7 @@ pri_py <- function(tif, incrk, inlcc,
   cat('\n')
 
 
-  intCMD <- tryCatch(shell(cmd_prio, intern = TRUE),
+  intCMD <- tryCatch(system(cmd_prio, intern = TRUE),
                      error = function(e) e$message)
 
   cat('\n\tlog CMD prio: \n')
@@ -1031,7 +1031,7 @@ crk_compare_py <- function(intif, intifs,
   cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_crk_comp, intern = TRUE),
+  intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
                      error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -1089,7 +1089,7 @@ lcc_compare_py <- function(intif, intifs,
   cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
   cat('\n')
 
-  intCMD <- tryCatch(shell(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
+  intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -1330,7 +1330,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
       #   out_gc <- (system(gc_cmd, intern = TRUE, show.output.on.console = TRUE))
       #
       #   (a <- system2(gc_cmd, timeout = 10, wait = TRUE))
-      #   (b <- shell(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
+      #   (b <- system(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
       # }
 
       # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'

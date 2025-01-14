@@ -1,6 +1,6 @@
 ## Description
 
-Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
+Simulates spatial points probabilistically given a raster and a range of pixel values. Pixels with higher values (Yes option)are more likely to be sampled. create_source_points.py in the command line or points_py( ) in R.
 
 ###  Parameters
 

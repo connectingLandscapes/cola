@@ -685,7 +685,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     # cat(test_suit2res)
 
     ## Run tests
-    intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
+    intCMD <- tryCatch(shell(test_suit2res, intern = TRUE), error = function(e) e$message)
 
 
     ## Define local paths if test
