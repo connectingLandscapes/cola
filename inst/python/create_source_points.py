@@ -14,6 +14,7 @@ values outside the provided range.
 #%%
 # IMPORTS
 import sys
+import osgeo
 import rasterio as rio
 import cola_functions as cf
 import pandas as pd
