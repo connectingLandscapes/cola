@@ -125,7 +125,7 @@ diagnose_cola <- function(envName = 'cola',
 
               if( file.exists(pyCola2check) & dir.exists(pathCola) ){
 
-                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n")
+                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n\n")
 
               } else {
                 cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
@@ -788,16 +788,18 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
+      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n')
+
       if(dss){
         ## Step4. Set paths ----------------------------------------------
         cat (sep = '', '  + Extra step   Installing DSS GUI\n')
         cola::setup_cola_dss()
       }
 
-      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n',
+      cat (sep = '', '\n\n',
            '\tPlease restart R to update the new settings\n',
            '\tCustomize your local parameteres on the file:\n',
-           '\t \tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))')
+           '\t \tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n')
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
