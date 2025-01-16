@@ -42,7 +42,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                             pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
                             grids, template,
                             method = 'thin_plate_spline',
-                            neighbors, crs = 'None'){
+                            neighbors, crs = 'None', cml = TRUE){
 
   # 1. List of CDPOP grid.csv files containing population genetic structure
   # 2. Path/filename of a template raster used for interpolation
@@ -67,10 +67,11 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        grids, ' ', template, ' ',
                        # allele, ' ', hetero, ' ',
                        method, ' ', neighbors, ' ', crs, ' 2>&1'))
+  if (cml){
   cat('\n\tCMD interpol: \n')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
-
+}
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
@@ -109,7 +110,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                              pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
                              grids, template, method = 'average', bandwidths = 'None',
-                             type = 'count', crs = 'None'){
+                             type = 'count', crs = 'None', cml = TRUE){
 
   if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
     stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
@@ -126,10 +127,11 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        method, ' ', bandwidths, ' ', type, ' ', crs
                        , ' 2>&1 ' #, logname
                        ))
-
+  if (cml){
   cat('\n\tCMD interpol: \n ')
   cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
   cat('\n')
+  }
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
@@ -170,7 +172,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      cdmat = NULL,
                      xy = NULL,
                      tempFolder,
-                     prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE))){
+                     prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
+                      cml = TRUE){
   #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
@@ -224,8 +227,10 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath
                  , ' 2>&1 ' #, logname
                  ))
+  if (cml){
   cat('\n\tCMD CDPOP: \n')
   cat(cmd, '\n')
+  }
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
@@ -405,7 +410,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 #' @title  Get NA value from raster layer metadata
 #' @description Extracts the NoData value from raster metadata
 #' @param path File location
-#' @return String with the NA value. No converted to number to avoid characters
+#' @return String with the NA value. No converted to number to avoid characters loss
 #' @examples
 #' input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
 #' guessNoData(input_tif)
@@ -423,6 +428,65 @@ guessNoData <- function(path){
     }
   }
   return(ans)
+}
+
+
+
+#' @title  Get MinMax value from raster layer
+#' @description Extracts the min and max value from raster
+#' @param rastPath File location or raster layer. Accepts file path or SpatRaster object
+#' @return Numeric vector of two numbers
+#' @examples
+#' input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+#' getMxMn(input_tif)
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+getMnMx <- function(rastPath, na.rm = TRUE){
+  # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+  # rastPath = 'C:/temp/cola/colaOCC2025011423394005//out_lcc_JCH2025011423414805.tif'
+  na.rm * 1
+
+  if(class(rastPath) == 'character'){
+    invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+    #ra2 <- sf::gdal_utils('info', rastPath,  options = c('-stats'))
+    ra <- as.numeric(strsplit(split = ',',
+                              gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
+    )[[1]])
+    #rst <- terra::rast(rastPath)
+
+  } else if (class(rastPath) == 'SpatRaster'){
+    rst <- (rastPath)
+    if (rst@ptr$inMemory){
+      rastPath <- sources(rst)
+      invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+      ra <- as.numeric(strsplit(split = ',',
+                                gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
+      )[[1]])
+    } else {
+      ra <- minmax(rst)[1:2]
+    }
+  }
+
+  if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+    return(ra)
+  } else {
+    ra <- setMinMax(rst, force=TRUE)
+    ra <- minmax(rst)[1:2]
+    if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+      return(ra)
+    } else {
+      ra <- global(rst, 'range' )
+      if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+        return(ra)
+      } else {
+        (ra <- range(rst[], na.rm = TRUE))
+        if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+          return(ra)
+        }
+      }
+    }
+  }
 }
 
 #' @title  Adapt file path. Change backslash to slash
@@ -465,7 +529,8 @@ s2res_py <- function(intif, outtif,
                      minval, maxval, maxout, shape,
                      nodata = NULL, prj = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
-                     pyscript = system.file(package = 'cola', 'python/s2res.py')){
+                     pyscript = system.file(package = 'cola', 'python/s2res.py'),
+                     cml = TRUE){
   # minval = 0
   # maxval =  100
   # maxout = 100
@@ -491,10 +556,11 @@ s2res_py <- function(intif, outtif,
                        prj
                        , ' 2>&1 ' #, logname
                        ))
-
+  if (cml){
   cat('\n\tCMD Surface : \n')
   cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
   cat('\n')
+  }
 
   intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
                      error = function(e) e$message)
@@ -565,7 +631,8 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 points_py <- function(intif, outshp,
                       smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
                       py = Sys.getenv("COLA_PYTHON_PATH"),
-                      pyscript = system.file(package = 'cola', 'python/create_source_points.py')){
+                      pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
+                      cml = TRUE){
   # smin = 2
   # smax =  95
   # npoints = 50
@@ -581,9 +648,11 @@ points_py <- function(intif, outshp,
                      issuit, ' ', upcrs
                      , ' 2>&1 '# , logname
                      ))
+  if (cml){
   cat('\n\tCMD Points: \n')
   cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
@@ -621,7 +690,8 @@ cdmat_py <- function(inshp, intif, outcsv,
                      ncores = Sys.getenv("COLA_NCORES"),
                      crs = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
-                     pyscript = system.file(package = 'cola', 'python/create_cdmat.py')){
+                     pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
+                     cml = TRUE){
   # maxdist = 100000
   # create_cdmat.py
   # [1] source points
@@ -645,10 +715,11 @@ cdmat_py <- function(inshp, intif, outcsv,
                        , ' 2>&1 '
                        # , logname
                        ))
-
+  if (cml){
   cat('\n\n\tCMD cdmat: \n')
   cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
@@ -675,7 +746,8 @@ lcc_py <- function(inshp, intif, outtif,
                    maxdist, smooth, tolerance,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/lcc.py')){
+                   pyscript = system.file(package = 'cola', 'python/lcc.py'),
+                   cml = TRUE){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -699,9 +771,11 @@ lcc_py <- function(inshp, intif, outtif,
                      , ' 2>&1 ' #, logname
                      ))
 
+  if (cml){
   cat('\n\tCMD LCC: \n')
   cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
   cat('\n')
+  }
 
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
@@ -728,7 +802,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
                         ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                         crs = 'None', tempFolder = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
-                        pyscript = system.file(package = 'cola', 'python/lcc_heavy.py')){
+                        pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
+                        cml = TRUE){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -766,8 +841,11 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      ))
 
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
+  if (cml){
   cat('\n\tCMD LCC:\n', cmd_lcc)
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
@@ -797,7 +875,8 @@ lccJoblib_py <- function(inshp, intif, outtif,
                          maxram = 6,
                          tempFolder = NULL,
                          py = Sys.getenv("COLA_PYTHON_PATH"),
-                         pyscript = system.file(package = 'cola', 'python/lcc_joblib.py')){
+                         pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
+                         cml = TRUE){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -836,8 +915,11 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
+  if (cml){
   cat('\n\tCMD LCC joblib:\n', cmd_lcc)
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
   file.remove(c(h5file1, h5file2))
@@ -863,7 +945,8 @@ crk_py <- function(inshp, intif, outtif,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/crk.py')){
+                   pyscript = system.file(package = 'cola', 'python/crk.py'),
+                   cml = TRUE){
 
   # [1] source points
   # [2] resistance surface
@@ -887,8 +970,10 @@ crk_py <- function(inshp, intif, outtif,
                      ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  if (cml){
   cat('\n\tCMD Kernel:\n',cmd_crk)
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
@@ -914,7 +999,8 @@ pri_py <- function(tif, incrk, inlcc,
                    outtifpatch, outtif,
                    threshold = 0.5, tolerance = 1000,
                    py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py')){
+                   pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
+                   cml = TRUE){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -980,10 +1066,11 @@ pri_py <- function(tif, incrk, inlcc,
                       , ' 2>&1 ' #, logname
                       ))
 
-
+  if (cml){
   cat('\n\tCMD prio: \n')
   cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
   cat('\n')
+  }
 
 
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE),
@@ -1017,7 +1104,8 @@ crk_compare_py <- function(intif, intifs,
                            inshp = 'None',
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
-                           pyscript = system.file(package = 'cola', 'python/crk_compare.py')){
+                           pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
+                           cml = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
@@ -1048,9 +1136,11 @@ crk_compare_py <- function(intif, intifs,
                           , ' 2>&1 ' #, logname
                           )
   )
+  if (cml){
   cat('\n\tCMD Compare CRK: \n')
   cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
                      error = function(e) e$message)
@@ -1077,7 +1167,8 @@ lcc_compare_py <- function(intif, intifs,
                            inshp = 'None',
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
-                           pyscript = system.file(package = 'cola', 'python/lcc_compare.py')){
+                           pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
+                           cml = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
@@ -1108,9 +1199,11 @@ lcc_compare_py <- function(intif, intifs,
                           , ' 2>&1 ' #, logname
                           )
   )
+  if (cml){
   cat('\n\tCMD Comp LCC: \n ')
   cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
   cat('\n')
+  }
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
@@ -1379,4 +1472,3 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   return(replacedPath)
   #} else { return(NA) }
 }
-

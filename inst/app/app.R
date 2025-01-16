@@ -134,16 +134,16 @@
 
 
       sh_hs_pal <-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                        domain= base::range(sh_hs[], na.rm = TRUE) + 0.0,
+                                        domain= getMnMx(sh_hs, na.rm = TRUE) + 0.0,
                                         na.color = "transparent")
       sh_sr_pal <-leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                        domain = base::range(sh_sr[], na.rm = TRUE)+ 0.0,
+                                        domain = getMnMx(sh_sr, na.rm = TRUE)+ 0.0,
                                         na.color = "transparent")
       sh_crk_pal <-leaflet::colorNumeric(palette = "inferno", reverse = TRUE,
-                                         domain= base::range(sh_crk[], na.rm = TRUE)+ 0.0,
+                                         domain= getMnMx(sh_crk, na.rm = TRUE)+ 0.0,
                                          na.color = "transparent")
       sh_lcc_pal <-leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                         domain= base::range(sh_lcc[], na.rm = TRUE)+ 0.0,
+                                         domain= getMnMx(sh_lcc, na.rm = TRUE)+ 0.0,
                                          na.color = "transparent")
 
       # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
@@ -167,19 +167,19 @@
 
         # addCircleMarkers(sh_pt, group = "draw") %>%
         # ll_sh %>%
-        addLegend(pal = sh_hs_pal, values = base::range(sh_hs[], na.rm = TRUE),
+        addLegend(pal = sh_hs_pal, values = getMnMx(sh_hs, na.rm = TRUE),
                   group = "HabitatSuitability", layerId = "HabitatSuitability",
                   position = 'bottomleft', title = "Hab. suitability") %>%
 
-        addLegend(pal = sh_crk_pal, values = base::range(sh_crk[], na.rm = TRUE),
+        addLegend(pal = sh_crk_pal, values = getMnMx(sh_crk, na.rm = TRUE),
                   group = "Kernels", layerId = "Kernels",
                   position = 'bottomleft', title = "Kernels") %>%
 
-        addLegend(pal = sh_sr_pal, values = base::range(sh_sr[], na.rm = TRUE),
+        addLegend(pal = sh_sr_pal, values = getMnMx(sh_sr, na.rm = TRUE),
                   group = "SurfaceResistance", layerId = "SurfaceResistance",
                   position = 'bottomleft', title = "Sur. resistance") %>%
 
-        addLegend(pal = sh_lcc_pal, values = base::range(sh_lcc[], na.rm = TRUE),
+        addLegend(pal = sh_lcc_pal, values = getMnMx(sh_lcc, na.rm = TRUE),
                   group = "Corridors", layerId = "Corridors",
                   position = 'bottomleft', title = "Corridors") %>%
 
@@ -505,7 +505,8 @@ server <- function(input, output, session) {
                                 ts = c(options('COLA_VIZ_RES_NCOL'), options('COLA_VIZ_RES_NROW')),
                                 dstfile = resamPath)
         cat(paste(' ---- >>>> Resampling to ',
-                    options('COLA_VIZ_RES_NCOL'),' - ', options('COLA_VIZ_RES_NROW'), '\n'))
+                  options('COLA_VIZ_RES_NCOL'),' - ',
+                  options('COLA_VIZ_RES_NROW'), '\n'))
       }
       #}
       return(resamPath)
@@ -541,7 +542,7 @@ server <- function(input, output, session) {
 
       # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
       #leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-      #             domain= base::range(sh_sr[], na.rm = TRUE)+ 0.0,
+      #             domain= getMnMx(sh_sr[], na.rm = TRUE)+ 0.0,
       #             na.color = "transparent")
 
       if( (rv$hsready) ){
@@ -553,17 +554,20 @@ server <- function(input, output, session) {
           rv$hs2s <- resampIfNeeded(rv$hs)
           rv$hs0 <- rv$hs
         }
+        #rv <- list(hs2s = "C:/temp/cola//colaAQZ2025011423115905//out_crk_ZWL2025011423151605.tif")
         rv$hs2s_sp <- terra::rast(rv$hs2s)
-        rv$hs_rng2 <- c(0, max(getMxMn(rv$hs2s)))# hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$hs_rng2 <- c(0, max(getMnMx(rv$hs2s)))# hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$hs_pal2 <- leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
-                                            domain = rv$hs_rng2 + 0.0,
+                                            domain = rv$hs_rng2 + c(0.001, 0.0),
                                             na.color = "transparent")
 
         # pdebug(devug = devug, sep = '\n-', pre = '-', '(rv$hs)', 'rv$hs2s')
 
-        ll0 <- ll0 %>% addRasterImage(x = rv$hs2s_sp, colors = rv$hs_pal2,
+        ll0 <- ll0 %>% addRasterImage(x = rv$hs2s_sp,
+                                      colors = rv$hs_pal2,
                                       opacity = .7,
-                                      group = "Habitat suitability", layerId = "HabitatSuitability") %>%
+                                      group = "Habitat suitability",
+                                      layerId = "HabitatSuitability") %>%
           addLegend(pal = rv$hs_pal2, values = rv$hs_rng2,
                     group = "Habitat suitability", layerId = "Habitat suitability",
                     position = 'bottomleft', title = "Suitability"#, opacity = .3
@@ -592,7 +596,7 @@ server <- function(input, output, session) {
           rv$tif0 <- rv$tiforig
         }
         rv$tif2s_sp <- terra::rast(rv$tif2s)
-        rv$tif_rng2 <- getMxMn(rv$tif2s) + 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$tif_rng2 <- getMnMx(rv$tif2s) + 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         #
         rv$tif_rng2 <- c(max(0, rv$tif_rng2[1]), rv$tif_rng2[2])
 
@@ -636,7 +640,7 @@ server <- function(input, output, session) {
           rv$crk0 <- rv$crk
         }
         rv$crk2s_sp <- terra::rast(rv$crk2s)
-        rv$crk_rng2 <- getMxMn(rv$crk2s) + 0.000 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$crk_rng2 <- getMnMx(rv$crk2s) + 0.000 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         print(rv$crk_rng2)
         rv$crk_pal2 <-leaflet::colorNumeric(palette = crk_pal_name, reverse = TRUE,
                                             domain = rv$crk_rng2 + 0.001,
@@ -664,7 +668,7 @@ server <- function(input, output, session) {
           rv$lcc0 <- rv$lcc
         }
         rv$lcc2s_sp <- terra::rast(rv$lcc2s)
-        rv$lcc_rng2 <- getMxMn(rv$lcc2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$lcc_rng2 <- getMnMx(rv$lcc2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$lcc_pal2 <-leaflet::colorNumeric(palette = 'plasma', reverse = TRUE,
                                             domain = rv$lcc_rng2 + 0.0,
                                             na.color = "transparent")
@@ -692,7 +696,7 @@ server <- function(input, output, session) {
           rv$pritif0 <- rv$pritif
         }
         rv$pritif2s_sp <- terra::rast(rv$pritif2s)
-        rv$pritif_rng2 <- getMxMn(rv$pritif2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
+        rv$pritif_rng2 <- getMnMx(rv$pritif2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$pritif_pal2 <- leaflet::colorNumeric(palette = 'Blues', reverse = FALSE,
                                                 domain = rv$pritif_rng2 + 0.0,
                                                 na.color = "transparent")
@@ -702,7 +706,7 @@ server <- function(input, output, session) {
         patchTif <- (gsub('out_pri_', 'out_pri_patch_', rv$pritif))
         patchTifR <- rast(patchTif)
 
-        patchpal <- colorBin(palette = "Dark2", domain = c(1, max(getMxMn(patchTif))), bins = c( 1, 43),
+        patchpal <- colorBin(palette = "Dark2", domain = c(1, max(getMnMx(patchTif))), bins = c( 1, 43),
                              reverse = FALSE, na.color = "transparent")
 
         ll0 <- ll0 %>%
@@ -760,7 +764,7 @@ server <- function(input, output, session) {
       #  setwd('/data/temp/DE2023090812244005file12665b147993/')
       #  pts_sp = sf::read_sf('out_simpts_TV2023090812282705file126638a90d5c.shp') # path
       #  pts_sp@data$ID <- 1:nrow(pts_sp)
-      #  pts_sp <- spTransform(pts_sp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      #  pts_sp <- spTransform(pts_sp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
       #  rv <<- list(
       #   hs_sp = terra::rast('in_surface_TV2023090812282705file126638a90d5c.tif'), # path
       #   tif_sp =terra::rast('out_surface_TV2023090812282705file126638a90d5c.tif'), # path
@@ -1188,7 +1192,7 @@ server <- function(input, output, session) {
           # tif_uncrs_extent_p@proj4string <- CRS(crs_selected)
           st_crs(tif_uncrs_extent_p) <- crs_selected
           tif_uncrs_extent_p <- sf::st_transform(tif_uncrs_extent_p,
-                                                 crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+                                                 crs = sf::st_crs("+proj=longlat +datum=WGS84"))
 
           llcrs <- llcrs %>% leaflet::addPolygons(data = tif_uncrs_extent_p) %>%
             addLegend("bottomright", colors = c("blue"), labels = c("Raster"), opacity = 1)
@@ -1199,12 +1203,12 @@ server <- function(input, output, session) {
           pts_uncrs_extent_p <- sf::st_as_sf(rv$pts_uncrs_extent)
           st_crs(pts_uncrs_extent_p) <- (crs_selected2)
           pts_uncrs_extent_p <- sf::st_transform(pts_uncrs_extent_p,
-                                                 crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+                                                 crs = sf::st_crs("+proj=longlat +datum=WGS84"))
 
           pts_uncrs_p <- rv$pts_uncrs
           #pts_uncrs_p@proj4string <- CRS(crs_selected)
           st_crs(pts_uncrs_p) <- (crs_selected2)
-          pts_uncrs_p <- sf::st_transform(pts_uncrs_p, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          pts_uncrs_p <- sf::st_transform(pts_uncrs_p, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           #pts_uncrs_p@data[, c('x0', 'y0')] <- st_coordinates(pts_uncrs_p)
           pts_uncrs_p$x0<- st_coordinates(pts_uncrs_p)[, 1]
           pts_uncrs_p$y0<- st_coordinates(pts_uncrs_p)[, 2]
@@ -1835,9 +1839,9 @@ server <- function(input, output, session) {
           rv$struRB <- struRB <- rast(struMap$newFiles[2])
           rv$densR <- densR <- rast(densMap$file)
 
-          rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-          rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-          rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+          rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+          rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+          rng_dens <- getMnMx(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
 
           # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
           # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
@@ -1938,9 +1942,9 @@ server <- function(input, output, session) {
         rv$struRB <- struRB <- rast(struMap$newFiles[2])
         rv$densR <- densR <- rast(densMap$file)
 
-        rng_strA <- getMxMn(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-        rng_strB <- getMxMn(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-        rng_dens <- getMxMn(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+        rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+        rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
+        rng_dens <- getMnMx(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
 
 
         cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
@@ -2094,7 +2098,8 @@ server <- function(input, output, session) {
 
         rv$hs_sp <- terra::rast(rv$hs)
         #rng_newtif <- c(newtif@data@min, newtif@data@max)
-        rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
+        #rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
+        rv$hs_rng <- rng_newtif <- getMnMx(rv$hs_sp)
 
         updateTextInput(session, inputId = "in_sur_3",
                         value = max(rv$hs_rng[1], 0, na.rm = TRUE))
@@ -2159,8 +2164,8 @@ server <- function(input, output, session) {
           rv$tiforig <- hs2rs_file$file
 
           rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
-          rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-          #rv$tif_rng <- rng_rstif <- minmax(rv$tif_sp)[1:2]
+          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+          rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
           rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                         domain = rng_rstif, na.color = "transparent")
 
@@ -2224,7 +2229,7 @@ server <- function(input, output, session) {
 
       rv$hs_sp <- terra::rast(hs2rs_samp_file)
       #rv$hs_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-      rv$hs_rng <- rng_rstif <- getMxMn(rv$hs_sp)[1:2]
+      rv$hs_rng <- rng_rstif <- getMnMx(rv$hs_sp)[1:2]
 
       updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
       updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
@@ -2327,16 +2332,16 @@ server <- function(input, output, session) {
 
 
         rv$tif_sp <- terra::rast(rv$tif)
-        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
 
 
         rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                              domain = rng_newtif+0.0, na.color = "transparent")
 
         rv$edi_sp <- terra::rast(rv$edi)
-        rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$edi_sp)[1:2], na.rm = TRUE)
+        #rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$edi_sp)[1:2]
 
         rv$edi_pal <- ediPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
                                                        domain = rng_newtif+0.0, na.color = "transparent")
@@ -2394,7 +2399,7 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n',pre='---- LOAD SCE SHP\n','rv$sceready', 'rv$sce', 'rv$inEdiSessID') # _____________
 
-      sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      sce <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
       sce$sortID <- 1:nrow(sce)
       rv$edi_sp <- sce
 
@@ -2540,15 +2545,15 @@ server <- function(input, output, session) {
           rv$tif <- burned
           rv$tiforig <- burned
           rv$tif_sp <- terra::rast(rv$tif)
-          rv$tif_rng <- getMxMn(rv$tif_sp)
+          rv$tif_rng <- getMnMx(rv$tif_sp)
 
           # rv$tif2s <- resampIfNeeded(burned)
           # rv$tif0 <- burned
           # rv$tif_sp <- terra::rast(burned)
           # rv$tif2s_sp <- terra::rast(rv$tif2s)
 
-          rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
-          #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+          #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
+          rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
 
           rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                         domain = rng_rstif, na.color = "transparent")
@@ -2654,7 +2659,7 @@ server <- function(input, output, session) {
           pdebug(devug=devug,sep='\n',pre='-- Replace pixel',
                  "polPath", polPath)
 
-          if( os == 'Windows'){
+          if( os %in% c('Darwin', 'Windows')){
             burned <<- tryCatch(replacePixels(polPath = polPath,
                                               # lineBuffW = as.numeric(input$in_edi_wid),
                                               att = input$in_edi_che,
@@ -2664,7 +2669,7 @@ server <- function(input, output, session) {
                                               rastCRS = NA,
                                               gdal = FALSE), error = function(e) NA)
 
-          } else if (os != 'Windows'){
+          } else{  # if (os %in% 'Linux'){
             burned <<- tryCatch(replacePixels(polPath = polPath,
                                               # lineBuffW = as.numeric(input$in_edi_wid),
                                               att = input$in_edi_che,
@@ -2685,8 +2690,8 @@ server <- function(input, output, session) {
             rv$tiforig <<- burned
             rv$tif_sp <<- terra::rast(burned)
 
-            rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
-            #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+            #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
+            rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
 
             rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                           domain = rng_rstif, na.color = "transparent")
@@ -2755,7 +2760,7 @@ server <- function(input, output, session) {
 
         rv$tif_sp <- newtif_pts <- terra::rast(rv$newtifpathpts)
         #rv$tif_rng <- rng_newtif_pts <- range(newtif_pts[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif_pts <- getMxMn(rv$tif_sp)
+        rv$tif_rng <- rng_newtif_pts <- getMnMx(rv$tif_sp)
 
 
         updateTextInput(session, inputId = "in_points_3", value = rv$tif_rng[1])
@@ -2830,7 +2835,7 @@ server <- function(input, output, session) {
         # rv <- list(hs = '/data/temp/TO2024011617101505filebfa367c3d30//in_pointshs_QP2024011617103005filebfa42265b6d.tif')
         rv$hs_sp <- newtif_pts <- terra::rast(rv$hs)
         #rv$hs_rng <- rng_newtif_pts <- r ange(newtif_pts[], na.rm = TRUE)
-        rv$hs_rng <- rng_newtif_pts <- getMxMn(rv$hs)[1:2]
+        rv$hs_rng <- rng_newtif_pts <- getMnMx(rv$hs)[1:2]
         pdebug(devug=devug,sep='\n',pre='-','rv$hs_rng')
 
 
@@ -2908,8 +2913,8 @@ server <- function(input, output, session) {
                                           npoints = as.numeric(input$in_points_5),
                                           issuit = 'Yes'
         ), error = function(e) list(err = e, file = ''))
-      cat("\n --- Points out: \n")
-      print(points_file)
+        cat("\n --- Points out: \n")
+        print(points_file)
 
       }
 
@@ -2932,7 +2937,7 @@ server <- function(input, output, session) {
 
           #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
           points_shpO <- sf::read_sf(points_file$file)
-          points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           points_shp$sortID <- 1:nrow(points_shp)
           #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
           rv$pts_sp <- points_shp
@@ -3017,8 +3022,8 @@ server <- function(input, output, session) {
 
       output$ll_map_dist <- leaflet::renderLeaflet({
         rv$tif_sp <- newtif <- terra::rast(newtifPath_dist)
-        rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
 
         rv$tif_pal <- tifPal <<-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                       domain = rng_newtif, na.color = "transparent")
@@ -3105,7 +3110,7 @@ server <- function(input, output, session) {
 
           params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
-          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           shp$sortID <- 1:nrow(shp)
           rv$pts_sp <- shp
 
@@ -3141,7 +3146,7 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
       cdmat_file <- cdmat_py(py = py, inshp = rv$pts, intif = rv$tif,
-                              outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
+                             outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
       cat("\n --- CDM Matrix out:")
       print(cdmat_file)
 
@@ -3234,8 +3239,8 @@ server <- function(input, output, session) {
         rv$tif_sp <- terra::rast(rv$tif)
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
-        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- minmax(rv$tif_sp)[1:2]
         rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                              domain = rng_newtif+0.0, na.color = "transparent")
 
@@ -3310,8 +3315,8 @@ server <- function(input, output, session) {
 
         output$ll_map_lcc <- leaflet::renderLeaflet({
 
-          # shp<-spTransform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          # shp<-spTransform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           shp$ID <- 1:nrow( shp )
           rv$pts_sp <- shp
 
@@ -3387,8 +3392,8 @@ server <- function(input, output, session) {
           rv$lccready <- TRUE
           rv$lcc_sp <- terra::rast(out_lcc$file)
 
-          rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
-          #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+          #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc_sp)[1:2]
 
 
           rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
@@ -3460,7 +3465,7 @@ server <- function(input, output, session) {
 
           #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
           #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
-          rv$lcc_rng <- rng_newtif <- getMxMn(rv$lcc)
+          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc)
 
 
           rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
@@ -3516,8 +3521,8 @@ server <- function(input, output, session) {
       output$ll_map_crk <- leaflet::renderLeaflet({
 
         rv$tif_sp <- newtif <- terra::rast(newtifPath_crk)
-        rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
-        #rv$lcc_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(newtif[], na.rm = TRUE)
+        rv$lcc_rng <- rng_newtif <- getMnMx(rv$tif_sp)
 
         rv$tif_pal <- tifPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                        domain = rng_newtif, na.color = "transparent")
@@ -3582,7 +3587,7 @@ server <- function(input, output, session) {
         params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
         output$ll_map_crk <- leaflet::renderLeaflet({
-          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           shp$ID <- 1:nrow( shp )
           rv$pts_sp <- shp
 
@@ -3657,8 +3662,8 @@ server <- function(input, output, session) {
           rv$crkready <- TRUE
           rv$crk <- out_crk$file
           rv$crk_sp <- terra::rast(out_crk$file);
-          rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
+          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
 
           # newtif[newtif[] == 0] <-
 
@@ -3792,8 +3797,8 @@ server <- function(input, output, session) {
         rv$tif_sp <- terra::rast(rv$tif)
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
-        rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
         rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                              domain = rng_newtif+0.0, na.color = "transparent")
 
@@ -3808,7 +3813,7 @@ server <- function(input, output, session) {
       # rv <- list(crk = '/data/tempR//colaVMQ2024081501510005//out_crk_PPH2024081501513905.tif')
       # rv$crk_sp <- terra::rast(rv$crk);
       # input <- list(pri_slider = 0.2)
-      # rv$crk_rng <- getMxMn(rv$crk_sp)
+      # rv$crk_rng <- getMnMx(rv$crk_sp)
       # print(rv$crk_rng)
       # rv$crk2s <- resampIfNeeded(rv$crk)
       # rv$crk2s_sp <- terra::rast(rv$crk2s)
@@ -3919,40 +3924,40 @@ server <- function(input, output, session) {
       # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
       # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
 
+      output$ll_map_pri <- leaflet::renderLeaflet({
 
-      tStartPri <- Sys.time()
-      out_pri <- tryCatch(pri_py(tif = rv$tif,
-                                 incrk = rv$crk ,
-                                 inlcc = rv$lcc,
-                                 maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
-                                 outshppoint = out_pri_shp,
-                                 outshppol = out_pri_shp_pol,
-                                 outshppatch = out_pri_shp_patch,
-                                 outtif = out_pri_tif,
-                                 outtifpatch = out_pri_tif_patch,
-                                 threshold = as.numeric(input$in_pri_5), # 0.5
-                                 tolerance = as.numeric(input$in_lcc_6)),  error = function(e) list(log = as.character(e), file = '', shp = NA))
-      ## missing threshold and 8 by user
-      cat("\n --- Prio out:\n")
-      print(out_pri)
+        tStartPri <- Sys.time()
+        out_pri <- tryCatch(pri_py(tif = rv$tif,
+                                   incrk = rv$crk ,
+                                   inlcc = rv$lcc,
+                                   maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
+                                   outshppoint = out_pri_shp,
+                                   outshppol = out_pri_shp_pol,
+                                   outshppatch = out_pri_shp_patch,
+                                   outtif = out_pri_tif,
+                                   outtifpatch = out_pri_tif_patch,
+                                   threshold = as.numeric(input$in_pri_5), # 0.5
+                                   tolerance = as.numeric(input$in_lcc_6)),  error = function(e) list(log = as.character(e), file = '', shp = NA))
+        ## missing threshold and 8 by user
+        cat("\n --- Prio out:\n")
+        print(out_pri)
 
-      #out_crk_no_data <- gdal_nodata
+        #out_crk_no_data <- gdal_nodata
 
-      tElapPri <- Sys.time() - tStartPri
-      textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
+        tElapPri <- Sys.time() - tStartPri
+        textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
 
 
-      rv$pritif <- out_pri$tif
-      rv$prishp <- out_pri$shp
+        rv$pritif <- out_pri$tif
+        rv$prishp <- out_pri$shp
 
-      if(is.na(out_pri$shp)){
-        rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
-        return(rv$llmap)
+        if(is.na(out_pri$shp)){
+          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
+          return(rv$llmap)
 
-      } else {
-        rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
-        output$ll_map_pri <- leaflet::renderLeaflet({
           # rv$lcc <- out_lcc
           # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
 
@@ -3961,8 +3966,8 @@ server <- function(input, output, session) {
           rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
           rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
 
-          rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          #rv$crk_rng <- rng_newtif <- range(minmax(rv$crk_sp)[1:2], na.rm = TRUE)
+          #rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)[1:2]
           rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
                                                          domain = rng_newtif+0.01, na.color = "transparent")
           # "viridis", "magma", "inferno", or "plasma".
@@ -3988,8 +3993,8 @@ server <- function(input, output, session) {
           # # ## try
           # llx <- makeLL()
           # rv$ll
-        })
-      }
+        }
+      })
     }
   })
 
@@ -4024,8 +4029,8 @@ server <- function(input, output, session) {
         rv$lcc_sp <- terra::rast(rv$lcc)
         params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
 
-        rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
         rv$lcc_pal <<- leaflet::colorNumeric(palette = "plasma",
                                              reverse = TRUE,
                                              domain = rng_newtif+0.0,
@@ -4068,8 +4073,8 @@ server <- function(input, output, session) {
         rv$crk_sp <- terra::rast(rv$crk)
         params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
 
-        rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-        #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)
         rv$crk_pal <<- leaflet::colorNumeric(palette = 'inferno',
                                              reverse = TRUE,
                                              domain = rng_newtif+0.0,
@@ -4123,7 +4128,7 @@ server <- function(input, output, session) {
 
       pdebug(devug=devug,sep='\n',pre='---- LOAD SCE SHP\n','rv$comready', 'rv$com', 'rv$inComSessID') # _____________
 
-      com <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
+      com <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
       rv$com_sp <- com
 
 
@@ -4221,52 +4226,52 @@ server <- function(input, output, session) {
 
       if (cond ){
 
-        if(in_com_ly == 'Corridors'){
+        output$ll_map_com <- leaflet::renderLeaflet({
+          if(in_com_ly == 'Corridors'){
 
-          comp_out <- tryCatch(
-            lcc_compare_py(intif = avail_layers[1],
-                           intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
-                           outcsvabs = outComCsvAbs,
-                           outcsvrel = outComCsvRel,
-                           outpngabs = outComPngAbs,
-                           outpngrel = outComPngRel,
-                           outfolder = outComFolder,
-                           inshp = inCompShp,
-                           shpfield = inCompShpField), error = function(e) NULL)
-          cat("\n --- LCC Compare out:\n")
-          print(comp_out)
-
-
-        } else if(in_com_ly == 'Dispersal kernels'){
-
-          comp_out <- tryCatch(
-            crk_compare_py(intif = avail_layers[1],
-                           intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
-                           outcsvabs = outComCsvAbs,
-                           outcsvrel = outComCsvRel,
-                           outpngabs = outComPngAbs,
-                           outpngrel = outComPngRel,
-                           outfolder = outComFolder,
-                           inshp = inCompShp,
-                           shpfield = inCompShpField), error = function(e) NULL)
-          cat("\n --- CRK Comp out:\n")
-          print(comp_out)
+            comp_out <- tryCatch(
+              lcc_compare_py(intif = avail_layers[1],
+                             intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+                             outcsvabs = outComCsvAbs,
+                             outcsvrel = outComCsvRel,
+                             outpngabs = outComPngAbs,
+                             outpngrel = outComPngRel,
+                             outfolder = outComFolder,
+                             inshp = inCompShp,
+                             shpfield = inCompShpField), error = function(e) NULL)
+            cat("\n --- LCC Compare out:\n")
+            print(comp_out)
 
 
-        }
-        com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
+          } else if(in_com_ly == 'Dispersal kernels'){
 
-        # cat("\n --- Comp out:\n")
-        # print(comp_out)
+            comp_out <- tryCatch(
+              crk_compare_py(intif = avail_layers[1],
+                             intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+                             outcsvabs = outComCsvAbs,
+                             outcsvrel = outComCsvRel,
+                             outpngabs = outComPngAbs,
+                             outpngrel = outComPngRel,
+                             outfolder = outComFolder,
+                             inshp = inCompShp,
+                             shpfield = inCompShpField), error = function(e) NULL)
+            cat("\n --- CRK Comp out:\n")
+            print(comp_out)
 
-        if (is.null(comp_out)){
 
-          rv$log <- paste0(rv$log, ' -- Comparisson failed');
+          }
+          com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
 
-        } else if (!is.null(comp_out) ){
-          if(file.exists(comp_out$file)){
+          # cat("\n --- Comp out:\n")
+          # print(comp_out)
 
-            output$ll_map_com <- leaflet::renderLeaflet({
+          if (is.null(comp_out)){
+
+            rv$log <- paste0(rv$log, ' -- Comparisson failed');
+
+          } else if (!is.null(comp_out) ){
+            if(file.exists(comp_out$file)){
+
 
               # outComCsvAbs <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compAbs.csv'
               # outComCsvRel <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compRel.csv'
@@ -4370,57 +4375,56 @@ server <- function(input, output, session) {
               ori_rng2 <- range(ori_rng, na.rm = TRUE)
 
               ori_pal <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                               domain = ori_rng2+0.001, na.color = "transparent")
+                                               domain = ori_rng2+0.00, na.color = "transparent")
 
-
-              # ## OPT1: sync 3 layers
-              # lls <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
-              #
-              #  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-              #  leaflet::addMeasure( position = "topright",
-              #            primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-              #            activeColor = "#3D535D",completedColor = "#7D4479")
-              #
-              # llsA <- lls %>%
-              #  addRasterImage(x = ori_stack[[1]], colors = ori_pal,
-              #         opacity = .7,
-              #         group = names(ori_stack)[1],
-              #         layerId = names(ori_stack)[1]) %>%
-              #  addLegend(pal = ori_pal, values = ori_rng2,
-              #       position = 'bottomleft', title = names(ori_stack)[1]) %>%
-              #  leaflet::addLayersControl(
-              #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-              #   overlayGroups = c(names(ori_stack)[1]),
-              #   options = leaflet::layersControlOptions(collapsed = FALSE))
-              #
-              # llsB <- lls %>%
-              #  addRasterImage(x = ori_stack[[2]], colors = ori_pal,
-              #         opacity = .7,
-              #         group = names(ori_stack)[2],
-              #         layerId = names(ori_stack)[2]) %>%
-              #  addLegend(pal = ori_pal, values = ori_rng2,
-              #       position = 'bottomleft', title = names(ori_stack)[2]) %>%
-              #  leaflet::addLayersControl(
-              #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-              #   overlayGroups = c(names(ori_stack)[2]),
-              #   options = leaflet::layersControlOptions(collapsed = FALSE))
-              #
-              # llsC <- lls %>%
-              #  addRasterImage(x = com_stack[[1]], colors = com_pal,
-              #         opacity = .7,
-              #         group = names(com_stack)[1],
-              #         layerId = names(com_stack)[1]) %>%
-              #  addLegend(pal = com_pal, values = com_rng2,
-              #       position = 'bottomleft', title = names(com_stack)[1]) %>%
-              #  leaflet::addLayersControl(
-              #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-              #   overlayGroups = c(names(com_stack)[1]),
-              #   options = leaflet::layersControlOptions(collapsed = FALSE))
-              #
-              #
-              # leafsync::sync(llsA, llsB, llsC, no.initial.sync = TRUE)
-
-
+              {
+                # ## OPT1: sync 3 layers
+                # lls <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
+                #
+                #  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+                #  leaflet::addMeasure( position = "topright",
+                #            primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                #            activeColor = "#3D535D",completedColor = "#7D4479")
+                #
+                # llsA <- lls %>%
+                #  addRasterImage(x = ori_stack[[1]], colors = ori_pal,
+                #         opacity = .7,
+                #         group = names(ori_stack)[1],
+                #         layerId = names(ori_stack)[1]) %>%
+                #  addLegend(pal = ori_pal, values = ori_rng2,
+                #       position = 'bottomleft', title = names(ori_stack)[1]) %>%
+                #  leaflet::addLayersControl(
+                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                #   overlayGroups = c(names(ori_stack)[1]),
+                #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                #
+                # llsB <- lls %>%
+                #  addRasterImage(x = ori_stack[[2]], colors = ori_pal,
+                #         opacity = .7,
+                #         group = names(ori_stack)[2],
+                #         layerId = names(ori_stack)[2]) %>%
+                #  addLegend(pal = ori_pal, values = ori_rng2,
+                #       position = 'bottomleft', title = names(ori_stack)[2]) %>%
+                #  leaflet::addLayersControl(
+                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                #   overlayGroups = c(names(ori_stack)[2]),
+                #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                #
+                # llsC <- lls %>%
+                #  addRasterImage(x = com_stack[[1]], colors = com_pal,
+                #         opacity = .7,
+                #         group = names(com_stack)[1],
+                #         layerId = names(com_stack)[1]) %>%
+                #  addLegend(pal = com_pal, values = com_rng2,
+                #       position = 'bottomleft', title = names(com_stack)[1]) %>%
+                #  leaflet::addLayersControl(
+                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                #   overlayGroups = c(names(com_stack)[1]),
+                #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                #
+                #
+                # leafsync::sync(llsA, llsB, llsC, no.initial.sync = TRUE)
+              }
 
               # OPT2: all layers
               #if (FALSE) {
@@ -4467,37 +4471,33 @@ server <- function(input, output, session) {
                   overlayGroups = c(names(com_stack), names(ori_stack)),
                   options = leaflet::layersControlOptions(collapsed = FALSE))
               # }
-            })
+            }
           }
-        }
+          {
+            #   if (!file.exists(points_file$file)){
+            #    rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
+            #   } else {
+            #    params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+            #    rv$pts <- points_file$file
+            #    rv$ptsready <- TRUE
+            #    output$ll_map_points <- leaflet::renderLeaflet({
+            #     #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+            #     points_shpO <- sf::read_sf(points_file$file)
+            #     points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+            #     points_shp$ID <- 1:nrow(points_shp)
+            #     #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+            #     rv$pts_sp <- points_shp
+            #     rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+            #     #temLL <- rv$llmap
+            #     #save(temLL, file = '/data/tempR/ll.RData')
+            #     #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+            #     makeLL( )
+            #    })
+            #   }
+          }
 
-        #   if (!file.exists(points_file$file)){
-        #    rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
-        #   } else {
-        #    params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
-        #
-        #    rv$pts <- points_file$file
-        #    rv$ptsready <- TRUE
-        #
-        #    output$ll_map_points <- leaflet::renderLeaflet({
-        #
-        #     #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-        #     points_shpO <- sf::read_sf(points_file$file)
-        #     points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +ellps=GRS80"))
-        #     points_shp$ID <- 1:nrow(points_shp)
-        #     #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-        #     rv$pts_sp <- points_shp
-        #
-        #     rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-        #
-        #     #temLL <- rv$llmap
-        #     #save(temLL, file = '/data/tempR/ll.RData')
-        #     #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
-        #
-        #     makeLL( )
-        #
-        #    })
-        #   }
+          llc
+        })
       }
     }
   })
@@ -4616,14 +4616,14 @@ server <- function(input, output, session) {
 
             r_pal <-leaflet::colorNumeric(palette = sample(c('viridis', 'magma', 'inferno', 'plasma'), 1),
                                           reverse = TRUE,
-                                          domain= base::range(rast2ll[], na.rm = TRUE) + 0.0,
+                                          domain= getMnMx(rast2ll, na.rm = TRUE) + 0.0,
                                           na.color = "transparent")
 
             ll_priv <- ll_priv %>%
               addRasterImage(rast2ll, colors = r_pal, opacity = .7,
                              group = ptname,
                              layerId = ptname) %>%
-              addLegend(pal = r_pal, values= base::range(rast2ll[], na.rm = TRUE),
+              addLegend(pal = r_pal, values= getMnMx(rast2ll, na.rm = TRUE),
                         group = ptname, layerId = ptname,
                         position = 'bottomleft', title = ptname)
 
@@ -4643,14 +4643,14 @@ server <- function(input, output, session) {
                            magma',
                                                               'inferno', 'plasma'), 1),
                                            reverse = TRUE,
-                                           domain= base::range(rast2ll[], na.rm = TRUE) + 0.0,
+                                           domain= getMnMx(rast2ll[], na.rm = TRUE) + 0.0,
                                            na.color = "transparent")
 
             ll_priv <- ll_priv %>%
               addRasterImage(rast2ll, colors = r_pal, opacity = .7,
                              group = ptname,
                              layerId = ptname) %>%
-              addLegend(pal = r_pal, values= base::range(rast2ll[], na.rm = TRUE),
+              addLegend(pal = r_pal, values= getMnMx(rast2ll[], na.rm = TRUE),
                         group = ptname, layerId = ptname,
                         position = 'bottomleft', title = ptname)
 
@@ -5317,7 +5317,7 @@ if (FALSE){
               bsTooltip(id = 'in_crk_4', placement = 'left', title = 'This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.'),
               bsTooltip(id = 'in_crk_5', placement = 'right',  title = 'This determines how the probability of dispersal declines with distance from the focal point. "linear" implements the function 1 - (1/dThreshold) * d where dThreshold is the specified distance threshold and d is the distance from the focal point. "gaussian" implements the function exp(-1*((d**2)/(2*(dispScale**2)))) where d is the distance from the focal point and dispScale is equal to dThreshold/4.'),
               bsTooltip(id = 'in_crk_t', title = 'Transform the kernel volume as done in UNICOR. If NO, kernel volume is ignored'),
-              bsTooltip(id = 'in_crk_6', placement = 'left', title = 'If 1, the default, the resistant kernel value at the origin is 1 and no kernel volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is determined by the equation kVol * 3/(pi*dThreshold**2) where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.'),
+              bsTooltip(id = 'in_crk_6', title = 'If 1, the default, the resistant kernel value at the origin is 1 and no kernel volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is determined by the equation kVol * 3/(pi*dThreshold**2) where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.'),
               bsTooltip(id = 'in_crk_sr', title = 'Resistance layer to use for kernels'),
               bsTooltip(id = 'name_crk', title = 'Name of the new layer'),
               bsTooltip(id = 'crk', title = 'Run the cumulative resistance kernels'),
@@ -5515,18 +5515,18 @@ if (FALSE){
             fluidRow(
               column(2,
                      fluidRow(br(),
-                            tags$table(
-                              style = "width: 100%", align = "left",
-                              tags$tr(tags$td(style = "width: 25%", align = "center",
-                                              htmlOutput(outputId = 'out_par_surA', fill = TRUE))
-                              )),
-                            br(),
-                            br(),
-                            ),
+                              tags$table(
+                                style = "width: 100%", align = "left",
+                                tags$tr(tags$td(style = "width: 25%", align = "center",
+                                                htmlOutput(outputId = 'out_par_surA', fill = TRUE))
+                                )),
+                              br(),
+                              br(),
+                     ),
                      fluidRow(
-                            column(12,
+                       column(12,
                               textInput("in_sur_7", "No Data:", '-9999')
-                     ))
+                       ))
               ),
 
               column(2,
@@ -5540,12 +5540,12 @@ if (FALSE){
 
 
               column(4,
-               #      fluidRow(
-                       # column(3,
-                       # ),
-                       # column(6,
-                              selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
-                       # ),
+                     #      fluidRow(
+                     # column(3,
+                     # ),
+                     # column(6,
+                     selectInput("in_pts_hs", "Source layer:", '50', choices = '', selectize = FALSE)
+                     # ),
                      #)
                      ,
                      textInput('name_sur', label = 'New layer name:', value = "", width = '100%', placeholder = 'NameOfNewLayertoCreate')
@@ -5707,8 +5707,8 @@ if (FALSE){
 
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_ptsA', fill = TRUE)),
-              column(1, textInput("in_points_3", "Min-grid:", '2')),
-              column(1, textInput("in_points_4", "Max-grid:", '95')),
+              column(1, textInput("in_points_3", "Min. val:", '2')),
+              column(1, textInput("in_points_4", "Max. val:", '95')),
               column(2, textInput("in_points_5", "# of points:", '50')),
               column(2, selectInput("in_points_ly", "Source layer:", '50', choices = '')),
               column(2, textInput('name_pts', label = 'New layer name:', value = "",

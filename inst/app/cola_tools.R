@@ -491,6 +491,8 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
   # inrasterpath = 'orig_tifs/size6.tif'
   # outrasterpath = 'size6.tif'
+  # inrasterpath = intif
+  # outrasterpath = outtif
 
   inraster <- inrasterpath
   outraster <- outrasterpath
@@ -547,7 +549,10 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
 
     if( !( nd & ps ) ) {
       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                              tr = rep(max(pixsize), 2), dstnodata = -9999)
+                              tr = rep(max(pixsize), 2),
+        #                      srcnodata = nd0, dstnodata = nd0,
+                              overwrite = TRUE)
+      # gdalUtilities::gdalinfo(outraster)
       outraster0 <- outraster
     }
 
@@ -640,9 +645,12 @@ fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
 
     if( !( ps ) ) {
-      gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+      gdalUtilities::gdalwarp(srcfile = inraster,
+                              dstfile = outraster,
                               ot = 'Float64',
-                              tr = rep(max(pixsize), 2), dstnodata = -9999)
+                              tr = rep(max(pixsize), 2)
+                              #, dstnodata = -9999
+                              )
       outraster0 <- outraster
     } else{
       outraster0 <- inraster
@@ -785,23 +793,27 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
         gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
                                 ot = 'Float64',
                                 #srcband  = 1,
-                                tr = rep(max(pixsize), 2), dstnodata = -9999)
+                                tr = rep(max(pixsize), 2)
+                                #, dstnodata = -9999
+                                )
         outraster0 <- outraster
       } else if( nd & !ps ){
         gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
                                 #srcband  = 1,
-                                srcnodata = nd0,
+                                #srcnodata = nd0,
                                 ot = 'Float64',
-                                tr = rep(max(pixsize), 2))
+                                tr = rep(max(pixsize), 2)
+                                )
         outraster0 <- outraster
 
       } else if (!nd & ps ){
         gdalUtilities::gdalwarp(srcfile = inraster,
                                 dstfile = outraster,
                                 #b = 1,
-                                ot = 'Float64',
-                                srcnodata = nd0 ,
-                                dstnodata = -9999)
+                                ot = 'Float64'
+                                #, srcnodata = nd0 ,
+                                #dstnodata = -9999
+                                )
         outraster0 <- outraster
       } else{
         outraster0 <- inraster
@@ -845,7 +857,9 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
       ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
       if( !( nd & ps ) ) {
         templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-        raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+        raster::resample(x = rx, y = templ, filename = outraster,
+                         # NAflag = -9999,
+                         overwrite = FALSE)
         outraster0 <- outraster
       } else{
         outraster0 <- inraster
@@ -1001,29 +1015,6 @@ loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- 
   return(outshp)
 }
 
-getMxMn <- function(rastPath){
-  # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
-  if(class(rastPath) == 'character'){
-    rst <- terra::rast(rastPath)
-  } else if (class(rastPath) == 'SpatRaster'){
-    rst <- (rastPath)
-  }
-
-  ra <- minmax(rst)[1:2]
-  if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-    return(ra)
-  } else {
-    (ra <- range(rst[], na.rm = TRUE))
-    if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-      return(ra)
-    } else {
-      ra <- global(rst, 'range' )
-      if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-        return(ra)
-      }
-    }
-  }
-}
 
 pdebug <- function(devug, pre = '\n --\n', sep = '\n-',  ...){
   if (devug){
