@@ -208,6 +208,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @param nSteps The number of steps for printing log in console
 #' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
 #' @param yml Use YML file to build the conda environment? Default TRUE
+#' @param ask Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE
+#' @param dss Install cola DSS as well? Default FALSE
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
@@ -373,8 +375,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       (newYmlFile <- paste0(tempfile(), 'newYml.yml'))  # read.delim(newYmlFile)
       writeLines(text = ymlTxt, con = newYmlFile)
 
-      user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
-      if ( isTRUE(user_permission) ) {
+      user_permission <- FALSE
+      if (ask){
+        user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
+      }
+
+      if ( isTRUE(user_permission) | !ask ) {
         insCondLog <- install_cond_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
 
         ## Error: folder exists but empty
@@ -499,7 +505,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     for( l in 1:length(libs2Install)){ # l = 1
       (lib2inst <- libs2Install[l])
       if( ! lib2inst %in% avLibs$package ){
-        cat(paste0(' --- Installing `',  libs2Install[l], '` module\n'))
+        cat(paste0(' \n --- Installing `',  libs2Install[l], '` module\n'))
 
         logPkg <- tryCatch(
           reticulate::py_install(
@@ -685,7 +691,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     # cat(test_suit2res)
 
     ## Run tests
-    intCMD <- tryCatch(shell(test_suit2res, intern = TRUE), error = function(e) e$message)
+    intCMD <- tryCatch(system(test_suit2res, intern = TRUE), error = function(e) e$message)
 
 
     ## Define local paths if test
@@ -784,6 +790,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       #cat(Renviron, sep = '\n')
       writeLines(text = Renviron, con = renv)
+      #gcp <- pyCola
+      #options('COLA_PYTHON_PATH')
+
+      ## Checking gdal_calc.py
+
 
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
@@ -797,9 +808,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
 
       cat (sep = '', '\n\n',
-           '\tPlease restart R to update the new settings\n',
-           '\tCustomize your local parameteres on the file:\n',
-           '\t \tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n')
+           '\tCustomize your local parameteres by editing the file:\n',
+           file.path(Sys.getenv("HOME"), ".Renviron"),'\n\n',
+           '\n\tOpen it on R/Rstudio with the command:\n',
+           '\tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n',
+           '\tPlease restart R to update the new settings\n'
+           )
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")

@@ -80,6 +80,7 @@ cleanMemory <- function(logFilePath){
 }
 
 
+## try deleting files
 delFiles <- function(...){
   invisible(suppressWarnings(
     tryCatch(file.remove(c(...)),
@@ -109,6 +110,40 @@ isProjected <- function(rastPath, details = FALSE){
   return(isProj)
 }
 
+
+## Resample raster layer
+resampIfNeeded <- function(rastPath){
+  # rastPath <- '/data/temp/ZS2023111311113105file4f6823209882/in_surface_fixed_QK2023111311142905file4f687fa39935.tif'
+  # rastPath <- '/data/temp/LI2024011611295205file1a5d191fa71355/in_lcc_CQ2024011611304405file1a5d19779aa294.tif'
+  # rastPath <- '/home/shiny/preCanopyClass30mCost.tif'
+
+  if(!requires(terra)){
+    stop()
+  }
+
+  r <- terra::rast(rastPath)
+  (totpixels <- terra::ncol(r) * terra::nrow(r))
+  #names(r)
+  #rasname <- r@pnt@.xData$filenames()
+  (resamPath <- gsub(x = rastPath,
+                     '.tif$', '_resam.tif'))
+  if(totpixels > options('COLA_VIZ_THREs_PIX')){
+    #if(file.exists()){
+    if (!file.exists(resamPath)){
+
+      gdalUtilities::gdalwarp(srcfile = rastPath,
+                              ts = c(options('COLA_VIZ_RES_NCOL'), options('COLA_VIZ_RES_NROW')),
+                              dstfile = resamPath)
+      cat(paste(' ---- >>>> Resampling raster to ',
+                options('COLA_VIZ_RES_NCOL'),' - ',
+                options('COLA_VIZ_RES_NROW'), '\n'))
+    }
+    #}
+    return(resamPath)
+  } else {
+    return(rastPath)
+  }
+}
 
 
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
@@ -486,7 +521,244 @@ ripTemplate <- data.frame(RIP, row.names = gsub(' .+|\t.+', '', RIP) )
 
 
 
+### Orig fitRaster2cola, cell size and nodata
+fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
+  # setwd('/home/shiny')
+  # inrasterpath = 'orig_tifs/size6.tif'
+  # outrasterpath = 'size6.tif'
+  # inrasterpath = '/data/tempR/colaELU2024080412561105//in_points_JLT2024080412564005.tif'
+  # outrasterpath = '/data/tempR/colaELU2024080412561105//in_points_fixed_JLT2024080412564005.tif'
 
+  inraster <- inrasterpath
+  outraster <- outrasterpath
+
+  outraster0 <- NA
+
+  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
+    stop( print('  >>> Infile not found - ', inraster))
+  }
+
+  if( is.null(outraster) ){
+    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
+                        basename(tempfile()) ,'.tif')
+  } else {
+    if( !file.exists(inraster)){
+      stop( print('  >>> Outfile not found - ', inraster))
+    }
+  }
+
+
+  if (!isProjected(inraster)){
+    return(NA)
+  } else {
+
+    if( require('gdalUtilities') ){
+      # options(scipen = 999)
+      # options(scipen = 9)
+
+      gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+      (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd <- (length(nd0) == 1) & (nd0 == -9999)
+      if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
+
+      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+      options(digits = max(nchar(pixsize0)))
+      (pixsize <- abs(as.numeric(pixsize0 )))
+      (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
+
+      if( !( nd & ps ) ) {
+        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+                                ot = 'Float64',
+                                #srcband  = 1,
+                                tr = rep(max(pixsize), 2)
+                                #, dstnodata = -9999
+                                )
+        outraster0 <- outraster
+      } else if( nd & !ps ){
+        cat ( ' \n Converting raster: Changing no data \n' )
+        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+                                #srcband  = 1,
+                                #srcnodata = nd0,
+                                ot = 'Float64',
+                                tr = rep(max(pixsize), 2)
+                                )
+        outraster0 <- outraster
+
+      } else if (!nd & ps ){
+        cat ( ' \n Converting raster: Changing no data \n' )
+        gdalUtilities::gdalwarp(srcfile = inraster,
+                                dstfile = outraster,
+                                #b = 1,
+                                ot = 'Float64'
+                                #, srcnodata = nd0 ,
+                                #dstnodata = -9999
+        )
+        outraster0 <- outraster
+      } else if (!ps ){
+        cat ( '  Making pixel squared' )
+        gdalUtilities::gdalwarp(srcfile = inraster,
+                                dstfile = outraster,
+                                #b = 1,
+                                ot = 'Float64'
+                                #, srcnodata = nd0 ,
+                                #dstnodata = -9999
+        )
+        outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+
+    } else if(require('raster')){
+      # print(3)
+
+      options(digits = 20)
+      rx <- raster(inraster)
+      nd0 <- rx@file@nodatavalue
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd0 <- nd0 == -9999
+
+      (pixsize <- res(rx))
+      ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      if( !( nd & ps ) ) {
+        templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+        raster::resample(x = rx, y = templ, filename = outraster,
+                         # NAflag = -9999,
+                         overwrite = FALSE)
+        outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+      # } else if(require('raster')){
+      #     # print(3)
+      #
+      #     options(digits = 20)
+      #     rx <- raster(inraster)
+      #     nd <- rx@file@nodatavalue == -9999
+      #
+      #     (pixsize <- res(rx))
+      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      #     if( !( nd & ps ) ) {
+      #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+      #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+      #       outraster0 <- outraster
+      #     } else{
+      #       outraster0 <- inraster
+      #     }
+      #   }
+    }
+
+    options(digits = 5)
+    return(outraster0)
+
+  }
+
+}
+
+### Only pix size
+fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
+  # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
+
+  # inrasterpath = 'orig_tifs/size6.tif'
+  # outrasterpath = 'size6.tif'
+
+  # setwd('/home/shiny')
+  # inrasterpath = 'preCanopyClass30mCost.tif'
+  # outrasterpath = 'preCanopyClass30mCost_OUT.tif'
+
+  inraster <- inrasterpath
+  outraster <- outrasterpath
+
+  outraster0 <- NA
+
+  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
+    stop( print('  >>> Infile not found - ', inraster))
+  }
+
+  if( is.null(outraster) ){
+    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
+                        basename(tempfile()) ,'.tif')
+  } else {
+    if( !file.exists(inraster)){
+      stop( print('  >>> Outfile not found - ', inraster))
+    }
+  }
+
+  # if (require('gdalUtils')){
+  #   # print(1)
+  #
+  #   gi <- gdalUtils::gdalinfo(inraster)
+  #
+  #   nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+  #   nd <- length(nd0) == 1 & nd0 == -9999
+  #
+  #   pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+  #   options(digits = max(nchar(pixsize0)))
+  #   (pixsize <- abs(as.numeric(pixsize0 )))
+  #   ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+  #
+  #   if( !( ps ) ) {
+  #     gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
+  #                         tr = rep(max(pixsize), 2))
+  #     outraster0 <- outraster
+  #   } else {
+  #     outraster0 <- inraster
+  #   }
+  # } else
+  if(require('gdalUtilities')){
+    # print(2)
+
+    # options(scipen = 999)
+    # options(scipen = 9)
+
+    gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+
+    nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
+    nd <- length(nd0) == 1 & nd0 == -9999
+
+    pixsize0 <- unlist(strsplit(split = ',',
+                                gsub('Pixel Size = \\(|\\)', '',
+                                     grep('Pixel Size', gi, value = TRUE))))
+    options(digits = max(nchar(pixsize0)))
+    (pixsize <- abs(as.numeric(pixsize0 )))
+    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+
+    if( !( ps ) ) {
+      gdalUtilities::gdalwarp(srcfile = inraster,
+                              dstfile = outraster,
+                              #ot = 'Float64',
+                              tr = rep(max(pixsize), 2)
+                              #, dstnodata = -9999
+                              )
+      outraster0 <- outraster
+    } else{
+      outraster0 <- inraster
+    }
+
+
+  } else if(require('raster')){
+    # print(3)
+
+    options(digits = 20)
+    rx <- raster(inraster)
+    nd <- rx@file@nodatavalue == -9999
+
+    (pixsize <- res(rx))
+    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+    if( !( nd & ps ) ) {
+      templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+      raster::resample(x = rx, y = templ, filename = outraster, overwrite = FALSE)
+      outraster0 <- outraster
+    } else{
+      outraster0 <- inraster
+    }
+  }
+
+  options(digits = 5)
+  return(outraster0)
+}
+
+## Orig function
 fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
   # inrasterpath = 'orig_tifs/size6.tif'
@@ -576,322 +848,8 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
-### Only pix size
-fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
-  # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
-
-  # inrasterpath = 'orig_tifs/size6.tif'
-  # outrasterpath = 'size6.tif'
-
-  # setwd('/home/shiny')
-  # inrasterpath = 'preCanopyClass30mCost.tif'
-  # outrasterpath = 'preCanopyClass30mCost_OUT.tif'
-
-  inraster <- inrasterpath
-  outraster <- outrasterpath
-
-  outraster0 <- NA
-
-  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
-    stop( print('  >>> Infile not found - ', inraster))
-  }
-
-  if( is.null(outraster) ){
-    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
-                        basename(tempfile()) ,'.tif')
-  } else {
-    if( !file.exists(inraster)){
-      stop( print('  >>> Outfile not found - ', inraster))
-    }
-  }
-
-  # if (require('gdalUtils')){
-  #   # print(1)
-  #
-  #   gi <- gdalUtils::gdalinfo(inraster)
-  #
-  #   nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-  #   nd <- length(nd0) == 1 & nd0 == -9999
-  #
-  #   pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-  #   options(digits = max(nchar(pixsize0)))
-  #   (pixsize <- abs(as.numeric(pixsize0 )))
-  #   ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-  #
-  #   if( !( ps ) ) {
-  #     gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-  #                         tr = rep(max(pixsize), 2))
-  #     outraster0 <- outraster
-  #   } else {
-  #     outraster0 <- inraster
-  #   }
-  # } else
-  if(require('gdalUtilities')){
-    # print(2)
-
-    # options(scipen = 999)
-    # options(scipen = 9)
-
-    gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-
-    nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-    nd <- length(nd0) == 1 & nd0 == -9999
-
-    pixsize0 <- unlist(strsplit(split = ',',
-                                gsub('Pixel Size = \\(|\\)', '',
-                                     grep('Pixel Size', gi, value = TRUE))))
-    options(digits = max(nchar(pixsize0)))
-    (pixsize <- abs(as.numeric(pixsize0 )))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-
-    if( !( ps ) ) {
-      gdalUtilities::gdalwarp(srcfile = inraster,
-                              dstfile = outraster,
-                              ot = 'Float64',
-                              tr = rep(max(pixsize), 2)
-                              #, dstnodata = -9999
-                              )
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-
-
-  } else if(require('raster')){
-    # print(3)
-
-    options(digits = 20)
-    rx <- raster(inraster)
-    nd <- rx@file@nodatavalue == -9999
-
-    (pixsize <- res(rx))
-    ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    if( !( nd & ps ) ) {
-      templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-      raster::resample(x = rx, y = templ, filename = outraster, overwrite = FALSE)
-      outraster0 <- outraster
-    } else{
-      outraster0 <- inraster
-    }
-  }
-
-  options(digits = 5)
-  return(outraster0)
-}
-
-### Orig fitRaster2cola, cell size and nodata
-fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
-  # setwd('/home/shiny')
-  # inrasterpath = 'orig_tifs/size6.tif'
-  # outrasterpath = 'size6.tif'
-  # inrasterpath = '/data/tempR/colaELU2024080412561105//in_points_JLT2024080412564005.tif'
-  # outrasterpath = '/data/tempR/colaELU2024080412561105//in_points_fixed_JLT2024080412564005.tif'
-
-  inraster <- inrasterpath
-  outraster <- outrasterpath
-
-  outraster0 <- NA
-
-  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
-    stop( print('  >>> Infile not found - ', inraster))
-  }
-
-  if( is.null(outraster) ){
-    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
-                        basename(tempfile()) ,'.tif')
-  } else {
-    if( !file.exists(inraster)){
-      stop( print('  >>> Outfile not found - ', inraster))
-    }
-  }
-
-
-  if (!isProjected(inraster)){
-    return(NA)
-  } else {
-
-    #   if (require('gdalUtils')){
-    #     # print(1)
-    #
-    #     gi <- gdalUtils::gdalinfo(inraster)
-    #
-    #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-    #     nd <- length(nd0) == 1 & nd0 == -9999
-    #
-    #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-    #     options(digits = max(nchar(pixsize0)))
-    #     (pixsize <- abs(as.numeric(pixsize0 )))
-    #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    #
-    #     if( !( nd & ps ) ) {
-    #       gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-    #                           tr = rep(max(pixsize), 2), dstnodata = -9999)
-    #       outraster0 <- outraster
-    #     } else{
-    #       outraster0 <- inraster
-    #     }
-
-
-    # if (require('gdalUtils')){
-    #   # print(1)
-    #
-    #   gi <- gdalUtils::gdalinfo(inraster)
-    #
-    #   nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-    #   if (length(nd0) == 0) { nd0 <- 0}
-    #   nd <- length(nd0) == 1 & nd0 == -9999
-    #
-    #   pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-    #   options(digits = max(nchar(pixsize0)))
-    #   (pixsize <- abs(as.numeric(pixsize0 )))
-    #   ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-    #
-    #   if( !( nd & ps ) ) {
-    #     gdalUtils::gdalwarp(srcfile = inraster,
-    #                         b = 1,
-    #                         dstfile = outraster,
-    #                         ot = 'Float64',
-    #                         tr = rep(max(pixsize), 2), dstnodata = -9999)
-    #     outraster0 <- outraster
-    #   } else if ( nd & !ps ){
-    #     gdalUtils::gdalwarp(srcfile = inraster, dstfile = outraster,
-    #                         srcnodata = nd0,
-    #                         ot = 'Float64',
-    #                         tr = rep(max(pixsize), 2))
-    #     outraster0 <- outraster
-    #
-    #   } else if (!nd & ps){
-    #     gdalUtils::gdalwarp(srcfile = inraster,
-    #                         b = 1,
-    #                         dstfile = outraster,
-    #                         ot = 'Float64',
-    #                         srcnodata = nd0 , dstnodata = -9999)
-    #     outraster0 <- outraster
-    #   } else {
-    #     outraster0 <- inraster
-    #   }
-    #
-    # } else
-    # if( require('gdalUtilities') ){ print(2) }
-
-    if( require('gdalUtilities') ){
-      # options(scipen = 999)
-      # options(scipen = 9)
-
-      gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-      (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
-      if (length(nd0) == 0) { nd0 <- 0}
-      nd <- (length(nd0) == 1) & (nd0 == -9999)
-      if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
-
-      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-      options(digits = max(nchar(pixsize0)))
-      (pixsize <- abs(as.numeric(pixsize0 )))
-      (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
-
-      if( !( nd & ps ) ) {
-        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                                ot = 'Float64',
-                                #srcband  = 1,
-                                tr = rep(max(pixsize), 2)
-                                #, dstnodata = -9999
-                                )
-        outraster0 <- outraster
-      } else if( nd & !ps ){
-        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                                #srcband  = 1,
-                                #srcnodata = nd0,
-                                ot = 'Float64',
-                                tr = rep(max(pixsize), 2)
-                                )
-        outraster0 <- outraster
-
-      } else if (!nd & ps ){
-        gdalUtilities::gdalwarp(srcfile = inraster,
-                                dstfile = outraster,
-                                #b = 1,
-                                ot = 'Float64'
-                                #, srcnodata = nd0 ,
-                                #dstnodata = -9999
-                                )
-        outraster0 <- outraster
-      } else{
-        outraster0 <- inraster
-      }
-
-
-      #} else if(require('gdalUtilities')){
-      #     # print(2)
-      #
-      #     # options(scipen = 999)
-      #     # options(scipen = 9)
-      #
-      #     gi <- capture.output(gdalUtilities::gdalinfo(inraster))
-      #
-      #     nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE)))
-      #     nd <- length(nd0) == 1 & nd0 == -9999
-      #
-      #     pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
-      #     options(digits = max(nchar(pixsize0)))
-      #     (pixsize <- abs(as.numeric(pixsize0 )))
-      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-      #
-      #     if( !( nd & ps ) ) {
-      #       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-      #                               tr = rep(max(pixsize), 2), dstnodata = -9999)
-      #       outraster0 <- outraster
-      #     } else{
-      #       outraster0 <- inraster
-      #     }
-      #
-    } else if(require('raster')){
-      # print(3)
-
-      options(digits = 20)
-      rx <- raster(inraster)
-      nd0 <- rx@file@nodatavalue
-      if (length(nd0) == 0) { nd0 <- 0}
-      nd0 <- nd0 == -9999
-
-      (pixsize <- res(rx))
-      ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-      if( !( nd & ps ) ) {
-        templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-        raster::resample(x = rx, y = templ, filename = outraster,
-                         # NAflag = -9999,
-                         overwrite = FALSE)
-        outraster0 <- outraster
-      } else{
-        outraster0 <- inraster
-      }
-      # } else if(require('raster')){
-      #     # print(3)
-      #
-      #     options(digits = 20)
-      #     rx <- raster(inraster)
-      #     nd <- rx@file@nodatavalue == -9999
-      #
-      #     (pixsize <- res(rx))
-      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
-      #     if( !( nd & ps ) ) {
-      #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
-      #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
-      #       outraster0 <- outraster
-      #     } else{
-      #       outraster0 <- inraster
-      #     }
-      #   }
-    }
-
-    options(digits = 5)
-    return(outraster0)
-
-  }
-
-}
-
-
-loadRast <- function(inFiles, tempFolder, sessID){ # inFile <- input$shapefile
+loadRast <- function(inFiles, tempFolder, sessID){
+  # inFile <- input$shapefile
 
 }
 

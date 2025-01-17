@@ -1431,9 +1431,11 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       runCMD <- tryCatch(system(cmdCalc, intern = TRUE), error = function(e) NA)
     } else {
-      ## Run analysis on Windows
 
-      # Use terra::rast
+      ## GDAL calc
+      ## works on win> C:\Users\gonza>C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\python.exe C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\Scripts\gdal_calc.py --help
+
+
       # gdalCalc <- file.path(dirname(Sys.getenv('COLA_PYTHON_PATH')), 'Scripts', 'gdal_calc.py')
       # if (file.exists(gdalCalc)){
       #
@@ -1448,6 +1450,9 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
       #   (a <- system2(gc_cmd, timeout = 10, wait = TRUE))
       #   (b <- system(gc_cmd, timeout = 10, wait = TRUE, intern = TRUE))
       # }
+
+      ## Run analysis on Windows
+      # Use terra::rast
 
       # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
       # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'

@@ -486,36 +486,6 @@ server <- function(input, output, session) {
     # sapply(1:length(rv), function(x){ cat('\n\t', names(rv)[x]); cat(rv[[x]])   })
   }
 
-  resampIfNeeded <- function(rastPath){
-    # rastPath <- '/data/temp/ZS2023111311113105file4f6823209882/in_surface_fixed_QK2023111311142905file4f687fa39935.tif'
-    # rastPath <- '/data/temp/LI2024011611295205file1a5d191fa71355/in_lcc_CQ2024011611304405file1a5d19779aa294.tif'
-    # rastPath <- '/home/shiny/preCanopyClass30mCost.tif'
-
-    r <- terra::rast(rastPath)
-    (totpixels <- terra::ncol(r) * terra::nrow(r))
-    #names(r)
-    #rasname <- r@pnt@.xData$filenames()
-    (resamPath <- gsub(x = rastPath,
-                       '.tif$', '_resam.tif'))
-    if(totpixels > options('COLA_VIZ_THREs_PIX')){
-      #if(file.exists()){
-      if (!file.exists(resamPath)){
-
-        gdalUtilities::gdalwarp(srcfile = rastPath,
-                                ts = c(options('COLA_VIZ_RES_NCOL'), options('COLA_VIZ_RES_NROW')),
-                                dstfile = resamPath)
-        cat(paste(' ---- >>>> Resampling to ',
-                  options('COLA_VIZ_RES_NCOL'),' - ',
-                  options('COLA_VIZ_RES_NROW'), '\n'))
-      }
-      #}
-      return(resamPath)
-    } else {
-      return(rastPath)
-    }
-  }
-
-
 
   makeLL <- function(){
     # https://rstudio.github.io/leaflet/morefeatures.html
@@ -583,7 +553,6 @@ server <- function(input, output, session) {
                              server = TRUE)
         # pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$point_choices')
       }
-
 
       if(rv$tifready){
         grps <- c(grps, "Surface resistance")
@@ -3240,7 +3209,7 @@ server <- function(input, output, session) {
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
         #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- minmax(rv$tif_sp)[1:2]
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
         rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                              domain = rng_newtif+0.0, na.color = "transparent")
 
