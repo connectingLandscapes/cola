@@ -117,8 +117,8 @@ resampIfNeeded <- function(rastPath){
   # rastPath <- '/data/temp/LI2024011611295205file1a5d191fa71355/in_lcc_CQ2024011611304405file1a5d19779aa294.tif'
   # rastPath <- '/home/shiny/preCanopyClass30mCost.tif'
 
-  if(!requires(terra)){
-    stop()
+  if(!require(terra)){
+    stop('Need terra library')
   }
 
   r <- terra::rast(rastPath)
