@@ -68,14 +68,14 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        # allele, ' ', hetero, ' ',
                        method, ' ', neighbors, ' ', crs, ' 2>&1'))
   if (cml){
-  cat('\n\tCMD interpol: \n')
-  cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-  cat('\n')
-}
+    cat('\n\tCMD interpol: \n')
+    cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+    cat('\n')
+  }
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
-                            intern = TRUE),
+                             intern = TRUE),
                      error = function(e) e$message)
   #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
   newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
@@ -126,16 +126,16 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                        # allele, ' ', hetero, ' ',
                        method, ' ', bandwidths, ' ', type, ' ', crs
                        , ' 2>&1 ' #, logname
-                       ))
+  ))
   if (cml){
-  cat('\n\tCMD interpol: \n ')
-  cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-  cat('\n')
+    cat('\n\tCMD interpol: \n ')
+    cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
+    cat('\n')
   }
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
   intCMD <- tryCatch(system( cmd_inter ,
-                            intern = TRUE),
+                             intern = TRUE),
                      error = function(e) e$message)
   #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
   newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
@@ -143,7 +143,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
                log =  intCMD ) )
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+  #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
 
@@ -173,7 +173,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      xy = NULL,
                      tempFolder,
                      prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
-                      cml = TRUE){
+                     cml = TRUE){
   #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
@@ -226,10 +226,10 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath
                  , ' 2>&1 ' #, logname
-                 ))
+  ))
   if (cml){
-  cat('\n\tCMD CDPOP: \n')
-  cat(cmd, '\n')
+    cat('\n\tCMD CDPOP: \n')
+    cat(cmd, '\n')
   }
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
@@ -238,7 +238,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath,
                   log =  intCMD )
-                  #log =  paste0(intCMD, ' -- ', read.delim(logname)) )
+  #log =  paste0(intCMD, ' -- ', read.delim(logname)) )
   return(ans2ret)
 
   # (gridFiles <- grep(pattern = '/grid.+csv$', x = newFiles, value = TRUE))
@@ -471,21 +471,28 @@ getMnMx <- function(rastPath, na.rm = TRUE){
   if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
     return(ra)
   } else {
-    if (!exists(rst) & class(rastPath) == 'SpatRaster'){
-      rst <- terra::rast(rastPath)
-    }
-    ra <- setMinMax(rst, force=TRUE)
-    ra <- minmax(rst)[1:2]
+    invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+    #ra2 <- sf::gdal_utils('info', rastPath,  options = c('-stats'))
+    ra <- as.numeric(strsplit(split = ',',
+                              gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
+    )[[1]])
+
     if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-      return(ra)
-    } else {
-      ra <- global(rst, 'range' )
+
+      rst <- terra::rast(rastPath)
+      ra <- setMinMax(rst, force=TRUE)
+      ra <- minmax(rst)[1:2]
       if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
         return(ra)
       } else {
-        (ra <- range(rst[], na.rm = TRUE))
+        ra <- global(rst, 'range' )
         if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
           return(ra)
+        } else {
+          (ra <- range(rst[], na.rm = TRUE))
+          if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+            return(ra)
+          }
         }
       }
     }
@@ -558,11 +565,11 @@ s2res_py <- function(intif, outtif,
                        format(nodata, scientific=F), ' ',
                        prj
                        , ' 2>&1 ' #, logname
-                       ))
+  ))
   if (cml){
-  cat('\n\tCMD Surface : \n')
-  cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
-  cat('\n')
+    cat('\n\tCMD Surface : \n')
+    cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
+    cat('\n')
   }
 
   intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
@@ -650,11 +657,11 @@ points_py <- function(intif, outshp,
                      format(npoints, scientific=F), ' ',
                      issuit, ' ', upcrs
                      , ' 2>&1 '# , logname
-                     ))
+  ))
   if (cml){
-  cat('\n\tCMD Points: \n')
-  cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
-  cat('\n')
+    cat('\n\tCMD Points: \n')
+    cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
@@ -717,11 +724,11 @@ cdmat_py <- function(inshp, intif, outcsv,
                        ncores, ' ', crs
                        , ' 2>&1 '
                        # , logname
-                       ))
+  ))
   if (cml){
-  cat('\n\n\tCMD cdmat: \n')
-  cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
-  cat('\n')
+    cat('\n\n\tCMD cdmat: \n')
+    cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
@@ -772,12 +779,12 @@ lcc_py <- function(inshp, intif, outtif,
                      format(ncores, scientific=F), " ",
                      crs
                      , ' 2>&1 ' #, logname
-                     ))
+  ))
 
   if (cml){
-  cat('\n\tCMD LCC: \n')
-  cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
-  cat('\n')
+    cat('\n\tCMD LCC: \n')
+    cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+    cat('\n')
   }
 
 
@@ -841,13 +848,13 @@ lccHeavy_py <- function(inshp, intif, outtif,
                      h5file2, " ",
                      '50'
                      , ' 2>&1 ' #, logname
-                     ))
+  ))
 
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
   if (cml){
-  cat('\n\tCMD LCC:\n', cmd_lcc)
-  cat('\n')
+    cat('\n\tCMD LCC:\n', cmd_lcc)
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
@@ -920,8 +927,8 @@ lccJoblib_py <- function(inshp, intif, outtif,
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
   if (cml){
-  cat('\n\tCMD LCC joblib:\n', cmd_lcc)
-  cat('\n')
+    cat('\n\tCMD LCC joblib:\n', cmd_lcc)
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
@@ -970,12 +977,12 @@ crk_py <- function(inshp, intif, outtif,
                      format(ncores, scientific=F), ' ', # [7] cores
                      crs
                      , ' 2>&1 ' #, logname
-                     ) # [8] proj
+  ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
   if (cml){
-  cat('\n\tCMD Kernel:\n',cmd_crk)
-  cat('\n')
+    cat('\n\tCMD Kernel:\n',cmd_crk)
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
@@ -1067,12 +1074,12 @@ pri_py <- function(tif, incrk, inlcc,
                       format(threshold, scientific=F), " ",
                       format(tolerance, scientific=F)
                       , ' 2>&1 ' #, logname
-                      ))
+  ))
 
   if (cml){
-  cat('\n\tCMD prio: \n')
-  cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
-  cat('\n')
+    cat('\n\tCMD prio: \n')
+    cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
+    cat('\n')
   }
 
 
@@ -1137,12 +1144,12 @@ crk_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield
                           , ' 2>&1 ' #, logname
-                          )
+  )
   )
   if (cml){
-  cat('\n\tCMD Compare CRK: \n')
-  cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
-  cat('\n')
+    cat('\n\tCMD Compare CRK: \n')
+    cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
@@ -1200,12 +1207,12 @@ lcc_compare_py <- function(intif, intifs,
                           outfolder, ' ',
                           inshp, ' ', shpfield
                           , ' 2>&1 ' #, logname
-                          )
+  )
   )
   if (cml){
-  cat('\n\tCMD Comp LCC: \n ')
-  cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
-  cat('\n')
+    cat('\n\tCMD Comp LCC: \n ')
+    cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
+    cat('\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
