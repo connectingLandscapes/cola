@@ -438,7 +438,7 @@ guessNoData <- function(path){
 #' @return Numeric vector of two numbers
 #' @examples
 #' input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' getMxMn(input_tif)
+#' getMnMx(input_tif)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -447,6 +447,8 @@ getMnMx <- function(rastPath, na.rm = TRUE){
   # rastPath = 'C:/temp/cola/colaOCC2025011423394005//out_lcc_JCH2025011423414805.tif'
   na.rm * 1
 
+  ra <- c(NA, NA)
+  # Path path
   if(class(rastPath) == 'character'){
     invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
     #ra2 <- sf::gdal_utils('info', rastPath,  options = c('-stats'))
@@ -455,31 +457,24 @@ getMnMx <- function(rastPath, na.rm = TRUE){
     )[[1]])
     #rst <- terra::rast(rastPath)
 
+    if( !(all(is.numeric(ra)) & all(!is.infinite(ra)))  ){
+      rst <- terra::rast(rastPath)
+      ra <- setMinMax(rst, force=TRUE)
+      ra <- minmax(rst)[1:2]
+      if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
+        ra <- global(rst, 'range' )
+        if(!(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
+          (ra <- range(rst[], na.rm = TRUE))
+        }
+      }
+    }
+
+    # Raster path
   } else if (class(rastPath) == 'SpatRaster'){
     rst <- (rastPath)
     if (rst@ptr$inMemory){
       rastPath <- sources(rst)
-      invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
-      ra <- as.numeric(strsplit(split = ',',
-                                gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
-      )[[1]])
-    } else {
-      ra <- minmax(rst)[1:2]
-    }
-  }
-
-  ## Round 2
-  if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
-
-    if(class(rastPath) == 'character') {
-      invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
-      ra <- as.numeric(strsplit(split = ',',
-                                gsub('.+=', '', grep(strsplit(ras, '\n')[[1]],
-                                                     pattern = 'Min/Max', value = TRUE)))[[1]])
-    } else if (class(rastPath) == 'SpatRaster'){
-      rst <- (rastPath)
-      if (rst@ptr$inMemory){
-        rastPath <- sources(rst)
+      if(file.exists(rastPath)){
         invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
         ra <- as.numeric(strsplit(split = ',',
                                   gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
@@ -487,29 +482,16 @@ getMnMx <- function(rastPath, na.rm = TRUE){
       } else {
         ra <- minmax(rst)[1:2]
       }
-    }
-
-    if( !(all(is.numeric(ra)) & all(!is.infinite(ra)))  ){
-      rst <- terra::rast(rastPath)
-      ra <- setMinMax(rst, force=TRUE)
+    } else {
       ra <- minmax(rst)[1:2]
-      if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
-        return(ra)
-      } else {
-        ra <- global(rst, 'range' )
-        if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-          return(ra)
-        } else {
-          (ra <- range(rst[], na.rm = TRUE))
-          if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-            return(ra)
-          }
-        }
-      }
     }
   }
   return(ra)
 }
+#getMnMx(rastPath=rast(volcano))
+#getMnMx('/home/shiny/Probability.tif')
+
+
 
 #' @title  Adapt file path. Change backslash to slash
 #' @description Fix paths so internal console recognize paths. Change backslash to backslash
