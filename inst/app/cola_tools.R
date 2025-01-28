@@ -562,49 +562,52 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
       nd <- (length(nd0) == 1) & (nd0 == -9999)
       if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
 
-      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '', grep('Pixel Size', gi, value = TRUE))))
+      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '',
+                                                    grep('Pixel Size', gi, value = TRUE))))
       options(digits = max(nchar(pixsize0)))
       (pixsize <- abs(as.numeric(pixsize0 )))
       (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
 
-      if( !( nd & ps ) ) {
+      #if( !( nd & ps ) ) {
+      if( !( ps ) ) {
         gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                                ot = 'Float64',
+                                # ot = 'Float64',
                                 #srcband  = 1,
                                 tr = rep(max(pixsize), 2)
                                 #, dstnodata = -9999
                                 )
         outraster0 <- outraster
-      } else if( nd & !ps ){
-        cat ( ' \n Converting raster: Changing no data \n' )
-        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-                                #srcband  = 1,
-                                #srcnodata = nd0,
-                                ot = 'Float64',
-                                tr = rep(max(pixsize), 2)
-                                )
-        outraster0 <- outraster
-
-      } else if (!nd & ps ){
-        cat ( ' \n Converting raster: Changing no data \n' )
-        gdalUtilities::gdalwarp(srcfile = inraster,
-                                dstfile = outraster,
-                                #b = 1,
-                                ot = 'Float64'
-                                #, srcnodata = nd0 ,
-                                #dstnodata = -9999
-        )
-        outraster0 <- outraster
-      } else if (!ps ){
-        cat ( '  Making pixel squared' )
-        gdalUtilities::gdalwarp(srcfile = inraster,
-                                dstfile = outraster,
-                                #b = 1,
-                                ot = 'Float64'
-                                #, srcnodata = nd0 ,
-                                #dstnodata = -9999
-        )
-        outraster0 <- outraster
+      # }
+      # else if( nd & !ps ){
+      #   cat ( ' \n Converting raster: Changing no data \n' )
+      #   gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+      #                           #srcband  = 1,
+      #                           #srcnodata = nd0,
+      #                           ot = 'Float64',
+      #                           tr = rep(max(pixsize), 2)
+      #                           )
+      #   outraster0 <- outraster
+      #
+      # } else if (!nd & ps ){
+      #   cat ( ' \n Converting raster: Changing no data \n' )
+      #   gdalUtilities::gdalwarp(srcfile = inraster,
+      #                           dstfile = outraster,
+      #                           #b = 1,
+      #                           ot = 'Float64'
+      #                           #, srcnodata = nd0 ,
+      #                           #dstnodata = -9999
+      #   )
+      #   outraster0 <- outraster
+      # } else if (!ps ){
+      #   cat ( '  Making pixel squared' )
+      #   gdalUtilities::gdalwarp(srcfile = inraster,
+      #                           dstfile = outraster,
+      #                           #b = 1,
+      #                           ot = 'Float64'
+      #                           #, srcnodata = nd0 ,
+      #                           #dstnodata = -9999
+      #   )
+      #   outraster0 <- outraster
       } else{
         outraster0 <- inraster
       }

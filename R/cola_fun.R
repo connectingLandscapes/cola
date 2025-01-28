@@ -443,7 +443,7 @@ guessNoData <- function(path){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 getMnMx <- function(rastPath, na.rm = TRUE){
-  # rastPath = '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+  #rastPath = '/data/tempR/colaEXR2025012814493505/Mountainaire_prePercentCanopy30m.tif'
   # rastPath = 'C:/temp/cola/colaOCC2025011423394005//out_lcc_JCH2025011423414805.tif'
   na.rm * 1
 
@@ -471,6 +471,9 @@ getMnMx <- function(rastPath, na.rm = TRUE){
   if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
     return(ra)
   } else {
+    if (!exists(rst) & class(rastPath) == 'SpatRaster'){
+      rst <- terra::rast(rastPath)
+    }
     ra <- setMinMax(rst, force=TRUE)
     ra <- minmax(rst)[1:2]
     if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){

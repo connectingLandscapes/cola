@@ -1,0 +1,6 @@
+logfile=/home/shiny/log_LAOS_L.txt
+
+for i in `seq 0 999999`; do
+echo q | htop | aha --black --line-fix | grep '\[' >> $logfile
+sleep 30s
+done

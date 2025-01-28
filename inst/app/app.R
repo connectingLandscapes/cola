@@ -524,7 +524,7 @@ server <- function(input, output, session) {
           rv$hs2s <- resampIfNeeded(rv$hs)
           rv$hs0 <- rv$hs
         }
-        #rv <- list(hs2s = "C:/temp/cola//colaAQZ2025011423115905//out_crk_ZWL2025011423151605.tif")
+        #rv <- list(hs2s = "/data/tempR//colaJOR2025012814413205/CopyOfin_surface_HSI2025012814414305.tif")
         rv$hs2s_sp <- terra::rast(rv$hs2s)
         rv$hs_rng2 <- c(0, max(getMnMx(rv$hs2s)))# hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$hs_pal2 <- leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
@@ -533,16 +533,18 @@ server <- function(input, output, session) {
 
         # pdebug(devug = devug, sep = '\n-', pre = '-', '(rv$hs)', 'rv$hs2s')
 
+        suppressWarnings(
         ll0 <- ll0 %>% addRasterImage(x = rv$hs2s_sp,
                                       colors = rv$hs_pal2,
                                       opacity = .7,
                                       group = "Habitat suitability",
                                       layerId = "HabitatSuitability") %>%
-          addLegend(pal = rv$hs_pal2, values = rv$hs_rng2,
+          addLegend(pal = rv$hs_pal2, values = rv$hs_rng2 + c(0.001, 0.0),
                     group = "Habitat suitability", layerId = "Habitat suitability",
                     position = 'bottomleft', title = "Suitability"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
+        )
 
         #inPoints <<- input$in_points_ly
         #pdebug(devug = devug, pre = '\n', sep = '\n-', '(rv$hs)', 'rv$hs2s', 'rv$point_choices', "input$in_points_ly", 'inPoints')
@@ -577,6 +579,7 @@ server <- function(input, output, session) {
         pdebug(devug=FALSE,pre='\n MakeLL - TIF', sep='\n',
                'rv$tiforig','rv$tif0', 'rv$tif0 != rv$tiforig', 'rv$tif2s', 'rv$tif_rng2')
 
+        suppressWarnings(
 
         ll0 <- ll0 %>%
           addRasterImage(rv$tif2s_sp, colors = rv$tif_pal2,
@@ -590,6 +593,7 @@ server <- function(input, output, session) {
                     position = 'bottomleft', title = "Resistance"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
+        )
 
         #pdebug(devug = devug, pre = '\n', sep = '\n-', 'rv$tif', 'rv$point_choices', "input$in_points_ly")
         rv$point_choices <- unique(c(rv$point_choices, 'SurfaceResistance'))
@@ -612,17 +616,18 @@ server <- function(input, output, session) {
         rv$crk_rng2 <- getMnMx(rv$crk2s) + 0.000 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         print(rv$crk_rng2)
         rv$crk_pal2 <-leaflet::colorNumeric(palette = crk_pal_name, reverse = TRUE,
-                                            domain = rv$crk_rng2 + 0.001,
+                                            domain = rv$crk_rng2 + c(0.001, 0),
                                             na.color = "transparent")
 
-
+        suppressWarnings(
         ll0 <- ll0 %>% addRasterImage(rv$crk2s_sp, colors = rv$crk_pal2, opacity = .7,
                                       group = "Kernels", layerId = "Kernels") %>%
-          addLegend(pal = rv$crk_pal2, values = rv$crk_rng2,
+          addLegend(pal = rv$crk_pal2, values = rv$crk_rng2 + c(0.001, 0),
                     layerId = "Kernels", group = "Kernels",
                     position = 'bottomleft', title = "Kernels"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
+        )
       }
 
       if((rv$lccready)){
@@ -639,16 +644,18 @@ server <- function(input, output, session) {
         rv$lcc2s_sp <- terra::rast(rv$lcc2s)
         rv$lcc_rng2 <- getMnMx(rv$lcc2s) + 0.001 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$lcc_pal2 <-leaflet::colorNumeric(palette = 'plasma', reverse = TRUE,
-                                            domain = rv$lcc_rng2 + 0.0,
+                                            domain = rv$lcc_rng2 + c(0.001, 0),
                                             na.color = "transparent")
 
+        suppressWarnings(
         ll0 <- ll0 %>% addRasterImage(rv$lcc2s_sp, colors = rv$lcc_pal2, opacity = .7,
                                       group = "Corridors", layerId = "Corridors") %>%
-          addLegend(pal = rv$lcc_pal2, values = rv$lcc_rng2,
+          addLegend(pal = rv$lcc_pal2, values = rv$lcc_rng2 + c(0.001, 0),
                     layerId = "Corridors", group = "Corridors",
                     position = 'bottomleft', title = "Corridors"#, opacity = .3
                     #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
           )
+        )
       }
 
 
@@ -2106,7 +2113,13 @@ server <- function(input, output, session) {
         rv$log <- paste0(rv$log, # _______
                          '\nCreating resistance surface');updateVTEXT(rv$log) # _______
 
-        in_sur_7 <- ifelse(input$in_sur_7 == '', yes = -9999, no = input$in_sur_7)
+
+
+
+        in_sur_7 <- ifelse(input$in_sur_7 == '', yes = guessNoData(rv$hs),
+                           no = as.numeric(input$in_sur_7))
+        in_sur_7 <- ifelse(is.na(in_sur_7), yes = guessNoData(rv$hs),
+                           no = in_sur_7)
 
 
         hs2rs_file <- tryCatch(s2res_py(py = py,
@@ -3861,7 +3874,7 @@ server <- function(input, output, session) {
   })
 
 
-  observeEvent(input$pri, {
+  isolate(observeEvent(input$pri, {
     condDist <- 0
     if(rv$crkready & rv$lccready){
       condDist <- 1
@@ -3892,8 +3905,9 @@ server <- function(input, output, session) {
       # out_pri_tif <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.tif'
       # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
       # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
+      cat("\n --- Prio start\n")
 
-      output$ll_map_pri <- leaflet::renderLeaflet({
+      isolate(output$ll_map_pri <- leaflet::renderLeaflet({
 
         tStartPri <- Sys.time()
         out_pri <- tryCatch(pri_py(tif = rv$tif,
@@ -3916,15 +3930,10 @@ server <- function(input, output, session) {
         tElapPri <- Sys.time() - tStartPri
         textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
 
-
         rv$pritif <- out_pri$tif
         rv$prishp <- out_pri$shp
 
-        if(is.na(out_pri$shp)){
-          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
-          return(rv$llmap)
-
-        } else {
+        if(!is.na(out_pri$shp)){
           rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
           # rv$lcc <- out_lcc
@@ -3941,31 +3950,22 @@ server <- function(input, output, session) {
                                                          domain = rng_newtif+0.01, na.color = "transparent")
           # "viridis", "magma", "inferno", or "plasma".
 
-          makeLL()
-
-          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
-          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
-          #         group = "Surface resistance", layerId = 'Kernel') %>%
-          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
-          #       position = 'topleft',
-          #       title= "Dispersal Kernel"#, opacity = .3
-          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-          #  ) %>% leaflet::addLayersControl(
-          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-          #   options = leaflet::layersControlOptions(collapsed = FALSE)
-          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-          #
-          # rv$llmap <<- llmap
-          # updateLL(llmap)
-          # rv$llmap
-          #
-          # # ## try
-          # llx <- makeLL()
-          # rv$ll
+        } else {
+          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
+          cat(' \ == Error: \n')
+          cat(out_pri$log, '\n')
+          #outLL <- leafletProxy("ll_map_pri")
+          #print(class(outLL))
         }
+
+        #cat(' \ == if out\n')
+        makeLL()
       })
+      ) #isolate
+      #cat("\n ==== Prio ends\n")
     }
   })
+  ) # isolate
 
 
   ## load your LCC
@@ -5243,7 +5243,7 @@ if (FALSE){
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
               bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a lesser increase in resistance as suitability declines.'),
-              bsTooltip(id = 'in_sur_7', title = 'The no data value of the input file'),
+              bsTooltip(id = 'in_sur_7', title = 'The no data value of the input raster. This value will be extracted form the raster if not provided'),
               bsTooltip(id = 'in_pts_hs', title = 'Name of the layer to use'),
               bsTooltip(id = 'name_sur', title = 'Name of the output'),
               bsTooltip(id = 'h2r', title = 'Run the function'),
@@ -5494,7 +5494,7 @@ if (FALSE){
                      ),
                      fluidRow(
                        column(12,
-                              textInput("in_sur_7", "No Data:", '-9999')
+                              textInput("in_sur_7", "No Data:", '')
                        ))
               ),
 
