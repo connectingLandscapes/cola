@@ -468,21 +468,32 @@ getMnMx <- function(rastPath, na.rm = TRUE){
     }
   }
 
-  if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
-    return(ra)
-  } else {
-    invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
-    #ra2 <- sf::gdal_utils('info', rastPath,  options = c('-stats'))
-    ra <- as.numeric(strsplit(split = ',',
-                              gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
-    )[[1]])
+  ## Round 2
+  if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
 
-    if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+    if(class(rastPath) == 'character') {
+      invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+      ra <- as.numeric(strsplit(split = ',',
+                                gsub('.+=', '', grep(strsplit(ras, '\n')[[1]],
+                                                     pattern = 'Min/Max', value = TRUE)))[[1]])
+    } else if (class(rastPath) == 'SpatRaster'){
+      rst <- (rastPath)
+      if (rst@ptr$inMemory){
+        rastPath <- sources(rst)
+        invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+        ra <- as.numeric(strsplit(split = ',',
+                                  gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
+        )[[1]])
+      } else {
+        ra <- minmax(rst)[1:2]
+      }
+    }
 
+    if( !(all(is.numeric(ra)) & all(!is.infinite(ra)))  ){
       rst <- terra::rast(rastPath)
       ra <- setMinMax(rst, force=TRUE)
       ra <- minmax(rst)[1:2]
-      if( all(is.numeric(ra)) & all(!is.infinite(ra)) ){
+      if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
         return(ra)
       } else {
         ra <- global(rst, 'range' )
@@ -497,6 +508,7 @@ getMnMx <- function(rastPath, na.rm = TRUE){
       }
     }
   }
+  return(ra)
 }
 
 #' @title  Adapt file path. Change backslash to slash
