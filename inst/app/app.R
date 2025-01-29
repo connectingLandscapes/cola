@@ -615,7 +615,7 @@ server <- function(input, output, session) {
         }
         rv$crk2s_sp <- terra::rast(rv$crk2s)
         rv$crk_rng2 <- getMnMx(rv$crk2s) + 0.000 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
-        print(rv$crk_rng2)
+        #print(rv$crk_rng2)
         rv$crk_pal2 <-leaflet::colorNumeric(palette = crk_pal_name, reverse = TRUE,
                                             domain = rv$crk_rng2 + c(0.001, 0),
                                             na.color = "transparent")
@@ -3655,8 +3655,8 @@ server <- function(input, output, session) {
           # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
           # # plot(newtif)
 
-          rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                                         domain = rng_newtif+0.01, na.color = "transparent")
+          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+          #                                               domain = rng_newtif+0.01, na.color = "transparent")
 
           # "viridis", "magma", "inferno", or "plasma".
           ## Update all visor
@@ -3855,9 +3855,11 @@ server <- function(input, output, session) {
         updateTextInput(session, "in_pri_5",
                         value = input$pri_slider)
 
-        rv$crk_pal2 <- leaflet::colorNumeric(
-          palette = "plasma", reverse = TRUE,
-          domain = newDm, na.color = "transparent")
+        suppressWarnings(
+          rv$crk_pal2 <- leaflet::colorNumeric(
+            palette = "plasma", reverse = TRUE,
+            domain = newDm, na.color = "transparent")
+        )
 
         oldLim <- input$ll_map_pri_prev_bounds
         #save(oldLim, file = 'bounds.RData')
@@ -4332,7 +4334,9 @@ server <- function(input, output, session) {
                 papalette <- 'Blues'
                 rrev <- FALSE
 
-              }; cat (' ori_rng for comp: ', com_rng2[1], ' ', com_rng2[2], ' | Palette: ', papalette, '\n')
+              };
+
+              #cat (' ori_rng for comp: ', com_rng2[1], ' ', com_rng2[2], ' | Palette: ', papalette, '\n')
 
 
               com_pal <- leaflet::colorNumeric(palette = papalette, reverse = rrev,
@@ -4346,8 +4350,10 @@ server <- function(input, output, session) {
               #ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
               ori_rng2 <- range(ori_rng, na.rm = TRUE)
 
-              ori_pal <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                               domain = ori_rng2+0.00, na.color = "transparent")
+              ori_pal <- leaflet::colorNumeric(palette = "viridis",
+                                               domain = ori_rng2+ c(0.001,0),
+                                               reverse = TRUE,
+                                               na.color = "transparent")
 
               {
                 # ## OPT1: sync 3 layers
@@ -4411,10 +4417,12 @@ server <- function(input, output, session) {
 
               ## Orig layers
               for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
-                llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
-                                              opacity = .7,
-                                              group = names(ori_stack)[x1],
-                                              layerId = names(ori_stack)[x1])
+                suppressWarnings(
+                  llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
+                                                opacity = .7,
+                                                group = names(ori_stack)[x1],
+                                                layerId = names(ori_stack)[x1])
+                )
               }
 
               ## Compare layers
@@ -5623,19 +5631,22 @@ if (FALSE){
             # ),
 
             fluidPage(
-              column(2, tags$table(style = "width: 100%", align = "left", tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))),
+              column(1, tags$table(style = "width: 100%", align = "left", tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))),
               column(2,
                      h6(paste("Use a positive or negative single value other than 0.",
                               "Please remove existing polygons before running again. "))),
 
               column(1, textInput("in_edi_val", label = "Value:", value = 0)), # to add/replace
+              column(2,
+                     h6(paste("The resulting layer will show only raster values greater than 1.",
+                              "Please remove existing polygons before running again. "))),
               column(2, numericInput("in_edi_wid", label = "Pixel width:", value = 1)),
-              column(2, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
+                     column(1, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
               #column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(1, actionButton("edi", HTML("Add vals"), icon = icon("play"))),
-              column(1, actionButton("rpl", HTML("Replace vals"), icon = icon("play"))),
+              column(2, actionButton("edi", HTML("Add vals"), icon = icon("plus")),
+               actionButton("rpl", HTML("Replace vals"), icon = icon("repeat"))),
 
               column(1, downloadButton('editifDwn', 'Download'))
 
