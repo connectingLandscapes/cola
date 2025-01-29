@@ -1700,10 +1700,11 @@ server <- function(input, output, session) {
     output$vout_cdp <- isolate(renderText({
 
       tStartCDP <- Sys.time()
-      cdpop_ans <<- cdpop_py(inputvars = invars_file_path,
+      cdpop_ans <<- tryCatch(cdpop_py(inputvars = invars_file_path,
                              agevars = NULL,
                              cdmat = rv$cdm, xy = rv$ptsxy,
-                             tempFolder = tempFolder, prefix = pref)
+                             tempFolder = tempFolder, prefix = pref),
+                             error = function(e) NA)
       #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
       rv$cdpop_ans <<- cdpop_ans
       cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)

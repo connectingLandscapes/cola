@@ -237,7 +237,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
   ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath,
-                  log =  intCMD )
+                  log =  CMDcp )
   #log =  paste0(intCMD, ' -- ', read.delim(logname)) )
   return(ans2ret)
 
