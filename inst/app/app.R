@@ -524,7 +524,7 @@ server <- function(input, output, session) {
           rv$hs2s <- resampIfNeeded(rv$hs)
           rv$hs0 <- rv$hs
         }
-        #rv <- list(hs2s = "/data/tempR//colaJOR2025012814413205/CopyOfin_surface_HSI2025012814414305.tif")
+        #rv <- list(hs2s = "/data/tempR//colaRDB2025012818465505//out_surface_SPY2025012818474205.tif")
         rv$hs2s_sp <- terra::rast(rv$hs2s)
         rv$hs_rng2 <- c(0, max(getMnMx(rv$hs2s)))# hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         rv$hs_pal2 <- leaflet::colorNumeric(palette = hs_pal_name, reverse = TRUE,
@@ -566,6 +566,7 @@ server <- function(input, output, session) {
           rv$tif2s <- resampIfNeeded(rv$tiforig)
           rv$tif0 <- rv$tiforig
         }
+        #rv <- list(tif2s = "/data/tempR//colaRDB2025012818465505//out_surface_SPY2025012818474205.tif")
         rv$tif2s_sp <- terra::rast(rv$tif2s)
         rv$tif_rng2 <- getMnMx(rv$tif2s) + 0.0 # hs = "viridis" | sr "magma" | crk "inferno" | lcc "plasma"
         #
@@ -2075,7 +2076,7 @@ server <- function(input, output, session) {
         rv$hs_sp <- terra::rast(rv$hs)
         #rng_newtif <- c(newtif@data@min, newtif@data@max)
         #rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
-        rv$hs_rng <- rng_newtif <- getMnMx(rv$hs_sp)
+        rv$hs_rng <- rng_newtif <- getMnMx(rv$hs)
 
         updateTextInput(session, inputId = "in_sur_3",
                         value = max(rv$hs_rng[1], 0, na.rm = TRUE))
@@ -2145,9 +2146,11 @@ server <- function(input, output, session) {
           rv$tif <- hs2rs_file$file
           rv$tiforig <- hs2rs_file$file
 
+          #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
+
           rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
           #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-          rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
+          rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
           rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
                                                         domain = rng_rstif, na.color = "transparent")
 

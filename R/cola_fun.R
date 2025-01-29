@@ -443,6 +443,8 @@ guessNoData <- function(path){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 getMnMx <- function(rastPath, na.rm = TRUE){
+  # rastPath0 <- rastPath
+  # rastPath <- rastPath0
   #rastPath = '/data/tempR/colaEXR2025012814493505/Mountainaire_prePercentCanopy30m.tif'
   # rastPath = 'C:/temp/cola/colaOCC2025011423394005//out_lcc_JCH2025011423414805.tif'
   na.rm * 1
@@ -472,17 +474,13 @@ getMnMx <- function(rastPath, na.rm = TRUE){
     # Raster path
   } else if (class(rastPath) == 'SpatRaster'){
     rst <- (rastPath)
-    if (rst@ptr$inMemory){
-      rastPath <- sources(rst)
-      if(file.exists(rastPath)){
-        invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
-        ra <- as.numeric(strsplit(split = ',',
-                                  gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
-        )[[1]])
-      } else {
-        ra <- minmax(rst)[1:2]
-      }
-    } else {
+    rastPath <- sources(rst)
+    if(file.exists(rastPath)){ # in disk
+      invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
+      ra <- as.numeric(strsplit(split = ',',
+                                gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
+      )[[1]])
+    } else { # in memory
       ra <- minmax(rst)[1:2]
     }
   }
@@ -490,7 +488,7 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 }
 #getMnMx(rastPath=rast(volcano))
 #getMnMx('/home/shiny/Probability.tif')
-
+# cola::getMnMx('/data/tempR//colaRDB2025012818465505//out_surface_IEB2025012818473305.tif')
 
 
 #' @title  Adapt file path. Change backslash to slash
