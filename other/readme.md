@@ -1,4 +1,4 @@
-<table align="center" border="0">
+<table align="center" border="0" style="width:30%">
      <tr>
       <td align="center">
        <a href="http://34.44.31.4:3838/connecting-landscapes" target="_blank">
@@ -9,7 +9,7 @@
     </tr>
 </table>
 
-<table align="center" border="0">
+<table align="center" border="0" style="width:100%">
      <tr>
       <td align="center">
        <a href="http://34.44.31.4:3838/connecting-landscapes" target="_blank">
