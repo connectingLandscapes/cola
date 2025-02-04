@@ -5,6 +5,6 @@
         <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true" alt="DON'T FORGET THIS">
         </a>
       </td>
-       <td align="center" colspan="4"> Wait some seconds </td>
+       <td align="center" colspan="4"> Wait some seconds meanwhile server fully loads </td>
     </tr>
 </table>
