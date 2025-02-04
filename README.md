@@ -3,9 +3,17 @@
 
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
-| | |
-|-------|:-:|
-|[![CoLa server](https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true)][1] | Wait some seconds meanwhile server loads|
+<table align="center" border="0" >
+     <tr>
+      <td align="center" width="60%">
+       <a href="http://34.44.31.4:3838/connecting-landscapes" target="_blank">
+        <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true" alt="DON'T FORGET THIS">
+        </a>
+      </td>
+       <td align="center" width="40%"> Wait some seconds while the server fully loads </td>
+    </tr>
+</table>
+
 
 > Decision Support System Overview
 
