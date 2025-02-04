@@ -13,7 +13,7 @@
 
 aa
 
- <table>
+<table align="center">
   <tbody>
     <tr>
       <td align="center">Key Features<br>
@@ -27,7 +27,7 @@ aa
         <span>&nbsp;&nbsp;</span>
       </td>
       <td>
-    <a href="stackoverflow.com">
+    <a href="http://34.44.31.4:3838/connecting-landscapes">
         <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true" alt="DON'T FORGET THIS">
     </a>
 </td>
