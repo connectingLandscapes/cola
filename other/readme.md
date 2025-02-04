@@ -17,9 +17,7 @@
         </a>
       </td>
        <td align="center"> 
-            <div style="width: 50px" > 
-            Wait some seconds while the server fully loads </td>
-          </div>
+            <div style="width: 10px" > Wait some seconds while the server fully loads </div></td>
     </tr>
 </table>
 
