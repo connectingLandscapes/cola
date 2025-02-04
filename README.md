@@ -5,7 +5,7 @@
 
 <div align="center">
  &nbsp;| &nbsp; 
-:---- | :---: |
+:---- | :---: 
 |[![CoLa server](https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true)][1] | Wait some seconds meanwhile server loads
 </div>
 
