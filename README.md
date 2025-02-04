@@ -4,7 +4,7 @@
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
 | | |
-|-------|:--:|
+|-------|:-:|
 |[![CoLa server](https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small.png?raw=true)][1] | Wait some seconds meanwhile server loads|
 
 <div align="center">
