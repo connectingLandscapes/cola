@@ -3,6 +3,8 @@
 
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
+[![CoLa server](https://github.com/connectingLandscapes/cola/blob/main/other/servericon.png?raw=true)
+
 > Toolkit Overview
 
 Increasing loss and fragmentation of habitats has resulted in an urgent need to identify areas for conservation that also maintain and enhance the ecological connectivity of protected areas. The Connecting Landscapes (CoLa) toolkit integrates and enhances numerous landscape genetics and habitat connectivity tools (Landguth and Cushman 2010, Landguth et al. 2012) to aid in identifying connectivity conservation priorities and areas of potential human-wildlife conflict.
@@ -42,3 +44,5 @@ Here are the servers links, only available during workshops
   * [Medium server link](http://34.44.31.4:3838/connecting-landscapes/)
   * [Big server link](http://34.44.133.188:3838/connecting-landscapes/)
 
+
+[1]: http://34.44.31.4:3838/connecting-landscapes/
