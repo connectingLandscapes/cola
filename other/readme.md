@@ -8,3 +8,8 @@
        <td align="center" colspan="4"> Wait some seconds meanwhile server fully loads </td>
     </tr>
 </table>
+
+
+| <div style="width:290px">property</div> | description                           |
+| --------------------------------------- | ------------------------------------- |
+| `border-bottom-right-radius`            | Defines the shape of the bottom-right |
