@@ -225,7 +225,7 @@
 # >> SERVER ---------------------------------------------------------------------------
 server <- function(input, output, session) {
 
-  ## Disable buttons ------
+  # Disable buttons ------
   shinyjs::disable("name_sur") # out_par_surA
   shinyjs::disable("in_pts_hs") # out_par_surA
   shinyjs::disable("name_pts") #
