@@ -224,7 +224,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
                                           'pytables', 'pandas',  'cython', 'numba' ,
-                                          'networkit', 'fiona', 'shapely',
+                                          'networkit==11.0', 'fiona', 'shapely',
                                           'kdepy', 'scikit-image', 'kdepy')
 ){
 
@@ -250,11 +250,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     }
 
   } else {
-    loadLib <- tryCatch(library(reticulate), error = function(e) NULL)
+    loadLib <- tryCatch(library(reticulate, quietly = TRUE), error = function(e) NULL)
     if( is.null(loadLib) ) {
       diagnose_cola()
     }
-    cat(sep = '', '    `reticulate` installed already!\n')
+    cat(sep = '', '    `reticulate` package installed already!\n')
   }
 
   library(reticulate)
@@ -502,9 +502,21 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
 
   if(length(lib2inst) != 0){
-    for( l in 1:length(libs2Install)){ # l = 1
+    for( l in 1:length(libs2Install)){ # l = 10
       (lib2inst <- libs2Install[l])
-      if( ! lib2inst %in% avLibs$package ){
+      (lib2 <- gsub('==.+', '', lib2inst))
+      (lib3 <- sub('=', '', lib2inst))
+      # Check if specific
+      versReq <- ifelse(grepl('==', lib2inst), TRUE, FALSE)
+      versOK <- FALSE
+      if(versReq){
+        (instVer <- avLibs$requirement[avLibs$package %in% lib2])
+        (versOK <- ifelse(instVer == lib3, TRUE, FALSE))
+      } else {
+        versOK <- TRUE
+      }
+
+      if( (! lib2 %in% avLibs$package ) | !versOK ){
         cat(paste0(' \n --- Installing `',  libs2Install[l], '` module\n'))
 
         logPkg <- tryCatch(

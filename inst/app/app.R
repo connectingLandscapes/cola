@@ -2124,7 +2124,7 @@ server <- function(input, output, session) {
                            no = in_sur_7)
 
 
-        hs2rs_file <- tryCatch(s2res_py(py = py,
+        hs2rs_file <- tryCatch(sui2res_py(py = py,
                                         intif = rv$hs,
                                         outtif = outs2r,
                                         minval = as.numeric(input$in_sur_3),
@@ -3916,7 +3916,7 @@ server <- function(input, output, session) {
       isolate(output$ll_map_pri <- leaflet::renderLeaflet({
 
         tStartPri <- Sys.time()
-        out_pri <- tryCatch(pri_py(tif = rv$tif,
+        out_pri <- tryCatch(prio_py(tif = rv$tif,
                                    incrk = rv$crk ,
                                    inlcc = rv$lcc,
                                    maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),

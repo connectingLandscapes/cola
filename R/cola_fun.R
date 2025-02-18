@@ -506,7 +506,7 @@ adaptFilePath <- function(path){
   return ( gsub(fixed = TRUE, '\\', '/', path) )
 }
 
-#' @title  Suitability surface to resistance surface
+#' @title  Suitability to resistance
 #' @description Transforms suitability to resistance surface
 #' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
 #' @param pyscript String. Python script location
@@ -521,13 +521,13 @@ adaptFilePath <- function(path){
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' srp30 <- s2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
+#' srp30 <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 #' hs_rast <- terra::rast(hs)
 #' plot(hs_rast, main = 'Habitat suitability')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-s2res_py <- function(intif, outtif,
+sui2res_py <- function(intif, outtif,
                      minval, maxval, maxout, shape,
                      nodata = NULL, prj = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -995,7 +995,7 @@ crk_py <- function(inshp, intif, outtif,
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-pri_py <- function(tif, incrk, inlcc,
+prio_py <- function(tif, incrk, inlcc,
                    maskedcsname = paste0(tempfile(), '.tif'),
                    outshppoint, outshppol, outshppatch,
                    outtifpatch, outtif,
