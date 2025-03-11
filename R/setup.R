@@ -499,25 +499,27 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   (avLibs <- reticulate::py_list_packages(envname = envName))
 
   ## Install conda packages
-  (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
+  (libs2inst <- libs2Install[! libs2Install %in% avLibs$package])
 
-  if(length(lib2inst) != 0){
-    for( l in 1:length(libs2Install)){ # l = 10
-      (lib2inst <- libs2Install[l])
+  if(length(libs2inst) != 0){
+    for( l in 1:length(libs2inst)){ # l = 10
+      (lib2inst <- lib2inst[l])
       (lib2 <- gsub('==.+', '', lib2inst))
       (lib3 <- sub('=', '', lib2inst))
       # Check if specific
-      versReq <- ifelse(grepl('==', lib2inst), TRUE, FALSE)
+      (versReq <- ifelse(grepl('==', lib2inst), TRUE, FALSE))
       versOK <- FALSE
       if(versReq){
-        (instVer <- avLibs$requirement[avLibs$package %in% lib2])
-        (versOK <- ifelse(instVer == lib3, TRUE, FALSE))
+        (instVer <- avLibs$requirement[avLibs$package %in% lib2]) # instVer <- avLibs$requirement[avLibs$package %in% 'xx']
+        if(length(instVer) != 0){
+          (versOK <- ifelse(instVer %in% lib3, TRUE, FALSE)) # instVer == lib3
+        }
       } else {
         versOK <- TRUE
       }
 
-      if( (! lib2 %in% avLibs$package ) | !versOK ){
-        cat(paste0(' \n --- Installing `',  libs2Install[l], '` module\n'))
+      if( (! lib2 %in% avLibs$package ) | !versOK ){ #
+        cat(paste0(' \n --- Installing `',  libs2inst[l], '` module\n'))
 
         logPkg <- tryCatch(
           reticulate::py_install(
@@ -547,7 +549,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   insLibs <- libs2Install[libs2Install %in% avLibs$package]
 
   ## No installed
-  noInsLibs <- libs2Install[!libs2Install %in% avLibs$package]
+  (noInsLibs <- libs2Install[ ! ((libs2Install %in% avLibs$package) | (!libs2Install %in% avLibs$requirement))])
   # noInsLibs <- c('a', 'f')
 
   if( length(noInsLibs) > 0 ){
