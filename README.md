@@ -1,4 +1,4 @@
-# Connectiviy analysis software: Connecting landscapes - `cola` 
+# Connectivity analysis software: Connecting landscapes - `cola` 
 
 
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
