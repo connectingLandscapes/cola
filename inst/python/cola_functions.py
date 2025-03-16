@@ -95,6 +95,75 @@ def arrayToGeoTiff(inarray, outfile, profile, crs=None, driver=None, res=None, d
     with rio.open(outfile, 'w', **profile) as dst:
         dst.write(inarray)
 
+# Function to generate edges based on pixel adjacency and distance
+# between cells
+@njit
+def generate_edges(pixels, cellSize):
+    """
+    Creates a list of tuples representing edges between nodes (pixels)
+    in a raster. Each tuple contains two node ids and an edge weight
+    calculated as a function of cell size weighted by distance between cell
+    centers, with cardinal cells given a weight of 1 and diagonal cells
+    given a weight np.sqrt(2). Node ids are integer and correspond to 
+    pixels starting at upper left corner, moving left to right, top to bottom.
+    
+    Parameters
+    ---------- 
+    pixels: numpy 2d array representing raster cell values
+    cellSize: numeric representing raster cell size
+    
+    Returns
+    ---------- 
+    edges: list of tuples. each tuple has three elements, two integer node ids 
+    and an edge weight
+    idall: list of node ids corresponding to original pixel order. these
+    do not include node ids of pixels with no data values. however, node
+    ids are not renumbered so there can be gaps in numbering between ids.
+    new_idmap: dictionary mapping original nodeids to node ids created
+    after removing no data nodes and then renumbering remaining nodes
+    consecutively        
+    """
+    # Get number of rows and columns in array
+    rows, cols = pixels.shape
+    # Valid node id indexer (ids of nodes with non-nodata weights)
+    vnid = 0
+    # Node ids
+    # original node ids (0 to ncells-1)
+    # valid node ids (0 to ncells with no data - 1)    
+    idall = []
+    idvalid = []
+    edges = []
+    for r in range(rows):
+        for c in range(cols):
+            # Only process node if weight >= 1 (otherwise skip as assumed no data)
+            if pixels[r, c] >= 1:
+                node = r * cols + c
+                if c < cols - 1:  # Edge to the pixel to the right
+                    if pixels[r, c+1] >= 1: # check if neighbor is nodata
+                        weight = np.mean(np.array([pixels[r, c], pixels[r, c+1]])) * cellSize
+                        edges.append((node, r * cols + (c+1), weight))
+                if r < rows - 1:  # Edge to the pixel below
+                    if pixels[r+1, c] >= 1: # check if neighbor is nodata
+                        weight = np.mean(np.array([pixels[r, c], pixels[r+1, c]])) * cellSize
+                        edges.append((node, (r+1) * cols + c, weight))
+                if c > 0 and r < rows - 1: # Edge to the pixel below left
+                    if pixels[r+1, c-1] >= 1: # check if neighor is nodata
+                        weight = np.mean(np.array([pixels[r, c], pixels[r+1, c-1]])) * cellSize * np.sqrt(2)
+                        edges.append((node, (r+1) * cols + (c-1), weight))
+                if c < cols-1 and r < rows -1: # Edge to pixel below right
+                    if pixels[r+1, c+1] >= 1: # check if neighor is nodata
+                        weight = np.mean(np.array([pixels[r, c], pixels[r+1, c+1]])) * cellSize * np.sqrt(2)
+                        edges.append((node, (r+1) * cols + (c+1), weight))                    
+                # Add to node map
+                idall.append(node)
+                idvalid.append(vnid)
+                # Increment nodeid
+                vnid += 1
+    new_idmap = dict((zip(idall, idvalid)))
+    # Renumber edges using idmap (if any nodes were invalid, this makes nodeids continuous)
+    edges = [(new_idmap[i[0]], new_idmap[i[1]], i[2]) for i in edges]
+    return edges, idall, new_idmap
+
 def connected_adjacency(image, connect, patch_size=(1, 1)):
     """
     Creates an adjacency matrix from an image where nodes are considered adjacent 
@@ -831,11 +900,12 @@ def read2flt32array(upCRS, rg):
 def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
     """
     Function to calculate corridors/paths from pairs of distance arrays
-    stored in an hdf file. Takes a batch of node pairs as input (as an array).
+    stored in an hdf file. Takes a batch of node pairs, sBatches, as input (as an array).
     For use in joblib parallel processing script lcc_joblib.py.
-    The other inputs, nodidsLen, dahdf, 
+    The other inputs, nodidsLen, dahdf, and corrTolerance are 
+    integer, string, and integer respectively.
     ----------
-    x : numpy array
+    x : integer used to index into 
         two column array of integer node ids
     Returns
     -------
@@ -856,6 +926,76 @@ def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
         ccounts += lcc
     h5f.close()
     return(ccounts)
+
+def calcKernels(x, nodeidsLen, dahdf, sBatches, dThreshold, tForm, tkv, kvol):
+    """
+    Function to calculate kernels from distance arrays
+    stored in an hdf file. Takes a batch of nodes as input (as an array).
+    For use in joblib parallel processing script crk_joblib.py.
+    ----------
+    x : integer used to index into 
+        two column array of integer node ids
+    Returns
+    -------
+    ksums : numpy array
+        array holding kernel sums
+    """
+    # Empty array to hold kernel sums
+    ksums = np.zeros((1,nodeidsLen))
+    # Open hdf5 file holding distances
+    h5f = tb.open_file(dahdf, 'r')
+    # Loop through cost distance arrays and calculate crks
+    for i in sBatches[x]:
+        ccArr = h5f.root.dset[i[0],:]
+        # Transform distances
+        if tForm == 'linear':
+            # Linear transform of distances
+            ccArr = 1 - (1/dThreshold) * ccArr        
+            # Convert negative values  to 0. (These are beyond the threshold)
+            ccArr[ccArr < 0] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'inverse':
+            # Inverse transform of distances
+            ccArr = 1/(ccArr + 1)
+            # Convert values beyond the distance threshold to 0
+            ccArr[ccArr < 1/(dThreshold + 1)] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'inversesquare':
+            # Inverse transform of distances
+            ccArr = 1/(ccArr**2 + 1)
+            # Convert values beyond the distance threshold to 0
+            ccArr[ccArr < 1/(dThreshold + 1)] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'gaussian':
+            dispScale = dThreshold/4
+            ccArr = np.exp(-1*((ccArr**2)/(2*(dispScale**2))))
+            # Set values beyond the distance threshold to 0
+            ccArr[ccArr < np.exp(-1*((dThreshold**2)/(2*(dispScale**2))))] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        # Transform kernel volume?
+        # From UNICOR help guide
+        # When „const_kernel_vol‟ is False, then the „kernel_volume‟ parameter
+        # is used on the transformed kernel resistant distance following
+        # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
+        # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+        # **I think the UNICOR help on this might be reversed because this is the code
+    	#	if const_kernal_vol:		
+        #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
+        #    else:
+        #        vol_const = 1.
+        if tkv == "yes":
+            vol_const = kvol * 3/(np.pi*dThreshold**2)
+            ccArr = ccArr*vol_const      
+        # Add kernel to running sum
+        ksums += ccArr
+    h5f.close()
+    return(ksums)
+
+
     
 def groupby_multipoly(df, by, aggfunc="first"):
     data = df.drop(labels=df.geometry.name, axis=1)
