@@ -240,10 +240,24 @@ def main() -> None:
     cf.arrayToGeoTiff(ocs, maskedcsname, profilecs)
     # Remove extra dimension for further processing
     ocs = np.squeeze(ocs)
-    # Convert resistance grid to graph
-    print("Converting image to graph", flush=True)
-    nkG, nodeids, idmap = cf.image_to_graph(ocs, cSize, -9999, 8)
+    
+    # Create edges, nodeids, and mapping between old and new nodeids
+    # from resistance grid
+    edges, nodeids, idmap = cf.generate_edges(ocs, cSize)
+    print('generated edges')
+
+    # Create graph (nodes only)
+    nkG = nk.Graph(len(idmap), weighted=True)
+    # Add edges to graph
+    for i in edges:
+        nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
+    print('created graph')
     print(nk.overview(nkG))
+    
+    # Convert resistance grid to graph
+#    print("Converting image to graph", flush=True)
+#    nkG, nodeids, idmap = cf.image_to_graph(ocs, cSize, -9999, 8)
+#    print(nk.overview(nkG))
     
     #%%
     # Loop through edge pairs and calculate corridors
