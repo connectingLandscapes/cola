@@ -927,7 +927,7 @@ def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
     h5f.close()
     return(ccounts)
 
-def calcKernels(x, nodeidsLen, dahdf, sBatches, dThreshold, tForm, tkv, kvol):
+def calcKernels(x, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv, kvol):
     """
     Function to calculate kernels from distance arrays
     stored in an hdf file. Takes a batch of nodes as input (as an array).
@@ -946,7 +946,7 @@ def calcKernels(x, nodeidsLen, dahdf, sBatches, dThreshold, tForm, tkv, kvol):
     h5f = tb.open_file(dahdf, 'r')
     # Loop through cost distance arrays and calculate crks
     for i in sBatches[x]:
-        ccArr = h5f.root.dset[i[0],:]
+        ccArr = h5f.root.dset[nodehdf[i],:]
         # Transform distances
         if tForm == 'linear':
             # Linear transform of distances
