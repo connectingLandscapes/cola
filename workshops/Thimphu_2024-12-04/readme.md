@@ -14,7 +14,7 @@
 1. Intro by David McDonald. [Slides](https://drive.google.com/open?id=1oAsKZAhw81zyzPKbyS0ehC6fG1ZYir1y&usp=drive_fs)
 2. Concepts by Dawn Burnham. [Slides](https://docs.google.com/presentation/d/1nvz7o9J4YcKl4p9okQ_1BGo8AiVj5awr?rtpof=true&usp=drive_fs)
 3. Study case by Singye Wangmo [Slides]()
-4. Study case by Eric Ash [Slides](https://drive.google.com/open?id=1o5YLn2k49cGJCzKHz5ncWYrKj5D4TUuZ&usp=drive_fs)
+4. Study case by Eric Ash [Slides](https://drive.google.com/open?id=107HlDUPaJVykzw_fFDbyNZ23m2_rAKTW&usp=drive_fs) 
 5. CoLa tutorial by Patrick Janz & Ivan Gonzalez [Slides](https://docs.google.com/presentation/d/1z1BYs3Y-5hjYH4oByVFvGQdIHjPyBx5N/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
 
 # Practical session
