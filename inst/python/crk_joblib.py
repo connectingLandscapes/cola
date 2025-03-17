@@ -260,46 +260,113 @@ def main() -> None:
             del ccArr
             toc1 = time.perf_counter()
             print(f"Writing batch to file took {toc1 - tic1:0.4f} seconds")
-
-    #%%
-    # Estimate memory required for kernel calculation by multiplying
-    # the number of graph nodes by the number of sources
-    memReq = nodeidsLen*len(sources)*64*gbCf
-
-    # If it's more than the threshold amount, divide into batches
-    if memReq > gbThreshold:
+        
         #%%
-        print('Calculating corridors in batches')
-
-        # Memory per processor
-        memProc = gbThreshold/nThreads
-
-        # Arrays per processor
-        arraysProc = memProc/(nodeidsLen*64*gbCf)
-
-        # Number of batches 
-        nBatches = int(np.floor(nodeidsLen/(arraysProc)))
-
-        # Use 50 percent of the number of lines across all threads
-        # as a way to allocate memory to the output list created
-        # by joblib.
-        jlibIncrement = int(np.ceil((nodeidsLen/nBatches*nThreads*0.5)/nThreads))
+        # Estimate memory required for kernel calculation by multiplying
+        # the number of graph nodes by the number of sources
+        memReq = nodeidsLen*len(sources)*64*gbCf
+    
+        # If it's more than the threshold amount, divide into batches
+        if memReq > gbThreshold:
+            #%%
+            print('Calculating corridors in batches')
+    
+            # Memory per processor
+            memProc = gbThreshold/nThreads
+    
+            # Arrays per processor
+            arraysProc = memProc/(nodeidsLen*64*gbCf)
+    
+            # Number of batches 
+            nBatches = int(np.floor(len(sources)/(arraysProc)))
+    
+            # Use 50 percent of the number of lines across all threads
+            # as a way to allocate memory to the output list created
+            # by joblib.
+            jlibIncrement = int(np.ceil((len(sources)/nBatches*nThreads*0.5)/nThreads))
+            
+            # Main issue is that the nodeids are relative to the graph
+            # while the indices need to be relative to the hdf file.
+            # Dictionary to link nodeids to hdf indices
+            nodehdf = dict(zip(sources, range(len(sources))))
+            
+            # Split nodeids into N batches
+            sBatches = np.array_split(sources, nBatches)
+            
+            # Use joblib to calculate kernels in parallel and sum on the fly
+            print("Summing kernels", flush=True)
+            with Parallel(n_jobs=nThreads) as parallel:
+                ccArr = np.zeros((1,nodeidsLen))
+                n_iter = 0
+                for j in range(jlibIncrement,int((np.ceil(nBatches/jlibIncrement)+1)*jlibIncrement),jlibIncrement):
+                    j = min(j, nBatches)
+                    results = parallel(delayed(cf.calcKernels)(i, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv, kvol) for i in range(n_iter,j))
+                    ccArr += sum(results)
+                    n_iter = j
+    # Otherwise, process as normal
+    else:
+        # Calculate shortest path distance from each source to every
+        # cell in the landscape
+        spspDist = nk.distance.SPSP(nkG, sources)
+        spspDist.run()
+        ccArr = spspDist.getDistances(asarray=True)
+        # Networkit gives inaccessible nodes the max float 64 value.
+        # Set these to nan.
+        ccArr[ccArr == np.finfo(np.float64).max] = np.nan
         
-        # Split nodeids into N batches
-        sBatches = np.array_split(nodeids, nBatches)
+        # Transform distances
+        if tForm == 'linear':
+            # Linear transform of distances
+            ccArr = 1 - (1/dThreshold) * ccArr        
+            # Convert negative values  to 0. (These are beyond the threshold)
+            ccArr[ccArr < 0] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'inverse':
+            # Inverse transform of distances
+            ccArr = 1/(ccArr + 1)
+            # Convert values beyond the distance threshold to 0
+            ccArr[ccArr < 1/(dThreshold + 1)] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'inversesquare':
+            # Inverse transform of distances
+            ccArr = 1/(ccArr**2 + 1)
+            # Convert values beyond the distance threshold to 0
+            ccArr[ccArr < 1/(dThreshold + 1)] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
+        elif tForm == 'gaussian':
+            dispScale = dThreshold/4
+            ccArr = np.exp(-1*((ccArr**2)/(2*(dispScale**2))))
+            # Set values beyond the distance threshold to 0
+            ccArr[ccArr < np.exp(-1*((dThreshold**2)/(2*(dispScale**2))))] = 0
+            # Set nan to 0
+            ccArr[np.isnan(ccArr)] = 0
         
-        # Use joblib to calculate kernels in parallel and sum on the fly
-        print("Summing kernels", flush=True)
-        with Parallel(n_jobs=nThreads) as parallel:
-            ccArr = np.zeros((1,nodeidsLen))
-            n_iter = 0
-            for j in range(jlibIncrement,int((np.ceil(nBatches/jlibIncrement)+1)*jlibIncrement),jlibIncrement):
-                j = min(j, nBatches)
-                results = parallel(delayed(cf.calcKernels)(i, nodeidsLen, dahdf, sBatches, dThreshold, tForm, tkv, kvol) for i in range(n_iter,j))
-                ccArr += sum(results)
-                n_iter = j  
+        # Transform kernel volume?
+        # From UNICOR help guide
+        # When „const_kernel_vol‟ is False, then the „kernel_volume‟ parameter
+        # is used on the transformed kernel resistant distance following
+        # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
+        # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+        # **I think the UNICOR help on this might be reversed because this is the code
+    	#	if const_kernal_vol:		
+        #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
+        #    else:
+        #        vol_const = 1.
+        if tkv == "yes":
+            vol_const = kvol * 3/(np.pi*dThreshold**2)
+            ccArr = ccArr*vol_const      
 
-  
+        # Multiply if kernel volume not 1
+        #if kvol > 1:
+        #    ccArr = ccArr*(kvol * 3/(np.pi*dThreshold**2))
+        #elif kvol < 1:
+        #    raise Exception('Kernel volume should be >= 1.')
+        
+        # Sum kernels
+        ccArr = np.sum(ccArr, axis=0)
     
     # Create 1D zeros array to hold kernel values
     dArr = np.zeros([r.shape[0]*r.shape[1]], 'float32')
@@ -327,6 +394,10 @@ def main() -> None:
     # Write crk to file
     cf.arrayToGeoTiff(dArr, ofile, profile)    
     
+    # If hdfs were created, delete them
+    if Path(dahdf).is_file():
+        Path(dahdf).unlink()
+
     toc = time.perf_counter()
     print(f"Calculating kernels took {toc - tic:0.4f} seconds", flush=True)
 
