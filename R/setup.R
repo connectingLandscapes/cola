@@ -503,7 +503,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   if(length(libs2inst) != 0){
     for( l in 1:length(libs2inst)){ # l = 10
-      (lib2inst <- lib2inst[l])
+      (lib2inst <- libs2inst[l])
       (lib2 <- gsub('==.+', '', lib2inst))
       (lib3 <- sub('=', '', lib2inst))
       # Check if specific

@@ -3615,7 +3615,8 @@ server <- function(input, output, session) {
                                     maxdist = as.numeric(input$in_crk_4),
                                     transf = (input$in_crk_t),
                                     shape = (input$in_crk_5),
-                                    volume = as.numeric(input$in_crk_6)), error = function(e) list(err = e, file = ''))
+                                    volume = as.numeric(input$in_crk_6)),
+                             error = function(e) list(err = e, file = ''))
         #out_crk_no_data <- gdal_nodata
 
         cat("\n --- CRK out:\n")
