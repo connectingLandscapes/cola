@@ -5892,7 +5892,7 @@ if (FALSE){
                                   tags$td(style = "width: 25%", align = "center",
                                           htmlOutput(outputId = 'out_par_distB', fill = TRUE))
                                 ))),
-                       column(3, textInput("in_dist_3", "Distance threshold (cost units):", '600000')),
+                       column(3, textInput("in_dist_3", "Distance threshold (cost units):", '2000000')),
                        column(2, textInput('name_dst', label = 'New CSV name:', value = "",
                                            width = '100%', placeholder = 'Name new CSV')),
                        column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
@@ -6063,7 +6063,7 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB', fill = TRUE)),
-              column(2, textInput("in_crk_4", "Max. dispersal distance (cost units):", '200000')),
+              column(2, textInput("in_crk_4", "Max. dispersal distance (cost units):", '2000000')),
               column(2, selectInput(inputId = "in_crk_5", label = "Kernel shape:",
                                     choices = c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
@@ -6107,7 +6107,7 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_lccA', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_lccB', fill = TRUE)),
 
-              column(2, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '600000')),
+              column(2, textInput("in_lcc_4", "Max. dispersal distance (cost units):", '10000000')),
               column(2, textInput("in_lcc_5", "Corridor smoothing factor:", '0')),
               column(2, textInput("in_lcc_6", "Corridor tolerance (meters):", '5')),
               column(1, selectInput("in_lcc_sr", "Source layer:", '50', choices = '')),
