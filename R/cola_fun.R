@@ -983,6 +983,77 @@ crk_py <- function(inshp, intif, outtif,
                log =  intCMD ) )
 }
 
+#' @title  Create least cost corridors using parallel computing
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param pyscript Python script location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+crkJoblib_py <- function(
+    inshp, intif, outtif,
+    maxdist, shape,
+    transform, volume,
+    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+    crs = 'None',
+    maxram = 6,
+    tempFolder = NULL,
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
+    cml = TRUE){
+
+  # "crk_joblib.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
+  # param3 = 25000
+  # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+  # [2] resistance surface
+  # [3] output file name
+  # [4] distance threshold (should be in meters*)
+  # [5] corridor smoothing factor (in number of cells)
+  # [6] corridor tolerance (in cost distance units)
+  # [7] number of cores
+  # [8] projection if missing
+  # [9] first h5 temp file
+  # [10] second h5 temp file
+  # [11] Max GB ram allowed
+
+  if (is.null(tempFolder)){
+    tempFolder <- tempdir()
+  }
+  tempH5 <- basename(tempfile())
+  h5file <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
+  (cmd_crk <- paste0(py, ' ', pyscript, ' ',
+                     inshp, ' ', intif, ' ', outtif, ' ',
+                     format(maxdist, scientific=F), ' ',
+                     shape, ' ', transform, " ",
+                     volume, " ",
+                     format(ncores, scientific=F), " ",
+                     crs, " ",
+                     h5file, " ",
+                     maxram
+                     , ' 2>&1 ' #, logname
+
+  ))
+  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
+  if (cml){
+    cat('\n\tCMD CRK joblib:\n', cmd_lcc)
+    cat('\n')
+  }
+
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+  file.remove(c(h5file1, h5file2))
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               log =  intCMD ) )
+}
+
 
 #' @title  Runs prioritization
 #' @description Run CDPOP model

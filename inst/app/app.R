@@ -3426,7 +3426,8 @@ server <- function(input, output, session) {
                                          outtif = out_lcc,
                                          maxdist = as.numeric(input$in_lcc_4),
                                          smooth = as.numeric(input$in_lcc_5),
-                                         tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
+                                         tolerance = as.numeric(input$in_lcc_6)),
+                            error = function(e) list(err = e, file = ''))
         cat("\n --- LCC out:\n")
         print(out_lcc)
 
@@ -3617,6 +3618,151 @@ server <- function(input, output, session) {
                                     shape = (input$in_crk_5),
                                     volume = as.numeric(input$in_crk_6)),
                              error = function(e) list(err = e, file = ''))
+        #out_crk_no_data <- gdal_nodata
+
+        cat("\n --- CRK out:\n")
+        print(out_crk)
+
+        tElapCrk <- Sys.time() - tStartCrk
+        textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+        rv$crk <- out_crk$file
+
+        if(!file.exists(out_crk$file)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          rv$llmap
+
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+          # rv$lcc <- out_lcc
+          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+          params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+          rv$crk_quan <- crk_quan
+
+          rv$crkready <- TRUE
+          rv$crk <- out_crk$file
+          rv$crk_sp <- terra::rast(out_crk$file);
+          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+
+          # newtif[newtif[] == 0] <-
+
+          # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
+          # # plot(newtif)
+
+          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+          #                                               domain = rng_newtif+0.01, na.color = "transparent")
+
+          # "viridis", "magma", "inferno", or "plasma".
+          ## Update all visor
+
+          makeLL()
+
+          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
+          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
+          #         group = "Surface resistance", layerId = 'Kernel') %>%
+          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
+          #       position = 'topleft',
+          #       title= "Dispersal Kernel"#, opacity = .3
+          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+          #  ) %>% leaflet::addLayersControl(
+          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+          #   options = leaflet::layersControlOptions(collapsed = FALSE)
+          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+          #
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # rv$llmap
+          #
+          # # ## try
+          # llx <- makeLL()
+          # rv$ll
+        }
+      })
+
+      isolate(
+        output$ll_map_pri_prev <- leaflet::renderLeaflet({
+
+          if((rv$crkready)){
+            ## Refresh prio tab
+            rv$crk2s <- resampIfNeeded(rv$crk)
+            rv$crk2s_sp <- terra::rast(rv$crk2s)
+            # cat('adding CRK for prio:', rv$crk2s, '\n')
+
+            bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+
+            rv$crk_pal2 <- leaflet::colorNumeric(
+              palette = "plasma", reverse = TRUE,
+              domain = rv$crk_rng + 0.01 , na.color = "transparent")
+
+            if(is.null(rv$crk_quan) | !exists('crk_quan')){
+              cat(' Calculating quantiles')
+
+              # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
+
+              qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
+              brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
+              rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
+
+
+              # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+              #stp <<- diff(range(brks)) / 10 # length(brks)
+
+              # crk_quan <<- rev(rv$crk_quan)
+              #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+              # updateSliderInput(inputId = 'pri_slider', value = median(brks),
+              #          min = min(brks),max = max(brks), step = stp)
+            }
+
+
+            # leafletProxy("ll_map_pri_prev") %>%
+            llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
+              addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                             colors = rv$crk_pal2, opacity = .7)
+
+            #llcrk2 %>% clearImages()
+          }
+        })
+      )
+    }
+  })
+
+
+  observeEvent(input$crk2, {
+    pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
+    condDist <- 0
+    if(rv$ptsready & rv$tifready){
+      condDist <- 1
+    }
+
+    #if(is.null(rv$incrkSessID)){
+    (incrkSessID <<- sessionIDgen()) # rv <- list()
+    rv$incrkSessID <- incrkSessID
+    #}
+
+    if( condDist == 1){
+      #input <- c(in_dist_3 = 25000)
+      rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
+      out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
+
+      output$ll_map_crk <- leaflet::renderLeaflet({
+
+        tStartCrk <- Sys.time()
+        out_crk <<- tryCatch(crkJoblib_py(
+          py = py, inshp = rv$pts, intif = rv$tif, outtif = out_crk,
+          maxdist = as.numeric(input$in_crk_4),
+          transf = (input$in_crk_t),
+          shape = (input$in_crk_5),
+          volume = as.numeric(input$in_crk_6)),
+          error = function(e) list(err = e, file = ''))
         #out_crk_no_data <- gdal_nodata
 
         cat("\n --- CRK out:\n")
@@ -5929,6 +6075,7 @@ if (FALSE){
               column(1, textInput('name_crk', label = 'New layer name:', value = "",
                                   width = '100%', placeholder = 'Name new layer')),
               column(1, actionButton("crk", "Get kernels", icon = icon("play")),
+                     actionButton("crk2", "Get kernels (heavy)", icon = icon("play")),
                      downloadButton('crkDwn', 'Download')),
             ),
 
