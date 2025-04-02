@@ -452,6 +452,9 @@ guessNoData <- function(path){
       (ans <- gsub('.+\\=', '', ndv))
     }
   }
+  if(is.na(ans) | ans == 'nan'){
+    ans <- 0
+  }
   return(ans)
 }
 
@@ -1617,5 +1620,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
   return(replacedPath)
+
   #} else { return(NA) }
 }

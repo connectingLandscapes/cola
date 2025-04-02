@@ -696,12 +696,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     # pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
 
     # Create test
-    (test_suit2res <- paste0(pyCola, ' ', # Python
-                             pyScript, ' ', # script
-                             system.file("sampledata/sampleTif.tif", package = "cola"), ' ', #in [1]
-                             outTest, #out
-                             ' 0 1 100', # min max scale-max
-                             ' 1 -9999 None')) # shape nodata proj
+    (test_suit2res <- paste0(
+      quotepath(pyCola), ' ', # Python
+      quotepath(pyScript), ' ', # script
+      quotepath(system.file("sampledata/sampleTif.tif", package = "cola")), ' ', #in [1]
+      quotepath(outTest), #out
+      ' 0 1 100', # min max scale-max
+      ' 1 -9999 None')) # shape nodata proj
     # cat(test_suit2res)
 
     ## Run tests
