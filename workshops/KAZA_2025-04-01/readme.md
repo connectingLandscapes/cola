@@ -21,9 +21,10 @@
 		- Server A (http://34.57.191.163:3838/connecting-landscapes/)  Wait for 10 seconds to load. Open on a new tab.
 		- Server B (http://34.57.191.163:3838/connecting-landscapes/)  Wait for 10 seconds to load. Open on a new tab.
  2. Download some sample data> (https://github.com/connectingLandscapes/cola/tree/main/workshops/KAZA_2025-04-01/data)
- 3. Fill out this survey to tell us about yourselves and your experience (2 min):
+    **These are sample data. They are incomplete and only to be used for training purposes. Please do not share the datasets beyond the people in this workshop.**
+ 4. Fill out this survey to tell us about yourselves and your experience (2 min):
  (https://forms.gle/jW98Aa5X7Gp5FnnU6). And an another survey about your the DSS perspective (https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link)
- 4. Follow the next steps: [Tutorial or slides here](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
+ 5. Follow the next steps: [Tutorial or slides here](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
 
 
 # Installing
