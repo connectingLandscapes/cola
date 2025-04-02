@@ -43,4 +43,7 @@ Then, in R run (use your room's WIFI):
 if(!require(devtools)){install.packages('devtools')}
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') # Installing CoLa R package
 cola::setup_cola(ask = FALSE, dss = TRUE) # Setup all CoLa components. Run this line until all problems are solved.
+
+# Run the DSS
+cola::cola_dss()
 ```
