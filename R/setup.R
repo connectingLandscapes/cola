@@ -580,7 +580,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
-    pyCola, ' ', welcomepy)); #cat(tryBcmd)
+    quotepath(pyCola), ' ', quotepath(welcomepy))); #cat(tryBcmd)
   (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e$message)) ## error is character
 
 

@@ -84,9 +84,9 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   ### Create CMD
   (cmd_inter <- paste0(
     py, ' ', pyscript, ' ',
-                       grids, ' ', template, ' ',
-                       # allele, ' ', hetero, ' ',
-                       method, ' ', neighbors, ' ', crs, ' 2>&1'))
+    grids, ' ', template, ' ',
+    # allele, ' ', hetero, ' ',
+    method, ' ', neighbors, ' ', crs, ' 2>&1'))
   if (cml){
     cat('\n\tCMD interpol: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
@@ -452,7 +452,7 @@ guessNoData <- function(path){
       (ans <- gsub('.+\\=', '', ndv))
     }
   }
-  if(is.na(ans) | ans == 'nan'){
+  if(is.na(ans) | ans == 'nan' | ans == '' | length(ans) == 0){
     ans <- 0
   }
   return(ans)
@@ -556,11 +556,11 @@ adaptFilePath <- function(path){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 sui2res_py <- function(intif, outtif,
-                     minval, maxval, maxout, shape,
-                     nodata = NULL, prj = 'None',
-                     py = Sys.getenv("COLA_PYTHON_PATH"),
-                     pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                     cml = TRUE){
+                       minval, maxval, maxout, shape,
+                       nodata = NULL, prj = 'None',
+                       py = Sys.getenv("COLA_PYTHON_PATH"),
+                       pyscript = system.file(package = 'cola', 'python/s2res.py'),
+                       cml = TRUE){
   # minval = 0
   # maxval =  100
   # maxout = 100
@@ -581,13 +581,13 @@ sui2res_py <- function(intif, outtif,
     quotepath(pyscript), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                       format(minval, scientific=F), ' ',
-                       format(maxval, scientific=F), ' ',
-                       format(maxout, scientific=F), ' ',
-                       format(shape, scientific=F), ' ',
-                       format(nodata, scientific=F), ' ',
-                       prj
-                       , ' 2>&1 ' #, logname
+    format(minval, scientific=F), ' ',
+    format(maxval, scientific=F), ' ',
+    format(maxout, scientific=F), ' ',
+    format(shape, scientific=F), ' ',
+    format(nodata, scientific=F), ' ',
+    prj
+    , ' 2>&1 ' #, logname
   ))
   if (cml){
     cat('\n\tCMD Surface : \n')
@@ -679,11 +679,11 @@ points_py <- function(intif, outshp,
     quotepath(pyscript), ' ',
     quotepath(intif), ' ',
     quotepath(outshp), ' ',
-                     format(smin, scientific=F), ' ',
-                     format(smax, scientific=F), ' ',
-                     format(npoints, scientific=F), ' ',
-                     issuit, ' ', upcrs
-                     , ' 2>&1 '# , logname
+    format(smin, scientific=F), ' ',
+    format(smax, scientific=F), ' ',
+    format(npoints, scientific=F), ' ',
+    issuit, ' ', upcrs
+    , ' 2>&1 '# , logname
   ))
   if (cml){
     cat('\n\tCMD Points: \n')
@@ -751,11 +751,11 @@ cdmat_py <- function(inshp, intif, outcsv,
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outcsv),
-                       ' ',
-                       format(maxdist, scientific=F), ' ',
-                       ncores, ' ', crs
-                       , ' 2>&1 '
-                       # , logname
+    ' ',
+    format(maxdist, scientific=F), ' ',
+    ncores, ' ', crs
+    , ' 2>&1 '
+    # , logname
   ))
   if (cml){
     cat('\n\n\tCMD cdmat: \n')
@@ -809,12 +809,12 @@ lcc_py <- function(inshp, intif, outtif,
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs
-                     , ' 2>&1 ' #, logname
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs
+    , ' 2>&1 ' #, logname
   ))
 
   if (cml){
@@ -880,15 +880,15 @@ lccHeavy_py <- function(inshp, intif, outtif,
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs, " ",
-                     h5file1, " ",
-                     h5file2, " ",
-                     '50'
-                     , ' 2>&1 ' #, logname
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file1, " ",
+    h5file2, " ",
+    '50'
+    , ' 2>&1 ' #, logname
   ))
 
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
@@ -958,15 +958,15 @@ lccJoblib_py <- function(inshp, intif, outtif,
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs, " ",
-                     h5file1, " ",
-                     h5file2, " ",
-                     maxram
-                     , ' 2>&1 ' #, logname
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file1, " ",
+    h5file2, " ",
+    maxram
+    , ' 2>&1 ' #, logname
 
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
@@ -1020,13 +1020,13 @@ crk_py <- function(inshp, intif, outtif,
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                     format(maxdist, scientific=F), ' ', # [4] distance threshold
-                     format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-                     transf, ' ', #
-                     format(volume, scientific=F), ' ', # [6] kernel volume
-                     format(ncores, scientific=F), ' ', # [7] cores
-                     crs
-                     , ' 2>&1 ' #, logname
+    format(maxdist, scientific=F), ' ', # [4] distance threshold
+    format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
+    transf, ' ', #
+    format(volume, scientific=F), ' ', # [6] kernel volume
+    format(ncores, scientific=F), ' ', # [7] cores
+    crs
+    , ' 2>&1 ' #, logname
   ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
@@ -1092,14 +1092,14 @@ crkJoblib_py <- function(
     quotepath(inshp), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-                     format(maxdist, scientific=F), ' ',
-                     shape, ' ', transform, " ",
-                     volume, " ",
-                     format(ncores, scientific=F), " ",
-                     crs, " ",
-                     h5file, " ",
-                     maxram
-                     , ' 2>&1 ' #, logname
+    format(maxdist, scientific=F), ' ',
+    shape, ' ', transform, " ",
+    volume, " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file, " ",
+    maxram
+    , ' 2>&1 ' #, logname
 
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
@@ -1129,13 +1129,13 @@ crkJoblib_py <- function(
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 prio_py <- function(tif, incrk, inlcc,
-                   maskedcsname = paste0(tempfile(), '.tif'),
-                   outshppoint, outshppol, outshppatch,
-                   outtifpatch, outtif,
-                   threshold = 0.5, tolerance = 1000,
-                   py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
-                   cml = TRUE){
+                    maskedcsname = paste0(tempfile(), '.tif'),
+                    outshppoint, outshppol, outshppatch,
+                    outtifpatch, outtif,
+                    threshold = 0.5, tolerance = 1000,
+                    py = Sys.getenv("COLA_PYTHON_PATH"),
+                    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
+                    cml = TRUE){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -1198,9 +1198,9 @@ prio_py <- function(tif, incrk, inlcc,
     quotepath(outshppatch), ' ',
     quotepath(outtifpatch), ' ',
     quotepath(outtif), ' ',
-                      format(threshold, scientific=F), " ",
-                      format(tolerance, scientific=F)
-                      , ' 2>&1 ' #, logname
+    format(threshold, scientific=F), " ",
+    format(tolerance, scientific=F)
+    , ' 2>&1 ' #, logname
   ))
 
   if (cml){
@@ -1274,7 +1274,7 @@ crk_compare_py <- function(intif, intifs,
     quotepath(outfolder), ' ',
     quotepath(inshp), ' ',
     quotepath(shpfield)
-                          , ' 2>&1 ' #, logname
+    , ' 2>&1 ' #, logname
   )
   )
   if (cml){
@@ -1341,7 +1341,7 @@ lcc_compare_py <- function(intif, intifs,
     quotepath(outfolder), ' ',
     quotepath(inshp), ' ',
     quotepath(shpfield)
-                          , ' 2>&1 ' #, logname
+    , ' 2>&1 ' #, logname
   )
   )
   if (cml){
