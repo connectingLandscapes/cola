@@ -1,6 +1,0 @@
-[submodule "inst/CDPOP"]
-	path = inst/CDPOP
-	url = https://github.com/forest-rev/CDPOP.git
-[submodule "inst/UNICOR"]
-	path = inst/UNICOR
-	url = https://github.com/forest-rev/UNICOR.git
