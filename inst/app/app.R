@@ -5662,7 +5662,7 @@ if (FALSE){
                      textInput("in_sur_4", "Max. val:", '100')
               ),
               column(2,
-                     textInput("in_sur_5", "Max-resistance:", '15byuuuuutttttttttttttttytyyeyyyyyyyyy0'),
+                     textInput("in_sur_5", "Max-resistance:", '150'),
                      textInput("in_sur_6", "Shape:", '1')
               ),
 
