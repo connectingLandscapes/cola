@@ -1,10 +1,10 @@
 # Workshop
-## KAsane, Botswana. April 1st-3rd 2025
+## Kasane, Botswana. April 1st-3rd 2025
 
 ##### *Scan this code*
-![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/qr.png)
+![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/qr-kaza.png)
 
-![banner](https://github.com/connectingLandscapes/cola/blob/main/workshops/Vientianie_2024-11-21/E-Banner_DSS%20BG%20Tiger_1920%20x%201080_V2-02.png?raw=true)
+![banner](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/ebanner.png)
 
 
 # Agenda
@@ -14,9 +14,19 @@
 3. CoLa DSS. [Slides](https://drive.google.com/open?id=1o5YLn2k49cGJCzKHz5ncWYrKj5D4TUuZ&usp=drive_fs)
 4. CoLa tutorial by Ivan Gonzalez. [Slides](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
 
+
 # Practical session
 
- 1. Get to this link: (http://34.57.191.163:3838/connecting-landscapes/)  Wait for 10 seconds to load. Open on a new tab.
- 2. Download some sample data> (http://34.57.191.163:3838/connecting-landscapes/)
- 3. Fill out this survey to tell us about yourselves and your experience (2 min): (https://docs.google.com/forms/d/e/1FAIpQLScY1UQM2b8iIEOr2do83rTwDlc-iDHE9-WQnp5qSIFyaeZVdw/viewform)
+ 1. Get to this link: 	
+		- Server A (http://34.57.191.163:3838/connecting-landscapes/)  Wait for 10 seconds to load. Open on a new tab.
+		- Server B (http://34.57.191.163:3838/connecting-landscapes/)  Wait for 10 seconds to load. Open on a new tab.
+ 2. Download some sample data> (https://github.com/connectingLandscapes/cola/tree/main/workshops/KAZA_2025-04-01/data)
+ 3. Fill out this survey to tell us about yourselves and your experience (2 min):
+ (https://forms.gle/jW98Aa5X7Gp5FnnU6). And an another survey about your the DSS perspective (https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link)
  4. Follow the next steps: [Tutorial or slides here](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
+
+
+# Installing
+Follow the steps presented [here]()
+ 
+
