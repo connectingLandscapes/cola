@@ -444,16 +444,16 @@ shp2xy <- function(shapefile, outxy, tempDir,
 #' @export
 guessNoData <- function(path){
   # path = raster path
-  ans <- NA
+  ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
     gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
-      (ans <- gsub('.+\\=', '', ndv))
+      (ans <- as.numeric(gsub('.+\\=', '', ndv)))
     }
   }
   if(is.na(ans) | ans == 'nan' | ans == '' | length(ans) == 0){
-    ans <- 0
+    ans <- -9999
   }
   return(ans)
 }
