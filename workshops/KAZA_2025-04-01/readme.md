@@ -3,8 +3,8 @@
 
 ##### *Scan this code*
 ![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/qr-kaza.png)
-
 ![banner](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/ebanner.png)
+![whatsapp](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/whatsapp.png)
 
 
 # Agenda
@@ -12,7 +12,7 @@
 1. Intro by David McDonald. [Slides](https://drive.google.com/open?id=1oAsKZAhw81zyzPKbyS0ehC6fG1ZYir1y&usp=drive_fs)
 2. Concepts and workflow by Dawn Burnham. [Slides](https://docs.google.com/presentation/d/1nvz7o9J4YcKl4p9okQ_1BGo8AiVj5awr?rtpof=true&usp=drive_fs)
 3. CoLa DSS. [Slides](https://drive.google.com/open?id=1o5YLn2k49cGJCzKHz5ncWYrKj5D4TUuZ&usp=drive_fs)
-4. CoLa tutorial by Ivan Gonzalez. [Slides](https://docs.google.com/presentation/d/18iNtXGxe_NAlaNdxGC9xb_OBJrwRIzXI/edit?usp=sharing&ouid=103068293807996405041&rtpof=true&sd=true)
+4. CoLa tutorial by Ivan Gonzalez. [Slides](https://github.com/connectingLandscapes/cola/tree/main/workshops/KAZA_2025-04-01)
 
 
 # Practical session
@@ -38,10 +38,16 @@ Main steps (follow this order):
 3. Install Rtools
 4. Install Rstudio (optional)
 
-Then, in R run (use your room's WIFI):
+Then, in R run (use your house WIFI):
 ```
+## Install package manager
 if(!require(devtools)){install.packages('devtools')}
+
+## Install or update CoLa. Take 2 mins
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') # Installing CoLa R package
+
+## Set up CoLa. Takes 30 mins the first time you run it
+## Run this function until all problems are solved
 cola::setup_cola(ask = FALSE, dss = TRUE) # Setup all CoLa components. Run this line until all problems are solved.
 
 # Run the DSS
