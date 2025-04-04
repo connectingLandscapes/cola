@@ -1532,7 +1532,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     err <- tryCatch(
       gdalUtilities::gdal_rasterize(
         te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-        tr = rastRes,
+        #tr = rastRes,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
@@ -1545,7 +1545,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     err <- tryCatch(
       gdalUtilities::gdal_rasterize(
         te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-        tr = rastRes,
+        #tr = rastRes,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
