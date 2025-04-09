@@ -385,11 +385,11 @@ def main() -> None:
     # Combine attributes into single array
     attArray = np.vstack(attList)
     # Shapefile column names
-    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','psum1','psum2','mincost','meancost','maxstrength','meanstrength','sumstrength']
+    column_names = ['xco','yco','pid1','pid2','eid1','eid2','parea1','parea2','pmax1','pmax2','pmean1','pmean2','psum1','psum2','mincost','meancost','maxstrn','meanstrn','sumstrn']
     # Convert to dataframe
     cAttDf = pd.DataFrame(attArray, columns=column_names)
     # Add corridor quality metric
-    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.sumstrength * 1/cAttDf.mincost
+    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.sumstrn * 1/cAttDf.mincost
     # Add patch quality metric
     cAttDf['pp1'] = cAttDf.psum1 * cAttDf.psum2
  
@@ -403,10 +403,14 @@ def main() -> None:
     bigPoly = pd.concat(polyList)
     # Add attributes to polygons
     bigPoly = pd.concat([bigPoly, cAttDf], axis=1)
+    # Set crs
+    bigPoly.set_crs(src.crs, inplace=True)
     # Write corridor polygons to shapefile
     bigPoly.to_file(ocorrpoly)
     
     # Write high value patches to shapefile
+    # Set crs
+    patchShape.set_crs(src.crs, inplace=True)
     patchShape.to_file(hvpatches)
     
     # Write high value patches to tiff
