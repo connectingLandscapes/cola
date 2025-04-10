@@ -21,6 +21,25 @@ cola_dss <- function(launch.browser = TRUE)  {
 }
 
 
+#' @title Quote file path if space is detected
+#' @description This function runs the \emph{cola} dashboard
+#' @param launch.browser Run this app on a new window? Default `TRUE`
+#' @note Please see the official website (\url{https://github.com/connectingLandscapes/cola/})
+#' @examples
+#' library(cola)
+#' if(interactive()) {
+#' cola_dss()
+#' }
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+quotepath <- function(path)  {
+  #path <- 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/KAZA2025resamp/Leop_Clip_500m.tif'
+  (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
+  return( path )
+}
+
+
 
 #' @title  Makes a population structure map from CDPOP results interpolation
 #' @description Takes CDPOP results and generates a raster interpolation
@@ -63,10 +82,11 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   ### Create CMD
-  (cmd_inter <- paste0(py, ' ', pyscript, ' ',
-                       grids, ' ', template, ' ',
-                       # allele, ' ', hetero, ' ',
-                       method, ' ', neighbors, ' ', crs, ' 2>&1'))
+  (cmd_inter <- paste0(
+    py, ' ', pyscript, ' ',
+    grids, ' ', template, ' ',
+    # allele, ' ', hetero, ' ',
+    method, ' ', neighbors, ' ', crs, ' 2>&1'))
   if (cml){
     cat('\n\tCMD interpol: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
@@ -121,11 +141,13 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
   logname <- paste0(tools::file_path_sans_ext(template), '_cdpop_mapdensity.txt')
   ### Create CMD
-  (cmd_inter <- paste0(py, ' ', pyscript, ' ',
-                       grids, ' ', template, ' ',
-                       # allele, ' ', hetero, ' ',
-                       method, ' ', bandwidths, ' ', type, ' ', crs
-                       , ' 2>&1 ' #, logname
+  (cmd_inter <- paste0(
+    quotepath(py), ' ', quotepath(pyscript), ' ',
+    quotepath(grids), ' ',
+    quotepath(template), ' ',
+    # allele, ' ', hetero, ' ',
+    method, ' ', bandwidths, ' ', type, ' ', crs
+    , ' 2>&1 ' #, logname
   ))
   if (cml){
     cat('\n\tCMD interpol: \n ')
@@ -224,8 +246,11 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE)
 
 
-  (cmd <- paste0(py, ' ', cdpopscript, ' ', datapath, ' invars.csv ', cdpopPath
-                 , ' 2>&1 ' #, logname
+  (cmd <- paste0(
+    quotepath(py), ' ',
+    quotepath(cdpopscript), ' ',
+    quotepath(datapath), ' invars.csv ', quotepath(cdpopPath)
+    , ' 2>&1 ' #, logname
   ))
   if (cml){
     cat('\n\tCMD CDPOP: \n')
@@ -419,13 +444,16 @@ shp2xy <- function(shapefile, outxy, tempDir,
 #' @export
 guessNoData <- function(path){
   # path = raster path
-  ans <- NA
+  ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
     gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
-      (ans <- gsub('.+\\=', '', ndv))
+      (ans <- as.numeric(gsub('.+\\=', '', ndv)))
     }
+  }
+  if(is.na(ans) | ans == 'nan' | ans == '' | length(ans) == 0){
+    ans <- -9999
   }
   return(ans)
 }
@@ -528,11 +556,11 @@ adaptFilePath <- function(path){
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 sui2res_py <- function(intif, outtif,
-                     minval, maxval, maxout, shape,
-                     nodata = NULL, prj = 'None',
-                     py = Sys.getenv("COLA_PYTHON_PATH"),
-                     pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                     cml = TRUE){
+                       minval, maxval, maxout, shape,
+                       nodata = NULL, prj = 'None',
+                       py = Sys.getenv("COLA_PYTHON_PATH"),
+                       pyscript = system.file(package = 'cola', 'python/s2res.py'),
+                       cml = TRUE){
   # minval = 0
   # maxval =  100
   # maxout = 100
@@ -548,15 +576,18 @@ sui2res_py <- function(intif, outtif,
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   ## Create CMD
-  (cmd_s2res <- paste0(py, ' ', pyscript, ' ',
-                       intif, ' ', outtif, ' ',
-                       format(minval, scientific=F), ' ',
-                       format(maxval, scientific=F), ' ',
-                       format(maxout, scientific=F), ' ',
-                       format(shape, scientific=F), ' ',
-                       format(nodata, scientific=F), ' ',
-                       prj
-                       , ' 2>&1 ' #, logname
+  (cmd_s2res <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(minval, scientific=F), ' ',
+    format(maxval, scientific=F), ' ',
+    format(maxout, scientific=F), ' ',
+    format(shape, scientific=F), ' ',
+    format(nodata, scientific=F), ' ',
+    prj
+    , ' 2>&1 ' #, logname
   ))
   if (cml){
     cat('\n\tCMD Surface : \n')
@@ -643,12 +674,16 @@ points_py <- function(intif, outshp,
   logname <- paste0(tools::file_path_sans_ext(outshp), '.txt')
 
 
-  (cmd_pts <- paste0(py, ' ', pyscript, ' ', intif, ' ', outshp, ' ',
-                     format(smin, scientific=F), ' ',
-                     format(smax, scientific=F), ' ',
-                     format(npoints, scientific=F), ' ',
-                     issuit, ' ', upcrs
-                     , ' 2>&1 '# , logname
+  (cmd_pts <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(intif), ' ',
+    quotepath(outshp), ' ',
+    format(smin, scientific=F), ' ',
+    format(smax, scientific=F), ' ',
+    format(npoints, scientific=F), ' ',
+    issuit, ' ', upcrs
+    , ' 2>&1 '# , logname
   ))
   if (cml){
     cat('\n\tCMD Points: \n')
@@ -710,12 +745,17 @@ cdmat_py <- function(inshp, intif, outcsv,
   logname <- paste0(tools::file_path_sans_ext(outcsv), '.txt')
 
   # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
-  (cmd_cdmat <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outcsv,
-                       ' ',
-                       format(maxdist, scientific=F), ' ',
-                       ncores, ' ', crs
-                       , ' 2>&1 '
-                       # , logname
+  (cmd_cdmat <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outcsv),
+    ' ',
+    format(maxdist, scientific=F), ' ',
+    ncores, ' ', crs
+    , ' 2>&1 '
+    # , logname
   ))
   if (cml){
     cat('\n\n\tCMD cdmat: \n')
@@ -763,14 +803,18 @@ lcc_py <- function(inshp, intif, outtif,
   # }
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
-                     inshp, ' ', intif, ' ', outtif, ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs
-                     , ' 2>&1 ' #, logname
+  (cmd_lcc <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs
+    , ' 2>&1 ' #, logname
   ))
 
   if (cml){
@@ -830,16 +874,21 @@ lccHeavy_py <- function(inshp, intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_lcc <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs, " ",
-                     h5file1, " ",
-                     h5file2, " ",
-                     '50'
-                     , ' 2>&1 ' #, logname
+  (cmd_lcc <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file1, " ",
+    h5file2, " ",
+    '50'
+    , ' 2>&1 ' #, logname
   ))
 
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
@@ -903,17 +952,21 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_lcc <- paste0(py, ' ', pyscript, ' ',
-                     inshp, ' ', intif, ' ', outtif, ' ',
-                     format(maxdist, scientific=F), ' ',
-                     format(smooth, scientific=F), ' ',
-                     format(tolerance, scientific=F), " ",
-                     format(ncores, scientific=F), " ",
-                     crs, " ",
-                     h5file1, " ",
-                     h5file2, " ",
-                     maxram
-                     , ' 2>&1 ' #, logname
+  (cmd_lcc <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(maxdist, scientific=F), ' ',
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file1, " ",
+    h5file2, " ",
+    maxram
+    , ' 2>&1 ' #, logname
 
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
@@ -961,14 +1014,19 @@ crk_py <- function(inshp, intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_crk <- paste0(py, ' ', pyscript, ' ', inshp, ' ', intif, ' ', outtif, ' ',
-                     format(maxdist, scientific=F), ' ', # [4] distance threshold
-                     format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-                     transf, ' ', #
-                     format(volume, scientific=F), ' ', # [6] kernel volume
-                     format(ncores, scientific=F), ' ', # [7] cores
-                     crs
-                     , ' 2>&1 ' #, logname
+  (cmd_crk <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(maxdist, scientific=F), ' ', # [4] distance threshold
+    format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
+    transf, ' ', #
+    format(volume, scientific=F), ' ', # [6] kernel volume
+    format(ncores, scientific=F), ' ', # [7] cores
+    crs
+    , ' 2>&1 ' #, logname
   ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
@@ -978,6 +1036,81 @@ crk_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               log =  intCMD ) )
+}
+
+#' @title  Create least cost corridors using parallel computing
+#' @description Run CDPOP model
+#' @param py Python location
+#' @param pyscript Python script location
+#' @param py Python location
+#' @return Path with CDPOP results
+#' @examples
+#' runCDPOP( )
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+crkJoblib_py <- function(
+    inshp, intif, outtif,
+    maxdist, shape,
+    transform, volume,
+    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+    crs = 'None',
+    maxram = 6,
+    tempFolder = NULL,
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
+    cml = TRUE){
+
+  # "crk_joblib.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
+  # param3 = 25000
+  # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+  # [2] resistance surface
+  # [3] output file name
+  # [4] distance threshold (should be in meters*)
+  # [5] corridor smoothing factor (in number of cells)
+  # [6] corridor tolerance (in cost distance units)
+  # [7] number of cores
+  # [8] projection if missing
+  # [9] first h5 temp file
+  # [10] second h5 temp file
+  # [11] Max GB ram allowed
+
+  if (is.null(tempFolder)){
+    tempFolder <- tempdir()
+  }
+  tempH5 <- basename(tempfile())
+  h5file <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+
+  (cmd_crk <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    format(maxdist, scientific=F), ' ',
+    shape, ' ', transform, " ",
+    volume, " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    h5file, " ",
+    maxram
+    , ' 2>&1 ' #, logname
+
+  ))
+  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+
+  if (cml){
+    cat('\n\tCMD CRK joblib:\n', cmd_lcc)
+    cat('\n')
+  }
+
+  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+  file.remove(c(h5file1, h5file2))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -996,13 +1129,13 @@ crk_py <- function(inshp, intif, outtif,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 prio_py <- function(tif, incrk, inlcc,
-                   maskedcsname = paste0(tempfile(), '.tif'),
-                   outshppoint, outshppol, outshppatch,
-                   outtifpatch, outtif,
-                   threshold = 0.5, tolerance = 1000,
-                   py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
-                   cml = TRUE){
+                    maskedcsname = paste0(tempfile(), '.tif'),
+                    outshppoint, outshppol, outshppatch,
+                    outtifpatch, outtif,
+                    threshold = 0.5, tolerance = 1000,
+                    py = Sys.getenv("COLA_PYTHON_PATH"),
+                    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
+                    cml = TRUE){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -1053,19 +1186,21 @@ prio_py <- function(tif, incrk, inlcc,
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
 
-  (cmd_prio <- paste0(py, ' ',
-                      pyscript, ' ',
-                      tif, ' ',
-                      incrk, ' ', inlcc, ' ',
-                      maskedcsname, ' ',
-                      outshppoint, ' ',
-                      outshppol, ' ',
-                      outshppatch, ' ',
-                      outtifpatch, ' ',
-                      outtif, ' ',
-                      format(threshold, scientific=F), " ",
-                      format(tolerance, scientific=F)
-                      , ' 2>&1 ' #, logname
+  (cmd_prio <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(tif), ' ',
+    quotepath(incrk), ' ',
+    quotepath(inlcc), ' ',
+    quotepath(maskedcsname), ' ',
+    quotepath(outshppoint), ' ',
+    quotepath(outshppol), ' ',
+    quotepath(outshppatch), ' ',
+    quotepath(outtifpatch), ' ',
+    quotepath(outtif), ' ',
+    format(threshold, scientific=F), " ",
+    format(tolerance, scientific=F)
+    , ' 2>&1 ' #, logname
   ))
 
   if (cml){
@@ -1127,15 +1262,19 @@ crk_compare_py <- function(intif, intifs,
 
   dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
 
-  (cmd_crk_comp <- paste0(py, ' ', pyscript, ' ',
-                          intif, ' ', intifs, ' ',
-                          outcsvabs, ' ',
-                          outcsvrel, ' ',
-                          outpngabs, ' ',
-                          outpngrel, ' ',
-                          outfolder, ' ',
-                          inshp, ' ', shpfield
-                          , ' 2>&1 ' #, logname
+  (cmd_crk_comp <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(intif), ' ',
+    quotepath(intifs), ' ',
+    quotepath(outcsvabs), ' ',
+    quotepath(outcsvrel), ' ',
+    quotepath(outpngabs), ' ',
+    quotepath(outpngrel), ' ',
+    quotepath(outfolder), ' ',
+    quotepath(inshp), ' ',
+    quotepath(shpfield)
+    , ' 2>&1 ' #, logname
   )
   )
   if (cml){
@@ -1190,15 +1329,19 @@ lcc_compare_py <- function(intif, intifs,
   logname <- paste0(tools::file_path_sans_ext(outfolder), '.txt')
 
 
-  (cmd_lcc_comp <- paste0(py, ' ', pyscript, ' ',
-                          intif, ' ', intifs, ' ',
-                          outcsvabs, ' ',
-                          outcsvrel, ' ',
-                          outpngabs, ' ',
-                          outpngrel, ' ',
-                          outfolder, ' ',
-                          inshp, ' ', shpfield
-                          , ' 2>&1 ' #, logname
+  (cmd_lcc_comp <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
+    quotepath(intif), ' ',
+    quotepath(intifs), ' ',
+    quotepath(outcsvabs), ' ',
+    quotepath(outcsvrel), ' ',
+    quotepath(outpngabs), ' ',
+    quotepath(outpngrel), ' ',
+    quotepath(outfolder), ' ',
+    quotepath(inshp), ' ',
+    quotepath(shpfield)
+    , ' 2>&1 ' #, logname
   )
   )
   if (cml){
@@ -1389,7 +1532,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     err <- tryCatch(
       gdalUtilities::gdal_rasterize(
         te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-        tr = rastRes,
+        #tr = rastRes,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
@@ -1402,7 +1545,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     err <- tryCatch(
       gdalUtilities::gdal_rasterize(
         te = rastExtent, # -te <xmin> <ymin> <xmax> <ymax>
-        tr = rastRes,
+        #tr = rastRes,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
@@ -1477,5 +1620,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   # file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
   return(replacedPath)
+
   #} else { return(NA) }
 }

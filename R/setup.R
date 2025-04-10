@@ -503,7 +503,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   if(length(libs2inst) != 0){
     for( l in 1:length(libs2inst)){ # l = 10
-      (lib2inst <- lib2inst[l])
+      (lib2inst <- libs2inst[l])
       (lib2 <- gsub('==.+', '', lib2inst))
       (lib3 <- sub('=', '', lib2inst))
       # Check if specific
@@ -580,7 +580,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
-    pyCola, ' ', welcomepy)); #cat(tryBcmd)
+    quotepath(pyCola), ' ', quotepath(welcomepy))); #cat(tryBcmd)
   (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e$message)) ## error is character
 
 
@@ -696,12 +696,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     # pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
 
     # Create test
-    (test_suit2res <- paste0(pyCola, ' ', # Python
-                             pyScript, ' ', # script
-                             system.file("sampledata/sampleTif.tif", package = "cola"), ' ', #in [1]
-                             outTest, #out
-                             ' 0 1 100', # min max scale-max
-                             ' 1 -9999 None')) # shape nodata proj
+    (test_suit2res <- paste0(
+      quotepath(pyCola), ' ', # Python
+      quotepath(pyScript), ' ', # script
+      quotepath(system.file("sampledata/sampleTif.tif", package = "cola")), ' ', #in [1]
+      quotepath(outTest), #out
+      ' 0 1 100', # min max scale-max
+      ' 1 -9999 None')) # shape nodata proj
     # cat(test_suit2res)
 
     ## Run tests
