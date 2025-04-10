@@ -125,7 +125,7 @@ diagnose_cola <- function(envName = 'cola',
 
               if( file.exists(pyCola2check) & dir.exists(pathCola) ){
 
-                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n")
+                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n\n")
 
               } else {
                 cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
@@ -208,6 +208,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @param nSteps The number of steps for printing log in console
 #' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
 #' @param yml Use YML file to build the conda environment? Default TRUE
+#' @param ask Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE
+#' @param dss Install cola DSS as well? Default FALSE
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
@@ -217,11 +219,12 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = TRUE, ask = TRUE,
+                        dss = FALSE,
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
                                           'pytables', 'pandas',  'cython', 'numba' ,
-                                          'networkit', 'fiona', 'shapely',
+                                          'networkit==11.0', 'fiona', 'shapely',
                                           'kdepy', 'scikit-image', 'kdepy')
 ){
 
@@ -247,11 +250,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     }
 
   } else {
-    loadLib <- tryCatch(library(reticulate), error = function(e) NULL)
+    loadLib <- tryCatch(library(reticulate, quietly = TRUE), error = function(e) NULL)
     if( is.null(loadLib) ) {
       diagnose_cola()
     }
-    cat(sep = '', '    `reticulate` installed already!\n')
+    cat(sep = '', '    `reticulate` package installed already!\n')
   }
 
   library(reticulate)
@@ -372,8 +375,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       (newYmlFile <- paste0(tempfile(), 'newYml.yml'))  # read.delim(newYmlFile)
       writeLines(text = ymlTxt, con = newYmlFile)
 
-      user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
-      if ( isTRUE(user_permission) ) {
+      user_permission <- FALSE
+      if (ask){
+        user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
+      }
+
+      if ( isTRUE(user_permission) | !ask ) {
         insCondLog <- install_cond_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
 
         ## Error: folder exists but empty
@@ -492,13 +499,27 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   (avLibs <- reticulate::py_list_packages(envname = envName))
 
   ## Install conda packages
-  (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
+  (libs2inst <- libs2Install[! libs2Install %in% avLibs$package])
 
-  if(length(lib2inst) != 0){
-    for( l in 1:length(libs2Install)){ # l = 1
-      (lib2inst <- libs2Install[l])
-      if( ! lib2inst %in% avLibs$package ){
-        cat(paste0(' --- Installing `',  libs2Install[l], '` module\n'))
+  if(length(libs2inst) != 0){
+    for( l in 1:length(libs2inst)){ # l = 10
+      (lib2inst <- libs2inst[l])
+      (lib2 <- gsub('==.+', '', lib2inst))
+      (lib3 <- sub('=', '', lib2inst))
+      # Check if specific
+      (versReq <- ifelse(grepl('==', lib2inst), TRUE, FALSE))
+      versOK <- FALSE
+      if(versReq){
+        (instVer <- avLibs$requirement[avLibs$package %in% lib2]) # instVer <- avLibs$requirement[avLibs$package %in% 'xx']
+        if(length(instVer) != 0){
+          (versOK <- ifelse(instVer %in% lib3, TRUE, FALSE)) # instVer == lib3
+        }
+      } else {
+        versOK <- TRUE
+      }
+
+      if( (! lib2 %in% avLibs$package ) | !versOK ){ #
+        cat(paste0(' \n --- Installing `',  libs2inst[l], '` module\n'))
 
         logPkg <- tryCatch(
           reticulate::py_install(
@@ -528,7 +549,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   insLibs <- libs2Install[libs2Install %in% avLibs$package]
 
   ## No installed
-  noInsLibs <- libs2Install[!libs2Install %in% avLibs$package]
+  (noInsLibs <- libs2Install[ ! ((libs2Install %in% avLibs$package) | (!libs2Install %in% avLibs$requirement))])
   # noInsLibs <- c('a', 'f')
 
   if( length(noInsLibs) > 0 ){
@@ -559,7 +580,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   #tryA <- tryCatch(reticulate::py_exe(system.file("python/welcome.py", package = "cola")), error = function (e) e)
   (cmd2test <- paste0( #'cd ', cola_scripts_path, '; ',
-    pyCola, ' ', welcomepy)); #cat(tryBcmd)
+    quotepath(pyCola), ' ', quotepath(welcomepy))); #cat(tryBcmd)
   (cmdans <- tryCatch( system( cmd2test , intern = TRUE ), error = function (e) e$message)) ## error is character
 
 
@@ -675,16 +696,17 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     # pyCola <- paste0('conda run --cwd ', cola_scripts_path, ' -n ', envName,' python ')
 
     # Create test
-    (test_suit2res <- paste0(pyCola, ' ', # Python
-                             pyScript, ' ', # script
-                             system.file("sampledata/sampleTif.tif", package = "cola"), ' ', #in [1]
-                             outTest, #out
-                             ' 0 1 100', # min max scale-max
-                             ' 1 -9999 None')) # shape nodata proj
+    (test_suit2res <- paste0(
+      quotepath(pyCola), ' ', # Python
+      quotepath(pyScript), ' ', # script
+      quotepath(system.file("sampledata/sampleTif.tif", package = "cola")), ' ', #in [1]
+      quotepath(outTest), #out
+      ' 0 1 100', # min max scale-max
+      ' 1 -9999 None')) # shape nodata proj
     # cat(test_suit2res)
 
     ## Run tests
-    intCMD <- tryCatch(system(test_suit2res, intern = TRUE, ignore.stdout = TRUE), error = function(e) e)
+    intCMD <- tryCatch(system(test_suit2res, intern = TRUE), error = function(e) e$message)
 
 
     ## Define local paths if test
@@ -707,12 +729,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         file.copy(renv, file.path(home, ".Renviron_backup"), overwrite = TRUE)
       }
 
-      if (!file.exists(renv)) {
+      if ( !file.exists(renv) ) {
         file.create(renv)
       }
 
-
-      origRenviron <- readLines(renv)
+      {
       # if( !any(grep('COLA_PYTHON_PATH', origRenviron)) ){
       #
       #   ## Readfile
@@ -742,8 +763,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       #
       # } else {
       # }
+      }
 
-
+      origRenviron <- readLines(renv)
       Renviron <- origRenviron
 
       posA <- grep('COLA_PYTHON_PATH', Renviron)
@@ -754,40 +776,59 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       (posB <- ifelse(length(posB) == 0, length(Renviron) + 1, posB))
       Renviron[posB] <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
 
+
+
       pos <- grep('COLA_DATA_PATH', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_DATA_PATH='
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DATA_PATH='}
 
       pos <- grep('COLA_NCORES', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_NCORES=1'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_NCORES=1'}
 
       pos <- grep('COLA_DSS_UPL_MB', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_DSS_UPL_MB=250'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DSS_UPL_MB=250'}
 
       pos <- grep('COLA_VIZ_THRES_PIX', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_THRES_PIX=1000000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_THRES_PIX=1000000'}
 
       pos <- grep('COLA_VIZ_RES_NCOL', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_RES_NCOL=1000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NCOL=1000'}
 
       pos <- grep('COLA_VIZ_RES_NROW', Renviron)
-      (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      Renviron[pos] <- 'COLA_VIZ_RES_NROW=1000'
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NROW=1000'}
 
 
       #cat(Renviron, sep = '\n')
       writeLines(text = Renviron, con = renv)
+      #gcp <- pyCola
+      #options('COLA_PYTHON_PATH')
+
+      ## Checking gdal_calc.py
+
 
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
+      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n')
 
+      if(dss){
+        ## Step4. Set paths ----------------------------------------------
+        cat (sep = '', '  + Extra step   Installing DSS GUI\n')
+        cola::setup_cola_dss()
+      }
 
-      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n\n\tPlease restart R to update the new settings\n')
+      cat (sep = '', '\n\n',
+           '\tCustomize your local parameteres by editing the file:\n',
+           file.path(Sys.getenv("HOME"), ".Renviron"),'\n\n',
+           '\n\tOpen it on R/Rstudio with the command:\n',
+           '\tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n',
+           '\tPlease restart R to update the new settings\n'
+           )
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
