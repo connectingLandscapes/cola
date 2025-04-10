@@ -8,6 +8,7 @@ surface from xy locations.
 
 #%%
 # Imports
+import sys
 import networkit as nk
 import rasterio as rio
 from rasterio.crs import CRS
@@ -177,6 +178,10 @@ def image_to_graph(src_data, cellSize, ndValue, pixelConnectivity=8):
     tic = time.perf_counter()
     # Get array    
     A = src_data
+    # Check if non-negative min value is less than 1
+    if np.nanmin(A[A >= 0]) < 1:
+        print('Resistance surface has values < 1. Please provide a surface where the minimum resistance value is 1.')
+        sys.exit(0) 
     # Convert to 1D
     A = A.flatten()
     # Convert resistance surface to adjacency matrix
