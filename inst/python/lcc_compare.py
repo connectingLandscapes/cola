@@ -131,7 +131,8 @@ if shpZones == 'None':
     ax.xaxis.label.set_size(18)
     ax.set_ylabel('% Change Relative to Baseline', fontsize=18)
     # Bar labels
-    ax.bar_label(ax.containers[0], fmt=lambda x: f'{x:.2f}', fontsize=18, label_type='edge')
+    ax.bar_label(ax.containers[0], fmt=lambda x: f'{x:.2f}', fontsize=18, label_type='edge', padding=3)
+    ax.margins(y=0.1)
     ax.margins(y=0.1)
     ax.get_legend().remove()
     fig = ax.get_figure()
