@@ -270,11 +270,11 @@ def main() -> None:
     
     # !!! Write cpecells and labels to file (temporary code) !!
     cpecells2 = np.expand_dims(cpecells, axis=0)
-    cf.arrayToGeoTiff(cpecells2, 'C:/Users/pj276/Downloads/prioritization5/edge_cell_groups4.tif', profilecs)
+    cf.arrayToGeoTiff(cpecells2, 'C:/Users/pj276/Downloads/prioritization5/edge_cell_groups12.tif', profilecs)
     markers2 = np.expand_dims(markers, axis=0)
-    cf.arrayToGeoTiff(markers2, 'C:/Users/pj276/Downloads/prioritization5/markers_groups4.tif', profilecs)
+    cf.arrayToGeoTiff(markers2, 'C:/Users/pj276/Downloads/prioritization5/markers_groups12.tif', profilecs)
     labels2 = np.expand_dims(labels, axis=0)
-    cf.arrayToGeoTiff(labels2, 'C:/Users/pj276/Downloads/prioritization5/labels_groups4.tif', profilecs)
+    cf.arrayToGeoTiff(labels2, 'C:/Users/pj276/Downloads/prioritization5/labels_groups12.tif', profilecs)
     
     
     #%%
@@ -357,17 +357,34 @@ def main() -> None:
         # Distance between sets of points
         dsp = pdrs[0] + pdrs[1]
         # Threshold
-        dsp = np.where(dsp < np.min(dsp[dsp>0]) + corrTol, dsp, 0)
+        #dsp = np.where(dsp < np.min(dsp[dsp>0]) + corrTol*5, dsp, 0)
+        dsp = np.where(dsp < np.min(dsp[dsp>0])*1.10, dsp, 0)
+        
         # Set nan to 0
         dsp[np.isnan(dsp)] = 0
-        
-        # Minimum cost distance value between sets of points
-        mcd = np.min(dsp[dsp>0])
-        meancd = np.mean(dsp[dsp>0])
         
         # Mask out corridor where it overlaps with patches
         #dsp = np.where(np.logical_and(hvP > 1, dsp > 0), 0, dsp)
         dsp = np.where(hvP == 1, 0, dsp)
+        
+        # Segment corridors. Retain only largest one if there are multiple.
+        # This essentially erases isolated portions of corridors that are
+        # an artifact of the CMTC approach
+        dspBin = np.where(dsp > 0, 1, 0)
+        csegs, nc1 = ndi.label(dspBin, structure=fprint)
+        
+        # If there is more than one corridor segment
+        if nc1 > 1:            
+            # Get corridor attributes
+            cprops = regionprops(csegs)
+            cLabels = [i.label for i in cprops]
+            cAreas = [i.area for i in cprops]
+            keepcid = cLabels[np.argmax(cAreas)] # get label of largest corridor segment
+            dsp = np.where(csegs==keepcid, dsp, 0)
+        
+        # Minimum cost distance value between sets of points
+        mcd = np.min(dsp[dsp>0])
+        meancd = np.mean(dsp[dsp>0])
         
         # Get corridor strength values overlapping with corridor
         tCorr = np.where(dsp > 0, lcc, 0)
