@@ -1102,15 +1102,15 @@ crkJoblib_py <- function(
     , ' 2>&1 ' #, logname
 
   ))
-  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
   if (cml){
-    cat('\n\tCMD CRK joblib:\n', cmd_lcc)
+    cat('\n\tCMD CRK joblib:\n', cmd_crk)
     cat('\n')
   }
 
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-  file.remove(c(h5file1, h5file2))
+  intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+  file.remove(c(h5file))
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -1539,7 +1539,8 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         dst_filename = rasterizedPath,
         add = FALSE,
         a = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) print('Error rast pol for replacing'); print(e);e)
+
   } else{
     ## Use a single value
     err <- tryCatch(
@@ -1552,7 +1553,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         dst_filename = rasterizedPath,
         add = FALSE,
         burn = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) print('Error rast pol for replacing'); print(e);e)
   }
 
   if (!file.exists(rasterizedPath)){
@@ -1563,10 +1564,10 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
     cat(g2)
 
-
     #rft <- rast(rasterizedPath); plot(rft)
 
     if (gdal){
+      cat(' --- Rasterizing with gdal_calc.py')
       # Use gdal calc in linux
       (cmdCalc <- paste0('gdal_calc.py --overwrite ',
                          ' -A ', rastPath, # original
@@ -1576,6 +1577,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       runCMD <- tryCatch(system(cmdCalc, intern = TRUE), error = function(e) NA)
     } else {
+      cat(' --- Rasterizing with terra')
 
       ## GDAL calc
       ## works on win> C:\Users\gonza>C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\python.exe C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\Scripts\gdal_calc.py --help

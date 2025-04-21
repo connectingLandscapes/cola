@@ -2488,6 +2488,7 @@ server <- function(input, output, session) {
 
           pol2Rast <- tryCatch(draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW ), error = function(e) NULL)
           # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+
           pol2Rastx <- st_as_sf( pol2Rast)
           pol2Rastx$val2burn <- num2Burn
 

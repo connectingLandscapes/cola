@@ -48,7 +48,7 @@ devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade
 
 ## Set up CoLa. Takes 30 mins the first time you run it
 ## Run this function until all problems are solved
-cola::setup_cola(ask = FALSE, dss = TRUE) # Setup all CoLa components. Run this line until all problems are solved.
+cola::setup_cola(ask = FALSE, dss = TRUE) 
 
 # Run the DSS
 cola::cola_dss()
