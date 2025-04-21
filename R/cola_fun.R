@@ -977,7 +977,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-  file.remove(c(h5file1, h5file2))
+  tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -996,7 +996,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 crk_py <- function(inshp, intif, outtif,
-                   maxdist, shape, transf = 'yes', volume,
+                   maxdist, shape, transform = 'no', volume,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -1022,7 +1022,7 @@ crk_py <- function(inshp, intif, outtif,
     quotepath(outtif), ' ',
     format(maxdist, scientific=F), ' ', # [4] distance threshold
     format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-    transf, ' ', #
+    transform, ' ', #
     format(volume, scientific=F), ' ', # [6] kernel volume
     format(ncores, scientific=F), ' ', # [7] cores
     crs
@@ -1056,7 +1056,8 @@ crk_py <- function(inshp, intif, outtif,
 crkJoblib_py <- function(
     inshp, intif, outtif,
     maxdist, shape,
-    transform, volume,
+    transform = 'no',
+    volume,
     ncores = as.numeric(Sys.getenv('COLA_NCORES')),
     crs = 'None',
     maxram = 6,
@@ -1110,7 +1111,7 @@ crkJoblib_py <- function(
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
-  file.remove(c(h5file))
+  tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )

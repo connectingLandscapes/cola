@@ -150,4 +150,24 @@ if (FALSE){
 
 # Rprofile.site
 
+library(cola)
+
+pts_result <- points_py(intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+                        outshp = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_100points.shp',
+                        smin = 2, smax = 150,
+                        npoints = 50, issuit = 'No', upcrs = 'None')
+
+
+crk_result <- crkJoblib_py(inshp = pts_result$file,
+                           intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+                           outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk.tif',
+                           maxdist = 125000, shape = 'linear', volume = 1, transform = 'No')
+
+
+
+crk_result_1core <- crk_py(inshp = pts_result$file,
+                           intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+                           outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk_1core.tif',
+                           maxdist = 125000, shape = 'linear', volume = 1, transf = 'No')
+
 
