@@ -1526,7 +1526,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   # cat('\n ++ polPath ', polPath)
   # cat('\n ++ rasterizedPath ', rasterizedPath)
   # cat('\n ++ burnval ', burnval)
-
   if (colu){
     ## Use a column/attribute
     err <- tryCatch(
@@ -1539,7 +1538,11 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         dst_filename = rasterizedPath,
         add = FALSE,
         a = burnval) #as.numeric(burnval)
-      , error = function(e) print('Error rast pol for replacing'); print(e);e)
+      , error = function(e) {
+        print('Error rast pol for replacing');
+        print(e);
+        return(e)
+        })
 
   } else{
     ## Use a single value
@@ -1553,7 +1556,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         dst_filename = rasterizedPath,
         add = FALSE,
         burn = burnval) #as.numeric(burnval)
-      , error = function(e) print('Error rast pol for replacing'); print(e);e)
+      , error = function(e) {print('Error rast pol for replacing'); print(e);e})
   }
 
   if (!file.exists(rasterizedPath)){
