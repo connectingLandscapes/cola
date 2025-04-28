@@ -12,9 +12,8 @@ from scipy import ndimage as ndi
 import numpy as np
 import rasterio as rio
 from skimage.segmentation import watershed
-from skimage.morphology import binary_erosion
+from skimage.morphology import binary_erosion, binary_dilation, dilation
 from skimage.measure import regionprops
-from skimage.filters.rank import maximum
 import cola_functions as cf
 import pandas as pd
 from rasterio.features import shapes
@@ -61,18 +60,24 @@ def main() -> None:
     q = sys.argv[10] # 0.5
     q = float(q)
     
-    # Corridor tolerance. Should be the same tolerance used in the lcc script
-    corrTol = sys.argv[11] # 1000
+    # Corridor width parameter. As a percentage. E.g. a value of 10
+    # would take the minimum cost distance + 10% and use that to determine
+    # corridor width. If this is set low, the corridors from the prioritization
+    # will be narrower than those in the FLCC layer. If this is set ver high,
+    # the algorithm might grab additional cells nearby that are part of other
+    # corridors, leading to overestimates of individual corridors. Setting it
+    # to ~10-50 should yield the most interpretable results.
+    corrWidthParam = sys.argv[11] # 
 
     # Convert tolerance to float or integer
     try:
-        if cf.is_floatpy3(corrTol):
-            corrTol = float(corrTol)
-        elif corrTol.isdigit():
-            corrTol = int(corrTol)
+        if cf.is_floatpy3(corrWidthParam):
+            corrWidthParam = float(corrWidthParam)
+        elif corrWidthParam.isdigit():
+            corrWidthParam = int(corrWidthParam)
         else:
-            float(corrTol)
-            int(corrTol)
+            float(corrWidthParam)
+            int(corrWidthParam)
     except ValueError:
         print('Tolerance value must be either a float or integer')
 
@@ -102,6 +107,9 @@ def main() -> None:
     
     # Label discrete patches
     markers, npatch1 = ndi.label(hvP, structure=fprint)
+    # Dilate markers so that corridor edge cells can be labeled
+    markersDilate = dilation(markers, fprint)
+    
     # Get patch attribute
     rprops = regionprops(markers, intensity_image=im)
     pLabels = [i.label for i in rprops]
@@ -137,23 +145,20 @@ def main() -> None:
     ddf = pd.DataFrame({'crksums': ppSum, 'ind': patchShape.index})
     ddf = ddf.set_index('ind')
     patchShape = pd.concat([patchShape, ddf], axis=1)
-    
-    # Get moving window max over corridors
-    mx = maximum(lccB.astype('uint8'), fprint)
-    
+
     # Get patch edges
-    hvPedges = hvP - binary_erosion(hvP, fprint)
+    #hvPedges = hvP - binary_erosion(hvP, fprint)
+    # Get cells where corridors overlap with patch edges
+    #tPix = np.where((hvPedges > 0) & (lcc > 0), 1, 0)
     
-    # Get intersection of patch edges and moving window == 1
-    # These are the target pixels
-    tPix = mx*hvPedges
-    
+    # Get corridor edges
+    cedges = binary_dilation(hvP, fprint) - hvP
+    # Get cells where corridors overlap with patch edges
+    tPix = np.where((cedges > 0) & (lcc > 0), 1, 0)
+
     # Label discrete groups of corridor patch edge cells
     cpecells, npatch2 = ndi.label(tPix, structure=fprint)
-    
-    # Remove patch edge cells that don't overlap with flcc
-    cpecells[(cpecells > 0) & (lcc == 0)] = 0
-    
+   
     # Use watershed algorithm to determine which edge cells
     # are connected to edge cells in other patches
     # To do this, use edge cells as markers, flood them
@@ -173,8 +178,7 @@ def main() -> None:
     # and 0 values of high value patches 
     wMask = np.where(np.logical_and(lcc > 0, hvP < 1), True, False)
     # Add cpecells back to mask
-    wMask = np.where(cpecells > 0, True, wMask)
-    #wMask = np.where(lcc > 0, True, False)
+    #wMask = np.where(cpecells > 0, True, wMask)
    
     # Read in original cost surface
     with rio.open(ocsFile) as src:
@@ -203,7 +207,8 @@ def main() -> None:
     # Create dictionary for patches associated with edge cell groups
     d = {}
     for i in pLabels:
-        msk = np.where(markers==i, 1, 0)
+        #msk = np.where(markers==i, 1, 0)
+        msk = np.where(markersDilate==i, 1, 0)
         ucellids = np.unique(msk*cpecells)
         for j in ucellids:
             d[j] = i
@@ -226,24 +231,14 @@ def main() -> None:
     #%%
     # Get cell size from profile of original cost surface
     cSize = profilecs['transform'][0]
-    ## !!! Maybe delete Convert non-corridor, non-patch cells to no data
-    #newcs = np.maximum(np.where(lcc > 0, 1, 0), np.where(hvP > 0, 1, 0))
     
     # Convert non-corridor  cells to no data (this sets patch cells to nodata
     # as well so that corridors don't get routed through patches).
     # Corridors running through patches would get partially masked later
     # with patches which leads to funny results.
-    # However, include patch edge pixels
-#    newcs = np.where(lcc > 0, 1, 0)
-#    newcs = np.where(newcs==0, -9999, 1)
-#    ocs = np.where(newcs==1, ocs, -9999)
-#    ocs[(hvP==1) & (cpecells == 0)] = -9999
-    
-    # Convert non-corridor  cells to no data (this sets patch cells to nodata
-    # as well so that corridors don't get routed through patches).
-    # Corridors running through patches would get partially masked later
-    # with patches which leads to funny results.
-    # However, include patch edge pixels
+    # However, include patch edge pixels for now. Might remove these in 
+    # a later version as sometimes corridors may run through the edge
+    # of a patch and come out the other side, leading to disjunct corridors.
     ocs = wMask*ocs
     ocs[ocs == 0] = -9999
     ocs[np.isnan(ocs)] = -9999
@@ -270,11 +265,11 @@ def main() -> None:
     
     # !!! Write cpecells and labels to file (temporary code) !!
     cpecells2 = np.expand_dims(cpecells, axis=0)
-    cf.arrayToGeoTiff(cpecells2, 'C:/Users/pj276/Downloads/prioritization5/edge_cell_groups12.tif', profilecs)
+    cf.arrayToGeoTiff(cpecells2, 'C:/Users/pj276/Downloads/prioritization5/edge_cell_groups23.tif', profilecs)
     markers2 = np.expand_dims(markers, axis=0)
-    cf.arrayToGeoTiff(markers2, 'C:/Users/pj276/Downloads/prioritization5/markers_groups12.tif', profilecs)
+    cf.arrayToGeoTiff(markers2, 'C:/Users/pj276/Downloads/prioritization5/markers_groups23.tif', profilecs)
     labels2 = np.expand_dims(labels, axis=0)
-    cf.arrayToGeoTiff(labels2, 'C:/Users/pj276/Downloads/prioritization5/labels_groups12.tif', profilecs)
+    cf.arrayToGeoTiff(labels2, 'C:/Users/pj276/Downloads/prioritization5/labels_groups23.tif', profilecs)
     
     
     #%%
@@ -357,8 +352,7 @@ def main() -> None:
         # Distance between sets of points
         dsp = pdrs[0] + pdrs[1]
         # Threshold
-        #dsp = np.where(dsp < np.min(dsp[dsp>0]) + corrTol*5, dsp, 0)
-        dsp = np.where(dsp < np.min(dsp[dsp>0])*1.10, dsp, 0)
+        dsp = np.where(dsp < np.min(dsp[dsp>0])*(corrWidthParam/100 + 1), dsp, 0)
         
         # Set nan to 0
         dsp[np.isnan(dsp)] = 0
