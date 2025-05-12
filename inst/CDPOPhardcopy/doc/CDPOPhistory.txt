@@ -1,0 +1,920 @@
+Changes v1.3.20.2024.09.12 (ell)
+0) 'rU' to 'r'
+
+Changes v1.3.19.2023.01.19T08:40:00 (ell)
+0) Work through test files from EAsh and issues with introductions, mating interval, and mortality options.
+a) Hitting 1531 PDB in AddIndividuals, deleted pdb.set_trace()
+
+Changes v1.3.18.2022.12.6T10:18:00 (ell)
+0)Begin addressing priority list of modifications from SCushman, EAsh, Luciano
+a)Introductions: revisit for greater control. E.g., Control where Individuals are introduced, if individual there, then skip. Previous code population checks/based....checking.
+-> Looking into moving AddIndividuals before Dispersal happens, so they will take over a spot of parent; will work for nonoverlapping.
+-> Updating AddIndividuals() to accomodate new column in XY for grid mort. Note that gridmort uses bars for cdclimate and read from first file
+-> Remove sys-exit in exceed K (EAsh) when thisK < count_currentN + count_addN, then program will skip this add individual
+-> Working for subpopulations 1111222233334444, etc. 
+
+-> *** If known file for genes, then need to update, currently initializes genes with allele freq file
+-> ***Need to update usermanual for gridmort (Subpopmort_perc) moved to XY, CDCLIMATE works for bars in this file. If add individuals on, then subpopmort_perc is ignored; gridmort will always use the first files values. 
+
+1) Add variable in inputvars for skipped mating/spawning
+a) Added 'mateFrequency' field to inputvars
+b) In mate functions for replacement, flip coin to see if that individuals mates using matefreq
+
+Changes v1.3.17.2022.11.21T8:50:00 (ell)
+0) Spatial mortality indexing incorrect to subpop, not iteminlist (grid spot)
+
+Changes v1.3.16.2022.11.8T10:39:00MDT (ell)
+0) Unicor option still outputing XY with option == False. *Fixed
+1) Move subpopmortpercent to XY file. 
+a) Remove subpopmortperc field in popvars.
+b) Add Subpopmortperc to xy files; careful to check all cases - add after XY, spot 4 index 3
+c) Created gridmort var, read in from xy file
+d) can not be NA - divide by 100 here 
+e) Not outputing gridmort to grid.csv file
+f) Replace subpopmortperc var with gridmort in Mate() DoDisperse()
+g) Checking Mate()....removing any mention here and remove subpopmatemort,subpopmortperc; used to implement this here, but only use for disperse. Done.
+h) Checking Disperse()....Done.
+i) add a | cdclimate option....Done.
+j) Add to usermanual....done.
+
+Changes v1.3.15.2022.04.26T09:54:00 (ell)
+0) index error when genes answer is file introduce. (6 to 7)
+
+Changes v1.3.14.2022.03.30T09:40:00 (ell)
+0) Begin to add UNICOR output option
+a) 'output_unicor' in inputvars.csv and output XY{year}.csv that matches output_years
+b) updated usermanual.
+
+Changes v1.3.13.2022.03.15T15:00:00 (ell)
+0) Add option for cdevolveans and subpopmortality selection. 
+a) Rearranged this section so selects iteminlist, checks diffmort for cdevovlve, then diffmort for subpopmort, then applies differentialmortality_Total = 1. - ((1. - differentialmortality) * (1. - differentialmortality_SpatialSubPopMort))
+1) '|S4' dtype found in DoMortality -> converted to 'str'
+
+Changes v1.3.12.2022.03.10T15:17:00 (ell)
+0) For subpopmortperc option remove from mating module
+1) For subpopmortperc: remove option that required only mortality if moving to another subpop, now mortality considered at every location. 
+
+Changes v1.3.11.2022.03072022T00:45:00 (ccd)
+0) Conversion to Python 3 - ran python 2to3 function
+a) Changes to Set - removed import Set and change Set() to set()
+b) changed all 'S' dtypes to 'U' dtypes
+c) Changed all references to random to np.random and added replace = False to some uses of random.uniform
+1) Updated usermanual and readme (ell)
+
+Changes v1.3.10.2020.10272020T16:08:00 (ell)
+0) JC found option error with known genes and genepop option writing out -9999 in grid0.csv
+a) hindex column needed to be added to testing data known files since new updates.
+b) Commented out Known Warning flag for checks in PreProcessing
+
+Changes 1.3.09.2020.03052020T08:26:00MDT (ell)
+0) Matemoveno '9' not in summary stat calculations in Mate module (Bill P. email). cdval = probval for ind files.
+1) Fdispersemoveno and Mdispersemoveno '9' not in summary stat calculations in DoDisperse module. 
+
+Changes 1.3.08.2020.02202020T09:05:00MDT (ell)
+0) Revisit epigenetics module
+a) Remove epistasis field (confusing now and not implemented)
+b) Checking through PreProcess for epigene
+-> Recall, if 2 loci wished, 2 reset columns needed in xy, as well as 2 X columns. X1_L2 or X2_L2 will work for inputvars, but 4 columns needed in xyfile. 
+c) ** Add Error CHeck for only 2 alleles ** FIXED/Added already in main()
+d) Updated DoEpi for flattened gene array
+e) Commented out fitness/differential mortality section in DoEpi for now.
+f) Checking InheritGenes() modulde for reset and flexible gene region
+g) Then check/add differential mortality to selction MSelection modules
+
+Changes 1.3.07.2019.07012019T16:02:00MDT (ell)
+0) Checking epigenetic module with new flattened gene array.
+1) 'scale' typo in PreProcess find from Paul Savary. 
+
+Changes 1.3.06.20190318T09:43:00MDT (ell)
+0) Adding epistasis/interaction term to Mlocus model as in Wade 2001. + Xe*bjk*Aj*Ak is now the third term. The user has to specify only 2 loci that are interacting and possibly 1 environment. 
+-Xe is a new column outside of the total Xvars. Use needs to add this if considering epistasis.
+-bjk is one value specified by user
+-Aj and Ak are alleles part of the loci alleles under selection, but user needs to specifiy the j and k.
+-Add new column to inputvars for epistasis; 'N' not considering this term. 'bjk_Ajk_Bjk' - 3 values here if considering this term. j - loci and k points to allele number.
+***Need to add this to usermanual 
+- Add epistasis to the min/max calculation and spreadsheet. ***Paused here, not finished.
+
+1) Memory leak found with first global rescaling calculation. Update this calculation.   
+2) Added logit and global norm option to polygenic cdevolve
+3) Added deepcopy to when movement options are the same.
+
+November 13, 2018 - Archive - sent to review - beta polygenic selection module.
+
+Changes 1.3.05.20181017T08:08:00MST (ell/BF)
+0) Update MLocus module to rescale based on maxfit and minfit values; remove logit option. 2 options
+z) 'Global' and 'Local' added to cdevolveans
+a) 'Global': maxfit;minfit global values -> calculated before time loop starts on the max/min hypothetical possible genotypeXenvironment space given betas from user. 
+b) 'Local': maxfit;minfit local values -> calculated within each time loop on the max/min given genotypeXenvironment space with given betas from user.  GetMetrics() - calculate here and pass into DoDisperse()
+***Still confusion on local calculation: if calculate during GetMetrics step this is the current 'adult' population and calculation based on this population, when in DODispserse selection is applied to dispersing offspring. Max/min on incoming population genotypes? DoAdultMOrtlaity could loose those max fit values, while DOOffspring could bring in higher fit values than calculated in GeMetrics? Arguements for a global calculation. 
+1) Only allow for 'Local' option currently; 'Global' matches with theory; 'Local' code commeted out. 
+
+August 8, 2018 - Sent version to Amanda C./Lindsey
+
+Changes 1.3.04.20180818T14:15:00 (ell)
+0) Add in HIndex code from cdmetapop for DGS Project 2 work. 
+a) First add option with parameters. 'Hindex_Linear_min;max;min;max;min;max' - 6 parameters for min and max of slope, intecept, and environment. 
+b) Updated user manual description. Provide excel spreadsheet within doc folder on GitHub.
+c) add hindex variable and initialize hindex in DoOutput_CDPOP0(), then in InheritGenes() module. 
+d) added X1 vars to XY file. 
+e) Added DoHindexSelection()
+f) Checking hindex and cases throughout...
+
+Changes 1.3.03.2018052213:09:00PST (ell)
+-2) Removed gendmatans from inputfiles
+-1) Updated multi locus selection module after discussions with AE:
+a) Removed logit - rescaling options. ***In Progress - Temporary change in logit to rescaled global code. Testing WF validation with logit vs rescale. 
+
+1) Fixed some future warning errors. 
+2) Fixed intgeneans vs intgenesans error.
+3) Added option '9' for reading in a probability matrix. 
+
+May 22, 2018 - Sent version to Amanda C.
+
+Changes 1.3.02.20180406T12:57:00MDT (ell)
+0) Checking through migration barrier results for Camille. 
+a) B >= T should indicate complete barrier. Code has B > T. Changed. See v0_85 on reason this was changed. Special case for max and matrix of all zeros.
+b) Found switch issue when matrix values are less than 1 and 0 panmictic values wished too. i.e.,  int(maxbigCD) == 0 when maxbigCD < 1
+elif float(bigCD[j][k]) < threshold and threshold != 0.0 and float(bigCD[j][k]) == 0.0 or (minbigCD == maxbigCD or int(maxbigCD) == 0):
+					cdmatrix[j].append(1.0)
+added error checks for this now. 
+
+1) Add flexible allele / locus option
+a) intgenesans added option for 'file_var'.
+b) allele then has each allele per locus split by ';'
+c) added intgenesans option for 'random_var' then allele split by ';'
+d) added error checks
+e) Updated GetMetrics() to account for flexible alleles. 
+f) Updated InheritGenes()
+g) Now checking rest of code. For ease, flatten genes vector and stay consistent. Checked many combinations, sending code to beta testers. 
+
+2) Added option '9' for movement matrices. This is the prob mat directly with no function applied. 
+3) Updated subpopmortperc (to and from were switched) in mate module.
+
+Changes 1.3.01.20171217T16:56:00MST (ell) 
+-1) Updated M loci selection modules to include startSelection.
+0) Updated offno option 6 for multiple AgeVars. 
+
+Changes 1.3.00.20170909T15:00:00PST (ell)
+-2) GetMetrics() - condensing and sped up.
+-1) Made DoOutput() faster and cleaned up this module some. YAY! THat code seciton was awful ;)
+0) Updated movement option '6': within own population apply inverse square to cost distances. 
+1) Add in Models X and Y. M_X1_L1_A2_ModelX and M_X1_L1_A2_ModelY. Added in 5 argument check for cdevolveans starting with 'M'. 
+2) Add in epigenetic model ***working on this.
+-- 'epigeneans' option added. X1_L1_A2_ModelX as example. Assume one reset per locus.
+-- 'startEpigene' option added. like 'startSelection'
+-- 'betaFile_epigene' option added. like 'betaFile_selection', but does not have the extra environmental effect sizes. 
+-- Added inputvars new fields, add any error checks.
+-- Added special tracking lists for epigene module: Number of modifications that occurred, Number of deaths associated with epigene modification, Number of reset events.
+Track_EpigeneEvents = []
+Track_EpigeneDeaths = []
+Track_EpigeneResets = []
+-- As with the selection model, assume the first l loci are used in the epigenetic module. If both selection and epigenetics is turned on, then the first l loci are used in selection and then next k loci used for epigenetics. 
+-- Add X1 and v1 (environmental probability that modification occurs and reset probability) to XY file. Must have a column for number of X specified in the epigeneans. Reset columns follow the X values, must have a reset column for each loci in epigene modificaiton. 
+FIXED***Need to check this - is a reset parameter for each allele or loci? E.g., X2_L2_A2_ModelX means 2 X columns followed by 2 reset columns. For simplicity, create X column for each loci - that way it can be the same or different environment, however, still independent, so will have to add in dependence later (e.g., 1 env prob check that turns on 2 alleles at same time.) 
+-- If selection model and epigenetic model, then first columns designated for selection and rest for epigenetic - 
+-- read in beta files (now betas_selection and betas_epigene): checks added for length of beta file. Beta file for epigene is different and not dependent on environment, so length loci * alleles.
+-- Now add epigenetic modification module to CDPOP.py main code (DoEpigenetics). Right after ReadGrid() and GetMetrics(), essentially at the start of the time loop, the first main process checked. Here, loop through each individual, check probability that allele turns on (for both alleles at loci), update genes, then apply fitness consequence, individual dies or not, Track events of modification and Deaths.
+FIXED***find out about initial conditions for these epigene regions. Assuming turned off at gen = 0, can run burn-in and randomly turn on alleles if wanted for some amount of time.
+-- Back track: From Andrew Eckert: "For the methylation, could we include another conditional statement based on the idea that if one allele is epimutated in a diploid individual, the rate or probability of the other allele is influenced? In other words, another parameter that acts as a modifier of the epimutation rate conditional on the first allele being mutated?" Thus, will assume this is the mechanism for turning on the second allele. 
+FIXED: ***Still need to find out how to Mendel inherit to offspring. Add checks in inherit genes for special cases.
+FIXED***Reset for each allele? independece and epimethylmutated? If first allele resets and methylation process specified, then does that automatically turn off second allele? Keeping logic with dep and ind models, for dep model, if allele 1 resets (turns off), then allele 2 will auto turn off. If allele 1 does not reset, then still check for if methylation turns off. 
+
+-- Update XY file to have X1_Epigenetics seperated with ';' for each allele. Assume only 2 alleles. Same for reset parameter
+FIXED*** Add error check in beginning, only allow 2 alleles for epigenetic module.
+
+-- DoEpigenetics() finished. Inserted NA and OPEN locations in relavant fields.
+-- Added startEpigene
+-- Added Tracking to PostProcessing()
+
+FIXED***Waiting on input from Amy Or Eckert on inheritance of epiregion [2,0],[1,1],[1,0] options, that is do we keep 2 copies?
+FIXED***Decide on model x or y used here in fitness. Keep model x and y options to match selection options.
+
+-- Added in Model X and Model Y.
+-- Added option for independent alleles epimutated or second allele conditional on first turn on. X2_L2_A2_ModelX_Ind or X2_L2_A2_ModelX_Dep for 'Independence' or 'Dependence'.
+
+-- InheritGenes() updated to include epigene options for inheriting and reseting for both Ind and Dep options. Note, Dep follows logic of Methylation conditional on first allele.
+-- Begin checking parameters and options
+FIXED*** add checks here for selection/epigenetic loci regions.
+FIXED*** Check modules that use gen < geneswap time
+SEMIFIXED*** Check GetMetrics and caluclations with epigenes [0,0], [0,1] cases and calculations that assume 2 alleles - Make note in user manual, calculations may not be accurate if epigenetic option on and to calculate metrics on grid files. 
+FIXED***Add to cdclimate module
+
+-- Tested a number of parameter combinations, seems verified. Moving to validation steps next
+Validation Test #1: Rate of fixation of allele with reset = 0 should be the WF equation or same as selection model (fixed DNA change). Set up WF assumptions, uniform epigenetic modification surface, reset = 0 and betas as in selection validation set up. 
+
+
+***Will worry about 1 environment turning on more than 1 loci/alleles later. (e.g., 1 env prob check that turns on 2 alleles at same time.)
+***3) Add in epistasis/interactions - separate beta file needed? *** Working on this 
+
+
+Changes 1.2.38.201710:50:00PST (ell)
+-1) Updated AgeVars to be used for each subpop (only ageclass was operating with multiple subpops). Tracking Age deaths for male and female now split out by subpopulation '|' and ages ';'. Checking combinations. Removing logistic pop model option for now, ***fix later. ***User manual needs to be updated on this new information for introductions. Add age 1+ females/males for each pop tracking.
+
+Changes 1.2.37.20170604T14:15:00MST (ell)
+0) Adding functionality for introducing individuals at given time steps. Create multiple XY files that also link to allele frequency files. The first XY file is the master file defining all grid locations and defining K possible spots in each subpopulation. This only works for individuals grouped together in subpopulation that have the same XYs.
+i)'|' was used for initializing multiple subpopulations for the file answer for allefreqfilename and conflicts with '|' in the cdclimate module. This needs to be fixed and a different deliminator used for subpopulations, however, for now create intgenesans = 'file_introduce', which will tell program that these multiple allele frequency files are to be used in the cdclimate module. 
+1) Removed .csv on allele frequency files inputvars since rest of file names don't include .csv. 
+
+
+Changes 1.2.36.20170130T15:36:00.India (ell)
+0) Added in age-specific mortality to the cdclimate module.
+
+Changes 1.2.35.20160801T12:48:00MDT (ell)
+-1) Checking Stephen Rice error with philopatry...fixed.
+0) Begin coding in multiple allele selection option. (SC)
+a) In XY file, add column for X1, X2, ..., XN. Have it be flexible and as many columns the user wants to enter *** with error checks. First create test grid surface for XY16 points that produce a Z score representative of a gradient of values: -1 to 1. Read this in if in inputvars CDEVOLVEans == 'M'. A separate file is then read in (create new field for this) that specifies the betas and number of loci/alleles under selection. Make it M_X3_L5...this will tell the program to look for a file for multiple loci selection model and that 3 variables are involved (which will be in the XY file) and 5 loci are under selection. Number of alleles will already be specified. 
+b) Read in beta file, and order [varible][loci][allele]
+c) Read in inputvars new cdevolveans and field for beta file
+d) Read in XY xvars field
+e) Add linear additive model to DoDisperse Module
+f) Add in a beta_0 in the betaFile - upper left corner spot.
+g) Add interaction terms. Make a general betaFile and the headers will tell what to multiply. ***Still working on
+20170109T09:00:00MST (ell) Continue working on selection module
+1) Checked over above steps
+2) With 16 points checked simple case of 1 locus, 2 alleles, 1 X: b111 = -10, b112 = 10; zscores for X1 = 0,-1,-1,-1,1,0,-1,-1,1,1,0,-1,1,1,1,0
+2a) Initialize all AA produces only AA and only in lower right triangle 
+2b) Initialize all aaa produces only aa and only in upper left triangle
+2c) Initialize random produces no AA in upper left and no aa in lower right. Aa can be anywhere.
+3) Test the 1-locus modelS *Close to WF assumptions, mean birth rate is bumped up else uneven population size.  
+a) Set up 1000 system with 3 checks above.
+i) initialize all AA
+ii) initialize all aa
+iii) initialize random
+iv) 1000 1-locus validation p fixation rate compare to eqn 2 in Landguth et al 2012.
+
+
+Changes 1.2.34.2016.06.24T15:57:00MDT (ell)
+0) Add mortality option for females and males in AgeVars file. (Melissa Oscarson goat work). 
+a) Add tracking FDeaths and MDeaths to output.csv file.
+b) fix for option 6, fix for dd mortality. 
+1) Create a cdevolveans m;b that refers to survival as a function of heterozygosity, e.g., survival = 55(heterozygosity) + 56.179. Then 1 - survival gives the additional mortality of that individual. 
+a) Add option to inputvars (1_HeMort) and fitvals seperated by ; 2 values for linear equation. Option 1_HeMort_GEA - means first locus can have spatial differential survival based on het. Option 1_HeMort_All - means regardless of genotype, apply het survival equation - use values in AA spot.  
+b) Track heterozygosity of each individual
+c) Add to user manual. 
+d) Changed individual het calculation as # het loci / total # loci
+
+2) Adding in a rate of twinning. 
+a) Cleaning up and speeding up the InheritGenes module - reducing for loops...
+b) Checked WF validation. 
+
+Changes 1.2.33.2016.04.28T16:28:00MDT (ell)
+0) Error in output write out with all MateDistances reported. Make this option and fixed.
+1) Added error statement for if cdclimgentime is not 0. 
+2) Added error statement if C == 0 in Gaussian function.
+3) Bug if sexual reproduction == N and Y/Y. Fixed.  
+
+Changes 1.2.33.2016.03.23T17:00:00MDT (ell, AJS, SAC)
+0) Begin to add multi-allele selection model. See user manual for equation. Add in beta file for each allele. Add in variable file.  
+
+Changes 1.2.32.2015.12.05T11:44:00MST (ell, AJS, SAC)
+0) FIxed disperal and mate movement prob to cost conversion for outputting.
+1) Add to output.csv a column for mate movement distances separated by |
+
+
+Changes 1.2.31.2015.09.13T14:13:00MDT (ell)
+0) Add back in asexual reproduction with selfing. 
+1) Create flexible cdclimgen and add in fitness surface option.
+2) Add fitness surfaces to XY file, remove from popvars.
+3) Check fitvals that apply to resident individuals (not just offspring). Add in fitvals for DoMortality(). Track mature individuals and only apply these to fitvals?
+4) Add in option 3 for cdevolve answer
+5) Check distances moved and probability back to cost conversion. Grid and output files. Error in inverse square back calculation. 
+6) Add in cost back calculation for mating CD dist.
+
+Changes 1.2.30.2015.06.08T16:05:00MDT (ell)
+0) Philopatry options continued. When using a threshold > 0 for either sex and eg male threshold > female threshold, the population will continue to become sex biased in N due to movement. Thea and Emily project. Next fix is to tally spots open and designate half for females and half for males. Then still allow the females (if F philopatry) to move first, but only randomly move the first half spots designated to them. Then males can fill in the rest. Still a caution here and checking on results.
+
+Changes 1.2.29.2015.05.15T13:20:00MDT (ell)
+0) Still an error when intgenesans is known and NA values started with, known genes and unfilled grid not matching up. 
+
+Changes 1.2.28.2015.04.08T10:57:00MDT (ell)
+0) Search for why stable logistic runs are not stable. * Still not fixed, next version.
+1) Make philopatry module more flexible (Thea and Emily project). First allow threshold to be greater than 0. Removed all the conditions on philopatry option. Caution noted in user manual. Now if F specified the offspring list is sorted and females disperse first. vic versa for M.
+2) Error with Tyler Creech. Fix 'known' genotype data and geneswap is used. Known file has to read in age 1 or greater. Now 'known' can be used with geneswap time.
+
+Changes v1.2.27.2015.03.30T09:43:00MDT (ell)
+0) Fix .gen format.
+1) Testing repro age issues raised by Thea. Just tracking numbers off, fixed. Sped up this section of code a bit in DoMate()
+2) Add in probability of maturation for males and females.
+3) Error in delete at DoMortality(), fixed.
+
+Changes v1.2.26.2015.03.21T11:08:00MDT (ell)
+0) Add in subpopmortperc option for mate movement. If subpopmortperc is entered, then in DoMate() module - if mate selection occurs from another subpop, apply success of mate based on this number, track unsucessful mate if occurs.
+
+Changes v1.2.25.2014.02.02T09:20:00MST (ell)
+0) Prachi found bug with philopatry == F and cdclimate module is on. Error message fixed.
+
+Changes: v1.2.24.2014.12.11T06:55:00MST (ell)
+0) startGenes >0 and intgenesans == file should work, fixed. Just known option that is not an option with startGenes>0.
+
+Changes: v1.2.23.2014.09.09T13:04:00MDT (ell, SBanks)
+0) To create population fluctuations, in the cdclimate module: add in changing birth rate, changing mortality options: below steps of changes
+1) Remove Edmatrix option. 
+2) Remove cdclimateans -> if parameters | separated use in specified generations.
+3) Reorder input file to have cdclimategen up front.
+4) Add in cdclimgentime with removed cdclimateans
+5) Update CDClimate() module to read in all cdmatrix options at given generation.
+6) Update PreProcess() module, removes readin of initial matrix here.
+7) Add in the scale_max, scale_min to reconvert probability to cost distance values.
+8) Update ReadCDMatrix() to include scale_min, scale_max
+9) Update the agedistribution file to AgeVars.csv to include age specific fields here.
+10) Redo distribution to be general.
+11) Added mortality | option to agevars.csv file and read in during cdclimate module
+12) Added offno and lmbda | option to inputvars.csv rile and read in during cdclimate module.
+13) For known, read in age.
+14) Add back in newmortperc -> mortality at the egg/litter stage.
+15) If equalsexratio is 'AtBirth', then in the DoOffMortality function, sort by sex and cull equally 0s and 1s
+16) Move birth lmbda (Fecundity) to Agevars.csv file. Now make Agevars.csv a requirement to have.
+17) Remove reproage in inputvars.csv file. Read in from Agevars.csv file.
+18) Remove adult mortality, in Agevars.csv file now.
+19) Added in normal draw for litter size. Added in age specific draws for each offno option.
+20) Add in total population at each time step by age classes.
+21) Add in total female breed population at each time step by age classes.
+22) Age in Nt+1/Nt growth rate to output file.
+23) Create a burningen that begins swapping genes, check start selection. 
+24) Check startGenes, error with fluctuating populations. Recode, initialize genes with NA, then at startGenes times, initialize genes and start swap.
+25) Add in density dependent option (exp or logistic) with variable K in logistic tied to cdclimate module, hard K can be > than logistic K. This is applied during Mortality - create DoContantMortality() and DoDensityDependentMortality() functions.
+26) To create a census before birth pulse: census-reproduction-survival-age0disperse-ageAll-censues...So at the update stage then OffDisperseIN age to 1.
+27) Remove birthmortperc, this will be read in from first column in agevars file.
+29) Check FemaleBreeder_age correct output
+28) To get stable leslie matrix, create offno option for equal recruitment (fecundity * number of individuals in that age class - 
+
+
+Changes: v1.2.22.2014.08.17T09:51:00MDT (ell)
+0) In the grid{}.csv file, add a column for ED and CD distance for each individual. Updated 'known' option, but still need to debug and check. **Update user manual. **Note that functions 5,7,8 still are probabilities.
+
+Changes: v.1.2.21.2014.07.23T12:38:00MDT (ell)
+0) An option for age distribution and allele frequency files for each subpopulation can be specified in input file seperated by a '|'. Error checks included.
+
+Changes: v.1.2.20.2014.07.18T09:24:00MDT (ell)
+0) When using cdclimate, the old threshold value was being used to calculate probability cdmatrix. Changed this.
+
+Changes: v1.2.20.2014.06.05T10:27:00MDT (ell)
+0) genepop.gen file not outputting correct individuals to pops if the subpopulation field is out of order. Puneet found.
+
+Changes: v1.2.20.2014.04.27T07:23:00MDT (ell)
+0) CDClimate module updated for new functions.
+
+Changes: v1.2.20.2014.04.24T08:49:00MDT (ell)
+0) C.Day found error in indexing when alleles > loci for allele frequency file. Fixed.
+
+Changes: v1.2.20_2014.04.16T10:43:00MDT (ell)
+0) Some clean up, remove RandomMate and NearestNeighborMate functions in _Mate module. Can add NearestNeighbor back eventually.
+
+Changes: v.1.2.20_2014.04.10T09:25:00CDT (ell)
+0) Add the gaussian function (A.Shirk request). Option (9)
+1) Added in option 7 and 8 from cdfish - subpopulation and levy distribution.
+2) Updated movement functions - normalized them.
+3) Then added 10) move function (or the random placement) just uses cd matrix.
+4) Removed function 6) and condensed with random function 4 - wasn't there and same function. Considers cost matrix. Check dispersal functions.
+5) Added parameter C for Gaussian. Updated input file, GUI no longer up to date. 
+6) Removed random dispersal functions in _Disperse.py
+7) Rescaled from min to threshold in function _PreProcess.py
+8) Remove if statement on function in _Mate module.
+9) Checking rescaling output....
+
+Changes: v.12.19_2014.02.04T14:02:00MST (ell)
+0)Check mortality function if no one dies freegrid = [] error? Not an error as it never reaches this point before it breaks from extinction loop, but added freegrid = list(openindex) to be safe as correct logic here.
+1) Make naming shorter for output. T{}M{}F{}Pop{}
+2) checked spot tempinf in OffDisperseIN - it's correct spot 5.
+3) Passed in infection parameters into mort function to delete from
+4) genepop output .txt to .gen
+
+Changes: v1.2.18_2013.08.27T15:53:00MST (ell)
+0) Added parameter field 'burningen' after cdevolveans. This refers to the generation that the selection surface will begin operating on the locus or loci under selection...for burn in procedures.
+1) User found a mismatch in grid and genepop output and fixed this error.
+
+Changes: v.1.2.17_2013.08.25T08:49:00MST (ell)
+0) Age distribution read in function InitializeAge() if linux or mac saved file '\r' character at end not stripped...added and fixed this error. 
+1) AdultDeaths in overlapping age structure was not reporting in output file all age classes for the field AdultDeaths. Fixed in function AdultMortality().
+
+Changes: v1.2.17_2013.07.12T13:47:00MST (ell)
+0) Error in dtype output with BreedFemales and BreedMales fixed.
+1) Fixed M philopatry option, my logic was off before.
+
+Changes: v1.2.16_2013.07.03T13:11:00MST (ell)
+0) Fitness surface error readin for square matrix only - changed to read in square matrices. 
+1) Added some error checks for fitness surface: must be the same dimensions and dimension checks.
+2) Added gradient files to data folder as example and updated user manual.
+
+Changes: v1.2.14_2013.06.09T14:21:00MST (ell)
+0) Adding back asexual / hemaphordictic mating options sexans == N.
+1) Asexual did not have breeding number of grids split (reproage) option split out -> added. 
+2) Added error check for philopatry must be sexual reproduction too.
+3) Asexual option for YY and NY (NY == YN) added.
+4) Added error statement in allelefrequency file read in - must match up number of alleles and loci entered.
+
+Changes: v1.2.13_2013.05.25T09:27:00MST (ell)
+0) Adding Female-biased dispersal - expanding options for Philopatry field to N, F, and M now. Added error checks in CDPOP.py - strict cases for F and M biased movement: 0 movement, equal sexes initialized, ‘AtBirth’ sex ratio, and either movement rules 1, 2, 5 or 6.
+
+Changes: v1.2.11_2012.12.16T09:26:00MST (ell)
+0) Corrections to GENEPOP output format file.
+1) Correction to age distribution function. Error in float precision carrying capacity .99999
+
+Changes: v1.2.10-2012.07.08T09:25:00MST (ell)
+0) When a panmictic cdmatrix and threshold set, get ED window and set everything else to 0.
+1) When Y/Y or Y/N (female promiscuity) then make the clutch size for each female equal. Ie, if the birth rate is a constant of 2 and a female mates twice, then she will have 1 offspring from each mating event. Added another offno option '4' for this, assume constant birth rate.
+
+Changes: v1.2.09-2012.06.21T16:32:00MST (ell)
+0) Added subpopulation numbers for females, males, dispersal, etc...Careful to check this in linux, using np.where[0] indexing.
+1) Added subpopulation emigration numbers
+2) Changed philopatry option, so that when a female doesn't mate and have offspring a nearest neighbor female will take her spot. Use male dispersal to reassign probability matrix.
+3) Found a speed up spot section. Dispersal index was looping, not necessary!
+4) Added females that do not mate tracking number
+
+Changes: v1.2.08-2012.05.20T09:41:00MST (ell)
+0) Add multiple paternity - This is an additional option in input variable file of Y or N. This will enforce females to have equal birth rates when mating with multiple males.
+1) Add argv 1 for data directory. 
+2) Added argv 2 for input var file name.
+3) Added argv 3 for output file directory.
+
+Changes: v1.2.07-2012.05.11T09:33:00MST (ell)
+0) Track Female and Male dispersal distance in ED and in CD.
+
+Changes: v1.2.06-2012.04.06T08:14:00MST (ell)
+0) Genepop option to .txt file and spaces in between files.
+1) Changed threshold greater than or equal to, to ensure barrier number set.
+2) Checking cdclimate module: error in new header function read in fixed. 
+3) Linux (MAC) 'rU' added to readCDmatrix() too.
+4) Checking ploygamy, philopatry, grid crash after gen 0: movement threshold can't be >= changed back.
+5) Added 'agemortperc' - This field is the new mortality field. oldmortperc and newmortperc removed.
+6) Added back in a birthmortperc in case user wants a birth rate mortality.
+7) Added Deaths output.csv as age structured column.
+8) Found bug when mortality is 0, fixed.
+
+Changes: v1.2.05-2012.03.28T08:09:00MST (ell)
+0) Linux syntax with filename.split('\\'), changes to filename.split('grid').
+1) Turn input variable file into reading header, not hard coded. Added FileIO.py loadFile()
+2) Misc strucutre grid format output changes. stu to stru. Removed NAs.
+3) Added GENEPOP structure option
+
+Changes: v1.2.04-2012.03.25T09:53:00MST (ell)
+0) Linux (MAC really) return character issue. Not reading \r character? Added 'rU' for opening files.
+1) Added more grid output options. genalex, genepop, structure. Removed on the fly and added it to the end post process step.
+
+Changes: v1.2.03-2012.03.20T10:56:00MST (ell)
+0) Added mutation for forward, backward, forwardbackward, random.
+1) Subpopulation have to be labeled 1 to N and not skipping numbers. Fix this eventually, added error statement.
+2) Equal sex ratio option now at birth. 
+
+Changes: v1.2.02-2012.03.19T10:12:00MST (ell)
+0) Error in 'Something wrong in gene general format. Email Erin.' DoOutput(). When NA introduced, genesnew becomes an array of string values. Adjusted string and integer checks.
+1) Added a column in output for actual number of breeding females and males. This is confusing with the possible breeding females.
+2) Took sexans == N off until further testing.
+
+Changes: v1.2.01-2012.03.10T15:19:00MST (ell)
+New version addition...slowly adding in functionality to v1.2 to decommission v1.1.
+0) Added in monogamy Mreplace and Freplace both N.
+1) Re formatted the age distribution file, column format, remove the frequency.
+
+Changes: v1.2-2012.03.06T07:42:00MST (ell)
+0) Adding in nearest neighbor function....not done.
+1) Strange index error with np.where in linux verses windows, in ReadGric90 line 101 made a quick fix for linux run.
+2) Make fitness file more general like UNICOR...not done.
+
+Changes: v1.2-2012.03.06T05:51:00MST (ell)
+0) Misc minor errors that Karl Jarvis has spotted:
+0a) Misspelled DisperserDeaths in Outputfile.
+0b) Subpop Mortality now takes float values.
+0c) I had an index error for FG into the subpop list, so subpop not updating correctly.
+0d) I took out geneswapgen.
+0e) Made repro age to work without age structured populations.
+0f) Had an index error for subpopmortalitypercent.
+1) Gilles email: Was using 1 loci, put error sys.exit in for this.
+
+Changes: v1.2-2012.02.13T16:56MST (ell)
+0) I added a subpopulation differential mortality of dispersing offspring option. 
+
+Changes: v1.2-2011.11.25T10:10EDT (ell)
+0) Adding demographics to v1.2 now. List of changes:
+1) User must specify all xy possible points and complete cd matrix.
+2) User can start with NA values in xy file in the fourth and fifth column to specify empty spot. Must have values in the subpop, xgrid, and ygrid fiedl.
+2) filledgrids used in place of nogrids.
+3) Asexual reproduction not functional, must do more testing for this. Flagged error if user uses.
+4) Removed DoImmigration() altogether! Do not need Immigration now with fluctuating population sizes. Make a note and add to future versions of code if requested, otherwise use the 'assisted migration' approach for immigration questions.
+5) Back to the discussion of habitat loop or offspring loop for dispersal. Current code loops through habitat spots. I think I will change this to loop through offspring to make it individual-based centric. I will check code at end and see how different results are.
+6) Made cevolve functions: Do1LocusSelection(), Do2LocusSelection().
+7) AdultMortality() slowed down, attempt to speed up, redid with numpy calls.
+
+
+Changes: v1.1-2011.11.19T18:12EDT (ell)
+0) Attempts to speed up by calculating prob array up front in place of cdmatrix. Replace cdmatrix with probmatrix. Then convert to numpy and index into it for getting mate pairs and dispersal locations.
+1) Removed CDPairs.
+2) Removed xycdmatid.
+3) Combined linear, inverse square and neg bin  into sexualNY(), sexualYY(), asexualNY, asexualYY().
+4) Changed w_choice_general in mate and dispersal modules to w_choice_item().
+5) Code seems to check out with Wright Fisher and IBD. Sped up quite a bit.
+6) Took out F measures.
+
+
+Changes: v1.0-2011.11.19T1408EDT (ell)
+0) Checking Equal sex ratio bugs...First error was old stuff when splitting up equal sex ratio into just left and right side. 
+1) Added equal sex ratio by subpopulations.
+2) Equal sex ratio working, but just not realistic for sex specific dispersing offspring.
+3) Added Mother and Father location to ID column name so can track where that offspring comes from.
+
+Changes: v1.0-2011.10.31T15:34MST (ell)
+0) I added a tracker for variance in reproductive success for both males and females.
+
+Changes: v1.0-2011.08.05T13:20:00MST (ell)
+0) unique does not order sequentially, indexing error fixed in Modules.
+1) Added tracking subpop migration numbers to current code.
+2) Checked 'known' option for genes, make sure it is working.
+
+
+Changes: v1.0-2011.08.05T15:39:00MST (ell)
+0) Fixed the genetic distances indexing error
+1) Added variance of dispersal and mating CD and ED for Tab.
+
+Changes: v1.0-2011.05.05T14:58:00MST (ell)
+0) Added subpopulation information to GetMetrics.  Now first column in xyfilename is a subpop designation.  Ho and He will be displayed in outputfile as HoTotal|Ho1|..|HoN, for N subpopulations with a bar separating values.  Same for He.  A user can then calculate Fst between subpopulations.
+
+Changes: v1.0-2011.04.10T11:31:00MST (ell)
+0) Cleaning up more of the code.
+1) Make sure GUI works with new varaibles.
+2) some indexing writing out errors with nthfile choice.
+3) Added cdclimate to allow multiple read in separated with a '|'.
+
+Changes: v1.0-2011.04.02T10:08:00MST (ell)
+0) Begin multi-loci selection work.
+1) Added inputvariables for cdevolveans1 and cdevolveans2 corresponding to 1 locus and 2 loci seletion models.
+2) Added inputvariables foe 9 combinations of 2 loci selection.
+3) Added error check for if using cdevolve then 2 alleles must be used.
+4) Added substantial code sections for the 9 possible combinations of genotypes.
+5) Changed cdevolve answer to '1', '2', 'N'
+6) Added p1,q1,p2,q2 allele freqency trackers for the 2 locus equation.
+
+
+Changes: v1.0-2011.04.01T11:26:00MST (ell)
+0) Code walk through and clean up (getting ready to publish v1.0 and code DM model of 2 locus selection.  Here is the list of changes made:
+1) Remove directory hard coded.
+2) Removed xycdmatrix file and references.  Assume the cdxlocation and cdylocation are the ordered xgrid ygrid locations.  Make note of this in user manual and README.
+3) Remove adult fitness surface references and fecundity fitness surface references and code sections.
+4) Remove panans, just confusing.
+5) Remove Twopopans, just confusing as well.
+6) Removed MateCDmatans, DispCDmatans.
+
+Changes: v0.93-2011.03.08T11:52:00 (ell)
+0) Removed RipMgr stuff for right now...until batch capability back online.
+1) Added system argument for inputvariables.csv.
+
+Changes: v0.93-2011.01.20T1600 Hawaii time (ell)
+0) Rearranged inputvariables.csv to be grouped in categories for ease of GUI development.
+
+Changes: v0.93-2010.12.30T1650 (ell)
+0) Found some minor erros in function passing when intgeneans == file and allelefrequency file is specified.
+1) Found out that CDPOP_Mate.py Freplace == Y and Mreplace == N AND Freplace == N and Mreplace == N does not exist.  Put print functions in with sys.exit(-1)...code in later.
+2) mtDNA: If Y, then last loci becomes mtDNA and every offspring gets this locus from mother only.  If N, then regular Mendal inheritance for the last loci.
+
+Changes: v0.93-2010.12.28T093000 (ell)
+0) CDCLIMATE work begin...
+1) Added to user_input.ip and inputvariables.csv: CDCLIMATE (Y and N), cdclimgentime (mod 0 of looptime), futurematecdmat, futuredispcdmat, futrexycdmatrixfilename
+2) Added above parameters to CDPOP.py.
+
+Changes: v0.92-2010.12.23T090900 (ell)
+0) CDINFECT work begin...
+1) Added parameters cdinfect to switch it on or off.
+2) Added parameters transmissionprob to flip the coin to see if offspring infected.
+3) If cdinfection, create a random status infection 0 or 1 -- initialize the population.  If not cdinfect, create status 0 infection for all individuals and intialize.  Add column to grid.csv output after sex column and before genes.
+4) If mother or father has infection, then flip coin for transmission probability and if random coin flip is less than transmission probability, assign a 1 for infected offspring.
+5) Rearrange functions, made new ones: InitializeInfect()
+6) Begin Gene2 work...genes stored as general format. 
+
+Changes: v0.91-2010.12.21T02:49 (ell)
+0) Added DispCDmatans.
+1) Added mtDNA option...not in code, need to talk to Gordon to make sure I understand how this is swapped.
+2) Turn 'max' into a function GetMaxCDValue() to CDPOP_PreProcess()
+
+Changes: v0.91-2010.12.11T08:52 (ell)
+0) Added 3 fitness surfaces for OffspringMortalityFitness, one for each genotype.
+1) Fix DoImmigration() error, list index out of range...within cdevolve section for both emigration and immigration, was not deleting the probarray within the while loop.
+2) Begin stubbing DoImmigration()/DoEmigratin(), created CDPOP_Disperse.py and within created DoLinearDisperse(), DoInverseSquareDisperse(), DoNegExpDisperse()....
+
+Changes: v0.91-2010.11.23T09:00:00 (ell)
+0) New version: added new movement functions, negative exponential y = a10^-bx with matemoveparA and matmoveparB parameters. Added 6 functions to CDPOP_Mate.py
+1) Added FdispmoveparA, FdispmoveparB, MdispmoveparA, MdispmoveparB
+
+Changes: v0.90-2010.11.05.09:51 (ell)
+0) New version: begin CDEVOLVE work.
+1) Change user_input.ip and inputvariables.csv to include 'cdevolve' answer.  This is Y or N to turn this module on or off.
+2) Change user_input.ip and inputvariables.csv to include LociSelect.  This is the loci and allele under selection, e.g., L0A1|L0A4.
+3) Change user_input.ip and inputvariables.csv to include fitsurface.  This is the ascii file .txt, tab delimited fitness surface that defines differential mortality for an offspring given loci under selection.
+4) Tested above with test files: CDTable1000_pts1, edcdmatrix_pts1, Pnts1, fitvals0_0, set at max movement thresholds.
+5) In CDPOP_Modules added PrepTextFile()
+6) In CDPOP_Modules in DoPreProcess() added ReadFitnessSurface() function to read in the fitness surface ascii file in CDPOP_PreProcess()
+7) Extracted header file information from fitvalues.
+8) Store fitness values for each xy location spot: get xll, yll to be in center location, get xfitval,yfitval, run closet point check on xgrid,ygrid to xfitval, yfitval, and then find closest fitnessvalue to xgrid, ygrid, storing it in fitvals list.  THIS SECTION NEEDS TO USE KDTREE AND SPEED UP.
+9) Step 8 way too slow...rewrote using KDTREE and SCIPY now needed.
+10) DoDisperse() -- passed in cdevolveans, fitvals, lociselect.
+11) DoEmigration() -- Movement1and2: line 500-560 after itemselect, add differentialmortality based on fitnessvalues in while loop until offspring survives to take that spot.  Be careful to add this same logic everywhere!  Right now only added for movement 1 and 2.
+12) DoEmigration() -- Movement4: lines639 - 692 added 11) logic to panmixia.
+12) DoEmigration() -- Movement3: lines611-671 added 11) logic to nearest neighbor.
+13) DoImmigratin() -- Movement1,2,3,4 added 11) logic. 
+14) Removed DoOffspringMortality()...in logic from 11, if not lociselected, then apply newmortperc to offspring.
+15) Track allele frequency of the first locus (p) at each generation...created a deltap and append all_freq_tot[0] to as p...added deltap to output file.
+16) Track w11, w12, w22 -- the relative fitness of the three genotypes...Track total zygotes with each genotype in OffDisperseIN, get proportion and then max for relative fitness.
+17) Relative fitness values do not change every year, removed 16)
+18) Deleted loci under select column.  Just assume first loci under selection.
+19) Added Adult_Mortality_Fitness, Offspring_Mortality_Fitness, and Fecundity_Fitness columns to inputvariables.csv and user_input.ip.
+20) Added if AA and Aa, then go to fitness surface.
+21) in DoAdultMortality() added section to apply Adult_Mortality_Fitness
+22) Recap: Turn AdultMortFit off by setting oldmortperc == AdultMortFit.  Turn OffspringMortFit off by setting newmortperc == OffspringMorFit.  These 2 surfaces are viability selection in terms of mortality.  Fitness surfaces used for genotypes AA and Aa.  Global mortality used for aa.  Fecundity surface is proportion of offspring for aa.  Use with constant offspring at set level (eg 10, 10 offspring for every mother with AA and Aa).  Then Fecundity selection is preformed for aa individuals and fitness surface at proportion of set offspring level (eg .10 would produce 1 offspring for every mother with aa).
+23) Added fecundityfitsurface: first error check if cdevolveans = Y, then offno == 3.  Then DoOffspringCDEvolve() function in DoOffspring().  If Mother has AA or Aa, then apply lmdba for offspring number.
+
+
+
+Changes: v0.89-2010.10.27.11:26 (ell)
+0) When equalsexratio == N, then carries a return character on end of sex field.  stripped this value when read in line 762 in _Modules.py
+
+
+Changes: v0.89-2010.10.17-07:59 (ell)
+0) Continue debugging DoGridOut_general() function, was not spitting out the nthfile values.
+1) Stubbed ReadCDMatrix() and ReadXYCDMatrix() and ReadXY() and ReduceCDMatrix() and InitializeAge() and InitializeGenes()
+2) Begin CDMetaPop work...
+3) Added matecdmatrixfilename and dispmatrixfilename in input variables.
+4) Call this function twice ReadCDMatrix() to read in matecdmatrixfile and dispcdmatrixfile.
+5) Created CDPOP_PreProcess.py library.
+6) Follow cdmatrix throughout code, changing and adding matecdmatrix or dispcdmatrix where appropriate.
+7) Removed DoCostDistanceMatrix dependency.
+
+
+Changes: v0.89-2010.10.02-06:34 (ell)
+0) Incorporated Joe's RipMgr
+1) Incorporated logMsg() and begin logging dialogue.
+2) Split up CDPOP_Modules, included CDPOP_PostProcess.py
+3) Added grid output option format (CDPOP and General for now). DoGridOut_cdpop0(), DoGridOut_cdpop(),DoGridOut_general() functions stubbed.
+4) Split up CDPOP_Modules, included CDPOP_Mate.py, CDPOP_Offspring, and CDPOP_GetMetrics.py
+5) Begin to redo CDPOP with general genes format throughout code.
+
+NOT FIXED: v0.88-2010.09.11-11:34 (ell)  Hit another error.  Need to fix.  When 'List' is specified and if 'nthfile_seq' > 1, then error index out of range.  grid0.csv is not written correctly....wait, when looptime was 5, and nthfile_seq was 6 it ran fine...only when nthfile_seq=10 did it incorrectly write grid0.csv file.  hmmm, fix later.
+
+Changes: v0.88-2010.09.02-12:20 (ell)
+0) Needed to run CDPOP and hit some errors...note that when Mmovefunction is 1 and Fmovefunction 2, something bizarre is happening with offspring sex...I did not fix this yet, will require some more thorough debugging.
+1) Error when equalsexratio == N...at start of cdmatrix creation...fix later.
+2) Included movement thresholds 25max, 50max, 75max if else statements.
+3) Except/try added to code for checks on import statements.  Note commented out Joe's RipMgr as I am testing code for another project to be run on other computers.  Also found out that import random has to come after import numpy.random, not sure what this is doing.
+
+v0.88-2010June15--1500 - Code completely modular.  Will begin sub-
+	module changes next.
+      -2010June20--20:30 - Stubbing modules. Also change import Numpy as np - use this convention.
+      -2010June22--15:13 - DoMate() 24 stubs.  Also changed nthfile_seqence and nthfile_list to be 0|4|5 instead of 0 4 5, so that Joe's parser can handle this exception.
+      -2010June23--16:23 - DoOffspring() 5 stubs. Also removed function w_choice(), since I only ever use w_choice_general()
+      -2010June27--Continued stubbing...InheritGenes() not stubbed, DoAdultMortality() not stubbed, DoDisperse stubbed to DoEmigration() and DoImmigration(), DoOutput() not stubbed, DoPostProcess() stubbed to 5.
+      -2010July08--Rearrange xygrid.csv input file to have columns Subpopulation, XCoord, YCoord, ID, Sex...no more FID.  Beginning to track these changes in code to make CDPOP run.  Working but not sure special cases tracking subpopulations...need to still check this.  Got Immigrants to work.
+ v0.87-2010May16--12:04 --Some changes, but beginning to modularize.
+	1. Create unique batchfolder output with datetime stamp: added foldertime
+	variable.
+	2. Removed most of the print statements.
+	3. Begin _Modules script to store functions
+	4. Begin incorporating RipMgr
+	5. From Nev Amos, non-overlapping generations giving an error:
+		- agelst was not correct for the file agedistribution
+		- possible error when there are no Births...This will need
+		to be checked well in future when testing overlapping gens
+	6. Program Steps restructured:
+	Step 0: Import packages
+	Step 1: Start timer, get script arguments
+	Step 2: Call DoUserInput()
+	Step3: Begin Batch Looping
+	Step 4: Begin Monte-Carlo Looping
+	Step 5: Create storage variables
+	Step 6: Call DoPreProcess
+	Step 7: Start Generation Looping
+	Step 8: Call ReadGrid()
+	Step 9: Call GetMetrics()
+	Step 10: Call DoMate()
+ v0.86-2010May11--09:20 -- M.Jacobi's GUI
+	1. I changed nthfile options to match GUI, 
+	included, nthfile_yn: a boolean answer to tell user that if 'Y', then
+	read nthfile_list and if 'N', then read nthfile_seq.  nthfile_list: is
+	a discontiguous range of integer values.  nthfile_seq is a start, end, by
+	value range to give even intervals where user specifies the value by.
+	2. I added a mod check for nthfile_seq, in case value is not an even
+	divisible number.  I add a max check for nthfile_list, in case max
+	list value from user is greater than the total looptime.  Truncates
+	values in all cases.
+	3. I rearrange input variables once again to make more sense to user...
+	Put twopopans next to panans.
+	4. Removed 'Reproans' -- not used and sex specific movement included
+	in movement functions and thresholds now.
+	5. Removed 'Locians' -- not coded yet and include in future...
+	2010Apr27--18:48 -- I found an error with Nevil Amos's work when
+	equalsexratio == 'Y' and there are odd nogrids.  If this happens to be
+	the case, which doesn't make sense with equalsex ratio and an odd
+	number of grids, then I added a random draw of a sex for the left
+	over grid spot.
+ v0.85-2010Feb28--11:51 -- This version adds sex specific movement for 
+	dispersal across functions and threshold values.  
+	Here is list of the following code changes:
+	1. inputvariablesv0_85.csv includes Fdispersemoveno, Mdispersemoveno
+		Fdispersemovethresh, and Mdispersemovethresh
+	2. March 08 also fixed when cdmatrix is all zeros and movement threshold
+		is set to 'max', then >= sign causes nobody to mate-up, thanks A.Shirk.
+		on line 1247 changed '>=' to '>'
+ v0.84-2010Jan14--21:44 -- Clean up CDPOP!
+	1. range to xrange
+	2. formatting...
+	3. deleting varibles hanging around...
+	4. Also allowed sex column to be F and M -- before they were 0 and 1.
+	5. FID values also can be any number -- before they were 0 - nogrids-1
+	6. Fixed linux error with creating folders '\\' to '/'
+	7. Removed dependency on agefile and allelefile:  added 'N' to skip code
+	segment that reads in these files and won't need to include these files
+	in the directory location.  Moved the order around for th inputvariables.
+ v0.83-2009Mar21--13:25 -- A few more changes made to get a Wright-Fisher 
+	population...also doing some cleanup as I go along.
+	1. Need to grab females and males with replacement until nogrid times.
+	Code before only did this for nofemale times.  This is fine for the panmictic
+	case, but when there are cost distance matrices not equal to zero than
+	immigrants can come in potentially.  inputvariables now has 'twopopans': 
+	'Y' == assumes that [0,nogrids/2) is population 1 and [nogrids/2,nogrids] is
+	population 2.  'N' == assumes that there is only 1 population.  
+	2. Mutation rate changed AGAIN.  'per locus per generation' actually means
+	 that the mutation rate is applied to each allele at each locus for offspring.
+	A bit confusing, eh?  So I removed the /2 after muterate.
+	3. Removed plotans section...no need to provide this...along with pylab.
+	4. Removed analysisans section...no need to provide this, will work on later.
+ v0.82-2009Mar19--12:22 -- A few changes made to get a Wright-Fisher 
+	population:
+1. mating with replacement for females and males.  Code before used replacement in males only and without replacement in females.  
+	inputvariables now has a column for an answer for Freplace: Y==Females 
+	mate with replacement, N==Females mate without replacement.  
+	And Mreplate: Y==Males mate with replacement, N==Males mate without 
+	replacement.  Note that there are only N,Y and Y,Y cases for Female 
+	replacement, Male replacement.  Other cases will have to be coded in later. 
+	2. Also added selfans: Y==selfing
+	allowed in the sexans==N case or the one sex case, and N==selfing not
+	allowed in the sexans==N case or the one sex case.
+	3. Change offspring number section.  Random draw between 0 and lmbda, 
+	instead of the set 0 and 5 before.  Constant number set to lmbda now...
+	removed offno 4 choice, constant assignment is offno==3 with lmbda as
+	the constant value assigned to each mate pair.
+	4. Mutation rate changed!  Code before was getting expected number of 
+	mutations per generation = 2 * number of loci * number of offspring * mute-
+	rate.  Apparently mutation rate should be the expected number of mutations
+	per generation = number of loci * number of offspring * muterate.  So I 
+	simply took the muterate code sections and inserted muterate/2.
+ v0.81-2009Mar02-11:45 -- Panmictic cases not calculated average mate distance
+	and average disperal distance...would report a zero, since it was grabbing
+	cost distance values for the calculation.  Now it uses the xgrid and ygrid
+	distance instead of the xycdmatrix values, plus cost distance values.  The
+	4 average distance numbers are then reported out in output.csv (MateDistED,
+	DispDistED, MateDistCD, and DispDistCD).
+ v0.80-2009Feb04-09:45 -- Movement function and threshold seperated into
+	mating and dispersal functions.   moveno is not split up into matemoveno and
+	dispmoveno.  movethresh is split up into matemovethresh and 
+	dispmovethresh.
+ v0.70-2008Dec05-12:45 -- A series of issues fixed...This version is ment to 
+	analyzed the output using Rpy...Added analysis option using RPy.  analysisans 
+	== 'Y' will implement Mantel test the distance matrices that were created  
+ 	using robjects....not coded yet.
+	1. Fixed a 0.0 xycdmatrix issue in panans = N.  Might be a small chance that
+	2 points are a cost distance of 0 from each other...make probability 1.0 then.
+	3. Removed plotting function...for now.
+	4. Changed all 'bear' references to id or individual
+ v0.697-2008Dec10-10:00 -- Added Fst numbers...F, Fst, Fis, Fit.
+ v0.696-2008Dec09-09:45 -- Other issues come up before I can finish the 0.70
+	Rpy analysis code segment for v0.70...
+	1. Added MateDistED and DispDistED to the list of tracking
+	variables that is outputed to output.csv.
+	2. Should speed up program: only print out grid{nthfile}.csv...also, program
+	does not read from file grid{gen}.csv...read from memory.	
+	3. Added time,datetime to track simulation time.
+ v0.695-2008Dec07-14:43 -- Added a batch file loop.  inputvariables.csv can now
+	include multiple lines to be read in.
+	Added a column in inputvariables to specify file for the x,y coords of the 
+	cdmatrix.
+ v0.69-2008Dec05-10:45 -- Removed the differeing number of alleles/locus at
+	the end of the inputvariables.csv file and added nthfile slots.  This will 
+	allow calculation of the genetic distance to be based on a specified sequ.
+	of generations, eg, 0,1,2,3,4,5,10,20,50...instead of the nthfile=5 for 0,5,10,...
+	If nthfile == 'Y', then code will read in the end of the inputvariables.csv file
+	where the specified generations are listed to calculated those generations
+	distance matrices.  Enter a number for a range of step sizes, eg, nthfile=5
+	for 0,5,10,...,looptime.
+ v0.63-2008Nov21-11:17 -- Added options for calculating genetic distance matrix
+	Specify gendmatans to be 'braycurtis', 'Dps', 'Da' or 'N'. Dps == Proportion
+	of shared alleles from Bowcock etal 1994.  Da == Nei's genetic distance 
+	from Nei etal 1983.  N == no genetic distance matrix will be calculated.
+ v0.62-2008Nov19-16:18 -- Corrected mutation code.  Before the 2 alleles at each
+	locus from both the mother and father had a chance of mutating before being
+	passed on to the offspring (possible 4 mutations occuring at each locus).  Now, 
+	the alleles are passed to an offspring (1 from the mother and 1 from the father 
+	at each locus) and the passed alleles have the chance of mutation (possible 2
+	mutations occuring at each locus).
+ v0.61-2008Nov10-15:35 -- If genetic information is known about the initial pop-
+	ulation, then user input changed: freqfileans to intgenesans - 3 choices.
+	1) if 'file', then read from allelefrequency.csv file and draw allele freq
+	from this distribution. 2) if 'random', then alleles are initialized with a
+	equal random choice (this maximizes genetic divesity in the population). 
+	3) if 'known', then the genetype of each individual is all ready known and
+	included in the xyfilename.csv file.
+ v0.60-2008Oct30-14:03 -- Added mutation.  User choice muterate added to input-
+	variables.csv.  An allele has this chance of mutating to another allele based on
+	the KAM (Kth-Allele-Model).
+	Added AllelesMutated plotting variable too.
+ v0.55-2008Oct27-09:40 -- Coded segment sexans == Y for moveno==4: panmictic sexual
+	reproduction.  Still loop through the number of females, but choosing a random
+	male for a mate.  Offspring still disperse from female location, but to a random
+	freegrid opening. 
+ v0.50-2008Oct25-10:10 -- Added Monte-Carlo method functionality with mcruns in 
+	inputvariables.csv user options.  Now creates mcrun(number) folder with output 
+	results in directory location.
+ v0.40-2008Oct23-10:45 -- Name change to CDPOP!  
+	Removed user input at command line section.
+	Added to inputvariables.csv, costdmatans (if Y, then the cost distance matrix
+	is created for the xygrid points), Edmatans (if Y, then the Euclidean distance
+	matrix is created for the xygrid points), and gendmatans (if Y, then the
+	Bray-Curtis genetic distance matrices are created for every nthfile year).
+	In step 10, I removed the user cmd prompts.
+	Swapped step 9 and 10, so that all the plotting figures are displayed at program 
+	end. 
+ v0.35-2008Oct9-12:00 -- Attempts to correct sexual reproduction logic.  
+	Removed MFcdmat and MFpairs from sexans==Y code and replaced the 
+	equivalent matrices with xycdmatrix and extracting values with females.
+	and males. 
+	Removed moveno functions 4-Moore Neighborhood and now  moveno==3 will 
+	refer to Nearest Neighbor Mating and Nearest Neighbor Dispersal.
+	Added Indexpairs (similar to MFpairs) for error checking purposes.
+	Removed offspringgenes...append genetic information onto offspring array.
+ v0.34-2008Oct8-12:00 -- Step 1 moveno = 1,2 logic recoded with w_choice()
+	function instead of previous cumnormprob draw.
+ v0.33-2008Oct7-12:00 -- Added panans in moveno=1.  If panans == N, then code
+	runs as before.  If panans == Y, then code will run with cdmatrix that has
+	more than one zero in it (e.g. a panmictic situation on either side of a 
+	barrier).  If panans == N, than it checks for one case in which there exists
+	a zero in the cdmatrix that represents self-mating situation.  If panans == Y
+	then there will be multiple cases in which there is a zero in the cdmatrix and
+	a mate is choosen with equal random draw from all the zero cases.
+	In addition, added movethresh = 'max' choice.  This choice allows the 
+	functions to use the maximum xycdmatrix value for their probability calc-
+	ulations.
+ v0.32-2008Oct6-16:67 -- Coded moveno == 5 with sexans == Y for step 1.
+ v0.31-2008Oct3-13:20 -- Fixed a write out error for when gen > geneswapgen 
+	step 8 code.  Before the code was printing out the wrong ordering of gene
+	information.  No wonder there has been no structure!
+ v0.30-2008Sept28-10:15 -- Added asexual and sexual choice for each movement 
+	function.  sexans added (if sexans == Y then sexual reproduction used. 
+	if sexans == N then asexual reproduction used).
+ v0.25-2008Sept2810:15 -- Changed logic for movement function 5 - random
+	mixing with asexual reproduction.   
+ v0.20-2008Sept02-14:30 -- Recoded step 7 to randomly choose an open grid 
+	spot and then choose a offspring to occupy that based on movement function
+	versus the previous versions in which an offspring was randomly choosen to
+	dispersal to an open grid spot based on movement functions. 
+ v0.13-2008July03-12:37 -- Added geneswapgen in inputvariables.csv and user
+	prompt: used to initiate gene swap code.
+ v0.12-2008July03-11:00 -- Added nthfile in inputvariables.csv and user prompt 
+	Used to calculate genetic distance matrix for every gen mod nthfile, but
+	will also use later to just Write out txt files in step 8 according to user
+	defined generation year.
+ v0.11-2008July03-09:00 -- Removed cdans functions.
+ v0.10-2008May26-13:00 -- Created an 8-Moore Neighborhood movement function; 
+	moveno='4'; by int() of the MFcdmat numbers, for example, in ED the 
+	4-Moore Neighborhood around the center cell's are each 1 unit away and 
+	the 4 corners are 1.41. The 8-Moore Neighborhood with int() in the 
+	corner 1.41 numbers (int(1.41)==1).
+ v0.01 -- Initial model work created before 5/23/2008.
+ CDGridModelv0.x.py
+ Author: Erin L Landguth
+ Created: February 2008
+ Description: This program is a population model for xy location points.  It
+	uses a cost distance matrix as a weight for probability of mating.  The 
+	cost distance matrix is an input to this program. THe population remains 
+	constant, therefore, each xy location point is considered to be a 'grid'
+	location and birth, death, and migration processes will fill and control 
+	individual 'grid' dynamics.
+ Program Input: 
+	1. n .dbf or .asc tables or cost distance matrix
+	2. user inputs (see program files)
+ Program Output: 
+	1. xy location and genes of old+new generation in grid(gen).csv
+	2. Cdmatrix(nogrids).csv
+	3. Edmatrix(nogrids).csv
+	4. Gdmatrix(gen).csv 
+	5. output.csv
+ Program Files (for default runs - need to be stored in I/O folder):
+	1. cdmatrix.csv - cost distance matrix to be read in.
+	2. inputvariables.csv - the list of variables used in the program
+	3. agedistribution.csv - the age structure to initialize model
+	4. allelefrequency.csv - allele distribution of each locus for initial Con
+	5. xyrandominitial.csv or xytriangleinitial.csv - example initial xy 
+		points that define the grid/network locations of individuals.
+ Program Steps:
+	A. Get User-defined information.
+	0. Initializing the model...
+		- Read in cdmatrix
+		- Initialize the genetic information and age class of the population.
+		- Extract cdmatrix locations and values for xy location points.
+		- Begin Looping
+	1. Choose mate pairs
+	2. Choose  of offspring for each mate
+	3. Choose sex of each offspring
+	4. Mortality of new generation
+	5. Swap genes
+	6. Mortality of old generation
+	7. Dispersal of survived offspring (includes Emigration and Immigration)
+	8. Generate .txt file of old+new+Immigration generation
+	9. Generate distance matrices
+   10. Plotting commands and write output to csv file
+	11. Statistical analysis results using Rpy
+ ----------------------------------------------------------------------------
