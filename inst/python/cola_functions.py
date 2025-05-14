@@ -866,8 +866,8 @@ def checkRasterVals(r, profile):
     # Check resistance values
     if np.sum((r > 0) & (r < 1)) > 0:
         r[((r > 0) & (r < 1))] = 1
-        print('Warning: Values between 0 and 1 detected. Converting these values to 1.')
-        print('If this is not what you want, please load a resistance layer with the correct values.')
+        print('Warning: Resistance values between 0 and 1 detected. Converting these values to 1.')
+        print('If this is not what you want, please load a resistance layer with no resistance values less than 1.')
         return([r, profile])
     else:
         return([r, profile])
