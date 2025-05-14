@@ -847,6 +847,32 @@ def checkNoData(r, profile):
         return([r, profile])
             #raise Exception('No data value is not equal to -9999. Reformat resistance grid so that no data values are set to -9999.')   
 
+def checkRasterVals(r, profile):
+    """
+    Check whether there are resistance values between 0-1
+    Parameters
+    ----------
+    r : numpy array
+        raster array
+    profile : dictionary
+        rasterio profile dictionary
+    Returns
+    -------
+    r : numpy array
+        raster array
+    profile : dictionary
+        rasterio profile dictionary
+    """
+    # Check resistance values
+    if np.sum((r > 0) & (r < 1)) > 0:
+        r[((r > 0) & (r < 1))] = 1
+        print('Warning: Values between 0 and 1 detected. Converting these values to 1.')
+        print('If this is not what you want, please load a resistance layer with the correct values.')
+        return([r, profile])
+    else:
+        return([r, profile])
+            #raise Exception('No data value is not equal to -9999. Reformat resistance grid so that no data values are set to -9999.') 
+
 def read2flt32array(upCRS, rg):
     """
     Read resistance grid to array
