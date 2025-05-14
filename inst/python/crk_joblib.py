@@ -211,17 +211,13 @@ def main() -> None:
             print("Number of valid sources = " + str(len(sources)), flush=True)
 
     #%%
-    # Calculate GB required by pairwise source points
-    # number of nodes/750 is an empirical factor
-    gbCf = 0.000000000125 # bits to gb conversion factor
-    memReq = (len(sources)**2)*64*gbCf*(nkG.numberOfNodes()/750)
-    
     # Use only 80% of user supplied threshold to be conservative
     gbThreshold = gbLim*0.8
 
     #%%
     # Estimate memory required for distance mapping by multiplying
     # the number of graph nodes by the number of sources
+    gbCf = 0.000000000125 # bits to gb conversion factor
     memReq = nodeidsLen*len(sources)*64*gbCf
     
     # If it's more than the threshold amount, divide into batches
