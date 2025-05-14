@@ -436,9 +436,9 @@ def main() -> None:
     # Convert to dataframe
     cAttDf = pd.DataFrame(attArray, columns=column_names)
     # Add corridor quality metric
-    cAttDf['cp1'] = cAttDf.psum1 * cAttDf.psum2 * cAttDf.sumstrn * 1/cAttDf.mincost
+    cAttDf['cp1'] = np.mean([cAttDf.psum1 * cAttDf.psum2]) * cAttDf.sumstrn * 1/cAttDf.meancost
     # Add patch quality metric
-    cAttDf['pp1'] = cAttDf.psum1 * cAttDf.psum2
+    #cAttDf['pp1'] = cAttDf.psum1 * cAttDf.psum2
  
     # Convert attributes to geodataframe of points
     with rio.open(ocsFile) as src:
