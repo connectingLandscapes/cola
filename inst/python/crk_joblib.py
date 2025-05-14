@@ -136,6 +136,10 @@ def main() -> None:
     # -9999 if necessary
     r, profile = cf.checkNoData(r, profile)
     
+    # Check values between 0-1. If detected, this converts those values to
+    # 1 and prints a message.
+    r, profile = cf.checkRasterVals(r, profile)
+    
     # Check cell size
     if profile['transform'][0] != np.abs(profile['transform'][4]):
         raise Exception('X and Y cell dimensions must be equal. Reformat resistance grid so that cell dimensions are the same in X and Y directions.')
