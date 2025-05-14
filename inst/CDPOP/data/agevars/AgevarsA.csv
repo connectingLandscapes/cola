@@ -1,0 +1,7 @@
+Age class,Number in age class,Male Mortality,Female Mortality,Mean Fecundity,Std Fecundity,Male Maturation,Female Maturation
+0,0,80,80,0,0,0,0
+1,1,70,70,2,1,0,0
+2,1,60,60,2,1,1,0
+3,1,50,50,2,1,1,1
+4,1,40,40,2,1,1,1
+5,1,90,90,4,1,1,1

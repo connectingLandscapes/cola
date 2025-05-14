@@ -550,6 +550,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 
   if (!isProjected(inraster)){
     return(NA)
+    print(' Raster MUST have proceted coordinate system. Please update your layer.')
   } else {
 
     if( require('gdalUtilities') ){

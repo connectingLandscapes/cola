@@ -1,0 +1,7 @@
+Age class,Distribution,Male Mortality,Female Mortality,Mean Fecundity,Std Fecundity,Male Maturation,Female Maturation
+0,0,50,50,0,0,0,0
+1,1,50,50,5,1,0,0
+2,1,50,50,5,1,1,0
+3,1,50,50,5,1,1,1
+4,1,50,50,5,1,1,1
+5,1,100,100,5,1,1,1

@@ -22,14 +22,11 @@ cola_dss <- function(launch.browser = TRUE)  {
 
 
 #' @title Quote file path if space is detected
-#' @description This function runs the \emph{cola} dashboard
-#' @param launch.browser Run this app on a new window? Default `TRUE`
-#' @note Please see the official website (\url{https://github.com/connectingLandscapes/cola/})
+#' @description This function add double quotes to the string if a space is detected
+#' @path The file path to be quoted
 #' @examples
 #' library(cola)
-#' if(interactive()) {
-#' cola_dss()
-#' }
+#' quotepath('C:/Users/First Second Name/Documents')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -38,7 +35,6 @@ quotepath <- function(path)  {
   (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
   return( path )
 }
-
 
 
 #' @title  Makes a population structure map from CDPOP results interpolation
@@ -61,7 +57,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                             pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
                             grids, template,
                             method = 'thin_plate_spline',
-                            neighbors, crs = 'None', cml = TRUE){
+                            neighbors, crs = 'None', cml = TRUE, show.result = TRUE){
 
   # 1. List of CDPOP grid.csv files containing population genetic structure
   # 2. Path/filename of a template raster used for interpolation
@@ -101,6 +97,11 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
                    list.files(path = dirname(grids), full.names = TRUE))
 
+  # show.result = TRUE;
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
                              newFiles, NA),
                newFiles = newFiles,
@@ -117,8 +118,8 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param grids String. Vector with the CDPOP output files to be interpolated
 #' @param template String. Raster template for interpolating the files
 #' @param method String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'
-#' @param bandwiths String.
-#' @param type String.
+#' @param bandwiths String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer
+#' @param type String. Specify whether count per cell or count per km2 should be returned. Options are: 'count', 'density'
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
@@ -130,7 +131,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                              pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
                              grids, template, method = 'average', bandwidths = 'None',
-                             type = 'count', crs = 'None', cml = TRUE){
+                             type = 'count', crs = 'None', cml = TRUE, show.result = TRUE){
 
   if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
     stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
@@ -142,7 +143,8 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   logname <- paste0(tools::file_path_sans_ext(template), '_cdpop_mapdensity.txt')
   ### Create CMD
   (cmd_inter <- paste0(
-    quotepath(py), ' ', quotepath(pyscript), ' ',
+    quotepath(py), ' ',
+    quotepath(pyscript), ' ',
     quotepath(grids), ' ',
     quotepath(template), ' ',
     # allele, ' ', hetero, ' ',
@@ -162,6 +164,13 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
   newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
                    list.files(path = dirname(grids), full.names = TRUE))
+
+  # , show.result = TRUE
+  if(show.result){
+    print(intCMD)
+  }
+
+
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
                log =  intCMD ) )
@@ -172,14 +181,15 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 #' @title  Run CDPOP model
 #' @description Run CDPOP model
-#' @param py String. Python location
-#' @param cdpopscript String. Python location
-#' @param inputvars String.
-#' @param agevars String.
-#' @param cdmat String.
-#' @param xy String.
-#' @param tempfolder String.
-#' @param prefix String.
+#' @param py String. Python executable location
+#' @param cdpopscript String. CDOPOP Python script location
+#' @param inputvars String. CSV parameters file path location. Full path or relative to the CDOPOP Python script
+#' @param agevars String. CSV age file path location. Full path or relative to the CDOPOP Python script
+#' @param cdmat String. CSV cost-distance matrix file path location. Full path or relative to the CDOPOP Python script
+#' @param xy String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script
+#' @param tempfolder String. Folder where results will be saved
+#' @param prefix String. String added to output folder
+#' @param cml String. Print the cola command line?. Default TRUE
 #' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
 #' runCDPOP( )
@@ -195,7 +205,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      xy = NULL,
                      tempFolder,
                      prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
-                     cml = TRUE){
+                     cml = TRUE, show.result = TRUE){
   #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
@@ -258,6 +268,11 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
+
+  if(show.result){
+    print(CMDcp)
+  }
+
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
@@ -520,11 +535,11 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 
 
 #' @title  Adapt file path. Change backslash to slash
-#' @description Fix paths so internal console recognize paths. Change backslash to backslash
+#' @description Fix paths so internal console recognize paths. Change double backslash to slash
 #' @param path File location
 #' @return File location String using slash as separator
 #' @examples
-#' newPath <- adaptFilePath('\temp\path\to\file\here.tif')
+#' newPath <- adaptFilePath('\\temp\\path\\to\\file\\here.tif')
 #' newPath
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -533,6 +548,8 @@ adaptFilePath <- function(path){
   # path = "C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python/s2res.py C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/sampledata/sampleTif.tif C:\\Users\\ig299\\AppData\\Local\\Temp\\RtmpwrUyVu/VM2024041715525605file51c6028258//out_surface_JQ2024041715525705file51c260d2c4b.tif 0.06788435 0.9989325 100 1 -9999 None"
   return ( gsub(fixed = TRUE, '\\', '/', path) )
 }
+
+
 
 #' @title  Suitability to resistance
 #' @description Transforms suitability to resistance surface
@@ -546,6 +563,8 @@ adaptFilePath <- function(path){
 #' @param shape Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.
 #' @param nodata Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.
 #' @param prj string. Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param cml Logical. Print the back-end command line? Default  TRUE
+#' @param show.result Logical. Print the command line result? Default  TRUE
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
@@ -560,7 +579,7 @@ sui2res_py <- function(intif, outtif,
                        nodata = NULL, prj = 'None',
                        py = Sys.getenv("COLA_PYTHON_PATH"),
                        pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                       cml = TRUE){
+                       cml = TRUE, show.result = TRUE){
   # minval = 0
   # maxval =  100
   # maxout = 100
@@ -597,6 +616,10 @@ sui2res_py <- function(intif, outtif,
 
   intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
                      error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
 
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -649,6 +672,8 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @param npoints |Number of points | |npoints|  |Numeric|  | Number of points to simulate.
 #' @param issuit |Is it suitable?| | | issuit|  |String|  |‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
 #' @param upcrs Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with the created shapefile
 #' @examples
 #' library(cola)
@@ -665,7 +690,7 @@ points_py <- function(intif, outshp,
                       smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
                       py = Sys.getenv("COLA_PYTHON_PATH"),
                       pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
-                      cml = TRUE){
+                      cml = TRUE, show.result = TRUE){
   # smin = 2
   # smax =  95
   # npoints = 50
@@ -685,6 +710,7 @@ points_py <- function(intif, outshp,
     issuit, ' ', upcrs
     , ' 2>&1 '# , logname
   ))
+
   if (cml){
     cat('\n\tCMD Points: \n')
     cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
@@ -692,6 +718,10 @@ points_py <- function(intif, outshp,
   }
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(file.exists(outshp), outshp, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -710,6 +740,8 @@ points_py <- function(intif, outshp,
 #' @param intif String.
 #' @param py Python location
 #' @param pyscript Python script location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with the CSV matrix
 #' @examples
 #' library(cola)
@@ -728,7 +760,7 @@ cdmat_py <- function(inshp, intif, outcsv,
                      crs = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
-                     cml = TRUE){
+                     cml = TRUE, show.result = TRUE){
   # maxdist = 100000
   # create_cdmat.py
   # [1] source points
@@ -766,6 +798,9 @@ cdmat_py <- function(inshp, intif, outcsv,
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
 
+  if(show.result){
+    print(intCMD)
+  }
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
@@ -777,6 +812,8 @@ cdmat_py <- function(inshp, intif, outcsv,
 #' @description Calculate corridors
 #' @param py Python location
 #' @param pyscript Python script location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -789,7 +826,7 @@ lcc_py <- function(inshp, intif, outtif,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/lcc.py'),
-                   cml = TRUE){
+                   cml = TRUE, show.result = TRUE){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -825,6 +862,11 @@ lcc_py <- function(inshp, intif, outtif,
 
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -836,6 +878,8 @@ lcc_py <- function(inshp, intif, outtif,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -849,7 +893,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
                         crs = 'None', tempFolder = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
-                        cml = TRUE){
+                        cml = TRUE, show.result = TRUE){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -899,7 +943,12 @@ lccHeavy_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-  file.remove(c(h5file1, h5file2))
+
+  tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
+
+  if(show.result){
+    print(intCMD)
+  }
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -912,6 +961,8 @@ lccHeavy_py <- function(inshp, intif, outtif,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -927,7 +978,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
                          tempFolder = NULL,
                          py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
-                         cml = TRUE){
+                         cml = TRUE, show.result = TRUE){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -977,6 +1028,11 @@ lccJoblib_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -989,6 +1045,8 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -1001,7 +1059,7 @@ crk_py <- function(inshp, intif, outtif,
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/crk.py'),
-                   cml = TRUE){
+                   cml = TRUE, show.result = TRUE){
 
   # [1] source points
   # [2] resistance surface
@@ -1036,6 +1094,11 @@ crk_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -1046,6 +1109,8 @@ crk_py <- function(inshp, intif, outtif,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -1064,7 +1129,7 @@ crkJoblib_py <- function(
     tempFolder = NULL,
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
-    cml = TRUE){
+    cml = TRUE, show.result = TRUE){
 
   # "crk_joblib.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -1095,7 +1160,7 @@ crkJoblib_py <- function(
     quotepath(outtif), ' ',
     format(maxdist, scientific=F), ' ',
     shape, ' ', transform, " ",
-    volume, " ",
+    format(volume, scientific=F), ' ', # kernel volume
     format(ncores, scientific=F), " ",
     crs, " ",
     h5file, " ",
@@ -1111,6 +1176,11 @@ crkJoblib_py <- function(
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -1123,6 +1193,8 @@ crkJoblib_py <- function(
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' runCDPOP( )
@@ -1136,7 +1208,7 @@ prio_py <- function(tif, incrk, inlcc,
                     threshold = 0.5, tolerance = 1000,
                     py = Sys.getenv("COLA_PYTHON_PATH"),
                     pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
-                    cml = TRUE){
+                    cml = TRUE, show.result = TRUE){
 
   # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -1214,8 +1286,12 @@ prio_py <- function(tif, incrk, inlcc,
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE),
                      error = function(e) e$message)
 
-  cat('\n\tlog CMD prio: \n')
-  print(intCMD)
+  if(show.result){
+    cat('\n\tlog CMD prio: \n')
+    print(intCMD)
+  }
+
+
   return(
     list(tif = ifelse(file.exists(outtif), outtif, NA),
          shp = ifelse(file.exists(outshppoint), outshppoint, NA),
@@ -1229,6 +1305,8 @@ prio_py <- function(tif, incrk, inlcc,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' crk_compare_py( )
@@ -1243,7 +1321,7 @@ crk_compare_py <- function(intif, intifs,
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
-                           cml = TRUE){
+                           cml = TRUE, show.result = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
@@ -1286,6 +1364,11 @@ crk_compare_py <- function(intif, intifs,
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
                      error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -1296,6 +1379,8 @@ crk_compare_py <- function(intif, intifs,
 #' @param py Python location
 #' @param pyscript Python script location
 #' @param py Python location
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
 #' crk_compare_py( )
@@ -1310,7 +1395,7 @@ lcc_compare_py <- function(intif, intifs,
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
-                           cml = TRUE){
+                           cml = TRUE, show.result = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
@@ -1352,6 +1437,11 @@ lcc_compare_py <- function(intif, intifs,
   }
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMD)
+  }
+
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
@@ -1365,6 +1455,8 @@ lcc_compare_py <- function(intif, intifs,
 #' @param rastPath String. Location of the raster layer
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
 #' burnShp( )
@@ -1463,7 +1555,8 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' @param rastPath String. Location of the raster layer
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
-#' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
 #' replacePixels( )

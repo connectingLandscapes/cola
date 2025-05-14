@@ -120,54 +120,54 @@
 
 
 
-if (FALSE){
-
-  (test_cmd <- paste( pyCola, tempPy))
-  system( test_cmd )
-
-  (test_cmd2 <- paste( pyCola, ' -c "import ',
-                       paste0(
-                         gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install),
-                         collapse = ', '), '"'))
-
-  (test_cmd2 <- paste( pyCola, ' -c "import os; print(os.getcwd())'))
-  system( test_cmd2 )
-  (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
-  system( test_cmd3 )
-
-}
+# if (FALSE){
+#
+#   (test_cmd <- paste( pyCola, tempPy))
+#   system( test_cmd )
+#
+#   (test_cmd2 <- paste( pyCola, ' -c "import ',
+#                        paste0(
+#                          gsub(replacement = 'skimage', pattern = 'scikit-image', libs2Install),
+#                          collapse = ', '), '"'))
+#
+#   (test_cmd2 <- paste( pyCola, ' -c "import os; print(os.getcwd())'))
+#   system( test_cmd2 )
+#   (test_cmd3 <- paste( pyCola, ' -c "import cola_functions as cf; print(1)'))
+#   system( test_cmd3 )
+#
+# }
 
 
 
 # setwd(Sys.getenv('R_USER'))
 # options(ZZZ = 'test')
-
-'C:/Program Files/R/R-4.0.2/etc/Rprofile.site'
-'C:/Program Files/R/R-4.0.2/library/base/R/Rprofile'
-'C:/Users/Admin/Documents/R/win-library/4.0/'
-'C:/Users/Admin/Documents/R/win-library/4.0/packrat/resources/init-rprofile.R' #init.R
-'C:/Users/Admin/Documents/R/win-library/4.0/usethis/html/ini'
-
-# Rprofile.site
-
-library(cola)
-
-pts_result <- points_py(intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
-                        outshp = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_100points.shp',
-                        smin = 2, smax = 150,
-                        npoints = 50, issuit = 'No', upcrs = 'None')
-
-
-crk_result <- crkJoblib_py(inshp = pts_result$file,
-                           intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
-                           outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk.tif',
-                           maxdist = 125000, shape = 'linear', volume = 1, transform = 'No')
-
-
-
-crk_result_1core <- crk_py(inshp = pts_result$file,
-                           intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
-                           outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk_1core.tif',
-                           maxdist = 125000, shape = 'linear', volume = 1, transf = 'No')
-
-
+#
+# 'C:/Program Files/R/R-4.0.2/etc/Rprofile.site'
+# 'C:/Program Files/R/R-4.0.2/library/base/R/Rprofile'
+# 'C:/Users/Admin/Documents/R/win-library/4.0/'
+# 'C:/Users/Admin/Documents/R/win-library/4.0/packrat/resources/init-rprofile.R' #init.R
+# 'C:/Users/Admin/Documents/R/win-library/4.0/usethis/html/ini'
+#
+# # Rprofile.site
+#
+# library(cola)
+#
+# pts_result <- points_py(intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+#                         outshp = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_100points.shp',
+#                         smin = 2, smax = 150,
+#                         npoints = 50, issuit = 'No', upcrs = 'None')
+#
+#
+# crk_result <- crkJoblib_py(inshp = pts_result$file,
+#                            intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+#                            outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk.tif',
+#                            maxdist = 125000, shape = 'linear', volume = 1, transform = 'No')
+#
+#
+#
+# crk_result_1core <- crk_py(inshp = pts_result$file,
+#                            intif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m.tif',
+#                            outtif = 'C:/Users/ig299/tempR/Buffalo_Clip_500m_out_crk_1core.tif',
+#                            maxdist = 125000, shape = 'linear', volume = 1, transf = 'No')
+#
+#
