@@ -23,8 +23,7 @@ import geopandas as gpd
 import numpy as np
 from pathlib import Path
 import time
-import tables as tb
-from joblib import Parallel, delayed
+from numba import set_num_threads
 
 def main() -> None:
     #%%
@@ -60,11 +59,6 @@ def main() -> None:
     # User provided CRS if using ascii or other file without projection info
     # Provide as epsg or esri string e.g. "ESRI:102028"
     upCRS = sys.argv[9] # Default None
-  
-    # Output distance array hdf name
-    # This is a temporary file and gets deleted at the end of the script,
-    # unless there's a script failure.
-    dahdf = sys.argv[10]
 
     # Set memory size for processing corridors
     # I.e. set to 16 if you want to use 16GB of RAM
@@ -73,7 +67,7 @@ def main() -> None:
     # the total amount of RAM available on your computer
     # and the amount used by other programs that may
     # be running.
-    gbLim = sys.argv[11] # Default 6
+    gbLim = sys.argv[10] # Default 6
     
     # Convert kernel volume to float or integer
     try:
@@ -114,6 +108,7 @@ def main() -> None:
     #%%
     # Set number of processors
     nk.setNumberOfThreads(nThreads)
+    set_num_threads(nThreads)
     
     #%%
     # Read xy file to dataframe
@@ -224,21 +219,15 @@ def main() -> None:
     # And map the distance between each source point and every cell in the landscape
     # --distance mapping--
     if memReq > gbThreshold:
-        # Create hdf file to hold distance array
-        shape = (len(sources), nodeidsLen)
-        atom = tb.Float64Atom()
-        filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=5, fletcher32=False)
-        h5f = tb.open_file(dahdf, 'w')
-        h5f.create_carray(h5f.root, 'dset', atom, shape,
-                               filters=filters)
-        h5f.close()
     
         # Divide sources into batches
         sLength = np.arange(0,len(sources))
         nCBatches = int(np.ceil(memReq/gbThreshold))
-        sBatches = np.array_split(sLength, nCBatches) 
-        print('Calculating cost distances in ' + str(len(sBatches)) + ' batches')
-      
+        #sBatches = np.array_split(sLength, nCBatches)
+        sBatches = np.array_split(sLength, nCBatches)[1:2]
+        print('Calculating kernels in ' + str(len(sBatches)) + ' batches')
+        # Empty array to hold accumulated kernels
+        ccArr = np.zeros((1,len(nodeids)))
         # Loop over batches and calculate distance array
         for b, s in enumerate(sBatches):
             tic1 = time.perf_counter()
@@ -247,62 +236,16 @@ def main() -> None:
             sourceBatchNK = np.array(sources)[s]
             spspDist = nk.distance.SPSP(nkG, sourceBatchNK)
             spspDist.run()
-            ccArr = spspDist.getDistances(asarray=True)
+            ccArrT = spspDist.getDistances(asarray=True)
             del spspDist
-            # Networkit gives inaccessible nodes the max float 64 value.
-            # Set these to nan.
-            ccArr[ccArr == np.finfo(np.float64).max] = np.nan
-            ccArr[ccArr > dThreshold] = np.nan
-            # Insert in hdf file
-            h5f = tb.open_file(dahdf, 'a')
-            h5f.root.dset[np.min(s):(np.max(s)+1),:] = ccArr
-            h5f.close()
-            del ccArr
+            # Convert distances to probabilities and transform if specified
+            ccArrT = cf.kCalcs(ccArrT, tForm, dThreshold, tkv, kvol) 
+            # Add to running sum
+            ccArr += ccArrT
             toc1 = time.perf_counter()
-            print(f"Writing batch to file took {toc1 - tic1:0.4f} seconds")
-        
-        #%%
-        # Estimate memory required for kernel calculation by multiplying
-        # the number of graph nodes by the number of sources
-        memReq = nodeidsLen*len(sources)*64*gbCf
-    
-        # If it's more than the threshold amount, divide into batches
-        if memReq > gbThreshold:
-            #%%
-            print('Calculating corridors in batches')
-    
-            # Memory per processor
-            memProc = gbThreshold/nThreads
-    
-            # Arrays per processor
-            arraysProc = memProc/(nodeidsLen*64*gbCf)
-    
-            # Number of batches 
-            nBatches = int(np.floor(len(sources)/(arraysProc)))
-    
-            # Use 50 percent of the number of lines across all threads
-            # as a way to allocate memory to the output list created
-            # by joblib.
-            jlibIncrement = int(np.ceil((len(sources)/nBatches*nThreads*0.5)/nThreads))
-            
-            # Main issue is that the nodeids are relative to the graph
-            # while the indices need to be relative to the hdf file.
-            # Dictionary to link nodeids to hdf indices
-            nodehdf = dict(zip(sources, range(len(sources))))
-            
-            # Split nodeids into N batches
-            sBatches = np.array_split(sources, nBatches)
-            
-            # Use joblib to calculate kernels in parallel and sum on the fly
-            print("Summing kernels", flush=True)
-            with Parallel(n_jobs=nThreads) as parallel:
-                ccArr = np.zeros((1,nodeidsLen))
-                n_iter = 0
-                for j in range(jlibIncrement,int((np.ceil(nBatches/jlibIncrement)+1)*jlibIncrement),jlibIncrement):
-                    j = min(j, nBatches)
-                    results = parallel(delayed(cf.calcKernels)(i, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv, kvol) for i in range(n_iter,j))
-                    ccArr += sum(results)
-                    n_iter = j
+            print("Finished batch " + str(b+1))
+            print(f"Calculating batch {b+1} took {toc1 - tic1:0.4f} seconds")      
+
     # Otherwise, process as normal
     else:
         # Calculate shortest path distance from each source to every
@@ -392,11 +335,7 @@ def main() -> None:
     dArr = np.expand_dims(dArr, axis=0)
     
     # Write crk to file
-    cf.arrayToGeoTiff(dArr, ofile, profile)    
-    
-    # If hdfs were created, delete them
-    if Path(dahdf).is_file():
-        Path(dahdf).unlink()
+    cf.arrayToGeoTiff(dArr, ofile, profile)
 
     toc = time.perf_counter()
     print(f"Calculating kernels took {toc - tic:0.4f} seconds", flush=True)

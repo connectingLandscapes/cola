@@ -1026,7 +1026,67 @@ def calcKernels(x, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv,
     h5f.close()
     return(ksums)
 
+@njit(parallel=True)
+def kCalcs(ccArr, tForm, dThreshold, tkv, kvol):
+    # Networkit gives inaccessible nodes the max float 64 value.
+    # Set these to nan. Need to flatten first so numba is only
+    # indexing on one dimension
+    orig_shape = ccArr.shape
+    ccArr = ccArr.flatten()
+    ccArr[ccArr == np.finfo(np.float64).max] = np.nan
+    
+    # Transform distances
+    if tForm == 'linear':
+        # Linear transform of distances
+        ccArr = 1 - (1/dThreshold) * ccArr        
+        # Convert negative values  to 0. (These are beyond the threshold)
+        ccArr[ccArr < 0] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'inverse':
+        # Inverse transform of distances
+        ccArr = 1/(ccArr + 1)
+        # Convert values beyond the distance threshold to 0
+        ccArr[ccArr < 1/(dThreshold + 1)] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'inversesquare':
+        # Inverse transform of distances
+        ccArr = 1/(ccArr**2 + 1)
+        # Convert values beyond the distance threshold to 0
+        ccArr[ccArr < 1/(dThreshold + 1)] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'gaussian':
+        dispScale = dThreshold/4
+        ccArr = np.exp(-1*((ccArr**2)/(2*(dispScale**2))))
+        # Set values beyond the distance threshold to 0
+        ccArr[ccArr < np.exp(-1*((dThreshold**2)/(2*(dispScale**2))))] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    
+    # Transform kernel volume?
+    # From UNICOR help guide
+    # When „const_kernel_vol‟ is False, then the „kernel_volume‟ parameter
+    # is used on the transformed kernel resistant distance following
+    # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
+    # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+    # **I think the UNICOR help on this might be reversed because this is the code
+	#	if const_kernal_vol:		
+    #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
+    #    else:
+    #        vol_const = 1.
+    if tkv == "yes":
+        vol_const = kvol * 3/(np.pi*dThreshold**2)
+        ccArr = ccArr*vol_const   
 
+    # Reshape 1D array    
+    ccArr = ccArr.reshape(orig_shape) 
+
+    # Sum crk values
+    ccArr = np.sum(ccArr, axis=0)
+
+    return(ccArr)
     
 def groupby_multipoly(df, by, aggfunc="first"):
     data = df.drop(labels=df.geometry.name, axis=1)
