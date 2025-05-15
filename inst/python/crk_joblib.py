@@ -5,7 +5,7 @@ Script to implement cumulative resistant kernel mapping using Networkit.
 If the memory threshold is set low enough, the script calculates
 distances from source points to every cell in the map in batches
 and writes to an hdf file on disk. It then reads distances from
-the hdf file and calculates cost distance corridors in parallel
+the hdf file and calculates kernels in parallel
 using joblib. Best performance will be with a solid state drive.
 @author: pj276
 """
@@ -66,7 +66,7 @@ def main() -> None:
     # unless there's a script failure.
     dahdf = sys.argv[10]
 
-    # Set memory size for processing corridors
+    # Set memory size for processing kernels
     # I.e. set to 16 if you want to use 16GB of RAM
     # when processing. Make sure you have enough RAM
     # available when setting this value. Consider
@@ -151,15 +151,17 @@ def main() -> None:
     # Create edges, nodeids, and mapping between old and new nodeids
     # from resistance grid
     edges, nodeids, idmap = cf.generate_edges(r, cSize)
-    print('generated edges')
+    print('Generated edges')
 
     # Create graph (nodes only)
     nkG = nk.Graph(len(idmap), weighted=True)
     # Add edges to graph
     for i in edges:
         nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
-    print('created graph')
-    print(nk.overview(nkG))
+    print('Created graph')
+    print('Number of nodes: ' + str(nkG.numberOfNodes()))
+    print('Number of edges: ' + str(nkG.numberOfEdges()))
+    #print(nk.overview(nkG))
     
     # Convert resistance grid to graph
 #    print("Converting image to graph", flush=True)
@@ -269,7 +271,7 @@ def main() -> None:
         # If it's more than the threshold amount, divide into batches
         if memReq > gbThreshold:
             #%%
-            print('Calculating corridors in batches')
+            print('Calculating kernels in batches')
     
             # Memory per processor
             memProc = gbThreshold/nThreads
