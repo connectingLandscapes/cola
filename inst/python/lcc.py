@@ -122,6 +122,10 @@ def main() -> None:
     # -9999 if necessary
     r, profile = cf.checkNoData(r, profile)
     
+    # Check values between 0-1. If detected, this converts those values to
+    # 1 and prints a message.
+    r, profile = cf.checkRasterVals(r, profile)
+    
     # Check cell size
     if profile['transform'][0] != np.abs(profile['transform'][4]):
         raise Exception('X and Y cell dimensions must be equal. Reformat resistance grid so that cell dimensions are the same in X and Y directions.')
@@ -141,7 +145,9 @@ def main() -> None:
     for i in edges:
         nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
     print('created graph')
-    print(nk.overview(nkG))
+    print('Number of nodes: ' + str(nkG.numberOfNodes()))
+    print('Number of edges: ' + str(nkG.numberOfEdges()))
+    #print(nk.overview(nkG))
     
 #    # Convert resistance grid to graph
 #    print("Converting image to graph", flush=True)
