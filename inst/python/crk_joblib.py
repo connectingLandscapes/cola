@@ -224,7 +224,7 @@ def main() -> None:
         sLength = np.arange(0,len(sources))
         nCBatches = int(np.ceil(memReq/gbThreshold))
         #sBatches = np.array_split(sLength, nCBatches)
-        sBatches = np.array_split(sLength, nCBatches)[1:2]
+        sBatches = np.array_split(sLength, nCBatches)
         print('Calculating kernels in ' + str(len(sBatches)) + ' batches')
         # Empty array to hold accumulated kernels
         ccArr = np.zeros((1,len(nodeids)))
