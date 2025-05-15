@@ -1014,19 +1014,17 @@ def calcKernels(x, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv,
         # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
         # When „const_kernel_vol‟ is True, then no volume transformation is applied.
         # **I think the UNICOR help on this might be reversed because this is the code
-    	#	if const_kernal_vol:		
+        #	if const_kernal_vol:		
         #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
         #    else:
         #        vol_const = 1.
         if tkv == "yes":
             vol_const = kvol * 3/(np.pi*dThreshold**2)
-            ccArr = ccArr*vol_const      
+            ccArr = ccArr*vol_const
         # Add kernel to running sum
         ksums += ccArr
     h5f.close()
     return(ksums)
-
-
     
 def groupby_multipoly(df, by, aggfunc="first"):
     data = df.drop(labels=df.geometry.name, axis=1)
