@@ -128,14 +128,14 @@ def main() -> None:
     # Create edges, nodeids, and mapping between old and new nodeids
     # from resistance grid
     edges, nodeids, idmap = cf.generate_edges(r, cSize)
-    print('generated edges')
+    print('Generated edges')
 
     # Create graph (nodes only)
     nkG = nk.Graph(len(idmap), weighted=True)
     # Add edges to graph
     for i in edges:
         nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
-    print('created graph')
+    print('Created graph')
     print('Number of nodes: ' + str(nkG.numberOfNodes()))
     print('Number of edges: ' + str(nkG.numberOfEdges()))
     #print(nk.overview(nkG))
