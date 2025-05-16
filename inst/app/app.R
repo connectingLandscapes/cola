@@ -1658,7 +1658,7 @@ server <- function(input, output, session) {
     }
 
     # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
-    invars_file_path <- file.path(tempFolder, 'invars_edited.csv')
+    invars_file_path <<- file.path(tempFolder, 'invars_edited.csv')
     write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
@@ -1700,7 +1700,7 @@ server <- function(input, output, session) {
     output$vout_cdp <- isolate(renderText({
 
       tStartCDP <- Sys.time()
-      cdpop_ans <<- tryCatch(cdpop_py(inputvars = invars_file_path,
+      cdpop_ans <<- tryCatch(cdpop_py(inputvars = ,
                              agevars = NULL,
                              cdmat = rv$cdm, xy = rv$ptsxy,
                              tempFolder = tempFolder, prefix = pref),
@@ -1719,7 +1719,16 @@ server <- function(input, output, session) {
       output$ll_map_cdp <- leaflet::renderLeaflet({
 
         # rv <- list()
-        # cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
+        #cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
+        #cdpop_ans <- /data/tempR//colaHEB2025051214375205
+
+        # datapath <- '/data/tempR//colaHEB2025051214375205'
+        # cdpopPath <- 'HGQ__1747079235'
+        # newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
+        # (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
+        # ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath)
+        # cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = newFiles, value = TRUE)
+
         cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
 
         if(length(cdpop_out) != 0){
@@ -1727,63 +1736,268 @@ server <- function(input, output, session) {
           shinyjs::enable("cdpop_ans_yy") #
           shinyjs::enable("mapcdpop") #
 
+          ##
+          ## Single MCRUN
+          ##
+          if(length(cdpop_out) == 1){
+            print('   --- single run CDPOP')
+            rv$cdpop_out <- read.csv(cdpop_out[1])
+            rv$cdpFolder <- dirname( dirname(cdpop_out[1]) )
 
-          rv$cdpop_out <- read.csv(cdpop_out)
-          rv$cdpFolder <- dirname(dirname(cdpop_out))
+            cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+                                 function(x){
+                                   #x = rv$cdpop_out$Population_Age1.
+                                   as.numeric(gsub('\\|.+|\\|', '', x))
+                                 })
 
-          cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
-                               function(x){
-                                 #x = rv$cdpop_out$Population_Age1.
-                                 as.numeric(gsub('\\|.+|\\|', '', x))
-                               }
-          )
+            cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+            cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
+            cdpop_grids_Num <<- sort(cdpop_grids_Num)
 
-          cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-          cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
-          cdpop_grids_Num <<- sort(cdpop_grids_Num)
+            output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
+                              type = "line", dashStyle = "DashDot", name = 'Population'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Population')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
 
-          output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-            highchart() %>% hc_exporting(enabled = TRUE) %>%
-              hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
-                            type = "line", dashStyle = "DashDot", name = 'Population'
-                            #, hcaes(x = 'Year', y = 'Population')
-              ) %>%
-              hc_yAxis(title = list(text = 'Population')) %>%
-              hc_xAxis(title = list(text = 'Generation')) %>%
-              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            })
 
-          })
+            output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                              type = "line", dashStyle = "DashDot", name = 'Alleles'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Alleles')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            })
 
-          output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-            highchart() %>% hc_exporting(enabled = TRUE) %>%
-              hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                            type = "line", dashStyle = "DashDot", name = 'Alleles'
-                            #, hcaes(x = 'Year', y = 'Population')
-              ) %>%
-              hc_yAxis(title = list(text = 'Alleles')) %>%
-              hc_xAxis(title = list(text = 'Generation')) %>%
-              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-          })
+            output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                              type = "line", dashStyle = "DashDot", name = 'He'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                                    type = "line", dashStyle = "DashDot", name = 'Ho'
+                                    #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            }) #
 
-          output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-            highchart() %>% hc_exporting(enabled = TRUE) %>%
-              hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                            type = "line", dashStyle = "DashDot", name = 'He'
-                            #, hcaes(x = 'Year', y = 'Population')
-              ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                                  type = "line", dashStyle = "DashDot", name = 'Ho'
-                                  #, hcaes(x = 'Year', y = 'Population')
-              ) %>%
-              hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-              hc_xAxis(title = list(text = 'Generation')) %>%
-              hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-          }) #
+            shinyjs::enable("cdpop_ans_yy") #
+            updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                                 choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
+                                 selected = head(cdpop_grids_Num, 1), server = TRUE)
 
-          shinyjs::enable("cdpop_ans_yy") #
-          updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                               choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
-                               selected = head(cdpop_grids_Num, 1), server = TRUE)
+            ##
+            ## Multiple MCRUN
+            ##
+          } else if(length(cdpop_out) > 1) {
+            print('   --- Multiple run CDPOP')
 
+            # cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
+            # cdpop_grids_Num <<- sort(cdpop_grids_Num)
+
+            cdpops <- lapply(cdpop_out, function(x){
+              # x <- cdpop_out[1]
+              xx <- read.csv(x)
+              xx$filename <- x
+              (xx$simulation <- gsub('.+batchrun0mcrun', '', dirname(x)))
+              xx
+            })
+
+            vecs <- lapply(cdpops, function(x) x[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho', 'simulation')])
+            vecs2 <- lapply(vecs, function(x) sapply(x, function(y) as.numeric(gsub('\\|.+|\\|', '', y))))
+
+            # vecs2 <- lapply(vecs2, function(y) as.numeric(sapply((strsplit(y, "\\|")), function(x) x[1])))
+            nyears <- max(unlist(lapply(vecs2, nrow)))
+            tempnum <- rep(NA, nyears)
+            (cdyy <- 0:(nyears-1))
+
+            cdpop2Plot <- sapply(c('Population_Age1.', 'Alleles', 'He', 'Ho'), function(x){
+              # x <- 'Population_Age1.'
+              vecs3 <- lapply(vecs2, function(y){
+                z <- tempnum
+                z[1:nrow(y)] <- y[, c(x)]
+                cbind(id = y[1, c('simulation')], z)
+                #return(z)
+              })
+              list(
+                data.frame(simumation = 0, Variable = x, Generation = cdyy,
+                  mean=apply(do.call(cbind, lapply(vecs3, function(x) x[, 2])), 1, mean, na.rm = TRUE),
+                  sd=apply(do.call(cbind , lapply(vecs3, function(x) x[, 2])), 1, sd, na.rm = TRUE))
+              )
+            })
+
+            # cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+            #                      function(x){#x = rv$cdpop_out$Population_Age1.
+            #                        as.numeric(gsub('\\|.+|\\|', '', x))})
+
+            ## Population
+            ##
+            output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+            yyA <- cdpop2Plot[['Population_Age1.']]
+            if (any(is.na(yyA$sd))){
+              # yyA <- rbind
+              ya <- yyA$Generation
+              yb <- yyA$sd
+              posNA <- which(is.na(yyA$sd))[1]
+              newrow <- yyA[posNA-1,]
+              newrow$sd <- 0
+              yyA <- rbind.data.frame(
+                yyA[1:(posNA-1), ], #head
+                newrow,
+                yyA[(posNA:nrow(yyA)), ]
+                # tail
+              )
+              yyA$sd[is.na(yyA$sd)] <- 0
+            }
+            pol <- cbind.data.frame(x = as.numeric(c(yyA$Generation, rev(yyA$Generation))),
+                                      y = c(yyA$mean +yyA$sd, rev(yyA$mean -yyA$sd)), z = 'S.D.')
+            multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+
+            multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+            pol <- pol[1:(nrow(pol)-1), ]
+
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
+                              hcaes(Year, Population_Age1., group=id)) %>%
+                hc_add_series(data = cdpop2Plot[['Population_Age1.']], # [, c('Generation', 'mean')]
+                              hcaes(Generation, mean),
+                              type = "line", name = 'Av. Population'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Population')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            })
+
+            ## Alleles
+            ##
+
+            output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+            yyB <- cdpop2Plot[['Alleles']]
+            if (any(is.na(yyB$sd))){
+              # yyA <- rbind
+              ya <- yyB$Generation
+              yb <- yyB$sd
+              posNA <- which(is.na(yyB$sd))[1]
+              newrow <- yyB[posNA-1,]
+              newrow$sd <- 0
+              yyB <- rbind.data.frame(
+                yyB[1:(posNA-1), ], #head
+                newrow,
+                yyB[(posNA:nrow(yyB)), ]
+                # tail
+              )
+              yyB$sd[is.na(yyB$sd)] <- 0
+            }
+
+            pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
+                                    y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
+            multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+            multiline$id <- as.numeric((as.character((multiline$id))))
+
+            multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+            pol <- pol[1:(nrow(pol)-1), ]
+
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                hc_add_series(data = multiline, type = "line", dashStyle = "DashDot",
+                              hcaes(Year, Alleles, group=id)) %>%
+                hc_add_series(data = cdpop2Plot[['Alleles']], # [, c('Generation', 'mean')]
+                              hcaes(Generation ,mean),
+                              type = "line", name = 'Av. Alleles'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Alleles')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            })
+
+            ## Ho
+            ##
+
+            output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+
+              yyB <- cdpop2Plot[['Ho']]
+              if (any(is.na(yyB$sd))){
+                # yyA <- rbind
+                ya <- yyB$Generation
+                yb <- yyB$sd
+                posNA <- which(is.na(yyB$sd))[1]
+                newrow <- yyB[posNA-1,]
+                newrow$sd <- 0
+                yyB <- rbind.data.frame(
+                  yyB[1:(posNA-1), ], #head
+                  newrow,
+                  yyB[(posNA:nrow(yyB)), ]
+                  # tail
+                )
+                yyB$sd[is.na(yyB$sd)] <- 0
+              }
+              pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
+                                      y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
+              multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+              multiline$id <- as.numeric(as.factor(as.character((multiline$id))))
+              multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+              pol <- pol[1:(nrow(pol)-1), ]
+
+              highchart() %>% hc_exporting(enabled = TRUE) %>%
+                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
+                              hcaes(Year, Ho, group=id)) %>%
+                hc_add_series(data = cdpop2Plot[['Ho']], # [, c('Generation', 'mean')]
+                              hcaes(Generation ,mean),
+                              type = "line",  name = 'Av. Ho'
+                              #, hcaes(x = 'Year', y = 'Population')
+                ) %>%
+                hc_yAxis(title = list(text = 'Ho')) %>%
+                hc_xAxis(title = list(text = 'Generation')) %>%
+                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+            }) #
+
+
+            cdpop_grids <<- grep(pattern = 'grid.+csv$', x = cdpop_ans$newFiles, value = TRUE)
+
+            cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+            cdpop_grids_Num <- paste0(
+              gsub('batchrun0mcrun', 'sim', basename(dirname(cdpop_grids))), '_gen',
+              cdpop_grids_Num)
+
+            shinyjs::enable("cdpop_ans_yy") #
+            orderVectGrids <- as.numeric(gsub('.+run', '' ,basename(dirname(cdpop_grids)) ) ) +
+              (as.numeric(gsub('grid|.csv', '' , basename(cdpop_grids)) ) /1000)
+            updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                                 #choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
+                                 choices = cdpop_grids_Num[order(orderVectGrids)],
+                                 selected = cdpop_grids_Num[1], server = TRUE)
+
+            cdpop_grids_Num <<- cdpop_grids_Num
+            print(cdpop_grids_Num[order(orderVectGrids)])
+
+            # df1 <- data.frame(Generation = 1:length(tempnum),
+            #                   mean=apply(do.call(cbind, vecs3), 1, mean, na.rm = TRUE),
+            #                   sd=apply(do.call(cbind, vecs3), 1, sd, na.rm = TRUE))
+            # scenarios <- na.omit(reshape2::melt(do.call(cbind, vecs3)))
+            #
+            # ggplot(data = df1, aes(x = Generation)) +
+            #   geom_line(aes(y = mean), linewidth = 1.5) +
+            #   geom_line(data = scenarios, linetype = 'dashed',
+            #             aes(x = Var1 , y = value, color = as.factor(Var2),
+            #                 group = as.factor(Var2)), linewidth = 1.5) +
+            #   geom_ribbon(aes(y = mean, ymin = mean - sd, ymax = mean + sd), alpha = .2) +
+            #   labs(x = "Generation", y = 'Alleles', color = 'Scenario') +
+            #   theme(text = element_text(size = 20), legend.position = 'bottom')
+          }
 
           xcdpDensMeth <- 'average'
           xcdpDensBand <- 'None'
@@ -1793,19 +2007,22 @@ server <- function(input, output, session) {
           xcdpDensBand <- 'None'
           xcdpDensType <- 'count'
 
-
           preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
           # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-
-          densMap <- cdpop_mapdensity(grids = cdpop_grids[1], template = rv$tif,
-                                      method = xcdpDensMeth,
-                                      bandwidths = xcdpDensBand,
-                                      type = xcdpDensType, crs = 'None')
+          densMap <- cdpop_mapdensity(
+            grids = cdpop_grids[1], template = rv$tif,
+            method = xcdpDensMeth,
+            bandwidths = xcdpDensBand,
+            type = xcdpDensType, crs = 'None')
           # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
 
-          struMap <- cdpop_mapstruct(grids = cdpop_grids[1], template = rv$tif,
-                                     method = 'thin_plate_spline',
-                                     neighbors = 'all', crs = 'None')
+          struMap <- cdpop_mapstruct(
+            grids = cdpop_grids[1], template = rv$tif,
+            method = 'thin_plate_spline',
+            neighbors = 'all', crs = 'None')
+          # 'heterozygosity_tps_None_grid0.tif'
+          # 'alleles_tps_None_grid0.tif'
+          # 'count_tps_None_grid0.tif'
 
           # print(' --- densMap ')
           # print(densMap)
@@ -1817,9 +2034,19 @@ server <- function(input, output, session) {
           rv$struRB <- struRB <- rast(struMap$newFiles[2])
           rv$densR <- densR <- rast(densMap$file)
 
-          rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-          rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-          rng_dens <- getMnMx(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+          rng_strA <- getMnMx(struRA);
+          palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                        domain = rng_strA+0.0,
+                                        na.color = "transparent")
+          rng_strB <- getMnMx(struRB);
+          palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                        domain = rng_strB+0.0, na.color = "transparent")
+          rng_dens <- getMnMx(densR);
+          print('rng_dens:')
+          print(rng_dens)
+          palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                        domain = rng_dens*c(1, 1.1),
+                                        na.color = "transparent")
 
           # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
           # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
@@ -1870,33 +2097,42 @@ server <- function(input, output, session) {
   )
 
   isolate(observeEvent(input$mapcdpop, {
-    input$cdpop_ans_yy
+    # input$cdpop_ans_yy
     if(input$cdpop_ans_yy != ''){
 
-
+      # input <- list(cdpop_ans_yy = 'sim0_gen4')
       pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
 
-      newname <- paste0(dirname(cdpop_grids), '/',
-                        'count_average_grid', cdpop_grids[pos2plot],'.tif')
+      (baserastname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/'))
+
+      (newname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/',
+                        'count_average_grid', cdpop_grids[pos2plot],'.tif'))
+
       print(paste(' ||| Plotting pos2plot ', pos2plot))
       # if (file.exists(paste0()))
       output$ll_map_cdp <- leaflet::renderLeaflet({
 
         cat(' -- Printing: ' , cdpop_grids[pos2plot], '\n')
 
-
-        preintnameA <- paste0(dirname(cdpop_grids[pos2plot]), '/count_average_',cdpop_grids[pos2plot],'tif')
-        preintnameB <- paste0(dirname(cdpop_grids[pos2plot]), '/alleles_tps_None_',cdpop_grids[pos2plot],'tif')
+        (preintnameA <- paste0(baserastname, '/count_average_',
+                              gsub('.csv', '', basename(cdpop_grids[pos2plot])), '.tif'))
+        (preintnameB <- paste0(baserastname, '/alleles_tps_None_',
+                              gsub('.csv', '', basename(cdpop_grids[pos2plot])),
+                              '.tif'))
 
         # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
         #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/grid0.csv'
         #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/alleles_tps_None_grid0.tif'
 
+        # 'heterozygosity_tps_None_grid0.tif'
+        # 'alleles_tps_None_grid0.tif'
+        # 'count_tps_None_grid0.tif'
 
         if ( !file.exists(preintnameA)){
           densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
                                       method = 'average',
-                                      bandwidths = 'None', type = 'count', crs = 'None')
+                                      bandwidths = 'None',
+                                      type = 'count', crs = 'None')
           # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
 
         } else {
@@ -1909,9 +2145,8 @@ server <- function(input, output, session) {
                                      neighbors = 'all', crs = 'None')
         } else {
           struMap <- list(newFiles = c( preintnameB,## Alleles
-                                        paste0(dirname(cdpop_grids[pos2plot]), '/heterozygosity_tps_None_',cdpop_grids[pos2plot],'tif')
+                                        gsub('alleles', 'heterozygosity', preintnameB)
                                         # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-
           ))
         }
 
@@ -1922,7 +2157,10 @@ server <- function(input, output, session) {
 
         rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
         rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-        rng_dens <- getMnMx(densR); palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_dens+0.0, na.color = "transparent")
+        rng_dens <- getMnMx(densR);
+
+        palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                      domain = rng_dens*c(1.0,1.1 ), na.color = "transparent")
 
 
         cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
@@ -4284,8 +4522,6 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, ' \n Select a data type first --- ');updateVTEXT(rv$log) # _______
     } else {
 
-
-
       (compID <- sessionIDgen(short = TRUE))
 
       # in_com_ly <- 'Dispersal kernels'
@@ -4310,7 +4546,7 @@ server <- function(input, output, session) {
         (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
       }
       # avail_layers <- rev(avail_layers)
-      avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
+      avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
 
       # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
       cat(' Compare: ', in_com_ly, '\n')
@@ -4816,7 +5052,10 @@ server <- function(input, output, session) {
                         '.zip'),
       content = function(filename) {
         if(!is.null( rv$cdpFolder) ){
-          # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
+           #rv <- list(tempFolder = '/data/tempR/colaHEB2025051214375205/', sessionID = 'colaHEB2025051214375205')
+           #rv$cdpFolder <- file.path(rv$tempFolder, '/HGQ__1747079235')
+
+          # setwd(rv$tempFolder)
           #filename <- paste0('points_', rv$inPointsSessID , '.zip')
           zip_file <- paste0(tempfile(), '_tempCDPOP.zip')
           #'',
@@ -4825,15 +5064,17 @@ server <- function(input, output, session) {
           #)
           #zip_file <- file.path(tempdir(), filename)
           # print(paste0('Making temp zip file: ', zip_file))
+          # invars_file_path <- file.path(rv$tempFolder, 'invars_edited.csv')
 
 
           com_files <- c(rv$ptsxy,
+                         invars_file_path,
                          list.files(path = rv$cdpFolder,
                                     recursive = TRUE,
                                     all.files = TRUE, include.dirs = TRUE,
                                     #pattern = "out_simpts_",
                                     full.names = TRUE))
-          print(paste0('incluiding: ', paste0(zip_file, collapse = ' ')))
+          print(paste0(' Preparing: ', zip_file))
 
 
           if (os == 'Windows'){
@@ -4841,12 +5082,10 @@ server <- function(input, output, session) {
           } else {
 
             # the following zip method works for me in linux but substitute with whatever method working in your OS
-            zip_command <<- paste("zip -j",
-                                  zip_file,
+            zip_command <<- paste("zip ", zip_file,
                                   paste(com_files, collapse = " "))
 
-            pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n',
-                   'filename', 'zip_file') # _____________ , 'zip_command'
+            #pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n', 'filename', 'zip_file') # _____________ , 'zip_command'
 
             system(zip_command)
           }
@@ -4858,10 +5097,7 @@ server <- function(input, output, session) {
       })
 
 
-
-
-    ## Download comparision
-
+    ## Download comparison
     output$comDwn <- downloadHandler(
       filename = paste0('comparison',
                         #"_",
@@ -4890,17 +5126,20 @@ server <- function(input, output, session) {
                                    # gsub('comp_|_.+', '', basename(rv$comFolder))
           )
 
-          print(paste0('incluiding: ', paste0(c(com_files, otherFiles), collapse = ' ')))
-
+          #files2down <- c(com_files, otherFiles)
+          files2down <- c(avail_layers, com_tifs)
+          # paste0(c(com_files, '||||', otherFiles)
+          print(paste('incluiding: ', paste(files2down, collapse = ' ')))
 
           if (os == 'Windows'){
-            zip(zipfile = zip_file, files = c(com_files, otherFiles), flags = '-r9X')
+            zip(zipfile = zip_file, files = files2down, flags = '-r9X')
+
           } else {
 
             # the following zip method works for me in linux but substitute with whatever method working in your OS
             zip_command <<- paste("zip -j",
                                   zip_file,
-                                  paste(com_files, collapse = " "))
+                                  paste(files2down, collapse = " "))
 
             pdebug(devug=devug,sep='\n',pre='\n---- Write COMP\n',
                    'filename', 'zip_file') # _____________ , 'zip_command'
