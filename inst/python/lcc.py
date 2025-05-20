@@ -147,13 +147,8 @@ def main() -> None:
     print('Created graph')
     print('Number of nodes: ' + str(nkG.numberOfNodes()))
     print('Number of edges: ' + str(nkG.numberOfEdges()))
-    #print(nk.overview(nkG))
-    
-#    # Convert resistance grid to graph
-#    print("Converting image to graph", flush=True)
-#    nkG, nodeids, idmap = cf.image_to_graph(r, cSize, -9999, 8)
-#    print(nk.overview(nkG))
-    
+    del edges
+
     #%%
     # Get sources as networkit node ids
     with rio.open(rg) as src:

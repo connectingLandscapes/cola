@@ -252,18 +252,10 @@ def main() -> None:
     for i in edges:
         nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
     print('created graph')
-    print(nk.overview(nkG))
-    
-    # !! Write cpecells to file (temporary code) !!
-    cpecells2 = np.expand_dims(cpecells, axis=0)
-    cf.arrayToGeoTiff(cpecells2, 'C:/Users/pj276/Downloads/prioritization5/edge_cell_groups2.tif', profilecs)
-    
-    
-    # Convert resistance grid to graph
-#    print("Converting image to graph", flush=True)
-#    nkG, nodeids, idmap = cf.image_to_graph(ocs, cSize, -9999, 8)
-#    print(nk.overview(nkG))
-    
+    print('Number of nodes: ' + str(nkG.numberOfNodes()))
+    print('Number of edges: ' + str(nkG.numberOfEdges()))
+    del edges
+
     #%%
     # Loop through edge pairs and calculate corridors
     # plus stats
