@@ -162,6 +162,7 @@ def main() -> None:
     print('Number of nodes: ' + str(nkG.numberOfNodes()))
     print('Number of edges: ' + str(nkG.numberOfEdges()))
     #print(nk.overview(nkG))
+    del edges
     
     # Convert resistance grid to graph
 #    print("Converting image to graph", flush=True)
@@ -234,10 +235,20 @@ def main() -> None:
         h5f.create_carray(h5f.root, 'dset', atom, shape,
                                filters=filters)
         h5f.close()
-    
+        
+        # Memory per processor
+        memProc = gbThreshold/nThreads
+
+        # Arrays per processor
+        arraysProc = memProc/(nodeidsLen*64*gbCf)
+
+        # Number of batches 
+        nCBatches = int(np.floor(len(sources)/(arraysProc)))
+        
         # Divide sources into batches
         sLength = np.arange(0,len(sources))
-        nCBatches = int(np.ceil(memReq/gbThreshold))
+        #nCBatches = int(np.ceil(memReq/gbThreshold))
+        
         sBatches = np.array_split(sLength, nCBatches) 
         print('Calculating cost distances in ' + str(len(sBatches)) + ' batches')
       
