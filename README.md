@@ -57,9 +57,7 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
 > Workshops
 
 Here are the servers links, only available during workshops 
-  * [Medium server link](http://34.44.31.4:3838/connecting-landscapes/)
-  * [Big server link](http://34.44.133.188:3838/connecting-landscapes/)
-
+  * [Medium server link](http://34.57.191.163:3838/connecting-landscapes)
 
 
 -----------------
