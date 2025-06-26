@@ -85,6 +85,9 @@ def main() -> None:
     # be running.
     gbLim = sys.argv[11] # Default 6
     
+    # Compression level for hdf files (9 is max)
+    clev = 5
+    
     # Convert distance threshold to float or integer
     try:
         if cf.is_float(dThreshold):
@@ -207,7 +210,7 @@ def main() -> None:
         # Create hdf file to hold point pair distance array
         shape = (len(sources), len(sources))
         atom = tb.Float64Atom()
-        filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=5, fletcher32=False)
+        filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=clev, fletcher32=False)
         h5f = tb.open_file(pphdf, 'w')
         h5f.create_carray(h5f.root, 'dset', atom, shape,
                                filters=filters)
@@ -327,7 +330,7 @@ def main() -> None:
         # Create hdf file to hold distance array
         shape = (len(sources), nodeidsLen)
         atom = tb.Float64Atom()
-        filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=5, fletcher32=False)
+        filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=clev, fletcher32=False)
         h5f = tb.open_file(dahdf, 'w')
         h5f.create_carray(h5f.root, 'dset', atom, shape,
                                filters=filters)
@@ -431,7 +434,7 @@ def main() -> None:
             # Get least cost path value
             lcpVal = np.nanmin(lcc)
             # Convert to 0/1 corridor
-            lcc = np.where(lcc <= lcpVal + corrTolerance, 1, 0)
+            lcc = np.where(lcc <= lcpVal + corrTolerance + 0.0001, 1, 0)
             lcc[np.isnan(lcc)] = 0
             lccSum += lcc
         del ccArr
