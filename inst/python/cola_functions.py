@@ -952,7 +952,7 @@ def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
         lcc = h5f.root.dset[i[0],:] + h5f.root.dset[i[1],:]
         lcc[np.isinf(lcc)] = np.nan
         lcpVal = np.nanmin(lcc)
-        lcc = np.where(lcc <= lcpVal + corrTolerance, 1, 0)
+        lcc = np.where(lcc <= lcpVal + corrTolerance + 0.0001, 1, 0)
         lcc[np.isnan(lcc)] = 0
         ccounts += lcc
     h5f.close()
