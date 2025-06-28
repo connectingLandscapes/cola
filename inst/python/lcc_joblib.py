@@ -329,7 +329,7 @@ def main() -> None:
     if memReq > gbThreshold:
         # Create hdf file to hold distance array
         shape = (len(sources), nodeidsLen)
-        atom = tb.Float64Atom()
+        atom = tb.UInt64Atom()
         filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=clev, fletcher32=False)
         h5f = tb.open_file(dahdf, 'w')
         h5f.create_carray(h5f.root, 'dset', atom, shape,
@@ -354,8 +354,12 @@ def main() -> None:
             del spspDist
             # Networkit gives inaccessible nodes the max float 64 value.
             # Set these to nan.
-            ccArr[ccArr == np.finfo(np.float64).max] = np.nan
-            ccArr[ccArr > dThreshold] = np.nan
+            ccArr[ccArr == np.finfo(np.float64).max] = np.iinfo(np.uint64).max #np.nan
+            ccArr[ccArr > dThreshold] = np.iinfo(np.uint64).max #np.nan
+            # Scale and convert to uint 64 (thresholding to prevent overflow)
+            ccArr = ccArr*10000
+            ccArr[ccArr >= np.iinfo(np.uint64).max] = np.iinfo(np.uint64).max #np.nan
+            ccArr = ccArr.astype(np.uint64)
             # Insert in hdf file
             h5f = tb.open_file(dahdf, 'a')
             h5f.root.dset[np.min(s):(np.max(s)+1),:] = ccArr
@@ -473,10 +477,10 @@ def main() -> None:
     cf.arrayToGeoTiff(lccSmooth, ofile, profile)
     
     # If hdfs were created, delete them
-    if Path(dahdf).is_file():
-        Path(dahdf).unlink()
-    if Path(pphdf).is_file():
-        Path(pphdf).unlink()
+#    if Path(dahdf).is_file():
+#        Path(dahdf).unlink()
+#    if Path(pphdf).is_file():
+#        Path(pphdf).unlink()
 
     toc = time.perf_counter()
     print(f"Calculating least cost corridors took {toc - tic:0.4f} seconds", flush=True)

@@ -949,7 +949,12 @@ def calcPaths(x, nodeidsLen, dahdf, sBatches, corrTolerance):
     h5f = tb.open_file(dahdf, 'r')
     # Loop through pairs and calculate corridors
     for i in sBatches[x]:
-        lcc = h5f.root.dset[i[0],:] + h5f.root.dset[i[1],:]
+        lcc1 = h5f.root.dset[i[0],:].astype(np.float64)
+        lcc1[lcc1 >= np.iinfo(np.uint64).max] = np.nan
+        lcc2 = h5f.root.dset[i[1],:].astype(np.float64)
+        lcc2[lcc2 >= np.iinfo(np.uint64).max] = np.nan
+        lcc = (lcc1 + lcc2)/10000
+        del lcc1, lcc2
         lcc[np.isinf(lcc)] = np.nan
         lcpVal = np.nanmin(lcc)
         lcc = np.where(lcc <= lcpVal + corrTolerance + 0.0001, 1, 0)
