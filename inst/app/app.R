@@ -258,7 +258,7 @@ server <- function(input, output, session) {
       coords <- cbind(clk$lng, clk$lat)
       pt0 <- st_sfc(st_point(coords), crs = 4326) # coords = c("x","y")
       #grp <- 'Habitat suitability'
-      # rv <- list(hs = '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif')
+      # <- <- list(hs = '/home/shiny/connecting-landscapes/docs/HS_size5_nd_squared.tif')
       # rv$tiforig <- '/data/temp/XC2024012300322305file1392143e34bb6//out_surface_PF2024012300322605file13921692a78bb.tif'
       # # rv$hs_sp <- terra::rast(rv$h)
       # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
@@ -899,6 +899,7 @@ server <- function(input, output, session) {
 
     data = NULL,
     orig = NULL,
+    layers = NULL,
 
     refresh = 0,
     cdpopRun = NULL, out_cdpop_files = c(''),
@@ -4549,6 +4550,7 @@ server <- function(input, output, session) {
       }
       # avail_layers <- rev(avail_layers)
       avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
+      avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )]
 
       # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
       cat(' Compare: ', in_com_ly, '\n')

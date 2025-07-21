@@ -84,7 +84,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     # allele, ' ', hetero, ' ',
     method, ' ', neighbors, ' ', crs, ' 2>&1'))
   if (cml){
-    cat('\n\tCMD interpol: \n')
+    cat('\n\tCMD interpol struct: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n')
   }
@@ -152,7 +152,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     , ' 2>&1 ' #, logname
   ))
   if (cml){
-    cat('\n\tCMD interpol: \n ')
+    cat('\n\tCMD interpol density: \n ')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n')
   }
@@ -306,7 +306,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param outxy String. Path to the resulting .xy file
 #' @param tempDir String. Path to the working directory
 #' @param mortrast String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.
-#' @param survrast String. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
+#' @param survrast String. Optional. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
+#' @param porcEmpty Integer. percentage of locations (points) that randomly will be considered empty and possible to be colonized.
 #' @return String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 #' @examples
 #' shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')
@@ -459,7 +460,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 guessNoData <- function(path){
-  # path = raster path
+  # path <- input_tif
   ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
     gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
@@ -663,16 +664,16 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 
 #' @title  Simulate spatial points
 #' @description Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
-#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
+#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default version should point to a conda environment. Might change among computers versions
 #' @param pyscript String. Python script location
-#' @param inshp  String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file|
-#' @param outif Output point layer| |  |outtif|  | ¿string| |File path to the output point layer. Written in ESRI Shapefile format.|
-#' @param intif Surface resistance |   |intif|     | String|      | File path to the input raster. Requires a projected file with square pixels. Not LonLat projection allowed|
-#' @param minval Minimum value| |minval| | Numeric| | The lower value of the pixels in the raster to consider to simulate the points.
-#' @param maxval |Maximum value| |maxval| | Numeric| | The upper value of the pixels in the raster to consider to simulate the points.
-#' @param npoints |Number of points | |npoints|  |Numeric|  | Number of points to simulate.
-#' @param issuit |Is it suitable?| | | issuit|  |String|  |‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
-#' @param upcrs Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed
+#' @param outif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
+#' @param minval Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
+#' @param maxval Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
+#' @param npoints Integer. Number of points. Number of points to simulate.
+#' @param issuit String. Is it suitable? ‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
+#' @param upcrs String. Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with the created shapefile
@@ -736,8 +737,8 @@ points_py <- function(intif, outshp,
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
 #' @param outcsv String. Output csv file name. Path of the output csv matrix
 #' @param maxdist Numeric. Max. dispersal distance in cost units. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.
-#' @param ncores numeric Numberof cores. Number of CPU cores to run the analysis
-#' @param crs String. Projection string. String. Projection information in the case the input raster [2] has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param intif String.
 #' @param py Python location
 #' @param pyscript Python script location
