@@ -10,6 +10,67 @@ using joblib. Best performance will be with a solid state drive.
 @author: pj276
 """
 
+# Get raster bounds
+with rio.open(rg) as src:
+    minX = src.bounds.left
+    maxX = src.bounds.right
+    maxY = src.bounds.top
+    minY = src.bounds.bottom
+    rasterCRS = src.crs
+ 
+# Create a fishnet
+# From https://spatial-dev.guru/2022/05/22/create-fishnet-grid-using-geopandas-and-shapely/
+# Creates from bottom left
+x, y = (minX, minY)
+geom_array = []
+ 
+# Polygon Size
+square_size = 5000*cSize
+while y <= maxY:
+    while x <= maxX:
+        geom = geometry.Polygon([(x,y), (x, y+square_size), (x+square_size, y+square_size), (x+square_size, y), (x, y)])
+        print([(x,y), (x, y+square_size), (x+square_size, y+square_size), (x+square_size, y), (x, y)])
+        geom_array.append(geom)
+        x += square_size
+    x = minX
+    y += square_size
+ 
+fishnet = gpd.GeoDataFrame(geom_array, columns=['geometry']).set_crs(rasterCRS)
+fishnet.to_file("C:/Users/pj276/Downloads/mainland_layers/fishnet_grid.shp")
+
+#save output files as per shapefile features
+for i in range(len(fishnet)):
+    geom = []
+    coord = shapely.geometry.mapping(fishnet)["features"][i]["geometry"]
+    geom.append(coord)
+    
+    geomb = []
+    coord = shapely.geometry.mapping(fishnet.iloc[i].geometry.buffer(50000, cap_style="square"))
+    geomb.append(coord)
+    
+    # Unbuffered
+    with rio.open(rg)as src:
+        out_image, out_transform = rio.mask.mask(src,geom,crop=True)
+        out_meta = src.meta
+    out_meta.update({'driver':'GTiff',
+                'height':out_image.shape[1],
+                'width':out_image.shape[2],
+                'transform':out_transform})
+    # If there's data in the tile, process
+    if np.sum(out_image > 0):
+        with rio.open("C:/Users/pj276/Downloads/mainland_layers/testtile_" + str(i) + ".tif",'w',**out_meta) as dest:
+           dest.write(out_image)
+        # Buffered
+        with rio.open(rg)as src:
+            out_image2, out_transform2 = rio.mask.mask(src,geomb,crop=True)
+            out_meta2 = src.meta
+        out_meta2.update({'driver':'GTiff',
+                    'height':out_image2.shape[1],
+                    'width':out_image2.shape[2],
+                    'transform':out_transform2})
+        with rio.open("C:/Users/pj276/Downloads/mainland_layers/testtileB_" + str(i) + ".tif",'w',**out_meta2) as dest:
+           dest.write(out_image2)
+
 #%%
 # IMPORTS
 import sys
@@ -19,6 +80,7 @@ import networkit as nk
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio import windows
+from rasterio.windows import from_bounds
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -169,7 +231,7 @@ def main() -> None:
     # than 50% of the number of valid cells.
     # If the kernel is too large relative to the number
     # of valid cells, it doesn't make sense to tile
-    if (nvc > 20e6) and (nck/nvc*100):
+    if (nvc > 20e6) and (nck/nvc*100 < 50):
         tMult = 0
         acct = nvc
         while acct > 20e6:
@@ -240,18 +302,24 @@ def main() -> None:
             wList2.append(window2.intersection(big_window))
     else:
         wList = [big_window]
-    
-    # Loop through windows and calculate kernels
-    for i, w in enumerate(wList):
+
+    # Loop through windows/tiles and calculate kernels
+    # Empty list to hold output file names
+    ofnList = []
+    for wi, w in enumerate(wList):
+        print("working on " + str(wi))
+        
         #%%
         # Create edges, nodeids, and mapping between old and new nodeids
         # from resistance grid
         with rio.open(rg) as src:
 
-            # Read in buffered window
-            r_b = src.read(1, window=w).squeeze()
             # Copy profile to new variable so it can be updated
             kwargs_ub = src.profile
+            
+            # Read in buffered window
+            r_b = src.read(1, window=w).squeeze()
+
             # Get window specific transform
             wst = rio.windows.transform(w, src.transform)
             # Update profile
@@ -266,12 +334,14 @@ def main() -> None:
                 #dst.write_band(band_id, dArr.astype(rio.float32), window=window)
                 dst.write_band(1, r_b)
 
-            # Read in unbuffered window
-            r_ub = src.read(1, window=wList2[i]).squeeze()
             # Copy profile to new variable so it can be updated
             kwargs_b = src.profile
+            
+            # Read in unbuffered window
+            r_ub = src.read(1, window=wList2[wi]).squeeze()
+
             # Get window specific transform
-            wst = rio.windows.transform(wList2[i], src.transform)
+            wst = rio.windows.transform(wList2[wi], src.transform)
             # Update profile
             kwargs_b.update({
                 'dtype': rio.float32,
@@ -291,8 +361,8 @@ def main() -> None:
         # Create graph (nodes only)
         nkG = nk.Graph(len(idmap), weighted=True)
         # Add edges to graph
-        for i in edges:
-            nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
+        for e in edges:
+            nkG.addEdge(e[0], e[1], w=e[2], addMissing=False, checkMultiEdge=False)
         print('Created graph')
         print('Number of nodes: ' + str(nkG.numberOfNodes()))
         print('Number of edges: ' + str(nkG.numberOfEdges()))
@@ -317,7 +387,9 @@ def main() -> None:
             cinds = cf.cell_indices_from_coords(src, r_b, np.array(xy))
             # Raise an exception if there are no source points in the landscape
             if np.sum(np.isnan(cinds)) >= 1:
-                raise Exception('Source points do not intersect resistance grid.')
+                #raise Exception('Source points do not intersect resistance grid.')
+                print('Source points do not intersect resistance grid. Moving on to next tile.')
+                continue
             else:
                 # Get number of points supplied by user
                 nPts = len(cinds)
@@ -344,7 +416,9 @@ def main() -> None:
                 # If there are no points after removing no data vals,
                 # exit script.
                 if len(cinds) == 0:
-                    raise Exception('No valid source points. This may be because none of your source points overlap with your resistance grid.')
+                    #raise Exception('No valid source points. This may be because none of your source points overlap with your resistance grid.')
+                    print('No valid source points. This may be because none of your source points overlap with your resistance grid.')
+                    continue
                 # Check if any points were removed
                 if nPts - len(cinds) > 0:
                     print('Ignoring ' + str(nPts - len(cinds)) + " source point(s) with no data values.", flush=True)
@@ -370,11 +444,13 @@ def main() -> None:
         # And map the distance between each source point and every cell in the landscape
         # --distance mapping--
         if memReq > gbThreshold:
+            # Create hdf file for tile
+            dahdfTile = str(Path(dahdf).parent / Path(dahdf).stem) + '_' + str(wi) + str(Path(dahdf).suffix)
             # Create hdf file to hold distance array
             shape = (len(sources), nodeidsLen)
             atom = tb.Float64Atom()
             filters = tb.Filters(complib='blosc2:lz4', shuffle=True, complevel=5, fletcher32=False)
-            h5f = tb.open_file(dahdf, 'w')
+            h5f = tb.open_file(dahdfTile, 'w')
             h5f.create_carray(h5f.root, 'dset', atom, shape,
                                    filters=filters)
             h5f.close()
@@ -410,55 +486,56 @@ def main() -> None:
                 ccArr[ccArr == np.finfo(np.float64).max] = np.nan
                 ccArr[ccArr > dThreshold] = np.nan
                 # Insert in hdf file
-                h5f = tb.open_file(dahdf, 'a')
+                h5f = tb.open_file(dahdfTile, 'a')
                 h5f.root.dset[np.min(s):(np.max(s)+1),:] = ccArr
                 h5f.close()
                 del ccArr
                 toc1 = time.perf_counter()
                 print(f"Writing batch to file took {toc1 - tic1:0.4f} seconds")
             
+        #%%
+        # Estimate memory required for kernel calculation by multiplying
+        # the number of graph nodes by the number of sources
+        memReq = nodeidsLen*len(sources)*64*gbCf
+    
+        # If it's more than the threshold amount, divide into batches
+        if memReq > gbThreshold:
             #%%
-            # Estimate memory required for kernel calculation by multiplying
-            # the number of graph nodes by the number of sources
-            memReq = nodeidsLen*len(sources)*64*gbCf
-        
-            # If it's more than the threshold amount, divide into batches
-            if memReq > gbThreshold:
-                #%%
-                print('Calculating kernels in batches')
-        
-                # Memory per processor
-                memProc = gbThreshold/nThreads
-        
-                # Arrays per processor
-                arraysProc = memProc/(nodeidsLen*64*gbCf)
-        
-                # Number of batches 
-                nBatches = int(np.floor(len(sources)/(arraysProc)))
-        
-                # Use 50 percent of the number of lines across all threads
-                # as a way to allocate memory to the output list created
-                # by joblib.
-                jlibIncrement = int(np.ceil((len(sources)/nBatches*nThreads*0.5)/nThreads))
-                
-                # Main issue is that the nodeids are relative to the graph
-                # while the indices need to be relative to the hdf file.
-                # Dictionary to link nodeids to hdf indices
-                nodehdf = dict(zip(sources, range(len(sources))))
-                
-                # Split nodeids into N batches
-                sBatches = np.array_split(sources, nBatches)
-                
-                # Use joblib to calculate kernels in parallel and sum on the fly
-                print("Summing kernels", flush=True)
-                with Parallel(n_jobs=nThreads) as parallel:
-                    ccArr = np.zeros((1,nodeidsLen))
-                    n_iter = 0
-                    for j in range(jlibIncrement,int((np.ceil(nBatches/jlibIncrement)+1)*jlibIncrement),jlibIncrement):
-                        j = min(j, nBatches)
-                        results = parallel(delayed(cf.calcKernels)(i, nodeidsLen, nodehdf, dahdf, sBatches, dThreshold, tForm, tkv, kvol) for i in range(n_iter,j))
-                        ccArr += sum(results)
-                        n_iter = j
+            print('Calculating kernels in batches')
+    
+            # Memory per processor
+            memProc = gbThreshold/nThreads
+    
+            # Arrays per processor
+            arraysProc = memProc/(nodeidsLen*64*gbCf)
+    
+            # Number of batches 
+            nBatches = int(np.floor(len(sources)/(arraysProc)))
+    
+            # Use 50 percent of the number of lines across all threads
+            # as a way to allocate memory to the output list created
+            # by joblib.
+            jlibIncrement = int(np.ceil((len(sources)/nBatches*nThreads*0.5)/nThreads))
+            
+            # Main issue is that the nodeids are relative to the graph
+            # while the indices need to be relative to the hdf file.
+            # Dictionary to link nodeids to hdf indices
+            nodehdf = dict(zip(sources, range(len(sources))))
+            
+            # Split nodeids into N batches
+            sBatches = np.array_split(sources, nBatches)
+            
+            # Use joblib to calculate kernels in parallel and sum on the fly
+            print("Summing kernels", flush=True)
+            with Parallel(n_jobs=nThreads) as parallel:
+                ccArr = np.zeros((1,nodeidsLen))
+                n_iter = 0
+                for j in range(jlibIncrement,int((np.ceil(nBatches/jlibIncrement)+1)*jlibIncrement),jlibIncrement):
+                    j = min(j, nBatches)
+                    results = parallel(delayed(cf.calcKernels)(k, nodeidsLen, nodehdf, dahdfTile, sBatches, dThreshold, tForm, tkv, kvol) for k in range(n_iter,j))
+                    ccArr += sum(results)
+                    n_iter = j
+
         # Otherwise, process as normal
         else:
             # Calculate shortest path distance from each source to every
@@ -547,15 +624,75 @@ def main() -> None:
         # a dimension corresponding to number of bands)
         dArr = np.expand_dims(dArr, axis=0)
         
-        # Write crk to file
-        cf.arrayToGeoTiff(dArr, ofile, profile)    
+        # Write buffered crk to file
+        ofileTile = str(Path(ofile).parent / Path(ofile).stem) + '_' + str(wi) + str(Path(ofile).suffix)
+        cf.arrayToGeoTiff(dArr, ofileTile, kwargs_ub)    
         
         # If hdfs were created, delete them
         if Path(dahdf).is_file():
             Path(dahdf).unlink()
-    
+
+        # Delete temp files 
+        if Path(wtemp_ub).is_file():
+            Path(wtemp_ub).unlink()
+        if Path(wtemp_b).is_file():
+            Path(wtemp_b).unlink()
+        
+        # Add output kernel file name to list
+        ofnList.append(ofileTile)
         toc = time.perf_counter()
         print(f"Calculating kernels took {toc - tic:0.4f} seconds", flush=True)
+
+    # Check for files to mosaic
+    if len(ofnList) > 1:
+        # Create template for plugging in smaller arrays using resistance
+        # raster profile.
+        rsum = np.zeros((profile['height'],profile['width']), dtype='float32')
+        # Loop through tiles and add to big raster
+        for i in ofnList:
+            # Get bounding box coordinates from tiles
+            with rio.open(i) as src:
+                rr = src.read(1)
+                left = src.bounds.left
+                right = src.bounds.right
+                top = src.bounds.top
+                bottom = src.bounds.bottom
+                rr[rr < 0] = 0
+
+            # Get smaller window row/col offsets relative to larger raster
+            with rio.open(rg) as src:
+                w1 = from_bounds(left, bottom, right, top, src.transform)
+
+            # Add smaller window to existing values in larger array, then plug into larger array
+            rsum[int(w1.row_off):int(w1.row_off+w1.height),int(w1.col_off):int(w1.col_off+w1.width)] = rr + rsum[int(w1.row_off):int(w1.row_off+w1.height),int(w1.col_off):int(w1.col_off+w1.width)]
+
+        rsum = np.expand_dims(rsum, axis=0)
+        cf.arrayToGeoTiff(rsum, ofile, profile)
+        
+# =============================================================================
+#         # Create zeros image
+#         crkCSum = np.zeros((r.shape[0],r.shape[1]))
+#         # Mosaic by cumulative sum
+#         for crkTile in ofnList:
+#             # Read file subset into larger window
+#             with rio.open(crkTile) as src:
+#                 # Read in buffered window
+#                 x = src.read(1, window=big_window).squeeze()
+#                 # Add to zeros image
+#                 crkCSum += x
+#         # Save to file
+#         # Add another dim for writing
+#         crkCSum = np.expand_dims(crkCSum, axis=0)
+#         # Write mosaiced crk to file
+#         cf.arrayToGeoTiff(crkCSum, ofile, profile)
+# =============================================================================
+
+    else:
+        # I think this branch represents what happens if there's no
+        # tiling. Need to figure out how to structure this case.
+        # Try just renaming the file
+        Path(ofnList[0]).rename(Path(ofile))
+        print('still working')
 
 if __name__ == "__main__":
     main()
