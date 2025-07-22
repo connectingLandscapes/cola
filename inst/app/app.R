@@ -1621,6 +1621,7 @@ server <- function(input, output, session) {
     invars_file_path <- file.path(tempFolder, 'invars_edited.csv')
     cat(' Saving CDPOP invars: ', invars_file_path, '\n')
     write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
+    print(rv$data)
   }))
 
   observeEvent(input$in_cdpop_pardef, {
@@ -1659,6 +1660,7 @@ server <- function(input, output, session) {
 
     # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
     invars_file_path <<- file.path(tempFolder, 'invars_edited.csv')
+    print(paste0('Using CDPOP Invarsfile: ', invars_file_path))
     write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
@@ -1700,7 +1702,7 @@ server <- function(input, output, session) {
     output$vout_cdp <- isolate(renderText({
 
       tStartCDP <- Sys.time()
-      cdpop_ans <<- tryCatch(cdpop_py(inputvars = ,
+      cdpop_ans <<- tryCatch(cdpop_py(inputvars = invars_file_path,
                              agevars = NULL,
                              cdmat = rv$cdm, xy = rv$ptsxy,
                              tempFolder = tempFolder, prefix = pref),
@@ -5641,7 +5643,7 @@ if (FALSE){
               bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
-              bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a lesser increase in resistance as suitability declines.'),
+              bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a greater increase in resistance as suitability declines.'),
               bsTooltip(id = 'in_sur_7', title = 'The no data value of the input raster. This value will be extracted form the raster if not provided'),
               bsTooltip(id = 'in_pts_hs', title = 'Name of the layer to use'),
               bsTooltip(id = 'name_sur', title = 'Name of the output'),
@@ -5684,7 +5686,7 @@ if (FALSE){
               bsTooltip(id = 'in_crk_shp', title = 'Load vectorial point layer'),
               bsTooltip(id = 'in_crk_4', placement = 'left', title = 'This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.'),
               bsTooltip(id = 'in_crk_5', placement = 'right',  title = 'This determines how the probability of dispersal declines with distance from the focal point. "linear" implements the function 1 - (1/dThreshold) * d where dThreshold is the specified distance threshold and d is the distance from the focal point. "gaussian" implements the function exp(-1*((d**2)/(2*(dispScale**2)))) where d is the distance from the focal point and dispScale is equal to dThreshold/4.'),
-              bsTooltip(id = 'in_crk_t', title = 'Transform the kernel volume as done in UNICOR. If NO, kernel volume is ignored'),
+              bsTooltip(id = 'in_crk_t', placement = 'top', title = 'Transform the kernel volume as done in UNICOR. If NO, kernel volume is ignored'),
               bsTooltip(id = 'in_crk_6', title = 'If 1, the default, the resistant kernel value at the origin is 1 and no kernel volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is determined by the equation kVol * 3/(pi*dThreshold**2) where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.'),
               bsTooltip(id = 'in_crk_sr', title = 'Resistance layer to use for kernels'),
               bsTooltip(id = 'name_crk', title = 'Name of the new layer'),
