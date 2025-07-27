@@ -15,6 +15,7 @@
 </table>
 
 
+Check our CoLa publication [here](https://www.sciencedirect.com/science/article/pii/S1364815225002609)
   
 > Decision Support System (DSS) Overview
   
@@ -29,7 +30,7 @@ For recent examples of how the individual tools have been used for wildlife rese
   
 > Contact
 
-Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and suggestions.
+Write Patrick.Jantz@nau.edu or Ivan.Gonzalez@nau.edu for questions and suggestions.
 
   
   
@@ -52,16 +53,6 @@ Write Patrick.Jantz@nau.edu or ig299@nau.edu (Ivan Gonzalez) for questions and s
 
   
   
-  
-  
-> Workshops
-
-Here are the servers links, only available during workshops 
-  * [Medium server link](http://34.44.31.4:3838/connecting-landscapes/)
-  * [Big server link](http://34.44.133.188:3838/connecting-landscapes/)
-
-
-
 -----------------
 Copyright (c) the respective contributors, as shown by the AUTHORS file.
 
