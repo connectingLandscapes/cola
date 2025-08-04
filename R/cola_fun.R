@@ -103,7 +103,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
-                             newFiles, NA),
+                             newFiles, ''),
                newFiles = newFiles,
                #log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
                log =  intCMD ) )
@@ -623,7 +623,7 @@ sui2res_py <- function(intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -724,7 +724,7 @@ points_py <- function(intif, outshp,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outshp), outshp, NA),
+  return( list(file = ifelse(file.exists(outshp), outshp, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 
@@ -804,7 +804,7 @@ cdmat_py <- function(inshp, intif, outcsv,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
+  return( list(file = ifelse(file.exists(outcsv), outcsv, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
                log =  intCMD ) )
 }
@@ -869,7 +869,7 @@ lcc_py <- function(inshp, intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -951,7 +951,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
   if(show.result){
     print(intCMD)
   }
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -1036,7 +1036,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   }
 
   tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -1101,7 +1101,7 @@ crk_py <- function(inshp, intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -1184,7 +1184,7 @@ crkJoblib_py <- function(
   }
 
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -1295,8 +1295,8 @@ prio_py <- function(tif, incrk, inlcc,
 
 
   return(
-    list(tif = ifelse(file.exists(outtif), outtif, NA),
-         shp = ifelse(file.exists(outshppoint), outshppoint, NA),
+    list(tif = ifelse(file.exists(outtif), outtif, ''),
+         shp = ifelse(file.exists(outshppoint), outshppoint, ''),
          #log =  paste0(intCMD, ' -- ', read.delim(logname)) ))
          log =  intCMD ) )
 }
@@ -1371,7 +1371,7 @@ crk_compare_py <- function(intif, intifs,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
@@ -1444,7 +1444,7 @@ lcc_compare_py <- function(intif, intifs,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
                log =  intCMD ) )
 }
