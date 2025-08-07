@@ -83,7 +83,11 @@ cleanMemory <- function(logFilePath){
 ## try deleting files
 delFiles <- function(...){
   invisible(suppressWarnings(
-    tryCatch(file.remove(c(...)),
+    tryCatch(file.remove(c(...), recursive = TRUE),
+             error = function(e) NULL)
+  ))
+  invisible(suppressWarnings(
+    tryCatch(unlink(c(...), force = TRUE, recursive = TRUE),
              error = function(e) NULL)
   ))
 }
@@ -938,6 +942,16 @@ loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- 
         grep('shp$', inFiles$newFile, value = TRUE)),
         error = function (e) {print(e); retunr(e)})
     }
+
+
+    # v <- vect(f)
+    #   s <- sf::st_as_sf(v) # sf object from a SpatVector
+    #   vv <- vect(s) # SpatVector from an sf:
+    #
+    # library(raster)
+    # x <- as(v, "Spatial") # To create an sp object from a SpatVector:
+    # vs <- vect(x) # SpatVector from a Spatial* vector type object with
+
 
     #if worked
     if( !is.null(outshp$shp) ){
