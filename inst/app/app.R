@@ -43,7 +43,7 @@
   library(viridis)
 
 }
-(cat('\n\n >>>> Welcome to CoLa 2.0 \n >>>> getwd(): ', getwd(), '\n'))
+(cat('\n\n >>>> Welcome to CoLa 2.2.1 \n >>>> getwd(): ', getwd(), '\n'))
 
 
 ## Init A
@@ -227,7 +227,8 @@
 server <- function(input, output, session) {
 
   shinyalert(html = TRUE, #type = "info",
-             imageUrl = 'https://github.com/connectingLandscapes/cola/blob/main/inst/docs/panthera.jpg?raw=true',
+             # imageHeight = 1000,
+             imageUrl = 'https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logoA_bgNA.jpg?raw=true',
              #system.file(package = 'cola', 'docs/logoA_bgNA.jpg'),
 
              title = paste0("Welcome to CoLa"),
@@ -2974,97 +2975,105 @@ server <- function(input, output, session) {
       #  plot(1, main = input$h2r)
       # })
 
-      output$ll_map_h2r <- leaflet::renderLeaflet({
 
-        (inSurSessID <- sessionIDgen())
-        #(inSurSessID2 <<- sessionIDgen())
-        outs2r <- paste0(tempFolder, '/out_surface_', inSurSessID, '.tif')
-        #pdebug(devug=devug,sep='\n',pre='---H2S\n',"inSurSessID", 'inSurSessID2', 'outs2r') # = = = = = = = = = = = = = = = = = = =
+      (inSurSessID <- sessionIDgen())
+      #(inSurSessID2 <<- sessionIDgen())
+      outs2r <- paste0(tempFolder, '/out_surface_', inSurSessID, '.tif')
+      #pdebug(devug=devug,sep='\n',pre='---H2S\n',"inSurSessID", 'inSurSessID2', 'outs2r') # = = = = = = = = = = = = = = = = = = =
+
+      rv$log <- paste0(rv$log, # _______
+                       '\nCreating resistance surface');updateVTEXT(rv$log) # _______
+
+      in_sur_7 <- ifelse(input$in_sur_7 == '', yes = guessNoData(rv$hs),
+                         no = as.numeric(input$in_sur_7))
+      in_sur_7 <- ifelse(is.na(in_sur_7), yes = guessNoData(rv$hs),
+                         no = in_sur_7)
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
+
+
+      hs2rs_file <- tryCatch(
+        sui2res_py(py = py,
+                   #intif = rv$hs,
+                   intif = subset(rv$layersList, public == input$in_name_hs)$internal,
+                   outtif = outs2r,
+                   minval = as.numeric(input$in_sur_3),
+                   maxval = as.numeric(input$in_sur_4),
+                   maxout = as.numeric(input$in_sur_5),
+                   shape = as.numeric(input$in_sur_6),
+                   nodata = in_sur_7,
+                   prj = 'None'), error = function(e) list(err = e, file = ''))
+      cat("\n --- Surf. resistance out:\n")
+      print(hs2rs_file)
+
+
+      if(file.exists(hs2rs_file$file)){
+
+        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
         rv$log <- paste0(rv$log, # _______
-                         '\nCreating resistance surface');updateVTEXT(rv$log) # _______
+                         ' ... DONE');updateVTEXT(rv$log) #
+        rv$tifready <- TRUE
+        rv$tif <- hs2rs_file$file
+        rv$tiforig <- hs2rs_file$file
 
-        in_sur_7 <- ifelse(input$in_sur_7 == '', yes = guessNoData(rv$hs),
-                           no = as.numeric(input$in_sur_7))
-        in_sur_7 <- ifelse(is.na(in_sur_7), yes = guessNoData(rv$hs),
-                           no = in_sur_7)
+        suggestedName <- suggestName(rv$layersList, type = 'Resistance')
+        #cat('suggestedName:',  suggestedName, '\n')
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Surface resistance created succesfully<br>",
+                                  'Layer name: ', suggestedName)
+        )
 
-        hs2rs_file <- tryCatch(
-          sui2res_py(py = py,
-                     #intif = rv$hs,
-                     intif = subset(rv$layersList, public == input$in_name_hs)$internal,
-                     outtif = outs2r,
-                     minval = as.numeric(input$in_sur_3),
-                     maxval = as.numeric(input$in_sur_4),
-                     maxout = as.numeric(input$in_sur_5),
-                     shape = as.numeric(input$in_sur_6),
-                     nodata = in_sur_7,
-                     prj = 'None'), error = function(e) list(err = e, file = ''))
-        cat("\n --- Surf. resistance out:\n")
-        print(hs2rs_file)
+        rv$layersList <- funLayersList(
+          df = rv$layersList, tempFolder,
+          inout = 'out', type =  'Resistance',
+          internal = rv$tif, public = suggestedName)
 
 
-        if(!is.na(hs2rs_file$file)){
+        newOutput <- suggestName(rv$layersList, type = 'Resistance')
 
-          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+        ## Inputs boxes
+        colaUpdateSelectizeInput(
+          ids = c('in_name_sur_edi',
+                  'in_name_sur_dis', 'in_name_sur_cdp',
+                  'in_name_sur_crk', 'in_name_sur_lcc'),
+          typex = 'Resistance', field = 'public', val = newOutput)
 
-          rv$log <- paste0(rv$log, # _______
-                           ' ... DONE');updateVTEXT(rv$log) #
-          rv$tifready <- TRUE
-          rv$tif <- hs2rs_file$file
-          rv$tiforig <- hs2rs_file$file
+        updateSelectizeInput( # inputsPoints
+          session, "in_points_ly",
+          choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+          selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+          , server = TRUE
+        )
 
-          suggestedName <- suggestName(rv$layersList, type = 'Resistance')
-          #cat('suggestedName:',  suggestedName, '\n')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Surface resistance created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
+        updateColaLayersLists(layersList = rv$layersList)
 
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Resistance',
-            internal = rv$tif, public = suggestedName)
+        #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
 
+        rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
+        #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+        rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
+        rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
+          palette = "viridis", reverse = TRUE,
+          domain = rng_rstif, na.color = "transparent")
 
-          newOutput <- suggestName(rv$layersList, type = 'Resistance')
+        # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
+        #rv$llmap <<- rv$llmap %>%
+        #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
 
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_sur_edi',
-                    'in_name_sur_dis', 'in_name_sur_cdp',
-                    'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = newOutput)
+        # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
+        lastLLx <- "Surface resistance"
+      } else {
+        rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
+        updateVTEXT(rv$log)
+        lastLLx <- NULL
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Surface resistance not created succesfully"),
+                   text = hs2rs_file$log)
+      }
 
-          updateSelectizeInput( # inputsPoints
-            session, "in_points_ly",
-            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-            , server = TRUE
-          )
-
-          updateColaLayersLists(layersList = rv$layersList)
-
-          #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
-
-          rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
-          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-          rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
-          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
-            palette = "viridis", reverse = TRUE,
-            domain = rng_rstif, na.color = "transparent")
-
-          # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
-          #rv$llmap <<- rv$llmap %>%
-          #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
-
-          # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
-          makeLL(lastLL = "Surface resistance")
-
-        } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
-          updateVTEXT(rv$log)
-        }
+      output$ll_map_h2r <- leaflet::renderLeaflet({
+        makeLL(lastLL = lastLLx)
       })
     }
     rv$refresh <- TRUE
@@ -3898,132 +3907,137 @@ server <- function(input, output, session) {
 
       in_points_ly <<- (input$in_points_ly)
 
-      output$ll_map_points <- leaflet::renderLeaflet({
-        #ifelse(any(grep(pattern = 'resistance',
-        #                                  tolower(input$in_points_ly))),
-        #                         'Suitability', 'Resistance')
-        #
-        pdebug(devug=devug,sep='\n',pre='---PTS\n',
-               "inPts", 'input$in_points_ly','in_points_ly',
-               'rv$hs', 'rv$tif') # = = = = = = = = = = = = = = = = = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+      #ifelse(any(grep(pattern = 'resistance',
+      #                                  tolower(input$in_points_ly))),
+      #                         'Suitability', 'Resistance')
+      #
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',
+             "inPts", 'input$in_points_ly','in_points_ly',
+             'rv$hs', 'rv$tif') # = = = = = = = = = = = = = = = = = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
 
-        inPts <<- rv$hs
-        intif4pts <<- subset(rv$layersList, public == in_points_ly)$internal
-        pdebug(devug=devug,sep='\n',pre='---PTS\n',
-               "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
-               'rv$hs', 'rv$tif')
+      inPts <<- rv$hs
+      intif4pts <<- subset(rv$layersList, public == in_points_ly)$internal
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',
+             "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
+             'rv$hs', 'rv$tif')
 
-        points_file <- tryCatch(
-          points_py(py = py,
-                    #intif = as.character(rv$tif),
-                    intif = intif4pts,
-                    outshp = out_pts,
-                    smin = max(0, as.numeric(input$in_points_3)),
-                    smax = as.numeric(input$in_points_4),
-                    npoints = as.numeric(input$in_points_5),
-                    issuit = ifelse(grepl('Suit',in_points_ly), 'Yes', 'No')),
-          error = function(e) list(err = e, file = ''))
-        cat("\n --- Points out: \n")
-        print(points_file)
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-        # if(in_points_ly == 'Resistance'){
-        # }
-        #
-        # if(in_points_ly == 'Suitability'){
-        #   inPts <<- rv$tif
-        #   pdebug(devug=devug,sep='\n',pre='---PTS\n',
-        #          "'HS'", 'rv$in_points_ly','in_points_ly',
-        #          'rv$hs', 'rv$tif')
-        #   points_file <- tryCatch(points_py(py = py,
-        #                                     #intif = as.character(rv$hs),
-        #                                     intif = subset(rv$layersList, public == in_points_ly)$internal,
-        #                                     outshp = out_pts,
-        #                                     smin = as.numeric(input$in_points_3),
-        #                                     smax = as.numeric(input$in_points_4),
-        #                                     npoints = as.numeric(input$in_points_5),
-        #                                     issuit = 'Yes'
-        #   ), error = function(e) list(err = e, file = ''))
-        #   cat("\n --- Points out: \n")
-        #   print(points_file)
-        #
-        # }
+      points_file <- tryCatch(
+        points_py(py = py,
+                  #intif = as.character(rv$tif),
+                  intif = intif4pts,
+                  outshp = out_pts,
+                  smin = max(0, as.numeric(input$in_points_3)),
+                  smax = as.numeric(input$in_points_4),
+                  npoints = as.numeric(input$in_points_5),
+                  issuit = ifelse(grepl('Suit',in_points_ly), 'Yes', 'No')),
+        error = function(e) list(err = e, file = ''))
+      cat("\n --- Points out: \n")
+      print(points_file)
 
-        # inPts <<- switch (in_points_ly,
-        #         SurfaceResistance = rv$hs,
-        #         HabitatSuitability = rv$tif)
-        # print(points_file)
+      # if(in_points_ly == 'Resistance'){
+      # }
+      #
+      # if(in_points_ly == 'Suitability'){
+      #   inPts <<- rv$tif
+      #   pdebug(devug=devug,sep='\n',pre='---PTS\n',
+      #          "'HS'", 'rv$in_points_ly','in_points_ly',
+      #          'rv$hs', 'rv$tif')
+      #   points_file <- tryCatch(points_py(py = py,
+      #                                     #intif = as.character(rv$hs),
+      #                                     intif = subset(rv$layersList, public == in_points_ly)$internal,
+      #                                     outshp = out_pts,
+      #                                     smin = as.numeric(input$in_points_3),
+      #                                     smax = as.numeric(input$in_points_4),
+      #                                     npoints = as.numeric(input$in_points_5),
+      #                                     issuit = 'Yes'
+      #   ), error = function(e) list(err = e, file = ''))
+      #   cat("\n --- Points out: \n")
+      #   print(points_file)
+      #
+      # }
 
-        # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+      # inPts <<- switch (in_points_ly,
+      #         SurfaceResistance = rv$hs,
+      #         HabitatSuitability = rv$tif)
+      # print(points_file)
 
-        if (!file.exists(points_file$file)){
-          rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
-          shinyalert(html = TRUE, type = "warning",
-                     title = paste0("Points no generated"),
-                     text = points_file$log)
+      # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
 
-        } else {
-          params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+      if (file.exists(points_file$file)){
+        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
-          rv$pts <- points_file$file
-          rv$ptsready <- TRUE
+        rv$pts <- points_file$file
+        rv$ptsready <- TRUE
 
-          suggestedNewName <- suggestName(rv$layersList, type = 'Points')
+        suggestedNewName <- suggestName(rv$layersList, type = 'Points')
 
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Points created succesfully<br>",
-                                    'Layer name: ', suggestedNewName)
-          )
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Points created succesfully<br>",
+                                  'Layer name: ', suggestedNewName)
+        )
 
-          rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                         inout = 'out', type =  'Points',
-                                         internal =  points_file$file,
-                                         public = suggestedNewName)
+        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                       inout = 'out', type =  'Points',
+                                       internal =  points_file$file,
+                                       public = suggestedNewName)
 
 
-          #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-          # points_shpO <- sf::read_sf("C:/cola/colaLOK2025080203311905/out_simpts_XHW2025080203313005.shp")
-          points_shpO <- sf::read_sf(points_file$file)
-          points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
-          points_shp$sortID <- 1:nrow(points_shp)
-          #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-          rv$pts_sp <- points_shp
+        #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+        # points_shpO <- sf::read_sf("C:/cola/colaLOK2025080203311905/out_simpts_XHW2025080203313005.shp")
+        points_shpO <- sf::read_sf(points_file$file)
+        points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+        points_shp$sortID <- 1:nrow(points_shp)
+        #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+        rv$pts_sp <- points_shp
 
-          updateColaLayersLists(rv$layersList)
+        updateColaLayersLists(rv$layersList)
 
-          rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+        rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
 
-
-          if(grepl('Suitability', in_points_ly )){
-            makeLL( lastLL = 'Habitat suitability')
-          } else if(grepl('Resistance', in_points_ly )){
-            makeLL( lastLL = 'Surface resistance')
-          }
-          # if (in_points_ly == 'Resistance'){
-          #   ## Inputs boxes
-          #   colaUpdateSelectizeInput(
-          #     ids = c('in_name_sur_edi',  'in_name_sur_dis', 'in_name_sur_cdp',
-          #             'in_name_sur_crk', 'in_name_sur_lcc', 'in_name_crk_pri', 'in_name_lcc_pri'),
-          #     typex = 'Resistance', field = 'public', val = newOutput)
-          # } else if ( in_points_ly == 'Suitability'){
-          #   colaUpdateSelectizeInput(
-          #     ids = c('in_points_ly', 'in_name_hs'),
-          #     typex = 'Suitability', field = 'public', val = newOutput)
-          # }
-          #
-          # updateSelectizeInput( # inputsPoints
-          #   session, "in_points_ly",
-          #   choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-          #   selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-          #   , server = TRUE
-          # )
-          #### ......
-
-          #temLL <- rv$llmap
-          #save(temLL, file = '/data/tempR/ll.RData')
-          #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
-
+        if(grepl('Suitability', in_points_ly )){
+          lastLLx <-  'Habitat suitability'
+        } else if(grepl('Resistance', in_points_ly )){
+          lastLLx <- 'Surface resistance'
         }
+      } else {
+        rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Points no generated"),
+                   text = points_file$log)
+        lastLLx <- NULL
+      }
+
+
+      output$ll_map_points <- leaflet::renderLeaflet({
+        makeLL( lastLL = lastLLx)
       })
+      # if (in_points_ly == 'Resistance'){
+      #   ## Inputs boxes
+      #   colaUpdateSelectizeInput(
+      #     ids = c('in_name_sur_edi',  'in_name_sur_dis', 'in_name_sur_cdp',
+      #             'in_name_sur_crk', 'in_name_sur_lcc', 'in_name_crk_pri', 'in_name_lcc_pri'),
+      #     typex = 'Resistance', field = 'public', val = newOutput)
+      # } else if ( in_points_ly == 'Suitability'){
+      #   colaUpdateSelectizeInput(
+      #     ids = c('in_points_ly', 'in_name_hs'),
+      #     typex = 'Suitability', field = 'public', val = newOutput)
+      # }
+      #
+      # updateSelectizeInput( # inputsPoints
+      #   session, "in_points_ly",
+      #   choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+      #   selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+      #   , server = TRUE
+      # )
+      #### ......
+
+      #temLL <- rv$llmap
+      #save(temLL, file = '/data/tempR/ll.RData')
+      #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+
 
       output$plot <-renderPlot({
         shinyjs::disable("points_py")
@@ -4579,91 +4593,99 @@ server <- function(input, output, session) {
       #input <- c(in_dist_3 = 25000)
       rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
-      output$ll_map_lcc <- leaflet::renderLeaflet({
 
-        cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
-        out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
-        intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
+      cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+      out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
+      intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
 
-        tStartLcc <- Sys.time()
-        #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-        out_lcc <- tryCatch(lcc_py(
-          py = py, inshp = rv$pts,
-          # intif = rv$tif,
-          intif = intif4,
-          outtif = out_lcc,
-          maxdist = as.numeric(input$in_lcc_4),
-          smooth = as.numeric(input$in_lcc_5),
-          tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-        cat("\n --- LCC out:\n")
-        print(out_lcc)
+      tStartLcc <- Sys.time()
+      #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
+      out_lcc <- tryCatch(lcc_py(
+        py = py, inshp = rv$pts,
+        # intif = rv$tif,
+        intif = intif4,
+        outtif = out_lcc,
+        maxdist = as.numeric(input$in_lcc_4),
+        smooth = as.numeric(input$in_lcc_5),
+        tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
 
-        # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+      cat("\n --- LCC out:\n")
+      print(out_lcc)
 
-        tElapLcc <- Sys.time() - tStartLcc
-        textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
+      # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
 
-        #rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+      tElapLcc <- Sys.time() - tStartLcc
+      textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
 
-        # pdebug(devug=devug,sep='\n',pre='\n \t LCC ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+      #rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
 
-        if(!file.exists(out_lcc$file)){
-          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-          shinyalert(html = TRUE, type = "warning",
-                     title = paste0("Corridors not generated"),
-                     text = out_lcc$log
-          )
-          makeLL()
+      # pdebug(devug=devug,sep='\n',pre='\n \t LCC ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
 
-        } else {
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
-          params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
-
-          #### ......
-          suggestedName <- suggestName(rv$layersList, type = 'Corridors')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Corridors created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
-
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Corridors',
-            internal = out_lcc$file, public = suggestedName)
-
-          newOutput <- suggestName(rv$layersList, type = 'Corridors')
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_lcc_pri'),
-            typex = 'Corridors', field = 'public', val = newOutput)
-
-          updateColaLayersLists(layersList = rv$layersList)
+      if(!file.exists(out_lcc$file)){
+        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Corridors not generated"),
+                   text = out_lcc$log
+        )
+        lastLLx <-  NULL
 
 
-          #### ......
+      } else {
+        rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
+        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
 
-          rv$lcc <- out_lcc$file
-          rv$lccready <- TRUE
-          rv$lcc_sp <- terra::rast(out_lcc$file)
+        #### ......
+        suggestedName <- suggestName(rv$layersList, type = 'Corridors')
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Corridors created succesfully<br>",
+                                  'Layer name: ', suggestedName)
+        )
 
-          #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
-          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc_sp)[1:2]
+        rv$layersList <- funLayersList(
+          df = rv$layersList, tempFolder,
+          inout = 'out', type =  'Corridors',
+          internal = out_lcc$file, public = suggestedName)
 
-          rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(
-            c("red3", "gold", "navyblue"),
-            reverse = TRUE,
-            domain = rv$lcc_rng+0.0,
-            na.color = "transparent")
-          makeLL( lastLL = 'Corridors')
-        }
-      })
+        newOutput <- suggestName(rv$layersList, type = 'Corridors')
+        ## Inputs boxes
+        colaUpdateSelectizeInput(
+          ids = c('in_name_lcc_pri'),
+          typex = 'Corridors', field = 'public', val = newOutput)
+
+        updateColaLayersLists(layersList = rv$layersList)
+
+
+        #### ......
+
+        rv$lcc <- out_lcc$file
+        rv$lccready <- TRUE
+        rv$lcc_sp <- terra::rast(out_lcc$file)
+
+        #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
+        rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc_sp)[1:2]
+
+        rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(
+          c("red3", "gold", "navyblue"),
+          reverse = TRUE,
+          domain = rv$lcc_rng+0.0,
+          na.color = "transparent")
+
+        lastLLx = 'Corridors'
+      }
     } else {
       shinyalert(html = TRUE, type = "warning",
                  title = paste0("Inputs not ready"),
                  text = 'Be sure to upload or generate resistance and points layers first'
       )
+      lastLLx <-  NULL
     }
+
+    output$ll_map_lcc <- leaflet::renderLeaflet({
+      makeLL( lastLL =  lastLLx)
+    })
 
     output$plot <-renderPlot({
       shinyjs::disable("lcc")
@@ -4688,92 +4710,98 @@ server <- function(input, output, session) {
       #input <- c(in_dist_3 = 25000)
       rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
-      output$ll_map_lcc <- leaflet::renderLeaflet({
 
-        cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+      cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
 
-        out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
-        intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
+      out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
+      intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
 
-        tStartLcc <- Sys.time()
-        #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-        out_lcc <- tryCatch(lccJoblib_py(
-          py = py, tempFolder = tempFolder,
-          inshp = rv$pts,
-          #intif = rv$tif,
-          intif = intif4,
-          outtif = out_lcc,
-          maxdist = as.numeric(input$in_lcc_4),
-          smooth = as.numeric(input$in_lcc_5),
-          tolerance = as.numeric(input$in_lcc_6)),
-          error = function(e) list(err = e, file = ''))
-        cat("\n --- LCC out:\n")
-        print(out_lcc)
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-
-        tElapLcc <- Sys.time() - tStartLcc
-        textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
-
-        rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
-
-        pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
-
-        if(!file.exists(out_lcc$file)){
-          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-          shinyalert(html = TRUE, type = "warning",
-                     title = paste0("Corridors not generated"),
-                     text = out_lcc$log
-          )
-          rv$llmap
-        } else {
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
-
-          rv$lcc <- out_lcc$file
-          rv$lccready <- TRUE
-          rv$lcc_sp <- terra::rast(out_lcc$file)
-          params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
-
-          #### ......
-          suggestedName <- suggestName(rv$layersList, type = 'Corridors')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Corridors created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
-
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Corridors',
-            internal = out_lcc$file, public = suggestedName)
-
-          newOutput <- suggestName(rv$layersList, type = 'Corridors')
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_lcc_pri'),
-            typex = 'Corridors', field = 'public', val = newOutput)
-
-          updateColaLayersLists(layersList = rv$layersList)
+      tStartLcc <- Sys.time()
+      #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
+      out_lcc <- tryCatch(lccJoblib_py(
+        py = py, tempFolder = tempFolder,
+        inshp = rv$pts,
+        #intif = rv$tif,
+        intif = intif4,
+        outtif = out_lcc,
+        maxdist = as.numeric(input$in_lcc_4),
+        smooth = as.numeric(input$in_lcc_5),
+        tolerance = as.numeric(input$in_lcc_6)),
+        error = function(e) list(err = e, file = ''))
+      cat("\n --- LCC out:\n")
+      print(out_lcc)
 
 
-          #### ......
+      tElapLcc <- Sys.time() - tStartLcc
+      textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
+
+      rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+
+      pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+
+      if(!file.exists(out_lcc$file)){
+        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Corridors not generated"),
+                   text = out_lcc$log
+        )
+        lastLLx <- NULL
+      } else {
+        rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
+
+        rv$lcc <- out_lcc$file
+        rv$lccready <- TRUE
+        rv$lcc_sp <- terra::rast(out_lcc$file)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
+
+        #### ......
+        suggestedName <- suggestName(rv$layersList, type = 'Corridors')
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Corridors created succesfully<br>",
+                                  'Layer name: ', suggestedName)
+        )
+
+        rv$layersList <- funLayersList(
+          df = rv$layersList, tempFolder,
+          inout = 'out', type =  'Corridors',
+          internal = out_lcc$file, public = suggestedName)
+
+        newOutput <- suggestName(rv$layersList, type = 'Corridors')
+        ## Inputs boxes
+        colaUpdateSelectizeInput(
+          ids = c('in_name_lcc_pri'),
+          typex = 'Corridors', field = 'public', val = newOutput)
+
+        updateColaLayersLists(layersList = rv$layersList)
 
 
-          #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
-          #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
-          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc)
+        #### ......
 
 
-          rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
-                                                         reverse = TRUE,
-                                                         domain = rng_newtif+0.0,
-                                                         na.color = "transparent")
-          makeLL( lastLL = 'Corridors')
-        }
-      })
+        #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
+        #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+        rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc)
+
+
+        rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
+                                                       reverse = TRUE,
+                                                       domain = rng_newtif+0.0,
+                                                       na.color = "transparent")
+        lastLL <- 'Corridors'
+      }
     } else {
+      lastLLx <- NULL
       shinyalert(html = TRUE, type = "warning",
                  title = paste0("Inputs not ready"),
                  text = 'Be sure to upload or generate resistance and points layers first'
       )
+
+      output$ll_map_lcc <- leaflet::renderLeaflet({
+        makeLL( lastLL = lastLLx)
+      })
     }
   })
 
@@ -4977,116 +5005,120 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
       out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
 
-      output$ll_map_crk <- leaflet::renderLeaflet({
 
-        intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
-        cat(' -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
+      intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
+      cat(' -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
 
-        tStartCrk <- Sys.time()
-        out_crk <<- tryCatch(
-          crk_py(py = py, inshp = rv$pts,
-                 #intif = rv$tif,
-                 intif = intif4py,
-                 outtif = out_crk,
-                 maxdist = as.numeric(input$in_crk_4),
-                 transf = (input$in_crk_t),
-                 shape = (input$in_crk_5),
-                 volume = as.numeric(input$in_crk_6)),
-          error = function(e) list(err = e, file = ''))
-        #out_crk_no_data <- gdal_nodata
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-        cat("\n --- CRK out:\n")
-        print(out_crk)
+      tStartCrk <- Sys.time()
+      out_crk <<- tryCatch(
+        crk_py(py = py, inshp = rv$pts,
+               #intif = rv$tif,
+               intif = intif4py,
+               outtif = out_crk,
+               maxdist = as.numeric(input$in_crk_4),
+               transf = (input$in_crk_t),
+               shape = (input$in_crk_5),
+               volume = as.numeric(input$in_crk_6)),
+        error = function(e) list(err = e, file = ''))
+      #out_crk_no_data <- gdal_nodata
 
-        tElapCrk <- Sys.time() - tStartCrk
-        textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+      cat("\n --- CRK out:\n")
+      print(out_crk)
 
+      tElapCrk <- Sys.time() - tStartCrk
+      textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+      rv$crk <- out_crk$file
+
+      if(!file.exists(out_crk$file)){
+        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Points no generated"),
+                   text = out_crk$log)
+        lastLLx <- NULL
+
+      } else {
+        rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+        # rv$lcc <- out_lcc
+        # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+        # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+        #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+        # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+        crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+        # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+        crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+        rv$crk_quan <- crk_quan
+
+        rv$crkready <- TRUE
         rv$crk <- out_crk$file
-
-        if(!file.exists(out_crk$file)){
-          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-          rv$llmap
-          makeLL()
-          shinyalert(html = TRUE, type = "warning",
-                     title = paste0("Points no generated"),
-                     text = out_crk$log)
-        } else {
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
-
-          # rv$lcc <- out_lcc
-          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
-          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-          params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
-          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
-
-          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
-          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
-          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
-          rv$crk_quan <- crk_quan
-
-          rv$crkready <- TRUE
-          rv$crk <- out_crk$file
-          rv$crk_sp <- terra::rast(out_crk$file);
-          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+        rv$crk_sp <- terra::rast(out_crk$file);
+        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+        rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
 
 
-          #### ......
-          suggestedName <- suggestName(rv$layersList, type = 'Kernels')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Resistant kernels created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
+        #### ......
+        suggestedName <- suggestName(rv$layersList, type = 'Kernels')
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Resistant kernels created succesfully<br>",
+                                  'Layer name: ', suggestedName)
+        )
 
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Kernels',
-            internal = rv$crk, public = suggestedName)
+        rv$layersList <- funLayersList(
+          df = rv$layersList, tempFolder,
+          inout = 'out', type =  'Kernels',
+          internal = rv$crk, public = suggestedName)
 
 
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_crk_pri'),
-            typex = 'Kernels', field = 'public', val = suggestedName)
+        ## Inputs boxes
+        colaUpdateSelectizeInput(
+          ids = c('in_name_crk_pri'),
+          typex = 'Kernels', field = 'public', val = suggestedName)
 
-          updateColaLayersLists(layersList = rv$layersList)
-          #### ......
+        updateColaLayersLists(layersList = rv$layersList)
+        #### ......
 
-          # newtif[newtif[] == 0] <-
+        # newtif[newtif[] == 0] <-
 
-          # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
-          # # plot(newtif)
+        # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
+        # # plot(newtif)
 
-          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-          #                                               domain = rng_newtif+0.01, na.color = "transparent")
+        #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+        #                                               domain = rng_newtif+0.01, na.color = "transparent")
 
-          # "viridis", "magma", "inferno", or "plasma".
-          ## Update all visor
+        # "viridis", "magma", "inferno", or "plasma".
+        ## Update all visor
 
-          makeLL(lastLL = 'Kernels')
+        # makeLL(lastLL = 'Kernels')
 
-          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
-          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
-          #         group = "Surface resistance", layerId = 'Kernel') %>%
-          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
-          #       position = 'topleft',
-          #       title= "Dispersal Kernel"#, opacity = .3
-          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-          #  ) %>% leaflet::addLayersControl(
-          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-          #   options = leaflet::layersControlOptions(collapsed = FALSE)
-          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-          #
-          # rv$llmap <<- llmap
-          # updateLL(llmap)
-          # rv$llmap
-          #
-          # # ## try
-          # llx <- makeLL()
-          # rv$ll
-        }
-      })
+        # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
+        #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
+        #         group = "Surface resistance", layerId = 'Kernel') %>%
+        #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
+        #       position = 'topleft',
+        #       title= "Dispersal Kernel"#, opacity = .3
+        #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+        #  ) %>% leaflet::addLayersControl(
+        #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+        #   options = leaflet::layersControlOptions(collapsed = FALSE)
+        #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+        #
+        # rv$llmap <<- llmap
+        # updateLL(llmap)
+        # rv$llmap
+        #
+        # # ## try
+        # llx <- makeLL()
+        # rv$ll
+        lastLLx <- 'Kernels'
+
+      }
+
 
       isolate(
         output$ll_map_pri_prev <- leaflet::renderLeaflet({
@@ -5132,12 +5164,20 @@ server <- function(input, output, session) {
           }
         })
       )
+
+      output$ll_map_crk <- leaflet::renderLeaflet({
+        makeLL(lastLL = lastLLx)
+      })
+
     } else {
       shinyalert(html = TRUE, type = "warning",
                  title = paste0("Inputs not ready"),
                  text = 'Be sure to upload or generate resistance and points layers first'
       )
+      lastLLx <- NULL
+
     }
+
   }))
 
 
@@ -5161,108 +5201,109 @@ server <- function(input, output, session) {
       intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
       cat(' -- Using ', input$in_name_sur_crk, intif4py, '\n')
 
-      output$ll_map_crk <- leaflet::renderLeaflet({
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-        tStartCrk <- Sys.time()
-        out_crk <<- tryCatch(crkJoblib_py(
-          py = py, inshp = rv$pts,
-          # intif = rv$tif,
-          intif = intif4py,
-          outtif = out_crk,
-          maxdist = as.numeric(input$in_crk_4),
-          transf = (input$in_crk_t),
-          shape = (input$in_crk_5),
-          volume = as.numeric(input$in_crk_6)),
-          error = function(e) list(err = e, file = ''))
-        #out_crk_no_data <- gdal_nodata
+      tStartCrk <- Sys.time()
+      out_crk <<- tryCatch(crkJoblib_py(
+        py = py, inshp = rv$pts,
+        # intif = rv$tif,
+        intif = intif4py,
+        outtif = out_crk,
+        maxdist = as.numeric(input$in_crk_4),
+        transf = (input$in_crk_t),
+        shape = (input$in_crk_5),
+        volume = as.numeric(input$in_crk_6)),
+        error = function(e) list(err = e, file = ''))
+      #out_crk_no_data <- gdal_nodata
 
-        cat("\n --- CRK out:\n")
-        print(out_crk)
+      cat("\n --- CRK out:\n")
+      print(out_crk)
 
-        tElapCrk <- Sys.time() - tStartCrk
-        textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+      tElapCrk <- Sys.time() - tStartCrk
+      textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
 
+      rv$crk <- out_crk$file
+
+      if(!file.exists(out_crk$file)){
+        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+        rv$llmap
+
+      } else {
+        rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+        #### ......
+        suggestedName <- suggestName(rv$layersList, type = 'Kernels')
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Resistant kernels created succesfully<br>",
+                                  'Layer name: ', suggestedName)
+        )
+
+        rv$layersList <- funLayersList(
+          df = rv$layersList, tempFolder,
+          inout = 'out', type =  'Kernels',
+          internal = rv$crk, public = suggestedName)
+
+
+        ## Inputs boxes
+        colaUpdateSelectizeInput(
+          ids = c('in_name_crk_pri'),
+          typex = 'Kernels', field = 'public', val = suggestedName)
+
+        updateColaLayersLists(layersList = rv$layersList)
+        #### ......
+        # rv$lcc <- out_lcc
+        # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+        # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+        #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+        # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+        crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+        # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+        crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+        rv$crk_quan <- crk_quan
+
+        rv$crkready <- TRUE
         rv$crk <- out_crk$file
+        rv$crk_sp <- terra::rast(out_crk$file);
+        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+        rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
 
-        if(!file.exists(out_crk$file)){
-          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-          rv$llmap
+        # newtif[newtif[] == 0] <-
 
-        } else {
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+        # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
+        # # plot(newtif)
 
-          #### ......
-          suggestedName <- suggestName(rv$layersList, type = 'Kernels')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Resistant kernels created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
+        #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+        #                                               domain = rng_newtif+0.01, na.color = "transparent")
 
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Kernels',
-            internal = rv$crk, public = suggestedName)
+        # "viridis", "magma", "inferno", or "plasma".
+        ## Update all visor
 
+        #makeLL(lastLL = 'Kernels')
+        lastLLx <- 'Kernels'
 
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_crk_pri'),
-            typex = 'Kernels', field = 'public', val = suggestedName)
-
-          updateColaLayersLists(layersList = rv$layersList)
-          #### ......
-          # rv$lcc <- out_lcc
-          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
-          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-          params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
-          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
-
-          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
-          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
-          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
-          rv$crk_quan <- crk_quan
-
-          rv$crkready <- TRUE
-          rv$crk <- out_crk$file
-          rv$crk_sp <- terra::rast(out_crk$file);
-          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
-
-          # newtif[newtif[] == 0] <-
-
-          # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
-          # # plot(newtif)
-
-          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-          #                                               domain = rng_newtif+0.01, na.color = "transparent")
-
-          # "viridis", "magma", "inferno", or "plasma".
-          ## Update all visor
-
-          makeLL(lastLL = 'Kernels')
-
-          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
-          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
-          #         group = "Surface resistance", layerId = 'Kernel') %>%
-          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
-          #       position = 'topleft',
-          #       title= "Dispersal Kernel"#, opacity = .3
-          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-          #  ) %>% leaflet::addLayersControl(
-          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-          #   options = leaflet::layersControlOptions(collapsed = FALSE)
-          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-          #
-          # rv$llmap <<- llmap
-          # updateLL(llmap)
-          # rv$llmap
-          #
-          # # ## try
-          # llx <- makeLL()
-          # rv$ll
-        }
-      })
+        # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
+        #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
+        #         group = "Surface resistance", layerId = 'Kernel') %>%
+        #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
+        #       position = 'topleft',
+        #       title= "Dispersal Kernel"#, opacity = .3
+        #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+        #  ) %>% leaflet::addLayersControl(
+        #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+        #   options = leaflet::layersControlOptions(collapsed = FALSE)
+        #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+        #
+        # rv$llmap <<- llmap
+        # updateLL(llmap)
+        # rv$llmap
+        #
+        # # ## try
+        # llx <- makeLL()
+        # rv$ll
+      }
 
       isolate(
         output$ll_map_pri_prev <- leaflet::renderLeaflet({
@@ -5308,11 +5349,19 @@ server <- function(input, output, session) {
           }
         })
       )
+
+      output$ll_map_crk <- leaflet::renderLeaflet({
+        makeLL( lastLL = lastLLx)
+
+      })
+
     } else {
       shinyalert(html = TRUE, type = "warning",
                  title = paste0("Inputs not ready"),
                  text = 'Be sure to upload or generate resistance and points layers first'
       )
+      lastLLx <- NULL
+
     }
   }))
 
@@ -6949,6 +6998,8 @@ if (FALSE){
               bsTooltip(id = 'in_dist_tif', title = 'Load surface resistance georreferenced raster. Not LonLat projection allowed'),
               bsTooltip(id = 'in_dist_shp', title = 'Load vectorial point layer'),
               bsTooltip(id = 'cdpop_mort', title = 'Use mortality from the resistance layer? Values will be scaled between 0 and 100%'),
+              bsTooltip(id = 'in_cdpop_tif', title = 'Upload a resistance that can be used as mortality layer'),
+
               bsTooltip(id = 'run_cdpop', title = 'Tun CDPOP simulation'),
               bsTooltip(id = 'cdpDwn', title = 'Download ZIP resulting files'),
               bsTooltip(id = 'cdpop_ans_yy', title = 'The generation you want to plot'),
