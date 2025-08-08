@@ -5435,6 +5435,8 @@ server <- function(input, output, session) {
 
     pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
 
+
+
     if (file.exists( rv$tif)){
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
       rv$tifready <- TRUE
@@ -5608,6 +5610,10 @@ server <- function(input, output, session) {
       # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
       # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
       cat("\n --- Prio start\n")
+
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the map is updated."))
+
 
       rv2 <<- rv$layersList
       isolate(output$ll_map_pri <- leaflet::renderLeaflet({
