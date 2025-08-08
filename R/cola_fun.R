@@ -1072,7 +1072,6 @@ crk_py <- function(inshp, intif, outtif,
   # [7] cores
   # [8] proj
 
-  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   (cmd_crk <- paste0(
     quotepath(py), ' ',
@@ -1095,15 +1094,24 @@ crk_py <- function(inshp, intif, outtif,
     cat('\n')
   }
 
-  intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+  intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
 
   if(show.result){
-    print(intCMD)
+    cat('Result:\n', intCMD, , '\n', sep = ' ')
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+  metaFile <- c(inshp = inshp, intif = intif, outif = outif, maxdist = maxdist,
+                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                log = paste0(intCMD, collapse = ' - '),
+                done = ifelse(file.exists(outtif), 'yes', 'no'))
+  write.table(metaFile, logname )
+
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log =  intCMD )
+  return( ans )
 }
 
 #' @title  Create least cost corridors using parallel computing
@@ -1638,7 +1646,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         print('Error rast pol for replacing');
         print(e);
         return(e)
-        })
+      })
 
   } else{
     ## Use a single value

@@ -231,8 +231,8 @@ server <- function(input, output, session) {
              imageUrl = 'https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logoA_bgNA.jpg?raw=true',
              #system.file(package = 'cola', 'docs/logoA_bgNA.jpg'),
 
-             title = paste0("Welcome to CoLa"),
-             text = paste0('Please save this sessionID in your records: <br>', sessionID)
+             title = paste0("Welcome to CoLa<br><br>", sessionID ),
+             text = paste0('Please save this sessionID in your records')
   )
 
 
@@ -603,7 +603,7 @@ server <- function(input, output, session) {
         # shp = NULL, # spatial object
         lastx <- last(subset(layersList, type == 'Points'))
         rv$pts <<- lastx$internal
-        rv$pts_sp <<- terra::vect(rv$pts)
+        rv$pts_sp <<- sf::read_sf(rv$pts)
         rv$pts_sp$sortID <<- 1:nrow(rv$pts_sp)
         rv$ptsready <<- TRUE
         params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
@@ -668,7 +668,7 @@ server <- function(input, output, session) {
         rv$pritif <<- lastxp$internal
         rv$pritif_sp <<- terra::rast(lastxp$internal)
         rv$prishp <<- gsub('.tif', '.shp',lastxp$internal)
-        rv$prishp_sp <<- terra::vect(gsub('.tif', '.shp',lastxp$internal))
+        rv$prishp_sp <<- sf::read_sf(gsub('.tif', '.shp',lastxp$internal))
         # rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
         # rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
 
@@ -1089,10 +1089,25 @@ server <- function(input, output, session) {
         # if(is.null(rv$pts_sp$sortID)) {
         #   rv$pts_sp$sortID <- 1:nrow(rv$pts_sp)
         #   }
+        # points_shp <- sf::read_sf('C:/cola/colaYBD2025080720231805//out_simpts_GAN2025080720234205.shp')
+        # points_shp <- sf::read_sf('C:/cola/Anoa/Anoa_present_ardianti.shp')
+        # points_shp$sortID <- 1:nrow(points_shp)
+        # bbWGS <- 9999999
+        if( is.null(rv$pts_sp_gcs) ){
+          #if ( !any(grepl('ID\\["EPSG",4326\\]\\]', sf::st_crs(points_shp))) ){
+          print('projecting')
+          rv$pts_sp_gcs <- sf::st_transform(rv$pts_sp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+          #}
+        }
+        # print('8888  rv$pts_sp_gcs in makeLL' )
+        # print(sf::st_crs(rv$pts_sp_gcs))
+        # print(rv$pts_sp_gcs)
+        # #outshp$shp <- st_transform(outshp$shp, crs = sf::st_crs(rastTemp))
+        # print(9999)
         bounds <- makeLLExtent(old = bounds,
-                               new = c(rv$pts_sp %>% st_bbox() %>% as.character() %>% as.numeric(),
-                                       terra::crs(rv$pts_sp, proj = TRUE)))
-        ll0 <- ll0 %>% addCircleMarkers(data = rv$pts_sp, #label = ~sortID,
+                               new = c(rv$pts_sp_gcs %>% st_bbox() %>% as.character() %>% as.numeric(),
+                                       terra::crs(rv$pts_sp_gcs, proj = TRUE)))
+        ll0 <- ll0 %>% addCircleMarkers(data = rv$pts_sp_gcs, #label = ~sortID,
                                         group = 'Points', radius = 5)
       }
     }
@@ -1384,6 +1399,7 @@ server <- function(input, output, session) {
     edi_sp = NULL, # spatial object
     tif_sp = NULL, # spatial object
     pts_sp = NULL, # spatial object
+    pts_sp_gcs = NULL, # spatial object
     lcc_sp = NULL, # spatial object
     crk_sp = NULL, # spatial object
     pritif_sp = NULL, # spatial object
@@ -2469,14 +2485,14 @@ server <- function(input, output, session) {
                                         domain = rng_dens*c(1, 1.1),
                                         na.color = "transparent")
 
-          # rv <- list(cdp_sp = terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
+          # rv <- list(cdp_sp = sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
           # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
           # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
           # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
-          # # newxyshp <- terra::vect(rv$pts)
+          # # newxyshp <- sf::read_sf(rv$pts)
           #
           # # llvect <- rv$cdp_sp
-          # llvect <- terra::vect('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
+          # llvect <- sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
           # leaflet() %>% addCircleMarkers(data = llvect)
           # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
 
@@ -3002,7 +3018,7 @@ server <- function(input, output, session) {
                    maxout = as.numeric(input$in_sur_5),
                    shape = as.numeric(input$in_sur_6),
                    nodata = in_sur_7,
-                   prj = 'None'), error = function(e) list(err = e, file = ''))
+                   prj = 'None'), error = function(e) list(log = e, file = ''))
       cat("\n --- Surf. resistance out:\n")
       print(hs2rs_file)
 
@@ -3737,11 +3753,12 @@ server <- function(input, output, session) {
 
         updateSelectizeInput( # inputs
           session, "in_points_ly",
-          choices = unlist(subset(rv$layersList, Resistance == 'Resistance')[,'public']),
+          choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
           selected = getLast(rv$layersList, 'Suitability', 'public')
           #, server = TRUE
         )
 
+        updateColaLayersLists(rv$layersList)
 
         rv$tif_sp <- newtif_pts <- terra::rast(rv$newtifpathpts)
         #rv$tif_rng <- rng_newtif_pts <- range(newtif_pts[], na.rm = TRUE)
@@ -3850,6 +3867,8 @@ server <- function(input, output, session) {
         rv$hs_rng <- rng_newtif_pts <- getMnMx(rv$hs)[1:2]
         pdebug(devug=devug,sep='\n',pre='-','rv$hs_rng')
 
+        updateColaLayersLists(rv$layersList)
+
 
         updateTextInput(session, inputId = "in_points_3", value = rv$hs_rng[1])
         updateTextInput(session, inputId = "in_points_4", value = rv$hs_rng[2])
@@ -3916,8 +3935,8 @@ server <- function(input, output, session) {
              'rv$hs', 'rv$tif') # = = = = = = = = = = = = = = = = = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
 
       inPts <<- rv$hs
-      intif4pts <<- subset(rv$layersList, public == in_points_ly)$internal
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',
+      intif4pts <<- subset(rv$layersList, public == in_points_ly)
+      pdebug(devug=T,sep='\n',pre='---PTS\n',
              "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
              'rv$hs', 'rv$tif')
 
@@ -3927,13 +3946,13 @@ server <- function(input, output, session) {
       points_file <- tryCatch(
         points_py(py = py,
                   #intif = as.character(rv$tif),
-                  intif = intif4pts,
+                  intif = intif4pts$internal,
                   outshp = out_pts,
                   smin = max(0, as.numeric(input$in_points_3)),
                   smax = as.numeric(input$in_points_4),
                   npoints = as.numeric(input$in_points_5),
                   issuit = ifelse(grepl('Suit',in_points_ly), 'Yes', 'No')),
-        error = function(e) list(err = e, file = ''))
+        error = function(e) list(log = e, file = ''))
       cat("\n --- Points out: \n")
       print(points_file)
 
@@ -3953,7 +3972,7 @@ server <- function(input, output, session) {
       #                                     smax = as.numeric(input$in_points_4),
       #                                     npoints = as.numeric(input$in_points_5),
       #                                     issuit = 'Yes'
-      #   ), error = function(e) list(err = e, file = ''))
+      #   ), error = function(e) list(log = e, file = ''))
       #   cat("\n --- Points out: \n")
       #   print(points_file)
       #
@@ -3987,11 +4006,18 @@ server <- function(input, output, session) {
 
         #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
         # points_shpO <- sf::read_sf("C:/cola/colaLOK2025080203311905/out_simpts_XHW2025080203313005.shp")
-        points_shpO <- sf::read_sf(points_file$file)
-        points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+        points_shp <- sf::read_sf(points_file$file)
         points_shp$sortID <- 1:nrow(points_shp)
+        rv$pts_sp <<- points_shp
+        # print('points_shpO')
+        # print(points_shpO)
+        rv$pts_sp_gcs <- sf::st_transform(points_shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+        # print('rv$pts_sp on LL')
+        # print(rv$pts_sp)
+        # print('rv$pts_sp_gcs on LL')
+        # print(rv$pts_sp_gcs)
+        #
         #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-        rv$pts_sp <- points_shp
 
         updateColaLayersLists(rv$layersList)
 
@@ -4191,11 +4217,11 @@ server <- function(input, output, session) {
 
   ##> vout_dist; ll_map_dist; distance_py; in_distance_3,
   ##> in_distance_shp in_dist_tif, inDistSessID distmap newtifPath_dist newshpPath_dist
-  observeEvent(input$in_dist_shp, {
+  observeEvent(input$in_shp, {
 
-    pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_dist_shp)') # _____________
+    pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_shp)') # _____________
 
-    # invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp, newin_distance_shp)), error = function(e) NULL)))
+    # invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp,  newin_distance_shp)), error = function(e) NULL)))
 
     rv$log <- paste0(rv$log, '\nLoading shapefile');updateVTEXT(rv$log) # _______
 
@@ -4229,7 +4255,7 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, '\nSTOP: load a valid surface raster first');updateVTEXT(rv$log) # _______
     } else {
 
-      inFiles <- input$in_dist_shp #
+      inFiles <- input$in_shp #
       inFiles$newFile <- paste0(tempFolder, '/', basename(inFiles$name))
       pdebug(devug=devug,sep='\n',pre='--','(inFiles)', 'print(inFiles)') # _____________
 
@@ -4246,29 +4272,27 @@ server <- function(input, output, session) {
 
       if (any(class(inShp$shp) %in% 'sf')){
 
-        output$ll_map_dist <- leaflet::renderLeaflet({
 
-          params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
-          shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
-          shp$sortID <- 1:nrow(shp)
-          rv$pts_sp <- shp
+        shp <- st_transform(inShp$shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+        shp$sortID <- 1:nrow(shp)
+        rv$pts_sp_gcs <- shp
 
-          suggestedNewName <- suggestName(rv$layersList, type = 'Points')
-          rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                         inout = 'in', type =  'Points',
-                                         internal = rv$pts,
-                                         public = suggestedNewName)
+        suggestedNewName <- suggestName(rv$layersList, type = 'Points')
+        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                       inout = 'in', type =  'Points',
+                                       internal = rv$pts,
+                                       public = suggestedNewName)
 
-          makeLL()
-          # llmap <<- rv$llmap %>% removeMarker(layerId = 'Points') %>%
-          #  addMarkers(data = rv$pts_sp, label = ~ID, group = 'Points')
-          # rv$llmap <<- llmap
-          # updateLL(llmap)
-          # # leafsurface
-          # #llmap
-          # rv$llmap
-        })
+        makeLL()
+        # llmap <<- rv$llmap %>% removeMarker(layerId = 'Points') %>%
+        #  addMarkers(data = rv$pts_sp, label = ~ID, group = 'Points')
+        # rv$llmap <<- llmap
+        # updateLL(llmap)
+        # # leafsurface
+        # #llmap
+        # rv$llmap
       }
     }
   })
@@ -4293,6 +4317,9 @@ server <- function(input, output, session) {
 
       rv$log <- paste0(rv$log, '\nGenerating matrix - ');updateVTEXT(rv$log) # _______
       #Sys.sleep(1)
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Task submitted. Please wait until the red label is updated."))
+
       tStartMat <- Sys.time()
 
       pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
@@ -4328,6 +4355,7 @@ server <- function(input, output, session) {
                          paste0('\n Pairs of points connected: ', validCels,
                                 '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
 
+        suggestedName <- suggestName(rv$layersList, type = 'Distance')
         shinyalert(html = TRUE, type = "success",
                    title = paste0("Cost-distance matrix created succesfully<br>",
                                   'File name: ', suggestedName),
@@ -4335,7 +4363,6 @@ server <- function(input, output, session) {
 
         ####
 
-        suggestedName <- suggestName(rv$layersList, type = 'Distance')
 
         rv$layersList <- funLayersList(
           df = rv$layersList, tempFolder,
@@ -4610,7 +4637,7 @@ server <- function(input, output, session) {
         outtif = out_lcc,
         maxdist = as.numeric(input$in_lcc_4),
         smooth = as.numeric(input$in_lcc_5),
-        tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(err = e, file = ''))
+        tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(log = e, file = ''))
 
       cat("\n --- LCC out:\n")
       print(out_lcc)
@@ -4730,7 +4757,7 @@ server <- function(input, output, session) {
         maxdist = as.numeric(input$in_lcc_4),
         smooth = as.numeric(input$in_lcc_5),
         tolerance = as.numeric(input$in_lcc_6)),
-        error = function(e) list(err = e, file = ''))
+        error = function(e) list(log = e, file = ''))
       cat("\n --- LCC out:\n")
       print(out_lcc)
 
@@ -5022,7 +5049,7 @@ server <- function(input, output, session) {
                transf = (input$in_crk_t),
                shape = (input$in_crk_5),
                volume = as.numeric(input$in_crk_6)),
-        error = function(e) list(err = e, file = ''))
+        error = function(e) list(log = e, file = ''))
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
@@ -5030,6 +5057,10 @@ server <- function(input, output, session) {
 
       tElapCrk <- Sys.time() - tStartCrk
       textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+      if(length(out_crk) == 1){
+        out_crk <- list(file = out_crk[1], log = 'No log found')
+      }
 
       rv$crk <- out_crk$file
 
@@ -5214,7 +5245,7 @@ server <- function(input, output, session) {
         transf = (input$in_crk_t),
         shape = (input$in_crk_5),
         volume = as.numeric(input$in_crk_6)),
-        error = function(e) list(err = e, file = ''))
+        error = function(e) list(log = e, file = ''))
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
@@ -6792,7 +6823,7 @@ if (FALSE){
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -30px"),
                             # textInput('name_pts_dst', label = '', value = "", width = NULL, placeholder = 'Points name:'),
-                            shiny::fileInput('in_dist_shp', 'Load points files', buttonLabel = 'Search',
+                            shiny::fileInput('in_shp', 'Load points files', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
@@ -6832,7 +6863,7 @@ if (FALSE){
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
                             # textInput('name_pts_crk', label = '', value = "", width = NULL, placeholder = 'Points name:'),
-                            shiny::fileInput('in_crk_shp', 'Load points files (all)', buttonLabel = 'Search',
+                            shiny::fileInput('in_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
@@ -6851,7 +6882,7 @@ if (FALSE){
                             div(style = "margin-top: -50px"),
                             # textInput('name_pts_lcc', label = '', value = "", width = NULL, placeholder = 'Points name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_lcc_shp', 'Load points files (all)', buttonLabel = 'Search',
+                            shiny::fileInput('in_shp', 'Load points files (all)', buttonLabel = 'Search',
                                              placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
@@ -7225,33 +7256,41 @@ if (FALSE){
             ),
 
             fluidRow(
-              column(2,
+              column(1,
                      fluidRow(
                        br(),
                        tags$table(
                          style = "width: 100%", align = "left",
                          tags$tr(tags$td(style = "width: 25%", align = "center",
                                          htmlOutput(outputId = 'out_par_surA', fill = TRUE))
-                         )),
-                       br(), br(),
-                     ),
-                     fluidRow(
-                       column(12,
-                              textInput("in_sur_7", "No Data:", '')
-                       ))
+                         ))
+                       # ,
+                       #                     br(), br(),
+                     )
+                     ,
+                     # fluidRow(
+                     #   column(12,
+                     #          textInput("in_sur_7", "No Data:", '')
+                     #   ))
               ),
 
-              column(2,
-                     textInput("in_sur_3", "Min. val:", '0'),
+              column(1,
+                     textInput("in_sur_3", "Min. val:", '0')
+              ),
+              column(1,
                      textInput("in_sur_4", "Max. val:", '100')
               ),
               column(2,
-                     textInput("in_sur_5", "Max-resistance:", '150'),
+                     textInput("in_sur_5", "Max-resistance:", '150')),
+              column(1,
                      textInput("in_sur_6", "Shape:", '1')
               ),
+              column(1,
+                     textInput("in_sur_7", "No Data:", '')
+              )
 
-
-              column(4,
+              ,
+              column(2,
                      #      fluidRow(
                      # column(3,
                      # ),
@@ -7267,25 +7306,28 @@ if (FALSE){
 
               column(2,
 
-                     tags$table(
-                       style = "width: 100%", align = "left",
-                       tags$tr(
-                         tags$td(style = "width: 25%", align = "center",
-                                 #
-                         )),
-                       tags$tr(
-                         tags$td(style = "width: 25%", align = "center",
-                                 br(),
-                                 actionButton("h2r", HTML("Get Resistance"), icon = icon("play")),
-                         )),
-                       tags$tr(
-                         tags$td(style = "width: 25%", align = "center",
-                                 h6(""),
-                                 downloadButton('tifDwn', 'Download')
-                         ))
-                     ),
+                     # tags$table(
+                     #   style = "width: 100%", align = "left",
+                     #   tags$tr(
+                     #     tags$td(style = "width: 25%", align = "center",
+                     #             #
+                     #     )),
+                     #   tags$tr(
+                     #     tags$td(style = "width: 25%", align = "center",
+                     #             br(),
+                     #
+                     #
+                     #             ,
+                     #     )),
+                     #   tags$tr(
+                     #     tags$td(style = "width: 25%", align = "center",
+                     #             h6(""),
+                     #             ## -
+                     #     ))
+                     # ),
 
-              )
+                     actionButton("h2r", HTML("Get Resistance"), icon = icon("play"))),
+              column(1, downloadButton('tifDwn', 'Download') )
             ),
 
             # tags$tr(tags$td(style = "width: 20%", align = "center", ), ),
@@ -7373,7 +7415,7 @@ if (FALSE){
               #            "Use a positive or negative single value other than 0.",
               #            "Please remove existing polygons before running again. ")
               #          )),
-              column(1,
+              column(2,
                      textInput("in_edi_val", label = "Value:", value = 0)),
               column(1,
                      numericInput("in_edi_wid", label = "Pixel width:", value = 1)
@@ -7389,8 +7431,8 @@ if (FALSE){
               #column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(2, actionButton("edi", HTML("Add vals"), icon = icon("plus")),
-                     actionButton("rpl", HTML("Replace vals"), icon = icon("repeat"))),
+              column(1, actionButton("edi", HTML("Add vals"), icon = icon("plus"))),
+              column(2, actionButton("rpl", HTML("Replace vals"), icon = icon("repeat"))),
 
               column(1, downloadButton('editifDwn', 'Download'))
 
@@ -7442,8 +7484,8 @@ if (FALSE){
               #                     width = '100%', placeholder = 'Name new layer')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(1, actionButton("points_py", "Create points", icon = icon("play")),
-                     downloadButton('ptsDwn', 'Download'))
+              column(1, actionButton("points_py", "Create points", icon = icon("play"))),
+              column(1, downloadButton('ptsDwn', 'Download'))
             ),
             leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
 
@@ -7499,9 +7541,8 @@ if (FALSE){
                                                     htmlOutput(outputId = 'out_par_distC', fill = TRUE))
                                           ))
                        ),
-                       column(1, actionButton("dist_py", "Get matrix", icon = icon("play")),
-                              downloadButton('csvDwn', 'Download')
-                       )
+                       column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
+                       column(1, downloadButton('csvDwn', 'Download'))
                      )
               )
               # , column(3,
@@ -7665,22 +7706,22 @@ if (FALSE){
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_crkA', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_crkB', fill = TRUE)),
-              column(3, textInput("in_crk_4", "Max. dispersal distance:", '100000'),
-                     selectInput(inputId = "in_crk_5", label = "Kernel shape:",
-                                 choices = c( 'linear', 'gaussian'), # 'RH',
-                                 selected = 'linear')),
-              column(2, selectInput(inputId = "in_crk_t", label = "Transform?:",
-                                    choices = c( 'yes', 'no'), selected = 'no'),
-                     # (input$in_crk_t)
-                     textInput("in_crk_6", "Kernel volume:", '1')),
-              column(3, selectInput("in_name_sur_crk", "Source layer:", '', choices = '')
+              column(2, textInput("in_crk_4", "Max. dispersal distance:", '100000')),
+              column(1, selectInput(inputId = "in_crk_5", label = "Shape:",
+                                    choices = c( 'linear', 'gaussian'), # 'RH',
+                                    selected = 'linear')),
+              column(1, selectInput(inputId = "in_crk_t", label = "Transform?:",
+                                    choices = c( 'yes', 'no'), selected = 'no')),
+              # (input$in_crk_t)
+              column(2, textInput("in_crk_6", "Kernel volume:", '1')),
+              column(2, selectInput("in_name_sur_crk", "Source layer:", '', choices = '')
                      # ,
                      # textInput('out_name_crk', label = 'New layer name:', value = "",
                      #           width = '100%', placeholder = 'Name new layer')
               ),
               column(1, actionButton("crk", "Get kernels", icon = icon("play")),
-                     actionButton("crk2", "Get kernels (heavy)", icon = icon("play")),
-                     downloadButton('crkDwn', 'Download')),
+                     actionButton("crk2", "Get kernels (heavy)", icon = icon("play"))),
+              column(1, downloadButton('crkDwn', 'Download')),
             ),
 
             leaflet::leafletOutput("ll_map_crk", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
@@ -7711,17 +7752,18 @@ if (FALSE){
               column(2, htmlOutput(outputId = 'out_par_lccA', fill = TRUE),
                      htmlOutput(outputId = 'out_par_lccB', fill = TRUE)),
 
-              column(3, textInput("in_lcc_4", "Max. dispersal distance:", '10000000')),
-              column(2, textInput("in_lcc_5", "Smoothing factor:", '0'),
-                     textInput("in_lcc_6", "Tolerance (meters):", '5')),
-              column(3, selectInput("in_name_sur_lcc", "Source layer:", '50', choices = '')
+              column(2, textInput("in_lcc_4", "Max. dispersal distance:", '10000000')),
+              column(2, textInput("in_lcc_5", "Smoothing factor:", '0')),
+              column(2, textInput("in_lcc_6", "Tolerance:", '5')),
+              column(2, selectInput("in_name_sur_lcc", "Source layer:", '50', choices = '')
                      # ,
                      # textInput('out_name_lcc', label = 'New layer name:', value = "",
                      #           width = '100%', placeholder = 'Name new layer')
               ),
-              column(1, br(), actionButton("lcc", "Get corridors", icon = icon("play")),
-                     actionButton("lcc2", "Run heavy)", icon = icon("play")),
-                     downloadButton('lccDwn', 'Download'))
+              column(1, actionButton("lcc", "Get corridors", icon = icon("play")),
+                     actionButton("lcc2", "Run heavy)", icon = icon("play"))),
+              column(1, downloadButton('lccDwn', 'Download'))
+
             ),
             leaflet::leafletOutput("ll_map_lcc", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1"),
             # ll_map_corr lcc vout_corr in_lcc_3 4 5
@@ -7763,10 +7805,10 @@ if (FALSE){
               column(1, htmlOutput(outputId = 'out_par_prioA', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioB', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioC', fill = TRUE)),
-              column(1, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
-              column(1, selectInput("in_name_sur_pri", "Source resistance:", '50', choices = '')),
-              column(1, selectInput("in_name_crk_pri", "Source kernel:", '50', choices = '')),
-              column(1, selectInput("in_name_lcc_pri", "Source corridor:", '50', choices = '')),
+              column(2, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
+              column(2, selectInput("in_name_sur_pri", "Source resistance:", '50', choices = '')),
+              column(2, selectInput("in_name_crk_pri", "Source kernel:", '50', choices = '')),
+              column(2, selectInput("in_name_lcc_pri", "Source corridor:", '50', choices = '')),
               # column(2, textInput('out_name_pri', label = 'New layer name:', value = "",
               #                     width = '100%', placeholder = 'Name new layer')),
               # column(4, textInput("in_pri_6", "Corridor tolerance:", '1000')),
