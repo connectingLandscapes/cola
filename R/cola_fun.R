@@ -106,7 +106,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                              newFiles, ''),
                newFiles = newFiles,
                #log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 
 }
 
@@ -173,7 +173,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
   #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
@@ -625,7 +625,7 @@ sui2res_py <- function(intif, outtif,
 
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 #' @title  Create random points
@@ -668,7 +668,7 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @param pyscript String. Python script location
 #' @param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed
-#' @param outif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
+#' @param outtif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
 #' @param minval Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
 #' @param maxval Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
 #' @param npoints Integer. Number of points. Number of points to simulate.
@@ -726,7 +726,7 @@ points_py <- function(intif, outshp,
 
   return( list(file = ifelse(file.exists(outshp), outshp, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 
 
 }
@@ -806,7 +806,7 @@ cdmat_py <- function(inshp, intif, outcsv,
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -871,7 +871,7 @@ lcc_py <- function(inshp, intif, outtif,
 
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -953,7 +953,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
   }
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -1038,7 +1038,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -1097,11 +1097,11 @@ crk_py <- function(inshp, intif, outtif,
   intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
 
   if(show.result){
-    cat('Result:\n', intCMD, , '\n', sep = ' ')
+    cat('Result:\n', intCMD,  '\n', sep = ' ')
   }
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
-  metaFile <- c(inshp = inshp, intif = intif, outif = outif, maxdist = maxdist,
+  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
                 shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
                 log = paste0(intCMD, collapse = ' - '),
                 done = ifelse(file.exists(outtif), 'yes', 'no'))
@@ -1110,7 +1110,7 @@ crk_py <- function(inshp, intif, outtif,
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-              log =  intCMD )
+              log = paste0("", intCMD) )
   return( ans )
 }
 
@@ -1191,10 +1191,19 @@ crkJoblib_py <- function(
     print(intCMD)
   }
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
+                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                maxram = maxram,
+                log = paste0(intCMD, collapse = ' - '),
+                done = ifelse(file.exists(outtif), 'yes', 'no'))
+  write.table(metaFile, logname )
+
+
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -1220,14 +1229,14 @@ prio_py <- function(tif, incrk, inlcc,
                     pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
                     cml = TRUE, show.result = TRUE){
 
-  # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
+  # pri_py(py, incrk, inlcc, outshp, outtif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
   #                    tif = rf$tif,
   #                    incrk = rv$crk ,
   #                    inlcc = rv$lcc,
   #                    maskedcsname = maskedcsname,
   #                    outshp = out_pri_shp,
-  #                    outif = out_pri_tif,
+  #                    outtif = out_pri_tif,
   #                    param5 = as.numeric(input$in_prio_5),
   #                    param6 = as.numeric(input$in_prio_6)) # 0.5
 
@@ -1306,7 +1315,7 @@ prio_py <- function(tif, incrk, inlcc,
     list(tif = ifelse(file.exists(outtif), outtif, ''),
          shp = ifelse(file.exists(outshppoint), outshppoint, ''),
          #log =  paste0(intCMD, ' -- ', read.delim(logname)) ))
-         log =  intCMD ) )
+         log = paste0("", intCMD) ) )
 }
 
 
@@ -1381,7 +1390,7 @@ crk_compare_py <- function(intif, intifs,
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 #' @title  Compare maps of least cost paths
@@ -1454,7 +1463,7 @@ lcc_compare_py <- function(intif, intifs,
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -1526,7 +1535,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
         dst_filename = rasterizedPath,
         add = TRUE,
         a = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) e$message)
 
   } else {
     print(' Add vals -- value')
@@ -1537,7 +1546,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
         dst_filename = rasterizedPath,
         add = TRUE,
         burn = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) e$message)
   }
 
 
