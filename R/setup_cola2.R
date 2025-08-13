@@ -3,45 +3,16 @@
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-cola_params <<- list(
+cola2_params <<- list(
   ## Environment name
   envName = 'cola',
 
   ## Libraries to install in the python conda environment
-  libs2Install = c('geopandas', # this first to avoid problems
-                   'gdal', 'h5py',
-                   'numexpr',
-                   'rasterio', 'pytables',
-                   'pandas',  'cython', 'numba' ,
-                   'networkit', 'fiona', 'shapely',
-                   'kdepy', 'joblib',
-                   'scikit-image'),
-  yml = TRUE,
-  ## Number steps
-  nSteps = 5,
+  libs2Install = c('google-api-python-client',
+                   'google-auth', 'google-cloud-storage',
+                   'geemap', 'numpy', 'matplotlib', 'scikit-learn', 'requests',
+                   'pandas', 'geopandas', 'shapely'))
 
-  ## R packages for the DSS
-  libs2colaDSS = c(
-    'markdown', 'rmarkdown',
-    'knitr', 'units',
-    "reshape2", 'bit', 'digest', 'dplyr',
-    'tidyverse', 'DT', 'ggplot2',
-    # debug install order: htmltools >> shiny >> shinyWidgets
-    'htmlwidgets', 'htmltools', ## Before shiny
-    'magrittr', 'RColorBrewer', 'viridis',
-    ## Spatial
-    # "rgeos", "rgdal", 'raster', ## old
-    'sf', 'terra',
-    'rlang', "leaflet", "leaflet.extras",
-    'gdalUtilities',
-    ## Shiny
-    'shiny',  ## Before shiny plugins
-    "shinydashboard",  "shinycssloaders",
-    'shinydashboardPlus', 'shinyjs',
-    'shinyWidgets', 'dashboardthemes',
-    "highcharter", 'plotly')
-)
-# attach(cola_params)
 
 
 #' @title Diagnose  \emph{COLA} installation
@@ -64,7 +35,11 @@ diagnose_cola <- function(envName = 'cola',
                                            'networkit', 'fiona', 'shapely',
                                            'geopandas',
                                            'kdepy',
-                                           'scikit-image')){
+                                           'scikit-image'),
+                          libs2Install2 = c('google-api-python-client',
+                                    'google-auth', 'google-cloud-storage',
+                                    'geemap', 'numpy', 'matplotlib', 'scikit-learn', 'requests',
+                                    'pandas', 'geopandas', 'shapely')){
 
   cat(sep = '',
       ' \n We will look for errors. Running `cola::setup_cola()` should help you to configure the package.\n',
@@ -217,7 +192,7 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
+setup_cola2 <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = TRUE, ask = TRUE,
                         dss = FALSE,
                         libs2Install =  c(
@@ -225,7 +200,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                           'gdal', 'h5py', 'numexpr', 'rasterio',
                                           'pytables', 'pandas',  'cython', 'numba' ,
                                           'networkit==11.0', 'fiona', 'shapely',
-                                          'kdepy', 'scikit-image', 'kdepy')
+                                          'kdepy', 'scikit-image', 'kdepy'),
+                        cola2 = FALSE,
+                        libs2Install2 = c('google-api-python-client',
+                          'google-auth', 'google-cloud-storage',
+                          'geemap', 'numpy', 'matplotlib', 'scikit-learn', 'requests',
+                          'pandas', 'geopandas', 'shapely')
 ){
 
   #envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE, libs2Install =  cola_params$libs2Install
@@ -469,6 +449,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   ## Step4. Install packages ----------------------------------------------
   cat (sep = '', '  +Step 4/', nSteps, ' Installing & checking conda modules\n')
+
+  if (cola2){
+    libs2Install <- unique(c(libs2Install, libs2Install2))
+  }
 
   if (!onlyIndividual){
 

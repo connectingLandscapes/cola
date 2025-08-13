@@ -97,7 +97,6 @@
   (rootPath <- system.file(package = 'cola'))
   path_error <<- '/var/log/shiny-server/'
 
-
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
@@ -119,95 +118,6 @@
   ## Showcase -----
   sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
 
-  if( FALSE) {
-    if( base::file.exists(sh_object) ){
-      ss <- base::load(sh_object)
-    } else {
-
-      sh_hs <- terra::rast(base::paste0(showcasePath, '/HabSui_res375m.tif'))
-      sh_sr <- terra::rast(base::paste0(showcasePath, '/Resistance_res375m.tif'))
-      sh_pt <- sf::st_read(base::paste0(showcasePath, '/SourcePoints_50.shp'))
-      #sh_pt <- spTransform(sh_pt, crs = sf::st_crs('EPSG:4326'))
-      sh_pt <- sf::st_transform(sh_pt, crs = sf::st_crs('EPSG:4326'))
-      sh_pt[, c('ln', 'lt')] <- st_coordinates(sh_pt)
-      sh_crk <- terra::rast(paste0(showcasePath, '/CRK_SP50_DT250k_v1.tif'))
-      sh_lcc <- terra::rast(paste0(showcasePath, '/LCC_SP50_DT1mln_CSF5CT5.tif'))
-
-
-      sh_hs_pal <-leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                        domain= getMnMx(sh_hs, na.rm = TRUE) + 0.0,
-                                        na.color = "transparent")
-      sh_sr_pal <-leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                        domain = getMnMx(sh_sr, na.rm = TRUE)+ 0.0,
-                                        na.color = "transparent")
-      sh_crk_pal <-leaflet::colorNumeric(palette = "inferno", reverse = TRUE,
-                                         domain= getMnMx(sh_crk, na.rm = TRUE)+ 0.0,
-                                         na.color = "transparent")
-      sh_lcc_pal <-leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                         domain= getMnMx(sh_lcc, na.rm = TRUE)+ 0.0,
-                                         na.color = "transparent")
-
-      # addCircleMarkers(lng = cmlng, lat = cmlat, group = "draw")
-
-      ll_sh <- leaflet::leaflet() %>% leaflet::addTiles() %>%
-        leaflet::addMeasure( position = "topright",
-                             primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                             activeColor = "#3D535D",completedColor = "#7D4479") %>%
-        leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE) %>%
-
-        addCircleMarkers(lng = sh_pt$ln, lat = sh_pt$lt, group = "Points", radius = 1) %>%
-
-        addRasterImage(sh_hs, colors = sh_hs_pal, opacity = .7,
-                       group = "HabitatSuitability", layerId = "HabitatSuitability") %>%
-        addRasterImage(sh_sr, colors = sh_sr_pal, opacity = .7,
-                       group = "SurfaceResistance", layerId = "SurfaceResistance") %>%
-        addRasterImage(sh_lcc, colors = sh_lcc_pal, opacity = .7,
-                       group = "Corridors", layerId = "Corridors") %>%
-        addRasterImage(sh_crk, colors = sh_crk_pal, opacity = .7,
-                       group = "Kernels", layerId = "Kernels") %>%
-
-        # addCircleMarkers(sh_pt, group = "draw") %>%
-        # ll_sh %>%
-        addLegend(pal = sh_hs_pal, values = getMnMx(sh_hs, na.rm = TRUE),
-                  group = "HabitatSuitability", layerId = "HabitatSuitability",
-                  position = 'bottomleft', title = "Hab. suitability") %>%
-
-        addLegend(pal = sh_crk_pal, values = getMnMx(sh_crk, na.rm = TRUE),
-                  group = "Kernels", layerId = "Kernels",
-                  position = 'bottomleft', title = "Kernels") %>%
-
-        addLegend(pal = sh_sr_pal, values = getMnMx(sh_sr, na.rm = TRUE),
-                  group = "SurfaceResistance", layerId = "SurfaceResistance",
-                  position = 'bottomleft', title = "Sur. resistance") %>%
-
-        addLegend(pal = sh_lcc_pal, values = getMnMx(sh_lcc, na.rm = TRUE),
-                  group = "Corridors", layerId = "Corridors",
-                  position = 'bottomleft', title = "Corridors") %>%
-
-
-        leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-        leaflet::addLayersControl(
-          baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-          overlayGroups = c('Points',
-                            'HabitatSuitability',
-                            'SurfaceResistance',
-                            'Kernels',
-                            'Corridors'
-          ),
-          options = leaflet::layersControlOptions(collapsed = FALSE))
-    }
-
-    # save(ll_sh, file = sh_object)
-
-
-    # file.remove(sh_object)
-    # rv$hs_sp <- terra::rast(rv$hs)
-    # #rng_newtif <- c(newtif@data@min, newtif@data@max)
-    # rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
-    #
-    # rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-    #                   domain = rng_newtif, na.color = "transparent")
-  }
 }
 
 ## Init B
@@ -513,7 +423,7 @@ server <- function(input, output, session) {
         if(restoreTry) {
           rv$layersList <<- myLayersList
           makeLL()
-          delFile(tempFolder, recursive = TRUE)
+          delFiles(tempFolder, recursive = TRUE)
           (cat(' >>>> tempFolder: ', restPath, '\n'))
           rv$tempFolder <- restPath
           tempFolder <<- restPath
@@ -5049,7 +4959,8 @@ server <- function(input, output, session) {
                transf = (input$in_crk_t),
                shape = (input$in_crk_5),
                volume = as.numeric(input$in_crk_6)),
-        error = function(e) list(log = e, file = ''))
+        error = function(e) {print('Error'); print(e);
+          list(log = e$message, file = out_crk)})
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
@@ -5245,7 +5156,7 @@ server <- function(input, output, session) {
         transf = (input$in_crk_t),
         shape = (input$in_crk_5),
         volume = as.numeric(input$in_crk_6)),
-        error = function(e) list(log = e, file = ''))
+        error = function(e) {print('Error'); print(e); list(log = e$message, file = out_crk)})
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")

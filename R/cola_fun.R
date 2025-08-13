@@ -951,9 +951,14 @@ lccHeavy_py <- function(inshp, intif, outtif,
   if(show.result){
     print(intCMD)
   }
-  return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  print('ANS LCC')
+  print(ans)
+  return( ans )
+
 }
 
 
@@ -1036,9 +1041,13 @@ lccJoblib_py <- function(inshp, intif, outtif,
   }
 
   tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  print('ANS LCC')
+  print(ans)
+  return( ans )
 }
 
 
@@ -1097,7 +1106,7 @@ crk_py <- function(inshp, intif, outtif,
   intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
 
   if(show.result){
-    cat('Result:\n', intCMD,  '\n', sep = ' ')
+    print(intCMD)
   }
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
@@ -1111,6 +1120,8 @@ crk_py <- function(inshp, intif, outtif,
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
+  print('ANS CRK')
+  print(ans)
   return( ans )
 }
 
@@ -1201,9 +1212,13 @@ crkJoblib_py <- function(
 
 
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  print('ANS CRK')
+  print(ans)
+  return( ans )
 }
 
 
