@@ -419,14 +419,18 @@ server <- function(input, output, session) {
                  type = "info"
       )
       if(!is.null(myLayersList) & nrow(myLayersList)>0){
+        myLayersList$X <- NULL
         restoreTry <- updateColaLayersLists(myLayersList)
         if(restoreTry) {
           rv$layersList <<- myLayersList
           makeLL()
           delFiles(tempFolder, recursive = TRUE)
           (cat(' >>>> tempFolder: ', restPath, '\n'))
-          rv$tempFolder <- restPath
-          tempFolder <<- restPath
+          (sessionID <<- sessionIDgen(folder = TRUE))
+
+          rv$sessionID <<- sessionID <<- restPath
+          rv$tempFolder <<- tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
+
           shinyalert(title = "The session was restored",
                      text = paste0('Your session ID now is:', restPath ),
                      type = "success")
@@ -685,6 +689,12 @@ server <- function(input, output, session) {
     # funLayersList(df = rv$layersList,
     #               inout = 'in', type =  'hs',
     #               internal = newtifPath, public = input$in_sui_name)
+    if(FALSE){
+      cat('++++\n')
+      print(df)
+      cat('tempFolder: ', tempFolder, " inout: ", inout,
+      " type: ", type, " internal: ", internal, " public: ", public, '\n')
+    }
 
     if(nrow(df) != 0){
       pub2 <- ifelse(public %in% df$public,
@@ -702,8 +712,8 @@ server <- function(input, output, session) {
     #     cat(' ++ Row to add: \n')
     #     print(df2)
 
-    nll <- rbind.data.frame(df, df2)
-    write.csv(nll, file.path(tempFolder, 'colaLayers.csv') )
+    nll <- rbind.data.frame(df[, c('id', 'inout', 'type', 'internal', 'public')], df2)
+    write.csv(nll, file.path(tempFolder, 'colaLayers.csv'), row.names = FALSE )
     cat('Layer List: \n')
     print(nll)
     return(nll)
@@ -4970,7 +4980,9 @@ server <- function(input, output, session) {
       textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
 
       if(length(out_crk) == 1){
+        print('  Fixing single slot CRK answer')
         out_crk <- list(file = out_crk[1], log = 'No log found')
+        print(out_crk)
       }
 
       rv$crk <- out_crk$file
@@ -5156,7 +5168,9 @@ server <- function(input, output, session) {
         transf = (input$in_crk_t),
         shape = (input$in_crk_5),
         volume = as.numeric(input$in_crk_6)),
-        error = function(e) {print('Error'); print(e); list(log = e$message, file = out_crk)})
+        error = function(e) {
+          print('Error'); print(e);
+          list(log = e$message, file = out_crk)})
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
@@ -5164,6 +5178,14 @@ server <- function(input, output, session) {
 
       tElapCrk <- Sys.time() - tStartCrk
       textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+      if(length(out_crk) == 1){
+        print('  Fixing single slot CRK answer')
+        out_crk <- list(file = out_crk[1], log = 'No log found')
+        print(out_crk)
+      }
+
+      rv$crk <- out_crk$file
 
       rv$crk <- out_crk$file
 
