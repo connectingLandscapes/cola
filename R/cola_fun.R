@@ -351,6 +351,8 @@ shp2xy <- function(shapefile, outxy, tempDir,
   }
 
   xy$Subpop_mortperc <- 0
+  xy$X <- xy$XCOORD
+  xy$Y <- xy$YCOORD
 
   xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
   xynew <- as.data.frame(xy)
@@ -869,9 +871,10 @@ lcc_py <- function(inshp, intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  return( ans )
 }
 
 
@@ -955,8 +958,7 @@ lccHeavy_py <- function(inshp, intif, outtif,
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
-  print('ANS LCC')
-  print(ans)
+  # print('ANS LCC');print(ans)
   return( ans )
 
 }
@@ -1045,8 +1047,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
-  print('ANS LCC')
-  print(ans)
+  #print('ANS LCC');print(ans)
   return( ans )
 }
 
@@ -1120,8 +1121,7 @@ crk_py <- function(inshp, intif, outtif,
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
-  print('ANS CRK')
-  print(ans)
+  # print('ANS CRK'); print(ans)
   return( ans )
 }
 
@@ -1216,8 +1216,7 @@ crkJoblib_py <- function(
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
-  print('ANS CRK')
-  print(ans)
+  #print('ANS CRK'); print(ans)
   return( ans )
 }
 

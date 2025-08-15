@@ -407,8 +407,12 @@ server <- function(input, output, session) {
     restPath <<- input$session2restore
     cat('Restoring session: ',restPath , ' ',
         file.path(dataFolder, restPath, 'colaLayers.csv'),'\n')
-    myLayersList <- tryCatch(read.csv(file.path(dataFolder, restPath, 'colaLayers.csv')),
+    myLayersList <- tryCatch(
+      read.csv(file.path(dataFolder, restPath, 'colaLayers.csv'))[, c('id', 'inout', 'type', 'internal', 'public')],
                              error = function(e) NULL)
+    # myLayersList <- tryCatch(
+    #   myLayersList[, c('id', 'inout', 'type', 'internal', 'public')],
+    #   error = function(e) NULL)
 
     if(!is.null(myLayersList)){
 
@@ -550,8 +554,9 @@ server <- function(input, output, session) {
       if (any(layersList$type %in% 'Distance') ){
         cat(' - Distance - ')
         lastx <- last(subset(layersList, type == 'Distance'))
-        rv$lccready <<- TRUE
-        rv$lcc <<- lastx$internal
+        rv$cdm <- lastx$internal
+        rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
+
         colaUpdateSelectizeInput(
           df = layersListx,
           ids = c('in_name_dis_cdp'),
@@ -712,7 +717,7 @@ server <- function(input, output, session) {
     #     cat(' ++ Row to add: \n')
     #     print(df2)
 
-    nll <- rbind.data.frame(df[, c('id', 'inout', 'type', 'internal', 'public')], df2)
+    nll <- rbind.data.frame(df, df2)
     write.csv(nll, file.path(tempFolder, 'colaLayers.csv'), row.names = FALSE )
     cat('Layer List: \n')
     print(nll)
@@ -1015,8 +1020,8 @@ server <- function(input, output, session) {
         # bbWGS <- 9999999
         if( is.null(rv$pts_sp_gcs) ){
           #if ( !any(grepl('ID\\["EPSG",4326\\]\\]', sf::st_crs(points_shp))) ){
-          print('projecting')
-          rv$pts_sp_gcs <- sf::st_transform(rv$pts_sp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+          cat(' Projecting points to EPSG4326')
+          rv$pts_sp_gcs <<- sf::st_transform(rv$pts_sp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           #}
         }
         # print('8888  rv$pts_sp_gcs in makeLL' )
@@ -1995,10 +2000,10 @@ server <- function(input, output, session) {
 
     ## no params provided
     if (is.null(rv$data)){
-      cat(' // No existing CDPOP invars\n')
+      cat('   // No existing CDPOP invars, using sample file\n')
       cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
     } else {
-      cat(' // Existing CDPOP invars\n')
+      cat('   // Existing CDPOP invars\n')
       cdpop_invars <- as.data.frame(t(rv$data))
       colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
     }
@@ -2014,7 +2019,7 @@ server <- function(input, output, session) {
 
     # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
     invars_file_path <<- file.path(tempFolder, 'invars_edited.csv')
-    print(paste0('Using CDPOP Invarsfile: ', invars_file_path))
+    cat('   // Using CDPOP Invarsfile: ', invars_file_path, '\n')
     write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
 
     newxy <- gsub('.shp', '.csv', x = rv$pts)
@@ -2029,11 +2034,15 @@ server <- function(input, output, session) {
     }
 
     if( input$cdpop_mort){
-      cat(' Extracing raster values for mortality\n')
-      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder, mortrast = rv$tif, porcEmpty = perc_emp)
+      cat('  CDPOP: Extracing raster values for mortality\n')
+      pdebug(TRUE,pre = '\n+', sep = ':\n:',
+             rv$pts, newxy, tempFolder, rv$tif, perc_emp)
+
+      xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder,
+             mortrast = rv$tif, porcEmpty = perc_emp)
       prefMort <- 'mort'
     } else {
-      shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
+      xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
     }
 
     ##
@@ -2045,9 +2054,9 @@ server <- function(input, output, session) {
     # pdebug(devug, pre = '\n --- ', sep = '\n', 'read.csv(newxy)', 'terra::crs(rv$tif_sp)')
 
     rv$cdp_sp <- st_transform(
-      sf::st_as_sf(read.csv(newxy), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp)),
+      sf::st_as_sf(read.csv(newxy), coords = c('X', 'Y'),
+                   crs = terra::crs(rv$tif_sp)),
       crs = '+proj=longlat +datum=WGS84')
-
 
     rv$ptsxy <- newxy
     # rv$cdm <- 'cdmat.csv'
@@ -2056,11 +2065,12 @@ server <- function(input, output, session) {
     output$vout_cdp <- isolate(renderText({
 
       tStartCDP <- Sys.time()
-      cdpop_ans <<- tryCatch(cdpop_py(inputvars = invars_file_path,
-                                      agevars = NULL,
-                                      cdmat = rv$cdm, xy = rv$ptsxy,
-                                      tempFolder = tempFolder, prefix = pref),
-                             error = function(e) NA)
+      cdpop_ans <<- tryCatch(
+        cdpop_py(inputvars = invars_file_path,
+                 agevars = NULL,
+                 cdmat = rv$cdm, xy = rv$ptsxy,
+                 tempFolder = tempFolder, prefix = pref),
+        error = function(e) NA)
       #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
       rv$cdpop_ans <<- cdpop_ans
       cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
@@ -4970,7 +4980,7 @@ server <- function(input, output, session) {
                shape = (input$in_crk_5),
                volume = as.numeric(input$in_crk_6)),
         error = function(e) {print('Error'); print(e);
-          list(log = e$message, file = out_crk)})
+          list(log = e$message, file = '')})
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
@@ -5170,7 +5180,7 @@ server <- function(input, output, session) {
         volume = as.numeric(input$in_crk_6)),
         error = function(e) {
           print('Error'); print(e);
-          list(log = e$message, file = out_crk)})
+          list(log = e$message, file = '')})
       #out_crk_no_data <- gdal_nodata
 
       cat("\n --- CRK out:\n")
