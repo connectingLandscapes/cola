@@ -6,11 +6,11 @@
 <table align="center" border="0" >
      <tr>
       <td align="center" width="60%">
-       <a href="http://34.57.191.163:3838/connecting-landscapes" target="_blank">
-        <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="DON'T FORGET THIS">
+       <a href="" target="_blank">
+        <img src="" alt="DON'T FORGET THIS">
         </a>
       </td>
-       <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
+       <td align="center" width="40%"> No public server at this time.<br>Contact us for specific server time requests<br> at ig299@nau.edu </td>
     </tr>
 </table>
 
