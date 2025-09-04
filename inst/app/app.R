@@ -555,13 +555,16 @@ server <- function(input, output, session) {
         cat(' - Distance - ')
         lastx <- last(subset(layersList, type == 'Distance'))
         rv$cdm <- lastx$internal
-        rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
+        rv$cdm_sp <- headMat <- tryCatch(data.table::fread(rv$cdm, header = F),
+                   error = function(e) NULL)
 
-        colaUpdateSelectizeInput(
-          df = layersListx,
-          ids = c('in_name_dis_cdp'),
-          typex = 'Distance', field = 'public')
-        params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
+        if ( !is.null(headMat)){
+          colaUpdateSelectizeInput(
+            df = layersListx,
+            ids = c('in_name_dis_cdp'),
+            typex = 'Distance', field = 'public')
+          params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
+        }
       }
 
       if (any(layersList$type %in% 'CDPOP') ){
@@ -2035,8 +2038,17 @@ server <- function(input, output, session) {
 
     if( input$cdpop_mort){
       cat('  CDPOP: Extracing raster values for mortality\n')
-      pdebug(TRUE,pre = '\n+', sep = ':\n:',
-             rv$pts, newxy, tempFolder, rv$tif, perc_emp)
+
+      # print("rv$pts")
+      # print(rv$pts)
+      # print("newxy")
+      # print(newxy)
+      # print('tempFolder')
+      # print(tempFolder)
+      # print('rv$tif')
+      # print(rv$tif)
+      # print('perc_emp')
+      # print(perc_emp)
 
       xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder,
              mortrast = rv$tif, porcEmpty = perc_emp)
