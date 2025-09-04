@@ -7,7 +7,7 @@
      <tr>
       <td align="center" width="60%">
        <a href="" target="_blank">
-        <img src="" alt="DON'T FORGET THIS">
+        <img src="">
         </a>
       </td>
        <td align="center" width="40%"> No public server at this time.<br>Contact us for specific server time requests<br> at ig299@nau.edu </td>
