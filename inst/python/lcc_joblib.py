@@ -223,10 +223,20 @@ def main() -> None:
         print('Calculating pairwise distances between sources in ' + str(len(sBatches)) + ' batches', flush=True)
         for s in sBatches:
             # Calculate shortest path distance from each source to
-            # every other source            
-            spspDist = nk.distance.SPSP(nkG, sources[s[0]:s[-1]+1], sources)
-            spspDist.run()
-            ppArr = spspDist.getDistances(asarray=True)
+            # every other source
+            # Networkit outputs a 64bit array all at once and this
+            # can swamp RAM, resulting in a value error.
+            try:            
+                spspDist = nk.distance.SPSP(nkG, sources[s[0]:s[-1]+1], sources)
+                spspDist.run()
+                ppArr = spspDist.getDistances(asarray=True)
+            except ValueError:
+                # print eror
+                print("""Calculating corridors failed.
+                      The process may have run out of memory.
+                      Consider setting a lower memory threshold.
+                      Exiting program.""")
+                sys.exit(1)    
             del spspDist
             # Insert in hdf file
             h5f = tb.open_file(pphdf, 'a')
@@ -285,10 +295,18 @@ def main() -> None:
         # Calculate shortest path distance from each source to
         # every other source
         print('Calculating pairwise distances between sources')
-        spspDist = nk.distance.SPSP(nkG, sources, sources)
-        spspDist.run()
-        ppArr = spspDist.getDistances(asarray=True)
-
+        try:
+            spspDist = nk.distance.SPSP(nkG, sources, sources)
+            spspDist.run()
+            ppArr = spspDist.getDistances(asarray=True)
+        except ValueError:
+            # print eror
+            print("""Calculating corridors failed.
+                  The process may have run out of memory.
+                  Consider setting a lower memory threshold.
+                  Exiting program.""")
+            sys.exit(1)
+        del spspDist
         #%%
         # If threshold > 0, apply threshold
         if dThreshold > 0:
@@ -348,9 +366,17 @@ def main() -> None:
             print('Working on batch ' + str(b+1) + ' of ' + str(len(sBatches)))
             print('Batch size is ' + str(len(s)))
             sourceBatchNK = np.array(sources)[s]
-            spspDist = nk.distance.SPSP(nkG, sourceBatchNK)
-            spspDist.run()
-            ccArr = spspDist.getDistances(asarray=True)
+            try:
+                spspDist = nk.distance.SPSP(nkG, sourceBatchNK)
+                spspDist.run()
+                ccArr = spspDist.getDistances(asarray=True)
+            except ValueError:
+                # print error
+                print("""Calculating corridors failed.
+                      The process may have run out of memory.
+                      Consider setting a lower memory threshold.
+                      Exiting program.""")
+                sys.exit(1)
             del spspDist
             # Networkit gives inaccessible nodes the max float 64 value.
             # Set these to nan.
@@ -382,7 +408,8 @@ def main() -> None:
 
         # Number of batches (divide by 2 becuase each line of reOrder can
         # represent two different arrays)
-        nBatches = int(np.floor(len(reOrder)/(arraysProc/2)))
+        # Needs to be at least 1
+        nBatches = np.max([1,int(np.floor(len(reOrder)/(arraysProc/2)))])
 
         # Use 50 percent of the number of lines across all threads
         # as a way to allocate memory to the output list created
@@ -409,9 +436,18 @@ def main() -> None:
         # Calculate shortest path distance from each source to every
         # cell in the landscape (slightly different than above spsp calcs)
         print('Calculating corridors')
-        spspDist = nk.distance.SPSP(nkG, sources)
-        spspDist.run()
-        ccArr = spspDist.getDistances(asarray=True)
+        try:
+            spspDist = nk.distance.SPSP(nkG, sources)
+            spspDist.run()
+            ccArr = spspDist.getDistances(asarray=True)
+        except ValueError:
+            # print error
+            print("""Calculating corridors failed.
+                  The process may have run out of memory.
+                  Consider setting a lower memory threshold.
+                  Exiting program.""")
+            sys.exit(1)
+        del spspDist
         del nkG
         # Networkit gives inaccessible nodes the max float 64 value.
         # Set these to nan.
