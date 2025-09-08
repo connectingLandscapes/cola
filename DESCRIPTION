@@ -1,7 +1,7 @@
 Package: cola
 Type: Package
 Title: Connecting Landscapes
-Version: 2.1.1
+Version: 2.2.1
 Author: Ivan Gonzalez & Patrick Jantz
 Maintainer: Ivan Gonzalez <gonzalezgarzonivan@gmail.com>
 Description: Set of tools for creating corridors, nodes, and others landscape

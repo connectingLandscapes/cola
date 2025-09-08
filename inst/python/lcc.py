@@ -244,7 +244,7 @@ def main() -> None:
         # Get least cost path value
         lcpVal = np.nanmin(lcc)
         # Convert to 0/1 corridor
-        lcc = np.where(lcc <= lcpVal + corrTolerance, 1, 0)
+        lcc = np.where(lcc <= lcpVal + corrTolerance + 0.001, 1, 0)
         lcc[np.isnan(lcc)] = 0
         lccSum = lcc + lccSum
     del ccList

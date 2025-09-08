@@ -83,7 +83,11 @@ cleanMemory <- function(logFilePath){
 ## try deleting files
 delFiles <- function(...){
   invisible(suppressWarnings(
-    tryCatch(file.remove(c(...)),
+    tryCatch(file.remove(c(...), recursive = TRUE),
+             error = function(e) NULL)
+  ))
+  invisible(suppressWarnings(
+    tryCatch(unlink(c(...), force = TRUE, recursive = TRUE),
              error = function(e) NULL)
   ))
 }
@@ -576,39 +580,39 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
                                 #srcband  = 1,
                                 tr = rep(max(pixsize), 2)
                                 #, dstnodata = -9999
-                                )
+        )
         outraster0 <- outraster
-      # }
-      # else if( nd & !ps ){
-      #   cat ( ' \n Converting raster: Changing no data \n' )
-      #   gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
-      #                           #srcband  = 1,
-      #                           #srcnodata = nd0,
-      #                           ot = 'Float64',
-      #                           tr = rep(max(pixsize), 2)
-      #                           )
-      #   outraster0 <- outraster
-      #
-      # } else if (!nd & ps ){
-      #   cat ( ' \n Converting raster: Changing no data \n' )
-      #   gdalUtilities::gdalwarp(srcfile = inraster,
-      #                           dstfile = outraster,
-      #                           #b = 1,
-      #                           ot = 'Float64'
-      #                           #, srcnodata = nd0 ,
-      #                           #dstnodata = -9999
-      #   )
-      #   outraster0 <- outraster
-      # } else if (!ps ){
-      #   cat ( '  Making pixel squared' )
-      #   gdalUtilities::gdalwarp(srcfile = inraster,
-      #                           dstfile = outraster,
-      #                           #b = 1,
-      #                           ot = 'Float64'
-      #                           #, srcnodata = nd0 ,
-      #                           #dstnodata = -9999
-      #   )
-      #   outraster0 <- outraster
+        # }
+        # else if( nd & !ps ){
+        #   cat ( ' \n Converting raster: Changing no data \n' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+        #                           #srcband  = 1,
+        #                           #srcnodata = nd0,
+        #                           ot = 'Float64',
+        #                           tr = rep(max(pixsize), 2)
+        #                           )
+        #   outraster0 <- outraster
+        #
+        # } else if (!nd & ps ){
+        #   cat ( ' \n Converting raster: Changing no data \n' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster,
+        #                           dstfile = outraster,
+        #                           #b = 1,
+        #                           ot = 'Float64'
+        #                           #, srcnodata = nd0 ,
+        #                           #dstnodata = -9999
+        #   )
+        #   outraster0 <- outraster
+        # } else if (!ps ){
+        #   cat ( '  Making pixel squared' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster,
+        #                           dstfile = outraster,
+        #                           #b = 1,
+        #                           ot = 'Float64'
+        #                           #, srcnodata = nd0 ,
+        #                           #dstnodata = -9999
+        #   )
+        #   outraster0 <- outraster
       } else{
         outraster0 <- inraster
       }
@@ -733,7 +737,7 @@ fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
                               #ot = 'Float64',
                               tr = rep(max(pixsize), 2)
                               #, dstnodata = -9999
-                              )
+      )
       outraster0 <- outraster
     } else{
       outraster0 <- inraster
@@ -826,7 +830,7 @@ fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
     if( !( nd & ps ) ) {
       gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
                               tr = rep(max(pixsize), 2),
-        #                      srcnodata = nd0, dstnodata = nd0,
+                              #                      srcnodata = nd0, dstnodata = nd0,
                               overwrite = TRUE)
       # gdalUtilities::gdalinfo(outraster)
       outraster0 <- outraster
@@ -862,20 +866,23 @@ loadRast <- function(inFiles, tempFolder, sessID){
 loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- input$shapefile
   #inFiles: data frame with files. column 'name' with file name, and 'newFile' with full new name path
 
-  # sessID <- 'colaQDZ2024091910420805'
+  ## setwd('/data/tempR/')
+  # sessID <- 'colaJOU2025072917142505/'
   # tempFolder <- paste0('/data/tempR/', sessID)
-  #inFiles <- data.frame(newFile = list.files(full.names = TRUE, path = tempFolder, pattern = 'pws'))
-  #inFiles$name <- basename(inFiles$newFile)
+  # inFiles <- data.frame(newFile = list.files(
+  # full.names = TRUE, path = tempFolder, pattern = 'Anoa'))
+  # inFiles$name <- basename(inFiles$newFile)
   # rv$inDistSessID
   # sessID <- (inDistSessID <- sessionIDgen())
   # tempFolder <- "/data/temp/SL2023112814374705file138b6c29cf34/"
   # save(inFiles, file = paste0(rootPath, '/inFiles_input_shp.RData'))
-  # sss <- load(paste0('/data/temp/inFiles_input_shp.RData'))
+  # sss <- load(paste0('/data/tempR/inFiles_input_shp.RData'))
   # load(paste0(rootPath, '/inFiles_input_shp.RData'))
   # sss <- load(paste0(tempFolder, '/shpfiles.RData')) # sss
 
   #print(inFiles)
   outshp <- list()
+  saveShp <- FALSE
   if ( class(inFiles) == "NULL" ){
     outshp$mssg <- 'Error in loading shapefile'
   } else {
@@ -919,24 +926,35 @@ loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- 
 
       # setwd("/data/temp/PH2023100311442505file8513323368416")
       # outshp <- inFiles <- list(newFile = '/data/temp/KI2023100313381405file8513368894f1c/sp50_multi.shp')
+      # inFiles <- data.frame(newFile = 'C:/cola/Anoa/Anoa_present_ardianti.shp')
 
       outshp$shp <- tryCatch(sf::read_sf(dirname(inFiles$newFile[1]),
                                          basename(tools::file_path_sans_ext(inFiles$newFile[1]))),
-                             error = function (e) NULL)
+                             error = function  (e) {print(e); return(e)})
+      # [1] "sf"         "tbl_df"     "tbl"        "data.frame"
+      cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
+
     }
 
+    ## Second try
     if( is.null(outshp$shp) ){
       outshp$shp <- tryCatch(sf::read_sf(
         grep('shp$', inFiles$newFile, value = TRUE)),
-        error = function (e) NULL)
+        error = function (e) {print(e); retunr(e)})
     }
 
-    if( !is.null(outshp$shp) ){
 
-      if (any(class(outshp$shp$geometry) == 'sfc_MULTIPOINT')){
-        outshp$shp <- st_cast(outshp$shp, "POINT")
-        outshp$shp <- as(outshp$shp, 'Spatial')
-      }
+    # v <- vect(f)
+    #   s <- sf::st_as_sf(v) # sf object from a SpatVector
+    #   vv <- vect(s) # SpatVector from an sf:
+    #
+    # library(raster)
+    # x <- as(v, "Spatial") # To create an sp object from a SpatVector:
+    # vs <- vect(x) # SpatVector from a Spatial* vector type object with
+
+
+    #if worked
+    if( !is.null(outshp$shp) ){
 
       # if (any(class(outshp$shp$geometry) == 'sfc_LINESTRING')){
       #   outshp$shp <- st_cast(outshp$shp, "LINE")
@@ -944,35 +962,114 @@ loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- 
       # }
 
       #print( ' ............. '); print(outshp$shp)
-
-      if ( is.na(st_crs(outshp$shp)) ){
-        # if (is.na(outshp$shp@proj4string@projargs)){
-        outshp$mssg <- 'No projection in shapefile'
-      } else {
-        if (!is.null(rastTemp)){
-
-          if(terra::same.crs(outshp$shp, rastTemp)){
-            outshp$shp <- terra::project(outshp$shp, crs(rastTemp))
-          }
-        }
+      if ( any(class(outshp$shp$geometry) == 'sfc_MULTIPOINT') ){
+        #cat (' Converting multipoint to singlepoint \n')
+        outshp$shp <- st_cast(outshp$shp, "POINT")
+        outshp$shp <- as(outshp$shp, 'Spatial')
+        saveShp <- TRUE
       }
 
-      if ( any(class(outshp$shp) %in% 'sf') ){
+      if ( any(class(outshp$shp) %in% c('sf', 'SpatialPointsDataFrame')) ){
         #if (class(outshp$shp) == 'SpatialPointsDataFrame'){
         outshp$shp$sortID <- 1:nrow(outshp$shp)
       }
 
+      if ( is.na(st_crs(outshp$shp)) ){
+        # if (is.na(outshp$shp@proj4string@projargs)){
+        #cat(' is.na(st_crs(outshp$shp)) \n')
+
+        outshp$mssg <- 'No projection in shapefile'
+      } else {
+        #cat(' !is.na(st_crs(outshp$shp)) \n')
+
+        # Project as raster
+        if (! is.null(rastTemp) ){
+          #cat(' ! is.null(rastTemp) \n')
+
+          if ( class(rastTemp) %in% 'SpatRaster' ){
+            #cat(' class(rastTemp) %in% SpatRaster \n')
+            # rastTemp <- terra::rast('/data/tempR/colaJOU2025072917142505/in_crk_SHX2025072917144105.tif')
+            # rastTemp <- terra::rast('C:/cola/Anoa/sur_colaMMR2025072905584605.tif')
+            # outshp <- list(shp = sf::read_sf('C:/cola/Anoa/Anoa_present_ardianti.shp'),
+            #                                  inFiles = 'C:/cola/Anoa/Anoa_present_ardianti.shp'
+            # )
+
+            #crsRst <- terra::crs(rastTemp)
+            crsVct <- terra::vect(outshp$shp[1, 1])
+            #cat(' Checking equal vector and raster CRS\n')
+            #print(terra::same.crs(crsVct, rastTemp))
+            if(! terra::same.crs(crsVct, rastTemp) ) {
+              # cat(' Reprojecting points to raster CRS\n')
+              # cat(' Old Projection: ', sf::st_crs(outshp$shp)$wkt,'\n')
+              if ( any(class(outshp$shp) %in% c('sf')) ){
+                outshp$shp <- st_transform(outshp$shp, crs = sf::st_crs(rastTemp))
+              } else if ( any(class(outshp$shp) %in% c('SpatialPointsDataFrame')) ){
+                outshp$shp <- terra::project(
+                  terra::vect(outshp$shp),
+                  rastTemp)
+              }
+
+              #shp2 <- terra::vect(outshp$shp) # SpatVector
+              #outshp$shp <- terra::project(shp2, crs(rastTemp))
+              # cat(' New Projection: ', sf::st_crs(outshp$shp)$wkt,'\n')
+              saveShp <- TRUE
+            }
+          } else {
+
+          }
+        }
+      }
+
       outshp$files <- inFiles$newFile
       outshp$layer <- grep(pattern = '.shp', outshp$files, value = TRUE)
+
+      if (saveShp){
+        # cat(' Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
+        # file.remove(inFiles$newFile)
+        # inFiles <- data.frame(
+        #   newFile = list.files(
+        #   path = 'C:/cola/colaBKE2025073122594805/', pattern = 'Anoa')
+        #   )
+        outshp$files <- gsub(x = inFiles$newFile, '\\.', '_proj.')
+        #print(outshp$files)
+        #inFiles$newFile <- gsub(x = inFiles$newFile, '\\..', '_proj.')
+        outshp$layer <- grep(pattern = '.shp', x = outshp$files, value = TRUE)
+        #print(outshp$layer)
+        if ( any(class(outshp$shp) %in% c('sf')) ){
+          #cat (' Saving SF points into a new layer with raster projection \n',outshp$layer, '\n')
+          sf::write_sf(outshp$shp,  overwrite=TRUE,
+                       outshp$layer
+                       #gsub(x = inFiles$newFile[1], '\\..+', '_proj.shp')
+          )
+        } else if ( any(class(outshp$shp) %in% c('SpatialPointsDataFrame')) ){
+          #cat (' Saving TERRA points into a new layer with raster projection \n',outshp$layer, '\n')
+          terra::writeVector(terra::vect(outshp$shp),  overwrite=TRUE,
+                             outshp$layer
+                             #gsub(x = inFiles$newFile[1], '\\..+', '_proj.shp')
+          )
+        } else if ( any(class(outshp$shp) %in% c('SpatVector')) ){
+          terra::writeVector((outshp$shp),  overwrite=TRUE,
+                             outshp$layer
+                             #gsub(x = inFiles$newFile[1], '\\..+', '_proj.shp')
+          )
+        }
+        #cat (' Writing projection: \n', sf::st_crs(outshp$shp)$wkt, '\n')
+        outshp$shp <- tryCatch(sf::read_sf(
+          outshp$layer
+          #inFiles$newFile[1], '\\..+', '_proj.shp'
+        ),
+        error = function  (e) {print(e); return(e)})
+      }
+
+      # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
+      # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
+      # try(file.remove(inFiles$name))
+      # tempFolder <- 'C:/cola/colaJAA2025073022473805'
+      save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
+      # ss <- load(paste0(tempFolder, '/outshp_loaded.RData'))
+      #cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
     }
-
-
-    # updateSelectInput(session, 'aoi_sur', choices = c('Dibujar', 'Capa'), selected = 'Capa')
-    # pdebug("is.null(py)", 'inSurSessID', sep = '\n', pre = ' -- ')
-    # try(file.remove(inFiles$name))
   }
-  #save(outshp, file = paste0(tempFolder, '/outshp_loaded.RData'))
-  cat('\n Vectorial layer loaded. Class: ', paste0(class(outshp$shp), collapse = '-'), '\n')
   #print(outshp)
   return(outshp)
 }

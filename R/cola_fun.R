@@ -84,7 +84,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     # allele, ' ', hetero, ' ',
     method, ' ', neighbors, ' ', crs, ' 2>&1'))
   if (cml){
-    cat('\n\tCMD interpol: \n')
+    cat('\n\tCMD interpol struct: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n')
   }
@@ -103,10 +103,10 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
-                             newFiles, NA),
+                             newFiles, ''),
                newFiles = newFiles,
                #log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 
 }
 
@@ -152,7 +152,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     , ' 2>&1 ' #, logname
   ))
   if (cml){
-    cat('\n\tCMD interpol: \n ')
+    cat('\n\tCMD interpol density: \n ')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n')
   }
@@ -173,7 +173,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
   #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
 }
 
@@ -306,7 +306,8 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param outxy String. Path to the resulting .xy file
 #' @param tempDir String. Path to the working directory
 #' @param mortrast String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.
-#' @param survrast String. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
+#' @param survrast String. Optional. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
+#' @param porcEmpty Integer. percentage of locations (points) that randomly will be considered empty and possible to be colonized.
 #' @return String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 #' @examples
 #' shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')
@@ -350,6 +351,8 @@ shp2xy <- function(shapefile, outxy, tempDir,
   }
 
   xy$Subpop_mortperc <- 0
+  xy$X <- xy$XCOORD
+  xy$Y <- xy$YCOORD
 
   xy$sex <- sample(x = c(1, 0), size = nrow(xy), replace = TRUE)
   xynew <- as.data.frame(xy)
@@ -459,7 +462,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 guessNoData <- function(path){
-  # path = raster path
+  # path <- input_tif
   ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
     gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
@@ -622,9 +625,9 @@ sui2res_py <- function(intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
+  return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 #' @title  Create random points
@@ -663,16 +666,16 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 
 #' @title  Simulate spatial points
 #' @description Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
-#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions
+#' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default version should point to a conda environment. Might change among computers versions
 #' @param pyscript String. Python script location
-#' @param inshp  String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file|
-#' @param outif Output point layer| |  |outtif|  | ¿string| |File path to the output point layer. Written in ESRI Shapefile format.|
-#' @param intif Surface resistance |   |intif|     | String|      | File path to the input raster. Requires a projected file with square pixels. Not LonLat projection allowed|
-#' @param minval Minimum value| |minval| | Numeric| | The lower value of the pixels in the raster to consider to simulate the points.
-#' @param maxval |Maximum value| |maxval| | Numeric| | The upper value of the pixels in the raster to consider to simulate the points.
-#' @param npoints |Number of points | |npoints|  |Numeric|  | Number of points to simulate.
-#' @param issuit |Is it suitable?| | | issuit|  |String|  |‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
-#' @param upcrs Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed
+#' @param outtif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
+#' @param minval Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
+#' @param maxval Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
+#' @param npoints Integer. Number of points. Number of points to simulate.
+#' @param issuit String. Is it suitable? ‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
+#' @param upcrs String. Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with the created shapefile
@@ -723,9 +726,9 @@ points_py <- function(intif, outshp,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outshp), outshp, NA),
+  return( list(file = ifelse(file.exists(outshp), outshp, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 
 
 }
@@ -736,8 +739,8 @@ points_py <- function(intif, outshp,
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
 #' @param outcsv String. Output csv file name. Path of the output csv matrix
 #' @param maxdist Numeric. Max. dispersal distance in cost units. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.
-#' @param ncores numeric Numberof cores. Number of CPU cores to run the analysis
-#' @param crs String. Projection string. String. Projection information in the case the input raster [2] has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param intif String.
 #' @param py Python location
 #' @param pyscript Python script location
@@ -803,9 +806,9 @@ cdmat_py <- function(inshp, intif, outcsv,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outcsv), outcsv, NA),
+  return( list(file = ifelse(file.exists(outcsv), outcsv, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -868,9 +871,10 @@ lcc_py <- function(inshp, intif, outtif,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  return( ans )
 }
 
 
@@ -950,9 +954,13 @@ lccHeavy_py <- function(inshp, intif, outtif,
   if(show.result){
     print(intCMD)
   }
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  # print('ANS LCC');print(ans)
+  return( ans )
+
 }
 
 
@@ -1035,9 +1043,12 @@ lccJoblib_py <- function(inshp, intif, outtif,
   }
 
   tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  #print('ANS LCC');print(ans)
+  return( ans )
 }
 
 
@@ -1071,7 +1082,6 @@ crk_py <- function(inshp, intif, outtif,
   # [7] cores
   # [8] proj
 
-  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   (cmd_crk <- paste0(
     quotepath(py), ' ',
@@ -1094,15 +1104,25 @@ crk_py <- function(inshp, intif, outtif,
     cat('\n')
   }
 
-  intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+  intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
 
   if(show.result){
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
+                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                log = paste0(intCMD, collapse = ' - '),
+                done = ifelse(file.exists(outtif), 'yes', 'no'))
+  write.table(metaFile, logname )
+
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  # print('ANS CRK'); print(ans)
+  return( ans )
 }
 
 #' @title  Create least cost corridors using parallel computing
@@ -1182,10 +1202,22 @@ crkJoblib_py <- function(
     print(intCMD)
   }
 
+  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
+                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                maxram = maxram,
+                log = paste0(intCMD, collapse = ' - '),
+                done = ifelse(file.exists(outtif), 'yes', 'no'))
+  write.table(metaFile, logname )
+
+
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
-  return( list(file = ifelse(file.exists(outtif), outtif, NA),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0("", intCMD) )
+  #print('ANS CRK'); print(ans)
+  return( ans )
 }
 
 
@@ -1211,14 +1243,14 @@ prio_py <- function(tif, incrk, inlcc,
                     pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
                     cml = TRUE, show.result = TRUE){
 
-  # pri_py(py, incrk, inlcc, outshp, outif, param5 = 0.5)
+  # pri_py(py, incrk, inlcc, outshp, outtif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
   #                    tif = rf$tif,
   #                    incrk = rv$crk ,
   #                    inlcc = rv$lcc,
   #                    maskedcsname = maskedcsname,
   #                    outshp = out_pri_shp,
-  #                    outif = out_pri_tif,
+  #                    outtif = out_pri_tif,
   #                    param5 = as.numeric(input$in_prio_5),
   #                    param6 = as.numeric(input$in_prio_6)) # 0.5
 
@@ -1294,10 +1326,10 @@ prio_py <- function(tif, incrk, inlcc,
 
 
   return(
-    list(tif = ifelse(file.exists(outtif), outtif, NA),
-         shp = ifelse(file.exists(outshppoint), outshppoint, NA),
+    list(tif = ifelse(file.exists(outtif), outtif, ''),
+         shp = ifelse(file.exists(outshppoint), outshppoint, ''),
          #log =  paste0(intCMD, ' -- ', read.delim(logname)) ))
-         log =  intCMD ) )
+         log = paste0("", intCMD) ) )
 }
 
 
@@ -1370,9 +1402,9 @@ crk_compare_py <- function(intif, intifs,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 #' @title  Compare maps of least cost paths
@@ -1443,9 +1475,9 @@ lcc_compare_py <- function(intif, intifs,
     print(intCMD)
   }
 
-  return( list(file = ifelse(file.exists(outpngabs), outpngabs, NA),
+  return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-               log =  intCMD ) )
+               log = paste0("", intCMD) ) )
 }
 
 
@@ -1517,7 +1549,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
         dst_filename = rasterizedPath,
         add = TRUE,
         a = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) e$message)
 
   } else {
     print(' Add vals -- value')
@@ -1528,7 +1560,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
         dst_filename = rasterizedPath,
         add = TRUE,
         burn = burnval) #as.numeric(burnval)
-      , error = function(e) e)
+      , error = function(e) e$message)
   }
 
 
@@ -1637,7 +1669,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         print('Error rast pol for replacing');
         print(e);
         return(e)
-        })
+      })
 
   } else{
     ## Use a single value
