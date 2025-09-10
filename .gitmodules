@@ -1,1 +1,3 @@
-
+[submodule "inst/sat_ts_fusion"]
+  path = inst/sat_ts_fusion
+  url = https://github.com/GEODE-Lab/sat_ts_fusion.git
