@@ -10,7 +10,7 @@ cola_params <<- list(
   ## Libraries to install in the python conda environment
   libs2Install = c('geopandas', # this first to avoid problems
                    'gdal', 'h5py',
-                   'numexpr',
+                   'numexpr', 'zarr',
                    'rasterio', 'pytables',
                    'pandas',  'cython', 'numba' ,
                    'networkit', 'fiona', 'shapely',
@@ -222,7 +222,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         dss = FALSE,
                         libs2Install =  c(
                           'geopandas',
-                          'gdal', 'h5py', 'numexpr', 'rasterio',
+                          'gdal', 'h5py', 'numexpr', 'rasterio', 'zarr',
                                           'pytables', 'pandas',  'cython', 'numba' ,
                                           'networkit==11.0', 'fiona', 'shapely',
                                           'kdepy', 'scikit-image', 'kdepy')
