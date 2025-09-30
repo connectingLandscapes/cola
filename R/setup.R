@@ -220,9 +220,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = TRUE, ask = TRUE,
                         dss = FALSE,
-                        libs2Install =  c(
-                          'geopandas',
-                          'gdal', 'h5py', 'numexpr', 'rasterio', 'zarr',
+                        libs2Install =  c('zarr==3.1.3',
+                                          'geopandas', 'gdal', 'h5py', 'numexpr', 'rasterio',
                                           'pytables', 'pandas',  'cython', 'numba' ,
                                           'networkit==11.0', 'fiona', 'shapely',
                                           'kdepy', 'scikit-image', 'kdepy')
