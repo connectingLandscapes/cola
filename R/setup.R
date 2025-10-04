@@ -127,12 +127,12 @@ diagnose_cola <- function(envName = 'cola',
 #' @param pv String. Python version to use. Default value is '3.12.11'
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
-#' install_cond_env(envName = 'cola',
+#' install_conda_env(envName = 'cola',
 #'     ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@nau.edu>
 #' @export
-install_cond_env <- function(envName, useYML = FALSE, ymlFile = NULL,
+install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
                              packagess = NULL , pv = '3.12.11'){
 
 
@@ -389,13 +389,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       if ( isTRUE(user_permission) ) {
 
         if(!onlyIndividual){
-          insCondLog <- install_cond_env(
+          insCondLog <- install_conda_env(
             envName = envName, useYML = yml,
             packagess = libs2Install,
             ymlFile = newYmlFile, pv = numPyVers3)
 
         } else {
-          insCondLog <- install_cond_env(
+          insCondLog <- install_conda_env(
             envName = envName, useYML = yml,
             ymlFile = newYmlFile, pv = numPyVers3)
         }
@@ -406,7 +406,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           if ( dir.exists(envDir) ){
             conda_remove(envName)
             unlink( envDir, recursive = TRUE, force = TRUE )
-            insCondLog <- install_cond_env(envName = envName, useYML = yml,
+            insCondLog <- install_conda_env(envName = envName, useYML = yml,
                                            ymlFile = newYmlFile,
                                            pv = numPyVers3)
           }
@@ -468,7 +468,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if (!file.exists(pyCola)){
           message(paste0(' Uninstalling corrupt previous installation and installing again'))
           tryCatch(conda_remove(envName))
-          insCondLog <- install_cond_env(envName = envName, useYML = yml,
+          insCondLog <- install_conda_env(envName = envName, useYML = yml,
                                          ymlFile = newYmlFile, pv = numPyVers3,
                                          packagess = libs2Install)
         }
