@@ -3,44 +3,44 @@
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-# cola_params <<- list(
-#   ## Environment name
-#   envName = 'cola',
-#
-#   ## Libraries to install in the python conda environment
-#   libs2Install = c('geopandas', # this first to avoid problems
-#                    'gdal', 'h5py',
-#                    'numexpr', 'zarr',
-#                    'rasterio', 'pytables',
-#                    'pandas',  'cython', 'numba' ,
-#                    'networkit', 'fiona', 'shapely',
-#                    'kdepy', 'joblib',
-#                    'scikit-image'),
-#   yml = TRUE,
-#   ## Number steps
-#   nSteps = 5,
-#
-#   ## R packages for the DSS
-#   libs2colaDSS = c(
-#     'markdown', 'rmarkdown',
-#     'knitr', 'units',
-#     "reshape2", 'bit', 'digest', 'dplyr',
-#     'tidyverse', 'DT', 'ggplot2',
-#     # debug install order: htmltools >> shiny >> shinyWidgets
-#     'htmlwidgets', 'htmltools', ## Before shiny
-#     'magrittr', 'RColorBrewer', 'viridis',
-#     ## Spatial
-#     # "rgeos", "rgdal", 'raster', ## old
-#     'sf', 'terra',
-#     'rlang', "leaflet", "leaflet.extras",
-#     'gdalUtilities',
-#     ## Shiny
-#     'shiny',  ## Before shiny plugins
-#     "shinydashboard",  "shinycssloaders",
-#     'shinydashboardPlus', 'shinyjs',
-#     'shinyWidgets', 'dashboardthemes',
-#     "highcharter", 'plotly')
-# )
+cola_params <<- list(
+  ## Environment name
+  envName = 'cola',
+
+  ## Libraries to install in the python conda environment
+  libs2Install = c('geopandas', # this first to avoid problems
+                   'gdal', 'h5py',
+                   'numexpr', 'zarr',
+                   'rasterio', 'pytables',
+                   'pandas',  'cython', 'numba' ,
+                   'networkit', 'fiona', 'shapely',
+                   'kdepy', 'joblib',
+                   'scikit-image'),
+  yml = TRUE,
+  ## Number steps
+  nSteps = 5,
+
+  ## R packages for the DSS
+  libs2colaDSS = c(
+    'markdown', 'rmarkdown',
+    'knitr', 'units',
+    "reshape2", 'bit', 'digest', 'dplyr',
+    'tidyverse', 'DT', 'ggplot2',
+    # debug install order: htmltools >> shiny >> shinyWidgets
+    'htmlwidgets', 'htmltools', ## Before shiny
+    'magrittr', 'RColorBrewer', 'viridis',
+    ## Spatial
+    # "rgeos", "rgdal", 'raster', ## old
+    'sf', 'terra',
+    'rlang', "leaflet", "leaflet.extras",
+    'gdalUtilities',
+    ## Shiny
+    'shiny',  ## Before shiny plugins
+    "shinydashboard",  "shinycssloaders",
+    'shinydashboardPlus', 'shinyjs',
+    'shinyWidgets', 'dashboardthemes',
+    "highcharter", 'plotly')
+)
 # # attach(cola_params)
 
 
@@ -176,8 +176,7 @@ diagnose_cola <- function(envName = 'cola',
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL,
-                             packagess = NULL , pv = '3.12.11'){
+install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL, packagess = NULL , pv = '3.12.11'){
 
 
   if(useYML & is.null(ymlFile) ){
@@ -430,7 +429,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if(!onlyIndividual){
           insCondLog <- install_cond_env(
             envName = envName, useYML = yml,
-            packages = libs2Install,
+            packagess = libs2Install,
             ymlFile = newYmlFile, pv = numPyVers3)
 
         } else {
@@ -505,10 +504,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       ## Error -- cola/python.exe saved on paths but doesn't exists
       if (!file.exists(pyCola)){
         if (!file.exists(pyCola)){
-          message(paste0(' Uninstalling corrupt previous installation'))
+          message(paste0(' Uninstalling corrupt previous installation and installing again'))
           tryCatch(conda_remove(envName))
           insCondLog <- install_cond_env(envName = envName, useYML = yml,
-                                         ymlFile = newYmlFile, pv = numPyVers2)
+                                         ymlFile = newYmlFile, pv = numPyVers3,
+                                         packagess = libs2Install)
         }
       }
 
