@@ -176,12 +176,16 @@ diagnose_cola <- function(envName = 'cola',
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL, packagess = NULL , pv = '3.12.11'){
+install_cond_env <- function(
+    envName, useYML = TRUE,
+    ymlFile = NULL, packagess = NULL , pv = '3.12.11'){
 
 
   if(useYML & is.null(ymlFile) ){
     ymlFile = system.file('python/python_conda_config.yml', package = "cola")
+    print('Usind default package yml file for conda creation')
   }
+
   newYmlFile <- ymlFile
   insCondLog <- ''
 
