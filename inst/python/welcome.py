@@ -30,7 +30,6 @@ from skimage.morphology import remove_small_objects
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KernelDensity
 
-
 import base64
 import gc
 import glob
@@ -51,7 +50,9 @@ import tables
 import tables as tb
 import time
 
-from skimage.segmentation import watershed
+import skimage
+
+
 from shapely.geometry import shape
 
 # print('    .... all good until here ')
@@ -65,8 +66,15 @@ import geopandas as gpd
 import rasterio as rio
 from rasterio.crs import CRS
 
+import zarr
 #print('    .... debug ')
 
 import cola_functions as cf
 #print (" cola_functions loaded!")
 print ("WELCOME -- libraries loaded successfully")
+
+try: 
+    from skimage.segmentation import watershed
+    
+except: 
+    print ("Can't: from skimage.segmentation import watershed")
