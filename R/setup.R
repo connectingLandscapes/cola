@@ -177,7 +177,7 @@ diagnose_cola <- function(envName = 'cola',
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL,
-                             packages = NULL , pv = '3.12.11'){
+                             packagess = NULL , pv = '3.12.11'){
 
 
   if(useYML & is.null(ymlFile) ){
@@ -195,7 +195,7 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL,
     if( any(grep('Could not solve for environment specs', insCondLog)) ){
       cat('   YML creation failed. Trying conda_create("', envName, '")\n')
       insCondLog <- tryCatch(
-        conda_create(envname = envName, packages = packages, python_version = pv),
+        conda_create(envname = envName, packages = packagess, python_version = pv),
         error = function(e) e$message)
     }
 
@@ -205,7 +205,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL,
     }
   } else {
     ## Creating env with no yml
-    insCondLog <- tryCatch(conda_create(envname =  envName,  packages = packages, python_version = pv), error = function(e) e$message)
+    insCondLog <- tryCatch(conda_create(envname =  envName,  packages = packagess,
+                                        python_version = pv), error = function(e) e$message)
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
            'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
@@ -926,9 +927,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       cat (sep = '', '\n\n',
            '    Customize your local parameteres by editing the file:\n\t',
-           file.path(Sys.getenv("HOME"), ".Renviron"),'\n\n',
+           file.path(Sys.getenv("HOME"), ".Renviron"), # # '\n\n',
            '\n    Open it on R/Rstudio with the command:\n',
-           '    file.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n',
+           '\tfile.edit(file.path(Sys.getenv("HOME"), ".Renviron"))\n\n',
            '  **  Please restart R to update the new settings  **\n'
       )
 

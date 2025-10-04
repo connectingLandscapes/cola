@@ -1,8 +1,8 @@
 Package: cola
 Type: Package
 Title: Connecting Landscapes
-Version: 2.2.1
-Author: Ivan Gonzalez & Patrick Jantz
+Version: 2.3.0
+Author: Ivan.Gonzalez@nau.edu & Patrick.Jantz@nau.edu
 Maintainer: Ivan Gonzalez <gonzalezgarzonivan@gmail.com>
 Description: Set of tools for creating corridors, nodes, and others landscape
     connectivity procedures. Also provides a dashboard for running all the tools under a graphical user interface.    
