@@ -176,7 +176,9 @@ diagnose_cola <- function(envName = 'cola',
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL, ... ){
+install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL,
+                             packages = NULL , pv = '3.12.11'){
+
 
   if(useYML & is.null(ymlFile) ){
     ymlFile = system.file('python/python_conda_config.yml', package = "cola")
@@ -192,7 +194,8 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL, ... ){
 
     if( any(grep('Could not solve for environment specs', insCondLog)) ){
       cat('   YML creation failed. Trying conda_create("', envName, '")\n')
-      insCondLog <- tryCatch(conda_create(envName, ...), error = function(e) e$message)
+      insCondLog <- tryCatch(conda_create(envname = envName, packages = packages, python_version = pv
+                                          ), error = function(e) e$message)
     }
 
     if( any(grep(' prefix already exists', insCondLog)) ){
@@ -201,14 +204,13 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL, ... ){
     }
   } else {
     ## Creating env with no yml
-    insCondLog <- tryCatch(conda_create(envName,  ...), error = function(e) e$message)
+    insCondLog <- tryCatch(conda_create(envname =  envName,  packages = packages, python_version = pv), error = function(e) e$message)
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
            'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
     }
   }
   return(insCondLog)
-
 }
 
 #' @title Install  \emph{COLA}
@@ -427,12 +429,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           insCondLog <- install_cond_env(
             envName = envName, useYML = yml,
             packages = libs2Install,
-            ymlFile = newYmlFile, python_version = numPyVers3)
+            ymlFile = newYmlFile, pv = numPyVers3)
 
         } else {
           insCondLog <- install_cond_env(
             envName = envName, useYML = yml,
-            ymlFile = newYmlFile, python_version = numPyVers3)
+            ymlFile = newYmlFile, pv = numPyVers3)
         }
 
         ## Error: folder exists but empty
@@ -443,7 +445,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
             unlink( envDir, recursive = TRUE, force = TRUE )
             insCondLog <- install_cond_env(envName = envName, useYML = yml,
                                            ymlFile = newYmlFile,
-                                           python_version = numPyVers2)
+                                           pv = numPyVers3)
           }
         }
         # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.8" "--quiet" "-c" "conda-forge"
