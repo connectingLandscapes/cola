@@ -1,49 +1,3 @@
-#' @title  Parameters for installation
-#' @description Defines the default cola installation parameters
-#' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#' @export
-cola_params <<- list(
-  ## Environment name
-  envName = 'cola',
-
-  ## Libraries to install in the python conda environment
-  libs2Install = c('geopandas', # this first to avoid problems
-                   'gdal', 'h5py',
-                   'numexpr', 'zarr',
-                   'rasterio', 'pytables',
-                   'pandas',  'cython', 'numba' ,
-                   'networkit', 'fiona', 'shapely',
-                   'kdepy', 'joblib',
-                   'scikit-image'),
-  yml = TRUE,
-  ## Number steps
-  nSteps = 5,
-
-  ## R packages for the DSS
-  libs2colaDSS = c(
-    'markdown', 'rmarkdown',
-    'knitr', 'units',
-    "reshape2", 'bit', 'digest', 'dplyr',
-    'tidyverse', 'DT', 'ggplot2',
-    # debug install order: htmltools >> shiny >> shinyWidgets
-    'htmlwidgets', 'htmltools', ## Before shiny
-    'magrittr', 'RColorBrewer', 'viridis',
-    ## Spatial
-    # "rgeos", "rgdal", 'raster', ## old
-    'sf', 'terra',
-    'rlang', "leaflet", "leaflet.extras",
-    'gdalUtilities',
-    ## Shiny
-    'shiny',  ## Before shiny plugins
-    "shinydashboard",  "shinycssloaders",
-    'shinydashboardPlus', 'shinyjs',
-    'shinyWidgets', 'dashboardthemes',
-    "highcharter", 'plotly')
-)
-# # attach(cola_params)
-
-
 #' @title Diagnose  \emph{COLA} installation
 #' @description Runs some test assessing the correct cola installation
 #' @param envName The environment name. 'cola' by default
@@ -169,17 +123,17 @@ diagnose_cola <- function(envName = 'cola',
 #' @description Installs `cola` conda environment
 #' @param envName The environment name. 'cola' by default
 #' @param ymlFile Path to YML to use. Default is NULL
+#' @param packagess String. Vector of packagess to be installed. Default is NULL
+#' @param pv String. Python version to use. Default value is '3.12.11'
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
-#' install_cond_env(envName = 'cola',
+#' install_conda_env(envName = 'cola',
 #'     ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @author Patrick Jantz <Patrick.Jantz@nau.edu>
 #' @export
-install_cond_env <- function(
-    envName, useYML = TRUE,
-    ymlFile = NULL, packagess = NULL , pv = '3.12.11'){
-
+install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
+                             packagess = NULL , pv = '3.12.11'){
 
   if(useYML & is.null(ymlFile) ){
     ymlFile = system.file('python/python_conda_config.yml', package = "cola")
@@ -193,7 +147,8 @@ install_cond_env <- function(
     ## Create env using yml file
     (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
     cat('   Creating conda using YML file:', instCondEnv, '\n')
-    insCondLog <- tryCatch(system(instCondEnv, intern = TRUE), error = function(e) e$message) #
+    insCondLog <- tryCatch(system(instCondEnv, intern = TRUE),
+                           error = function(e) e$message) #
 
     if( any(grep('Could not solve for environment specs', insCondLog)) ){
       cat('   YML creation failed. Trying conda_create("', envName, '")\n')
@@ -204,15 +159,18 @@ install_cond_env <- function(
 
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
+           'Try:\n     conda_remove(envname ="', envName,
+           '")\n     conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   } else {
     ## Creating env with no yml
-    insCondLog <- tryCatch(conda_create(envname =  envName,  packages = packagess,
-                                        python_version = pv), error = function(e) e$message)
+    insCondLog <- tryCatch(
+      conda_create(envname =  envName,  packages = packagess,
+                   python_version = pv), error = function(e) e$message)
+
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
+           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   }
   return(insCondLog)
@@ -431,13 +389,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       if ( isTRUE(user_permission) ) {
 
         if(!onlyIndividual){
-          insCondLog <- install_cond_env(
+          insCondLog <- install_conda_env(
             envName = envName, useYML = yml,
             packagess = libs2Install,
             ymlFile = newYmlFile, pv = numPyVers3)
 
         } else {
-          insCondLog <- install_cond_env(
+          insCondLog <- install_conda_env(
             envName = envName, useYML = yml,
             ymlFile = newYmlFile, pv = numPyVers3)
         }
@@ -448,7 +406,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           if ( dir.exists(envDir) ){
             conda_remove(envName)
             unlink( envDir, recursive = TRUE, force = TRUE )
-            insCondLog <- install_cond_env(envName = envName, useYML = yml,
+            insCondLog <- install_conda_env(envName = envName, useYML = yml,
                                            ymlFile = newYmlFile,
                                            pv = numPyVers3)
           }
@@ -510,7 +468,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if (!file.exists(pyCola)){
           message(paste0(' Uninstalling corrupt previous installation and installing again'))
           tryCatch(conda_remove(envName))
-          insCondLog <- install_cond_env(envName = envName, useYML = yml,
+          insCondLog <- install_conda_env(envName = envName, useYML = yml,
                                          ymlFile = newYmlFile, pv = numPyVers3,
                                          packagess = libs2Install)
         }
