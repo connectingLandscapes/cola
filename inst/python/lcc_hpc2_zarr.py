@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Sep 17 11:43:04 2025
-
+Read arrays pairwise from zarr file and calculate corridors
 @author: pj276
 """
 
@@ -9,6 +9,7 @@ Created on Wed Sep 17 11:43:04 2025
 # IMPORTS
 import sys
 import cola_functions as cf
+import cola_zarr_functions as czf
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import time
@@ -144,7 +145,7 @@ def main() -> None:
         
     print("Summing corridors", flush=True)
     res = Parallel(n_jobs=nThreads, return_as="generator_unordered", prefer="threads") (
-        delayed(cf.calcPathsMod)(reOrder[i], dazarr, corrTolerance) for i in range(startCorridor,endCorridor)
+        delayed(czf.calcPathsMod)(reOrder[i], dazarr, corrTolerance) for i in range(startCorridor,endCorridor)
         )
     lccSum = np.zeros((1,nodeidsLen))
     corridorCount = 1
