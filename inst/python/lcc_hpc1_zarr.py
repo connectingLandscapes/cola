@@ -17,6 +17,7 @@ a file. Subsequent corridor mapping is done by lcc_hpc2.py
 import sys
 #import osgeo
 import cola_functions as cf
+import cola_zarr_functions as czf
 import networkit as nk
 import rasterio as rio
 import pandas as pd
@@ -157,7 +158,7 @@ def main() -> None:
     # Get original node ids, accounting for gaps associated
     # with non-valid cells
     nCols = r.shape[1]
-    nodeids = cf.idSkip(iArray, nCols)
+    nodeids = czf.idSkip(iArray, nCols)
     # Create dictionary mapping between orginal node ids
     # and continuous node ids
     idmap = dict((zip(nodeids, range(len(iArray)))))
@@ -167,7 +168,7 @@ def main() -> None:
     keyArray = np.empty((nPix, ), dtype=int)
     keyArray[nodeids] = range(len(iArray))
     # Generator for edges
-    edgeGen = cf.generate_edgesMod(r, iArray, cSize, keyArray)
+    edgeGen = czf.generate_edgesMod(r, iArray, cSize, keyArray)
     # Initialize graph
     nkG = nk.Graph(len(iArray), weighted=True)
     del keyArray, iArray
@@ -225,7 +226,7 @@ def main() -> None:
         # Create zarr array to hold point pair distance array
         shape = (len(sources), len(sources))
         chunks = (1, len(sources))
-        ppz = cf.createZarrBlosc(shape, np.float64, chunks, ppzarr)
+        ppz = czf.createZarrBlosc(shape, np.float64, chunks, ppzarr)
         
         # Calculate number of batches
         nPBatches = int(np.ceil(memReq/gbThreshold))
@@ -381,7 +382,7 @@ def main() -> None:
         # Create zarr array to hold distance arrays
         shape = (len(sources), nodeidsLen)
         chunks = (1, nodeidsLen)
-        daz = cf.createZarrBlosc(shape, np.float64, chunks, dazarr)
+        daz = czf.createZarrBlosc(shape, np.float64, chunks, dazarr)
    
         # Divide sources into batches
         sLength = np.arange(0,len(sources))
