@@ -1,49 +1,3 @@
-#' @title  Parameters for installation
-#' @description Defines the default cola installation parameters
-#' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#' @export
-cola_params <<- list(
-  ## Environment name
-  envName = 'cola',
-
-  ## Libraries to install in the python conda environment
-  libs2Install = c('geopandas', # this first to avoid problems
-                   'gdal', 'h5py',
-                   'numexpr', 'zarr',
-                   'rasterio', 'pytables',
-                   'pandas',  'cython', 'numba' ,
-                   'networkit', 'fiona', 'shapely',
-                   'kdepy', 'joblib',
-                   'scikit-image'),
-  yml = TRUE,
-  ## Number steps
-  nSteps = 5,
-
-  ## R packages for the DSS
-  libs2colaDSS = c(
-    'markdown', 'rmarkdown',
-    'knitr', 'units',
-    "reshape2", 'bit', 'digest', 'dplyr',
-    'tidyverse', 'DT', 'ggplot2',
-    # debug install order: htmltools >> shiny >> shinyWidgets
-    'htmlwidgets', 'htmltools', ## Before shiny
-    'magrittr', 'RColorBrewer', 'viridis',
-    ## Spatial
-    # "rgeos", "rgdal", 'raster', ## old
-    'sf', 'terra',
-    'rlang', "leaflet", "leaflet.extras",
-    'gdalUtilities',
-    ## Shiny
-    'shiny',  ## Before shiny plugins
-    "shinydashboard",  "shinycssloaders",
-    'shinydashboardPlus', 'shinyjs',
-    'shinyWidgets', 'dashboardthemes',
-    "highcharter", 'plotly')
-)
-# attach(cola_params)
-
-
 #' @title Diagnose  \emph{COLA} installation
 #' @description Runs some test assessing the correct cola installation
 #' @param envName The environment name. 'cola' by default
@@ -94,7 +48,8 @@ diagnose_cola <- function(envName = 'cola',
         if ( class(avEnv) == 'data.frame' ){
           if( !envName %in% avEnv$name ){
             cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
-                envName, "')`\n\t or in conda CMD `conda env create -f ", system.file('python/python_conda_config.yml', package = "cola"),"`\n")
+                envName, "')`\n\t or in conda CMD `conda env create -f ",
+                system.file('python/python_conda_config.yml', package = "cola"),"`\n")
           } else {
 
             cat("  3. `cola` conda environment installed. Evaluating next step \n")
@@ -108,7 +63,7 @@ diagnose_cola <- function(envName = 'cola',
             if(length(noInsLibs) != 0){
               cat(sep = '', "  4. Some python libraries aren't installed. Try:\nR: `reticulate::py_install(envname = '", envName,
                   "', channel = 'conda-forge', packages = c('",
-                  paste0(noInsLibs, collapse= "', '"), "'))`\n conda CMD: conda install -n ", envName, " ",
+                  paste0(noInsLibs, collapse= "', '"), "'))`\n conda CMD: conda install -n ", envName, " -c conda-forge ",
                   paste0(noInsLibs, collapse= " "), '\n'
               )
             } else {
@@ -143,6 +98,12 @@ diagnose_cola <- function(envName = 'cola',
     }
   }
 
+  warning(paste0('CoLa requires a newer Python version for some specific scripts: 3.12.11\n',
+                 'To update your CoLa version, please run the following commands and try setup_cola() again:\n',
+                 '\n\treticulate::conda_remove(envname = "cola") \n',
+                 '\treticulate::conda_update()\n',
+                 '\tsetup_cola(pyVer = "3.12.11")\n'
+  ))
   if( FALSE) {
     cat(' We found some errors. Please chek the following steps:\n',
         '  1. `reticulate` package installed. Try `require(reticulate)`. Must be TRUE\n',
@@ -154,22 +115,28 @@ diagnose_cola <- function(envName = 'cola',
 }
 
 
+
 #' @title Install \emph{cola} conda environment
 #' @description Installs `cola` conda environment
 #' @param envName The environment name. 'cola' by default
 #' @param ymlFile Path to YML to use. Default is NULL
+#' @param packagess String. Vector of packagess to be installed. Default is NULL
+#' @param pv String. Python version to use. Default value is '3.12.11'
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
-#' install_cond_env(envName = 'cola',
+#' install_conda_env(envName = 'cola',
 #'     ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @author Patrick Jantz <Patrick.Jantz@nau.edu>
 #' @export
-install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
+install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
+                              packagess = NULL , pv = '3.12.11'){
 
   if(useYML & is.null(ymlFile) ){
     ymlFile = system.file('python/python_conda_config.yml', package = "cola")
+    print('Usind default package yml file for conda creation')
   }
+
   newYmlFile <- ymlFile
   insCondLog <- ''
 
@@ -177,27 +144,33 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
     ## Create env using yml file
     (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
     cat('   Creating conda using YML file:', instCondEnv, '\n')
-    insCondLog <- tryCatch(system(instCondEnv, intern = TRUE), error = function(e) e$message) #
+    insCondLog <- tryCatch(system(instCondEnv, intern = TRUE),
+                           error = function(e) e$message) #
 
     if( any(grep('Could not solve for environment specs', insCondLog)) ){
       cat('   YML creation failed. Trying conda_create("', envName, '")\n')
-      insCondLog <- tryCatch(conda_create(envName), error = function(e) e$message)
+      insCondLog <- tryCatch(
+        conda_create(envname = envName, packages = packagess, python_version = pv),
+        error = function(e) e$message)
     }
 
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
+           'Try:\n     conda_remove(envname ="', envName,
+           '")\n     conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   } else {
     ## Creating env with no yml
-    insCondLog <- tryCatch(conda_create(envName), error = function(e) e$message)
+    insCondLog <- tryCatch(
+      conda_create(envname =  envName,  packages = packagess,
+                   python_version = pv), error = function(e) e$message)
+
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '")\n')
+           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   }
   return(insCondLog)
-
 }
 
 #' @title Install  \emph{COLA}
@@ -220,17 +193,25 @@ install_cond_env <- function(envName, useYML = TRUE, ymlFile = NULL){
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = FALSE, ask = TRUE,
-                        dss = FALSE, zarr = FALSE, pyVer = NULL, # "3.12.11"
+                        dss = FALSE, zarr = FALSE, pyVer = "3.12.11",
                         libs2Install =  c(
                           'geopandas',
-                          'gdal', 'h5py', 'numexpr', 'rasterio', 'zarr',
+                          'gdal', 'h5py', 'numexpr', 'rasterio',
                           'pytables', 'pandas',  'cython', 'numba' ,
                           'networkit==11.0', 'fiona', 'shapely',
-                          'kdepy', 'scikit-image', 'kdepy')
+                          'kdepy', 'scikit-image')
 ){
 
-  #envName = cola_params$envName, nSteps = cola_params$nSteps, force = FALSE, libs2Install =  cola_params$libs2Install
+  # envName = 'cola'; nSteps = 5; force = FALSE; yml = FALSE; onlyIndividual = F; ask = FALSE; dss = TRUE; zarr = F
 
+
+  if(zarr){
+    libs2Install <- c('zarr', libs2Install)
+  }
+
+  if ( !ask ){
+    user_permission <- TRUE
+  }
 
   ## Step 1. Install reticulate ----------------------------------------------
   cat(sep = '', '  +Step 1/',nSteps, ': Installing & checking reticulate R package\n')
@@ -379,9 +360,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     }
   }
 
+
   (numPyVers3  <- ifelse(!is.null(pyVer), pyVer, numPyVers2))
 
-  ## Conda exists
+  ## Conda exists // check for cola
   if ( class(condaLists) == 'data.frame' ){
 
     ## Error: Env exists but empty -- prob broken uninstall
@@ -394,6 +376,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
     }
 
+
+
     ## Env not existing
     if( !envName %in% condaLists$name ){
 
@@ -405,13 +389,24 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       (newYmlFile <- paste0(tempfile(), 'newYml.yml'))  # read.delim(newYmlFile)
       writeLines(text = ymlTxt, con = newYmlFile)
 
-      user_permission <- FALSE
       if (ask){
         user_permission <- utils::askYesNo(paste0("Install '", envName, "' conda environment? Migth take some minutes"))
       }
 
-      if ( isTRUE(user_permission) | !ask ) {
-        insCondLog <- install_cond_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
+
+      if ( isTRUE(user_permission) ) {
+
+        if(!onlyIndividual){
+          insCondLog <- install_conda_env(
+            envName = envName, useYML = yml,
+            packagess = libs2Install,
+            ymlFile = newYmlFile, pv = numPyVers3)
+
+        } else {
+          insCondLog <- install_conda_env(
+            envName = envName, useYML = yml,
+            ymlFile = newYmlFile, pv = numPyVers3)
+        }
 
         ## Error: folder exists but empty
         if ( any( grep('Could not solve for environment specs', insCondLog) ) & isTRUE(force)){
@@ -419,12 +414,15 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           if ( dir.exists(envDir) ){
             conda_remove(envName)
             unlink( envDir, recursive = TRUE, force = TRUE )
-            insCondLog <- install_cond_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
+            insCondLog <- install_conda_env(envName = envName, useYML = yml,
+                                            ymlFile = newYmlFile,
+                                            pv = numPyVers3)
           }
         }
         # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.8" "--quiet" "-c" "conda-forge"
       } else {
-        message(paste0('You need to run `conda_create("', envName,'")` before using this package'))
+        message(paste0('You need to run `conda_create("', envName,', python_version = "',
+                       numPyVers3,'")` before using this package'))
         stop()
       }
     } else {
@@ -432,7 +430,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       cat (sep = '', '    `', envName, '` conda environment installed in ', colaexe, '\n')
       (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
       (pyColaVersion <- tryCatch(system( paste0( pyCola, ' -V') , intern = TRUE), error = function(e) NULL))
-      cat (sep = '', '    `', envName, '` conda environment using ', pyColaVersion, '\n')
+      (colaDir <- dirname(subset(condaLists, name == envName)$python))
 
       if ( pyColaVersion != 'Python 3.12.11' ){
         warning(paste0('We are using a new Python versiom. CoLs requires 3.12.11\n',
@@ -459,6 +457,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
 
+
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
@@ -477,7 +476,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if (!file.exists(pyCola)){
           message(paste0(' Uninstalling corrupt previous installation'))
           tryCatch(conda_remove(envName))
-          insCondLog <- install_cond_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
+          insCondLog <- install_conda_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
         }
       }
 
@@ -531,7 +530,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     for(i in 1:3){
 
       ## list packages
-      (avLibs <- reticulate::py_list_packages(envname = envName))
+      avLibs <- reticulate::py_list_packages(envname = envName, python = pyCola) # envName = 'cola'
 
       ## Install conda packages
       (lib2inst <- libs2Install[! libs2Install %in% avLibs$package])
@@ -551,7 +550,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## Try individually
 
   ## list packages
-  (avLibs <- reticulate::py_list_packages(envname = envName))
+  avLibs <- reticulate::py_list_packages(envname = envName, python = pyCola) # envName = 'cola'
 
   ## Install conda packages
   (libs2inst <- libs2Install[! libs2Install %in% avLibs$package])
@@ -598,7 +597,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     }
   }
 
-  avLibs <- reticulate::py_list_packages(envname = envName) # envName = 'cola'
+  avLibs <- reticulate::py_list_packages(envname = envName, python = pyCola) # envName = 'cola'
 
   ## Installed
   insLibs <- libs2Install[libs2Install %in% avLibs$package]
@@ -609,11 +608,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   if( length(noInsLibs) > 0 ){
     cat (sep = '', '  `', envName, '` conda environment installed!\n')
-    cat(sep = '', "   Some python libraries aren't installed. Try `reticulate::py_install(envname = '", envName,
+    warning(paste(sep = '', "   Some python libraries aren't installed. Try `reticulate::py_install(envname = '", envName,
         "', channel = 'conda-forge', packages = c('",
-        paste0(noInsLibs, collapse= "', '"), "')`")
+        paste0(noInsLibs, collapse= "', '"), "')`"))
     diagnose_cola()
-    stop()
+
   } else {
     cat (sep = '', '\n    All required conda modules installed!\n')
   }
@@ -917,5 +916,5 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 }
 
 ## Not run
-## setup_cola()
+## setup_cola(ask = FALSE, zarr = TRUE)
 ## reticulate::conda_remove('cola')
