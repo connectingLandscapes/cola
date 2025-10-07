@@ -44,8 +44,8 @@ setup_cola_dss <- function(
   "highcharter", 'plotly')){
 
   if(Sys.info()["sysname"] == 'Linux'){
-    cat('   Consider install the next libraries in Linux console before installing R packages: \n    ',
-    'sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev libudunits2-dev')
+    cat('\n   Consider install the next libraries in Linux console before installing R DSS packages (not required for command line): \n    ',
+    'sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev libudunits2-dev\n')
     Sys.sleep(5)
   }
 
@@ -54,8 +54,10 @@ setup_cola_dss <- function(
   }
   library(devtools)
 
-  if(!find_rtools()){
-    warning(" No Rtools found. Please install it for your R version")
+  if(Sys.info()["sysname"] == 'Windows'){
+    if(!find_rtools()){
+      warning(" No Rtools found. Please install it for your R version")
+    }
   }
 
   if (!require("remotes")) {
@@ -124,5 +126,5 @@ setup_cola_dss <- function(
   library(terra)
   library(viridis)
 
-  cat("\n   === All libraries required for COLA's DSS installed === \n\n")
+  cat("\n\n   === All libraries required for COLA's DSS installed === \n\n")
 }

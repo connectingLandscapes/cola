@@ -1,5 +1,5 @@
 import os; 
-print ("---- WD:", os.getcwd())
+#print ("---- WD:", os.getcwd())
 
 import zarr
 #print('    .... debug ')
