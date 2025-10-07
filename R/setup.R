@@ -52,14 +52,15 @@ diagnose_cola <- function(envName = 'cola',
             cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
                 envName, "')`\n\t or in conda CMD `conda env create -f ",
                 system.file('python/python_conda_config.yml', package = "cola"),"`\n")
-          } else {
+
+            } else {
 
             cat("  3. `cola` conda environment installed. Evaluating next step \n")
 
             ## cola available. Next check
             avLibs <- reticulate::py_list_packages(envname = envName,
                                                    python = subset(avEnv, name == envName)$python
-                                                   )
+            )
 
             ## No installed
             (noInsLibs <- libs2Install[
@@ -86,7 +87,7 @@ diagnose_cola <- function(envName = 'cola',
 
               if( file.exists(pyCola2check) & dir.exists(pathCola) ){
 
-                cat(sep = '', "\n\t=== All dependencies and requirements installed === \nLook for futher details in the repository documentation\n\n")
+                cat(sep = '', "\n\t=== All dependencies and requirements installed === \n\n   Look for futher details in the repository documentation\n\n")
 
                 colaDir <- 'NOTFOUND'
 
@@ -105,19 +106,20 @@ diagnose_cola <- function(envName = 'cola',
       }
     }
 
-  warning(paste0('CoLa requires a newer Python version for some specific scripts: 3.12.11\n',
-                 'To update your CoLa version, please run the following commands and try setup_cola() again:\n',
-                 '\n\treticulate::conda_remove(envname = "cola") \n',
-                 '\treticulate::conda_update()\n',
-                 '\tsetup_cola(pyVer = "3.12.11")\n'
-  ))
-  if( FALSE) {
-    cat(' We found some errors. Please chek the following steps:\n',
-        '  1. `reticulate` package installed. Try `require(reticulate)`. Must be TRUE\n',
-        '  2. `miniconda` software installed. Try `miniconda_path()`. Must a valid path\n',
-        '    2a. If error occurred, try: `miniconda_update()`\n',
-        '    2b. If error occurred, try: `reticulate::miniconda_uninstall()` and then `reticulate::install_miniconda()`\n',
-        '  3. `cola` conda environment installed. Try `reticulate::conda_list()` to see installed environments\n')
+    warning(paste0('CoLa requires a newer Python version for some specific scripts: 3.12.11\n',
+                   'To update your CoLa version, please run the following commands and try setup_cola() again:\n',
+                   '\n\treticulate::conda_remove(envname = "cola") \n',
+                   '\treticulate::conda_update()\n',
+                   '\tsetup_cola(pyVer = "3.12.11")\n'
+    ))
+    if( FALSE) {
+      cat(' We found some errors. Please chek the following steps:\n',
+          '  1. `reticulate` package installed. Try `require(reticulate)`. Must be TRUE\n',
+          '  2. `miniconda` software installed. Try `miniconda_path()`. Must a valid path\n',
+          '    2a. If error occurred, try: `miniconda_update()`\n',
+          '    2b. If error occurred, try: `reticulate::miniconda_uninstall()` and then `reticulate::install_miniconda()`\n',
+          '  3. `cola` conda environment installed. Try `reticulate::conda_list()` to see installed environments\n')
+    }
   }
 }
 
@@ -357,11 +359,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     if ( zarr & numPyVers <= 3.11 ){
       (colaDir <- dirname(subset(condaLists, name == envName)$python))
       warning(paste0('The current ', pyBaseVersion, ' version need to be updated.\n',
-                  'For this, please run the following commands and try setup_cola() again:\n',
-                  '\n\treticulate::conda_remove(envname = "cola") \n',
-                  '\tfile.remove("', colaDir, '")\n',
-                  '\treticulate::conda_update()\n',
-                  '\tsetup_cola()\n'
+                     'For this, please run the following commands and try setup_cola() again:\n',
+                     '\n\treticulate::conda_remove(envname = "cola") \n',
+                     '\tfile.remove("', colaDir, '")\n',
+                     '\treticulate::conda_update()\n',
+                     '\tsetup_cola()\n'
       ))
       # reticulate::conda_remove(envname = "cola")
       #(tryCatch( file.remove( colaDir ), error = function (e) NULL) )
@@ -637,8 +639,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   if( length(noInsLibs) > 0 ){
     cat (sep = '', '  `', envName, '` conda environment installed!\n')
     warning(paste(sep = '', "   Some python libraries aren't installed. Try `reticulate::conda_install(envname = '", envName,
-        "', channel = 'conda-forge', packages = c('",
-        paste0(noInsLibs, collapse= "', '"), "')`"))
+                  "', channel = 'conda-forge', packages = c('",
+                  paste0(noInsLibs, collapse= "', '"), "')`"))
     diagnose_cola()
 
   } else {
@@ -653,7 +655,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       reticulate::conda_install(
         envname = envName, # python_version = pyCola,
         channel = "conda-forge", packages = c('zarr', 'psutil'),
-      error = function (e) e))
+        error = function (e) e))
     print(logPkg)
   }
 
