@@ -66,15 +66,14 @@ import geopandas as gpd
 import rasterio as rio
 from rasterio.crs import CRS
 
-import zarr
 #print('    .... debug ')
+
+try: 
+    from skimage.segmentation import watershed
+except: 
+    print ("Can't: from skimage.segmentation import watershed")
 
 import cola_functions as cf
 #print (" cola_functions loaded!")
 print ("WELCOME -- libraries loaded successfully")
 
-try: 
-    from skimage.segmentation import watershed
-    
-except: 
-    print ("Can't: from skimage.segmentation import watershed")
