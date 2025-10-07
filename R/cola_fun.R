@@ -1105,11 +1105,12 @@ lccZarr_py <- function(inshp, intif, outtif,
     #tempFolder <- tempdir()
     tempFolder <- dirname(intif)
   }
+
   (tempH5 <- basename(tempfile()))
-  (pazarr <- paste0(tempFolder, '/', tempH5, '_pazarr.h5'))
-  (dazarr <- paste0(tempFolder, '/', tempH5, 'dazarr.h5'))
-  (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.h5'))
-  (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.h5'))
+  (pazarr <- paste0(tempFolder, '/', tempH5, '_pazarr.zarr'))
+  (dazarr <- paste0(tempFolder, '/', tempH5, '_dazarr.zarr'))
+  (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
+  (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
 
   # # INPUTS part A
   # # Path to file holding xy coordinates
