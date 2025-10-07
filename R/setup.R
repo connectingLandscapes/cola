@@ -86,7 +86,8 @@ diagnose_cola <- function(envName = 'cola',
 
               if( file.exists(pyCola2check) & dir.exists(pathCola) ){
 
-                cat(sep = '', "   === All dependencies and requirements installed === \nLook for futher details in the repository documentation\n\n")
+                cat(sep = '', "\n\t=== All dependencies and requirements installed === \nLook for futher details in the repository documentation\n\n")
+
                 colaDir <- 'NOTFOUND'
 
               } else {
@@ -103,7 +104,6 @@ diagnose_cola <- function(envName = 'cola',
         }
       }
     }
-  }
 
   warning(paste0('CoLa requires a newer Python version for some specific scripts: 3.12.11\n',
                  'To update your CoLa version, please run the following commands and try setup_cola() again:\n',
@@ -187,9 +187,10 @@ install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
 #' @param libs2Install The name of python libraries
 #' @param nSteps The number of steps for printing log in console
 #' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
-#' @param yml Use YML file to build the conda environment? Default TRUE
-#' @param ask Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE
+#' @param yml Use YML file to build the conda environment? Default FALSE
+#' @param ask Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking
 #' @param dss Install cola DSS as well? Default FALSE
+#' @param pyVer. String. Python version to install
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @param zarr Logical. Are you planning to use zarr libary? Default FALSE
 #' @return NULL. Prints in console logs regarding different steps
@@ -918,7 +919,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       if(dss){
         ## Step4. Set paths ----------------------------------------------
-        cat (sep = '', '  + Extra step   Installing DSS GUI\n\n')
+        cat (sep = '', '\n  + Extra step   Installing DSS GUI\n\n')
         cola::setup_cola_dss()
       }
 

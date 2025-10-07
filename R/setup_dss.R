@@ -44,7 +44,7 @@ setup_cola_dss <- function(
   "highcharter", 'plotly')){
 
   if(Sys.info()["sysname"] == 'Linux'){
-    cat('\n   Consider install the next libraries in Linux console before installing R DSS packages (not required for command line): \n    ',
+    cat('\n   Only for Linux: Consider install the next libraries in Linux console before installing R DSS packages (not required for command line): \n    ',
     'sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev libudunits2-dev\n')
     Sys.sleep(5)
   }

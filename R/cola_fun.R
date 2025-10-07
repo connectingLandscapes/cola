@@ -39,7 +39,7 @@ quotepath <- function(path)  {
 
 #' @title  Makes a population structure map from CDPOP results interpolation
 #' @description Takes CDPOP results and generates a raster interpolation
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
 #' @param grids String, List of CDPOP grid.csv files containing population genetic structure
 #' @param template String. Path/filename of a template raster used for interpolation
@@ -113,7 +113,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 #' @title  Makes a population density map from CDPOP results interpolation
 #' @description Takes CDPOP results and generates a raster interpolation
-#' @param py Python location
+#' @param py Python executable location
 #' @param cdpopscript Python location
 #' @param grids String. Vector with the CDPOP output files to be interpolated
 #' @param template String. Raster template for interpolating the files
@@ -742,7 +742,7 @@ points_py <- function(intif, outshp,
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param intif String.
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
@@ -814,7 +814,7 @@ cdmat_py <- function(inshp, intif, outcsv,
 
 #' @title  Corridors
 #' @description Calculate corridors
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
@@ -880,9 +880,9 @@ lcc_py <- function(inshp, intif, outtif,
 
 #' @title  Create least cost corridors for heavy rasters
 #' @description Run CDPOP model
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
+#' @param py Python executable location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -967,9 +967,9 @@ lccHeavy_py <- function(inshp, intif, outtif,
 
 #' @title  Create least cost corridors using parallel computing
 #' @description Run CDPOP model
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
+#' @param py Python executable location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -1054,7 +1054,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
 
 #' @title  Create least cost corridors using zarr
-#' @description Run CDPOP model
+#' @description Create a corridor raster using zarr. This approach is used for big data analysis
 #' @param inshp String. Path to file holding xy coordinates
 #' @param intif String. Path to resistance grid
 #' @param outtif String. Path to corridor GeoTIFF result
@@ -1067,7 +1067,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
 #' @param eci Numeric. End corridor index. Default is 'None'
 #' @param tempFolder Numeric.
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
@@ -1275,9 +1275,9 @@ lccZarr_py <- function(inshp, intif, outtif,
 
 #' @title  Create cumulative resistance kernels
 #' @description Cumulative resistant kernels
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
+#' @param py Python executable location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -1302,7 +1302,6 @@ crk_py <- function(inshp, intif, outtif,
   # [6] kernel volume
   # [7] cores
   # [8] proj
-
 
   (cmd_crk <- paste0(
     quotepath(py), ' ',
@@ -1339,7 +1338,6 @@ crk_py <- function(inshp, intif, outtif,
                 done = ifelse(file.exists(outtif), 'yes', 'no'))
   write.table(metaFile, logname )
 
-
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
@@ -1349,9 +1347,8 @@ crk_py <- function(inshp, intif, outtif,
 
 #' @title  Create least cost corridors using parallel computing
 #' @description Run CDPOP model
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -1445,9 +1442,8 @@ crkJoblib_py <- function(
 
 #' @title  Runs prioritization
 #' @description Run CDPOP model
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -1546,7 +1542,6 @@ prio_py <- function(tif, incrk, inlcc,
     print(intCMD)
   }
 
-
   return(
     list(tif = ifelse(file.exists(outtif), outtif, ''),
          shp = ifelse(file.exists(outshppoint), outshppoint, ''),
@@ -1557,9 +1552,9 @@ prio_py <- function(tif, incrk, inlcc,
 
 #' @title  Compare maps of cumulative resistance kernels
 #' @description This tool compares the cumulative resistance kernels
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
+#' @param py Python executable location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
@@ -1631,9 +1626,9 @@ crk_compare_py <- function(intif, intifs,
 
 #' @title  Compare maps of least cost paths
 #' @description This tool compares the least cost paths
-#' @param py Python location
+#' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python location
+#' @param py Python executable location
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
