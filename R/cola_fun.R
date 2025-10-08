@@ -1073,7 +1073,16 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
-#' lccZarr_py( )
+#' library(cola)
+#' (outdir <- tempdir())
+#' zarr <- lccZarr_py(inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#' intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#' outtif = file.path(outdir, 'out_lfcc.tif')
+#' tempFolder  = outdir,
+#' maxdist = 1000000,
+#' smooth = 0, tolerance = 0,
+#' ncores = 8, maxram = 6,
+#' crs = 'None', sci = 'None', eci = 'None')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1231,7 +1240,7 @@ lccZarr_py <- function(inshp, intif, outtif,
     quotepath(pyscriptB), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-    pazarr, " ",
+    dazarr, " ",
     format(smooth, scientific=F), ' ',
     format(tolerance, scientific=F), " ",
     format(ncores, scientific=F), " ",
@@ -1240,7 +1249,7 @@ lccZarr_py <- function(inshp, intif, outtif,
     nodeidsFile, " ",
     format(sci, scientific=F), " ",
     format(eci, scientific=F), " "
-    , ' 2>&1 ' #, logname
+    , '2>&1 ' #, logname
   ))
 
   if (cml){
