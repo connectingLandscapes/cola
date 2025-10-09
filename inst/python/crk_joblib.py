@@ -79,7 +79,7 @@ def main() -> None:
     try:
         if cf.is_float(kvol):
             kvol = float(kvol)
-        elif dThreshold.isdigit():
+        elif kvol.isdigit():
             kvol = int(kvol)
         else:
             float(kvol)
