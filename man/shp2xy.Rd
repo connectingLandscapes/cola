@@ -22,7 +22,9 @@ shp2xy(
 
 \item{mortrast}{String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.}
 
-\item{survrast}{String. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.}
+\item{survrast}{String. Optional. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.}
+
+\item{porcEmpty}{Integer. percentage of locations (points) that randomly will be considered empty and possible to be colonized.}
 }
 \value{
 String. Path to a temporal xy.csv file. Writes the same file at the outxy path
@@ -31,7 +33,11 @@ String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 Converts Shapefile into xy file
 }
 \examples{
-shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')
+(tempfolder <- tempfile())
+dir.create(tempfolder)
+
+(xyfile <- shp2xy( shapefile = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+        outxy = file.path(out_dir, 'out.xy'), tempDir = tempfolder))
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

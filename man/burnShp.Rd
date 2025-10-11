@@ -24,6 +24,10 @@ burnShp(
 \item{lineBuffW}{Number. How many pixels should be used as buffer width for line geometries?}
 
 \item{polpath}{String. Location of the vector layer}
+
+\item{cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show.result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
 Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.

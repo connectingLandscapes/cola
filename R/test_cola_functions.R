@@ -12,7 +12,7 @@
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-test_cola <- function(run = FALSE, zarr = FALSE, ){
+test_cola <- function(run = FALSE, zarr = FALSE){
 
   if (run){
     ## Habitat Suitability (HS) to surface resistance (SR)

@@ -11,11 +11,13 @@ cdpop_mapstruct(
   template,
   method = "thin_plate_spline",
   neighbors,
-  crs = "None"
+  crs = "None",
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{py}{Python executable location}
 
 \item{pyscript}{Python script location}
 
@@ -36,7 +38,13 @@ List with three slots: a) file, with NA if no result given or a single file if f
 Takes CDPOP results and generates a raster interpolation
 }
 \examples{
-cdpop_mapstruct( )
+grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
+template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
+
+struMap <- cdpop_mapstruct(
+  grids = grid, template = template,
+  method = 'thin_plate_spline', neighbors = 'all', crs = 'None')
+
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

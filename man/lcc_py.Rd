@@ -2,7 +2,7 @@
 % Please edit documentation in R/cola_fun.R
 \name{lcc_py}
 \alias{lcc_py}
-\title{Corridors}
+\title{Factorial least cost corridors}
 \usage{
 lcc_py(
   inshp,
@@ -14,22 +14,50 @@ lcc_py(
   ncores = as.numeric(Sys.getenv("COLA_NCORES")),
   crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/lcc.py")
+  pyscript = system.file(package = "cola", "python/lcc.py"),
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
-\item{pyscript}{Python script location}
+\item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
+
+\item{maxdist}{Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.}
+
+\item{smooth}{Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.}
+
+\item{tolerance}{Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.}
+
+\item{ncores}{Numeric. Number of cores. Number of CPU cores to run the analysis}
+
+\item{crs}{String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
+
+\item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
+
+\item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`}
+
+\item{cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show.result}{Logical. Print the command line result? Default TRUE}
+
+\item{outif}{String. Path output GeoTIFF file name.}
 }
 \value{
-Path with CDPOP results
+Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 }
 \description{
-Calculate corridors
+Run the factorial least cost corridors algorithm. Check more details on the user manual at https://github.com/connectingLandscapes/cola
 }
 \examples{
-runCDPOP( )
+library(cola)
+outdir <- tempdir()
+corridors <- lcc_py(
+  inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+  intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+  outtif = file.path(outdir, 'corridors.tif'),
+  maxdist = 100000, smooth = 0, tolerance = 0)
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

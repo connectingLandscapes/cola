@@ -15,13 +15,19 @@ crk_compare_py(
   inshp = "None",
   shpfield = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/crk_compare.py")
+  pyscript = system.file(package = "cola", "python/crk_compare.py"),
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{py}{Python executable location}
 
 \item{pyscript}{Python script location}
+
+\item{cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show.result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
 Path with CDPOP results

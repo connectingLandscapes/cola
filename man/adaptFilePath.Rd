@@ -13,10 +13,10 @@ adaptFilePath(path)
 File location String using slash as separator
 }
 \description{
-Fix paths so internal console recognize paths. Change backslash to backslash
+Fix paths so internal console recognize paths. Change double backslash to slash
 }
 \examples{
-newPath <- adaptFilePath('\temp\path\to\file\here.tif')
+newPath <- adaptFilePath('\\\\temp\\\\path\\\\to\\\\file\\\\here.tif')
 newPath
 }
 \author{

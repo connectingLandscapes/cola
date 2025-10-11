@@ -12,7 +12,9 @@ cdmat_py(
   ncores = Sys.getenv("COLA_NCORES"),
   crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/create_cdmat.py")
+  pyscript = system.file(package = "cola", "python/create_cdmat.py"),
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
@@ -24,13 +26,17 @@ cdmat_py(
 
 \item{maxdist}{Numeric. Max. dispersal distance in cost units. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000.}
 
-\item{ncores}{numeric Numberof cores. Number of CPU cores to run the analysis}
+\item{ncores}{Numeric. Number of cores. Number of CPU cores to run the analysis}
 
-\item{crs}{String. Projection string. String. Projection information in the case the input raster [2] has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
+\item{crs}{String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{Python location}
+\item{py}{Python executable location}
 
 \item{pyscript}{Python script location}
+
+\item{cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show.result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
 Path with the CSV matrix
@@ -40,11 +46,12 @@ Creates a dispersal resistance matrix among a set of points. create_cdmat.py in 
 }
 \examples{
 library(cola)
-hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-# hs_path <- 'C:/path/to/raster.tif'
+rast_path <- system.file(package = 'cola', 'sampledata/sampleSR.tif')
+# rast_path <- 'C:/path/to/raster.tif'
 points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
 # points_path <- 'C:/path/to/points.shp'
-mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv')
+outmat <- tempfile(fileext = '.csv')
+ mat_result <- cdmat_py(inshp = points_path, intif = rast_path, outcsv = outmat, maxdist = 100000)
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

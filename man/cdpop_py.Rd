@@ -12,25 +12,29 @@ cdpop_py(
   cdmat = NULL,
   xy = NULL,
   tempFolder,
-  prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE))
+  prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE)),
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{String. Python location}
+\item{py}{String. Python executable location}
 
-\item{cdpopscript}{String. Python location}
+\item{cdpopscript}{String. CDOPOP Python script location}
 
-\item{inputvars}{String.}
+\item{inputvars}{String. CSV parameters file path location. Full path or relative to the CDOPOP Python script}
 
-\item{agevars}{String.}
+\item{agevars}{String. CSV age file path location. Full path or relative to the CDOPOP Python script}
 
-\item{cdmat}{String.}
+\item{cdmat}{String. CSV cost-distance matrix file path location. Full path or relative to the CDOPOP Python script}
 
-\item{xy}{String.}
+\item{xy}{String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script}
 
-\item{prefix}{String.}
+\item{prefix}{String. String added to output folder}
 
-\item{tempfolder}{String.}
+\item{cml}{String. Print the cola command line?. Default TRUE}
+
+\item{tempfolder}{String. Folder where results will be saved}
 }
 \value{
 List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
@@ -39,7 +43,19 @@ List with two slots: a) newFiles with generated results, b) cdpopPath, with the 
 Run CDPOP model
 }
 \examples{
-runCDPOP( )
+(out_dir <- tempfile())
+dir.create(out_dir)
+
+(invarfile <- file.path(out_dir, 'invars.csv'))
+(xyfile <- file.path(out_dir, 'xy.csv'))
+
+file.copy(system.file(package = 'cola', 'sampledata/invars.csv'), invarfile)
+file.copy(system.file(package = 'cola', 'sampledata/xy.csv'), xyfile)
+
+cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
+                          prefix = 'test', tempFolder = out_dir)
+
+
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

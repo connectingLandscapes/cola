@@ -22,7 +22,7 @@ cola_dss <- function(launch.browser = TRUE)  {
 
 #' @title Quote file path if space is detected
 #' @description This function add double quotes to the string if a space is detected
-#' @path The file path to be quoted
+#' @param path The file path to be quoted
 #' @examples
 #' library(cola)
 #' quotepath(path = c('C:/Users/First Second Name/Documents', 'C:/Users/FirstSecondName/Documents'))
