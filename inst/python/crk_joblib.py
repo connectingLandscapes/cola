@@ -13,11 +13,12 @@ using joblib. Best performance will be with a solid state drive.
 #%%
 # IMPORTS
 import sys
-import osgeo
+#import osgeo
 import cola_functions as cf
+import cola_zarr_functions as czf
 import networkit as nk
 import rasterio as rio
-from rasterio.crs import CRS
+#from rasterio.crs import CRS
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -150,19 +151,41 @@ def main() -> None:
     #%%
     # Create edges, nodeids, and mapping between old and new nodeids
     # from resistance grid
-    edges, nodeids, idmap = cf.generate_edges(r, cSize)
-    print('Generated edges')
-
-    # Create graph (nodes only)
-    nkG = nk.Graph(len(idmap), weighted=True)
-    # Add edges to graph
-    for i in edges:
-        nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
-    print('Created graph')
+    # Get nonzero pixel indices
+    nzp = np.nonzero(r > 0)
+    # Get nonzero pixel values
+    nzpv = r[nzp]
+    # Combine into 3 column array (row, column, value)
+    iArray = np.vstack((nzp[0],nzp[1],nzpv)).T
+    del nzp, nzpv
+    # Get original node ids, accounting for gaps associated
+    # with non-valid cells
+    nCols = r.shape[1]
+    nodeids = czf.idSkip(iArray, nCols)
+    # Create dictionary mapping between orginal node ids
+    # and continuous node ids
+    idmap = dict((zip(nodeids, range(len(iArray)))))
+    # Create numpy array to serve as key value pairs for 
+    # node list with gaps and continuous node list
+    nPix = r.shape[0]*r.shape[1]
+    keyArray = np.empty((nPix, ), dtype=int)
+    keyArray[nodeids] = range(len(iArray))
+    # Generator for edges
+    edgeGen = czf.generate_edgesMod(r, iArray, cSize, keyArray)
+    # Initialize graph
+    nkG = nk.Graph(len(iArray), weighted=True)
+    del keyArray, iArray
+    
+    # Iterate over generator and add edges to graph
+    print('Adding edges to graph', flush=True)
+    for j in edgeGen:
+        for i in j[1]:
+            nkG.addEdge(i[0], i[1], w=i[2], addMissing=False, checkMultiEdge=False)
+    print('Added edges to graph')
     print('Number of nodes: ' + str(nkG.numberOfNodes()))
     print('Number of edges: ' + str(nkG.numberOfEdges()))
-    del edges
-
+    del edgeGen
+    
     nodeidsLen = len(nodeids)
 
     #%%
@@ -238,13 +261,16 @@ def main() -> None:
         arraysProc = memProc/(nodeidsLen*64*gbCf)
 
         # Number of batches 
-        nCBatches = int(np.floor(len(sources)/(arraysProc)))
+        nCBatches = int(np.floor(len(sources)/(arraysProc)))*2
         
         # Divide sources into batches
         sLength = np.arange(0,len(sources))
         #nCBatches = int(np.ceil(memReq/gbThreshold))
         
         sBatches = np.array_split(sLength, nCBatches) 
+        # Remove any empty batches
+        sBatches = [sub_array for sub_array in sBatches if sub_array.size > 0]
+
         print('Calculating cost distances in ' + str(len(sBatches)) + ' batches')
       
         # Loop over batches and calculate distance array
