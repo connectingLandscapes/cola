@@ -191,3 +191,65 @@ def calcPathsMod(x, zFileName, corrTolerance):
     lcc[np.isnan(lcc)] = 0
     return lcc
 
+def calcKernelsMod(x, dazarr, dThreshold, tForm, tkv, kvol):
+    """
+    Function to calculate kernels from distance arrays
+    stored in an hdf file. Takes a batch of nodes as input (as an array).
+    For use in joblib parallel processing script crk_joblib.py.
+    ----------
+    x : integer used to index into 
+        two column array of integer node ids
+    Returns
+    -------
+    ksums : numpy array
+        array holding kernel sums
+    """
+    # Open hdf5 file holding distances
+    zfile = zarr.open(dazarr)
+
+    ccArr = zfile[x,:]
+    # Transform distances
+    if tForm == 'linear':
+        # Linear transform of distances
+        ccArr = 1 - (1/dThreshold) * ccArr        
+        # Convert negative values  to 0. (These are beyond the threshold)
+        ccArr[ccArr < 0] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'inverse':
+        # Inverse transform of distances
+        ccArr = 1/(ccArr + 1)
+        # Convert values beyond the distance threshold to 0
+        ccArr[ccArr < 1/(dThreshold + 1)] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'inversesquare':
+        # Inverse transform of distances
+        ccArr = 1/(ccArr**2 + 1)
+        # Convert values beyond the distance threshold to 0
+        ccArr[ccArr < 1/(dThreshold + 1)] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    elif tForm == 'gaussian':
+        dispScale = dThreshold/4
+        ccArr = np.exp(-1*((ccArr**2)/(2*(dispScale**2))))
+        # Set values beyond the distance threshold to 0
+        ccArr[ccArr < np.exp(-1*((dThreshold**2)/(2*(dispScale**2))))] = 0
+        # Set nan to 0
+        ccArr[np.isnan(ccArr)] = 0
+    # Transform kernel volume?
+    # From UNICOR help guide
+    # When „const_kernel_vol‟ is False, then the „kernel_volume‟ parameter
+    # is used on the transformed kernel resistant distance following
+    # „kernal_volume‟ * 3/(math.pi*kernel  resistant distances^2).
+    # When „const_kernel_vol‟ is True, then no volume transformation is applied.
+    # **I think the UNICOR help on this might be reversed because this is the code
+    #	if const_kernal_vol:		
+    #        vol_const = vol_constant * 3/(math.pi*edge_dist**2)
+    #    else:
+    #        vol_const = 1.
+    if tkv == "yes":
+        vol_const = kvol * 3/(np.pi*dThreshold**2)
+        ccArr = ccArr*vol_const
+
+    return ccArr
