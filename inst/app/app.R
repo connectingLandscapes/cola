@@ -5576,7 +5576,7 @@ server <- function(input, output, session) {
         tStartPri <- Sys.time()
         out_pri <- tryCatch(prio_py(
           # tif = rv$tif,
-          tif =   subset(rv2, public == input$in_name_sur_pri)$internal,
+          intif = subset(rv2, public == input$in_name_sur_pri)$internal,
           incrk = subset(rv2, public == input$in_name_crk_pri)$internal,
           inlcc = subset(rv2, public == input$in_name_lcc_pri)$internal,
 

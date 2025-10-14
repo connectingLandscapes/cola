@@ -128,7 +128,6 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
-#' cdpop_mapdensity( )
 #'
 #' grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
 #' template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
@@ -215,7 +214,6 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #'
 #' cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
 #'                           prefix = 'test', tempFolder = out_dir)
-#'
 #'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -1392,6 +1390,12 @@ crk_py <- function(inshp, intif, outtif,
   if ( ! any( c('yes', 'no') %in% transform ) ){
     stop( 'transform needs to be "yes" or "no"' )
   }
+
+  if ( ! any( c('linear', 'gaussian') %in% shape ) ){
+    stop( 'shaoe needs to be "linear" or "gaussian"' )
+  }
+
+
   (cmd_crk <- paste0(
     quotepath(py), ' ',
     quotepath(pyscript), ' ',
@@ -1496,6 +1500,15 @@ crkJoblib_py <- function(
   # [9] first h5 temp file
   # [10] second h5 temp file
   # [11] Max GB ram allowed
+
+  if ( ! any( c('yes', 'no') %in% transform ) ){
+    stop( 'transform needs to be "yes" or "no"' )
+  }
+
+  if ( ! any( c('linear', 'gaussian') %in% shape ) ){
+    stop( 'shaoe needs to be "linear" or "gaussian"' )
+  }
+
 
   if (is.null(tempFolder)){
     tempFolder <- tempdir()

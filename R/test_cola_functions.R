@@ -2,9 +2,10 @@
 
 #' @title  Test cola functions
 #' @description Run the main geospatial CoLa tools: Suitability to Resistance, Kernels, Corridors
-#' @param run Logical. Run the tests?
+#' @param run Logical. Run the tests? Default FALSE
 #' @param zarr Logical. Run zarr corridors? Default FALSE
-#' @return Path with CDPOP results
+#' @param doplot Logical. Plot results? Default FALSE. Requires ´terra´ library
+#' @return Text "Test finished"
 #' @examples
 #' library(cola)
 #' test_cola(run = TRUE )
@@ -12,29 +13,31 @@
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-test_cola <- function(run = FALSE, zarr = FALSE){
+test_cola <- function(run = FALSE, zarr = FALSE, doplot = FALSE){
 
   if (run){
     ## Habitat Suitability (HS) to surface resistance (SR)
-    require('terra')
-    library(terra)
 
     cat('######\n###### Here some functionalities CoLa demo:\n######\n\n\n')
 
     ## Intro
-    plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
-         main = 'Sample Habitat Suitability')
 
-    plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
-         add = TRUE)
+    if(doplot) {
+      library(terra)
+      plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
+           main = 'Sample Habitat Suitability')
 
-    cat("plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
+      plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
+           add = TRUE)
+
+      cat("plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
      main = 'Sample Surface Resistance')
 
 plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
      add = TRUE)
 
     ")
+    }
 
 
     ## SR
@@ -56,8 +59,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       maxout = 100, shape = 1
     )
 
-    plot(rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
-
+    if(doplot) {
+      plot(rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
+    }
 
     ## Kernels
     cat("\n\n################## KERNELS -----------\n\n
@@ -85,7 +89,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       shape = 'linear',
       volume = '1')
 
-    plot(rast(kernels$file), main = 'Created kernels')
+    if(doplot) {
+      plot(rast(kernels$file), main = 'Created kernels')
+    }
 
 
     cat("\n
@@ -114,7 +120,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       transform = 'no',
       volume = '1')
 
-    plot(rast(kernels_joblib$file), main = 'Created kernels parallel script')
+    if(doplot) {
+      plot(rast(kernels_joblib$file), main = 'Created kernels parallel script')
+    }
 
 
     cat("\n\n################## CORRIDORS -----------\n
@@ -134,7 +142,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       outtif = file.path(outdir, 'corridors_short.tif'),
       maxdist = 50000, smooth = 0, tolerance = 0)
 
-    plot(rast(corridors$file), main = 'Created corridors')
+    if(doplot) {
+      plot(rast(corridors$file), main = 'Created corridors')
+    }
 
 
     cat("\n\ncorridors_joblib <- lccJoblib_py(
@@ -153,7 +163,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       outtif = file.path(outdir, 'corridors_joblib.tif'),
       maxdist = 100000, smooth = 0, tolerance = 0)
 
-    plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+    if(doplot) {
+      plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+    }
 
     corridors_joblib <- lccJoblib_py(
       inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
@@ -161,7 +173,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       outtif = file.path(outdir, 'corridors_joblib.tif'),
       maxdist = 100000, smooth = 0, tolerance = 0)
 
-    plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+    if(doplot) {
+      plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+    }
 
 
 
@@ -181,8 +195,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
         intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
         outtif = file.path(outdir, 'corridors_zarr.tif'),
         maxdist = 100000, smooth = 0, tolerance = 0)
-
-      plot(rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
+      if(doplot) {
+        plot(rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
+      }
     }
 
     ##
