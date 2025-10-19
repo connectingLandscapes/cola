@@ -4,15 +4,17 @@
 \alias{test_cola}
 \title{Test cola functions}
 \usage{
-test_cola(run = FALSE, zarr = FALSE)
+test_cola(run = FALSE, zarr = FALSE, doplot = FALSE)
 }
 \arguments{
-\item{run}{Logical. Run the tests?}
+\item{run}{Logical. Run the tests? Default FALSE}
 
 \item{zarr}{Logical. Run zarr corridors? Default FALSE}
+
+\item{doplot}{Logical. Plot results? Default FALSE. Requires ´terra´ library}
 }
 \value{
-Path with CDPOP results
+Text "Test finished"
 }
 \description{
 Run the main geospatial CoLa tools: Suitability to Resistance, Kernels, Corridors

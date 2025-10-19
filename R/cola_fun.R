@@ -1581,6 +1581,7 @@ crkJoblib_py <- function(
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
+#' library(cola)
 #' outdir <- tempdir()
 #' prioritization <- prio_py(intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
 #'                           incrk = system.file(package = 'cola', 'sampledata/kernels.tif'),
@@ -1698,12 +1699,38 @@ prio_py <- function(intif, incrk, inlcc,
 #' @description This tool compares the cumulative resistance kernels
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python executable location
+#' @param intif String. File path to the input file used as reference raster.
+#' @param intifs String. File path to files to be compared. A single string is required
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
+#' @param outcsvabs String. File path to the csv output absolute difference table
+#' @param outcsvrel String. File path to the csv output relative difference table
+#' @param outpngabs String. File path to the png output absolute difference plot
+#' @param outpngrel String. File path to the png output relative difference plot
+#' @param outfolder String. File path to the folder where pairwise comparison between
+#' ´intif´ and ´intifs´
+#' @param inshp String. File path to the shapefile used to mask the comparisson
+#' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success, 
+#' and 'log' with any resulting message.
 #' @examples
-#' crk_compare_py( )
+#'library(cola)
+#'outdir <- tempdir()
+#'tifs2compare <- paste(sep = ',',
+#'  system.file(package = 'cola', 'sampledata/kernels.tif'),
+#'  system.file(package = 'cola', 'sampledata/kernels_short.tif'),
+#'  system.file(package = 'cola', 'sampledata/kernels_long.tif')
+#'  )
+#'comp_crk <- crk_compare_py(
+#'  intif = system.file(package = 'cola', 'sampledata/kernels.tif'),
+#'  intifs = tifs2compare,
+#'  outcsvabs = file.path(outdir, 'abs_table.csv'),
+#'  outcsvrel = file.path(outdir, 'rel_table.csv'),
+#'  outpngabs = file.path(outdir, 'abs_plot.png'),
+#'  outpngrel = file.path(outdir, 'rel_plot.png'),
+#'  outfolder = outdir
+#'  )
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
@@ -1772,11 +1799,39 @@ crk_compare_py <- function(intif, intifs,
 #' @description This tool compares the least cost paths
 #' @param py Python executable location
 #' @param pyscript Python script location
+#' @param intif String. File path to the input file used as reference raster.
+#' @param intifs String. File path to files to be compared. A single string is required
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
+#' @param outcsvabs String. File path to the csv output absolute difference table
+#' @param outcsvrel String. File path to the csv output relative difference table
+#' @param outpngabs String. File path to the png output absolute difference plot
+#' @param outpngrel String. File path to the png output relative difference plot
+#' @param outfolder String. File path to the folder where pairwise comparison between
+#' ´intif´ and ´intifs´
+#' @param inshp String. File path to the shapefile used to mask the comparisson
+#' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success, 
+#' and 'log' with any resulting message.
 #' @examples
-#' crk_compare_py( )
+#' #'library(cola)
+#' outdir <- tempdir()
+#' tifs2compare <- paste(sep = ',',
+#'  system.file(package = 'cola', 'sampledata/corridors.tif'),
+#'  system.file(package = 'cola', 'sampledata/corridors_short.tif'),
+#'  system.file(package = 'cola', 'sampledata/corridors_long.tif')
+#'  )
+#' comp_lcc <- lcc_compare_py(
+#' intif = system.file(package = 'cola', 'sampledata/kernels.tif'),
+#' intifs = tifs2compare,
+#' outcsvabs = file.path(outdir, 'abs_table.csv'),
+#' outcsvrel = file.path(outdir, 'rel_table.csv'),
+#' outpngabs = file.path(outdir, 'abs_plot.png'),
+#' outpngrel = file.path(outdir, 'rel_plot.png'),
+#'  outfolder = outdir
+#' )
+
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
@@ -1846,13 +1901,33 @@ lcc_compare_py <- function(intif, intifs,
 #' @param polpath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
+#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
-#' burnShp( )
+#' library(cola)
+#' library(terra)
+#' intif1 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+#' rasterizedPol1 <- burnShp(
+#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'   burnval = 'val2burn', colu = TRUE,
+#'   rastPath = intif1
+#' )
+#' plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
+#' 
+#' intif2 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+#' rasterizedPol2 <- burnShp(
+#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'), 
+#'   burnval = 200, 
+#'   rastPath = intif2
+#' )
+#' plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
+#' 
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1943,16 +2018,40 @@ burnShp <- function(polPath, burnval = 'val2burn',
 
 #' @title  Add values to  maps of least cost paths
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+#'  Not working on Windows at the moment.
 #' @param polpath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
+#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
-#' replacePixels( )
+#' library(cola)
+#' library(terra)
+#' usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
+#' intif1 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+#' 
+#' replacedPol1 <- replacePixels(
+#'  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'  burnval = 'val2burn', colu = TRUE,
+#'  gdal = usegdal,
+#'  rastPath = intif1
+#' )
+#' plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
+#' 
+#' intif2 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+#' replacedPol2 <- replacePixels(
+#'  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'  burnval = 200,  gdal = usegdal,
+#'  rastPath = intif2
+#' )
+#' plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1964,7 +2063,10 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
   # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
   # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
-
+  # rasterizedPath <- NA 
+  # if(Sys.info()['sysname'] == 'Windows'){
+  #   stop(' This function is not available in Windows yet')
+  # } else{ }
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
   ## Polygon to write
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
@@ -2022,6 +2124,8 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
+        init = 0,
+        a_nodata = -999,
         dst_filename = rasterizedPath,
         add = FALSE,
         a = burnval) #as.numeric(burnval)
@@ -2040,19 +2144,21 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
+        a_nodata = -999,
+        init = 0,
         dst_filename = rasterizedPath,
         add = FALSE,
         burn = burnval) #as.numeric(burnval)
       , error = function(e) {print('Error rast pol for replacing'); print(e);e})
   }
 
-  if (!file.exists(rasterizedPath)){
+  if (! file.exists(rasterizedPath) ){
     cat (' Error at rasterizing')
   } else {
 
     # rasterizedPath <- 'C:/cola/colaGLO2024121820390005/out_crk_EGL2024121820455305.tif'
     g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
-    cat(g2)
+    # cat(g2)
 
     #rft <- rast(rasterizedPath); plot(rft)
 
@@ -2096,6 +2202,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
       A <- terra::rast(rastPath)
       B <- terra::rast(rasterizedPath)
       # plot(A)
+      # plot(B)
       # plot(B)
 
       newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )

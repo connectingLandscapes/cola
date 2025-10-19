@@ -41,7 +41,6 @@ List with three slots: a) file, with NA if no result given or a single file if f
 Takes CDPOP results and generates a raster interpolation
 }
 \examples{
-cdpop_mapdensity( )
 
 grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
 template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')

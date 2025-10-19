@@ -19,6 +19,8 @@ replacePixels(
 
 \item{rastPath}{String. Location of the raster layer}
 
+\item{colu}{Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.}
+
 \item{att}{Logical. Should be 'all-the-touched' pixels be considered? Default TRUE}
 
 \item{polpath}{String. Location of the vector layer}
@@ -34,9 +36,32 @@ Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffi
 }
 \description{
 Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+ Not working on Windows at the moment.
 }
 \examples{
-replacePixels( )
+library(cola)
+library(terra)
+usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
+intif1 <- tempfile(fileext = '.tif')
+file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+
+replacedPol1 <- replacePixels(
+ polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+ burnval = 'val2burn', colu = TRUE,
+ gdal = usegdal,
+ rastPath = intif1
+)
+plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
+
+intif2 <- tempfile(fileext = '.tif')
+file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+replacedPol2 <- replacePixels(
+ polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+ burnval = 200,  gdal = usegdal,
+ rastPath = intif2
+)
+plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

@@ -54,6 +54,7 @@ Path with CDPOP results
 Run corridors prioritization algorithm. It takes the kernels and corridors as arguments.
 }
 \examples{
+library(cola)
 outdir <- tempdir()
 prioritization <- prio_py(intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
                           incrk = system.file(package = 'cola', 'sampledata/kernels.tif'),

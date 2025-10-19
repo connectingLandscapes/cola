@@ -55,7 +55,6 @@ file.copy(system.file(package = 'cola', 'sampledata/xy.csv'), xyfile)
 cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
                           prefix = 'test', tempFolder = out_dir)
 
-
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

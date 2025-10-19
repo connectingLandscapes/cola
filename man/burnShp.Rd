@@ -17,6 +17,8 @@ burnShp(
 \arguments{
 \item{burnval}{String. Value to burn. Can be a number or a attribute/column name}
 
+\item{colu}{Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.}
+
 \item{rastPath}{String. Location of the raster layer}
 
 \item{att}{Logical. Should be 'all-the-touched' pixels be considered? Default TRUE}
@@ -36,7 +38,26 @@ Path of the resulting raster layer. Same as rastPath with the '_rasterized' suff
 Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
 }
 \examples{
-burnShp( )
+library(cola)
+library(terra)
+intif1 <- tempfile(fileext = '.tif')
+file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+rasterizedPol1 <- burnShp(
+  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+  burnval = 'val2burn', colu = TRUE,
+  rastPath = intif1
+)
+plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
+
+intif2 <- tempfile(fileext = '.tif')
+file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+rasterizedPol2 <- burnShp(
+  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'), 
+  burnval = 200, 
+  rastPath = intif2
+)
+plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
+
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>
