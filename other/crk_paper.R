@@ -9,6 +9,24 @@ if(FALSE){
   content = read(file, String)
   println(content)
   run_omniscape(file)
+  
+  # [Required]
+  # resistance_file = /home/shiny/paper/inputs/size10_85m_24Mpix.tif
+  # radius = 5429
+  # block_size = 1
+  # project_name = /home/shiny/paper/output/test10_5429
+  # 
+  # [General options]
+  # source_from_resistance = false
+  # source_file = /home/shiny/paper/inputs/points100_as_size10.tif
+  # r_cutoff = 1
+  # calc_normalized_current = true
+  # 
+  # parallelize = true
+  # parallel_batch_size = 1
+  # 
+  # [Output options]
+  # write_raw_currmap = true
 }
 
 setwd('/home/shiny/paper/inputs/')
@@ -135,4 +153,30 @@ pwd
 plot(rast('/size8.asc_pts50.kdepaths'))
 plot(rast('/size8.asc_pts50.addedpaths.txt'))
 
+# Session_label    resistant_kernel
+# Grid_Filename    /home/shiny/paper/inputs/size9.asc
+# XY_Filename    /home/shiny/paper/inputs/pts100.xy
+# Use_Direction	FALSE
+# Type_Direction	FlowAcc
+# Use_Resistance	TRUE
+# Barrier_or_U_Filename	
+# Direction_or_V_Filename	
+# Speed_To_Resistance_Scale	
+# Use_ED_threshold    False
+# ED_Distance   10000
+# Edge_Type	all_paths
+# Transform_function	linear
+# Const_kernal_vol	True
+# Kernel_volume   10000
+# Edge_Distance    10000
+# Number_of_Processes    6
+# KDE_Function    Gaussian
+# KDE_GridSize    2
+# Number_of_Categories    5
+# Save_Path_Output    TRUE
+# Save_IndividualPaths_Output    FALSE
+# Save_GraphMetrics_Output    FALSE
+# Save_KDE_Output    FALSE
+# Save_Category_Output    FALSE
+# Save_CDmatrix_Output    FALSE
 }
