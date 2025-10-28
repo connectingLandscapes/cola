@@ -1,30 +1,44 @@
 if(FALSE){
-  julia --threads 4
-  
+  julia --threads 6
+
   Threads.nthreads()
   using Omniscape
   cd("/home/shiny/paper/ini+scripts/")
   readdir()
-  file = "omni10.ini"
-  content = read(file, String)
-  println(content)
+
+  # file = "omni8_100.ini"
+  # content = read(file, String)
+  # println(content)
+  # run_omniscape(file)
+
+  # file = "omni8_50.ini"
+  # println(file)
+  # run_omniscape(file)
+  #
+  # file = "omni9_50.ini"
+  # println(file)
+  # run_omniscape(file)
+
+  file = "omni9_100.ini"
+  println(file)
   run_omniscape(file)
-  
+  readdir()
+
   # [Required]
   # resistance_file = /home/shiny/paper/inputs/size10_85m_24Mpix.tif
   # radius = 5429
   # block_size = 1
   # project_name = /home/shiny/paper/output/test10_5429
-  # 
+  #
   # [General options]
   # source_from_resistance = false
   # source_file = /home/shiny/paper/inputs/points100_as_size10.tif
   # r_cutoff = 1
   # calc_normalized_current = true
-  # 
+  #
   # parallelize = true
   # parallel_batch_size = 1
-  # 
+  #
   # [Output options]
   # write_raw_currmap = true
 }
@@ -78,45 +92,45 @@ library(cola)
 inshp <- '/home/shiny/paper/inputs/points_sabah_100.shp'
 
 system.time(
-  crk6 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size6.tif', 
+  crk6 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size6.tif',
                              outtif = '/home/shiny/paper/output/cola_crk6.tif', volume = 0,
                              maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
 )
 # plot(rast('/home/shiny/paper/output/cola_crk6.tif'))
-# user  system elapsed 
+# user  system elapsed
 # 38.926   3.960  24.742
 
 system.time(
-  crk7 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size7.tif', 
+  crk7 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size7.tif',
                              outtif = '/home/shiny/paper/output/cola_crk7.tif', volume = 0,
                              maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
 )
 
-# user  system elapsed 
+# user  system elapsed
 # 284.355  27.610  84.834
 system.time(
-  crk8 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size8_170m_6Mpix.tif', 
+  crk8 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size8_170m_6Mpix.tif',
                              outtif = '/home/shiny/paper/output/cola_crk8.tif', volume = 0,
                              maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
 )
 
-# user  system elapsed 
-# 709.854  39.879 177.393 
+# user  system elapsed
+# 709.854  39.879 177.393
 system.time(
-  crk9 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size9.tif', 
-                              outtif = '/home/shiny/paper/output/cola_crk9.tif', volume = 0,
-                              maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
+  crk9 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size9.tif',
+                             outtif = '/home/shiny/paper/output/cola_crk9.tif', volume = 0,
+                             maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
 )
 
-# user  system elapsed 
-# 609.930  35.551 153.317 
+# user  system elapsed
+# 609.930  35.551 153.317
 
 system.time(
-  crk10 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size10_85m_24Mpix.tif', 
+  crk10 <- cola::crkJoblib_py(inshp = inshp, intif = '/home/shiny/paper/inputs/size10_85m_24Mpix.tif',
                               outtif = '/home/shiny/paper/output/cola_crk10.tif', volume = 0,
                               maxdist = 10000, shape = 'linear', ncores = 6, maxram = 50)
 )
-# user   system  elapsed 
+# user   system  elapsed
 # 1486.027   38.212  332.557
 
 
@@ -126,57 +140,57 @@ plot(rast(crk10$file))
 plot(rast('/home/shiny/paper/output/test9_3846_2/normalized_cum_currmap.tif'))
 
 if (FALSE){
-  
-##
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python /home/shiny/cola/inst/UNICOR/UNICOR.py /home/shiny/paper/ini+scripts/crk0.rip &> /home/shiny/paper/logUNcrk.txt
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk0.ini
 
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk0.ini
+  ##
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python /home/shiny/cola/inst/UNICOR/UNICOR.py /home/shiny/paper/ini+scripts/crk0.rip &> /home/shiny/paper/logUNcrk.txt
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk0.ini
 
-sudo su
-cd /home/shiny/cola/inst/UNICOR/unicor
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk8_50.ini &> /home/shiny/paper/logcrk_850.txt
-#2m10
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk8_100.ini &> /home/shiny/paper/logcrk_8100.txt
-#2m24
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk9_50.ini &> /home/shiny/paper/logcrk_950.txt
-# 4m09s
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk9_100.ini &> /home/shiny/paper/logcrk_9100.txt
-# 4m54
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk10_50.ini 
-# 8m38s
-time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk10_100.ini 
-# 9m34s
-pwd
-pwd
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk0.ini
 
-plot(rast('/size8.asc_pts50.kdepaths'))
-plot(rast('/size8.asc_pts50.addedpaths.txt'))
+  sudo su
+  cd /home/shiny/cola/inst/UNICOR/unicor
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk8_50.ini &> /home/shiny/paper/logcrk_850.txt
+  #2m10
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk8_100.ini &> /home/shiny/paper/logcrk_8100.txt
+  #2m24
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk9_50.ini &> /home/shiny/paper/logcrk_950.txt
+  # 4m09s
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk9_100.ini &> /home/shiny/paper/logcrk_9100.txt
+  # 4m54
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk10_50.ini
+  # 8m38s
+  time /home/shiny/.local/share/r-miniconda/envs/cola/bin/python UNICOR.py /home/shiny/paper/ini+scripts/crk10_100.ini
+  # 9m34s
+  pwd
+  pwd
 
-# Session_label    resistant_kernel
-# Grid_Filename    /home/shiny/paper/inputs/size9.asc
-# XY_Filename    /home/shiny/paper/inputs/pts100.xy
-# Use_Direction	FALSE
-# Type_Direction	FlowAcc
-# Use_Resistance	TRUE
-# Barrier_or_U_Filename	
-# Direction_or_V_Filename	
-# Speed_To_Resistance_Scale	
-# Use_ED_threshold    False
-# ED_Distance   10000
-# Edge_Type	all_paths
-# Transform_function	linear
-# Const_kernal_vol	True
-# Kernel_volume   10000
-# Edge_Distance    10000
-# Number_of_Processes    6
-# KDE_Function    Gaussian
-# KDE_GridSize    2
-# Number_of_Categories    5
-# Save_Path_Output    TRUE
-# Save_IndividualPaths_Output    FALSE
-# Save_GraphMetrics_Output    FALSE
-# Save_KDE_Output    FALSE
-# Save_Category_Output    FALSE
-# Save_CDmatrix_Output    FALSE
+  plot(rast('/size8.asc_pts50.kdepaths'))
+  plot(rast('/size8.asc_pts50.addedpaths.txt'))
+
+  # Session_label    resistant_kernel
+  # Grid_Filename    /home/shiny/paper/inputs/size9.asc
+  # XY_Filename    /home/shiny/paper/inputs/pts100.xy
+  # Use_Direction	FALSE
+  # Type_Direction	FlowAcc
+  # Use_Resistance	TRUE
+  # Barrier_or_U_Filename
+  # Direction_or_V_Filename
+  # Speed_To_Resistance_Scale
+  # Use_ED_threshold    False
+  # ED_Distance   10000
+  # Edge_Type	all_paths
+  # Transform_function	linear
+  # Const_kernal_vol	True
+  # Kernel_volume   10000
+  # Edge_Distance    10000
+  # Number_of_Processes    6
+  # KDE_Function    Gaussian
+  # KDE_GridSize    2
+  # Number_of_Categories    5
+  # Save_Path_Output    TRUE
+  # Save_IndividualPaths_Output    FALSE
+  # Save_GraphMetrics_Output    FALSE
+  # Save_KDE_Output    FALSE
+  # Save_Category_Output    FALSE
+  # Save_CDmatrix_Output    FALSE
 }
