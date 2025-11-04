@@ -2078,7 +2078,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   ## Raster to create
   (replacedPath <- gsub(x = rastPath, '.tif$', '_scerpld.tif'))
 
-
   rtp <- terra::rast(rastPath)
   # (rastRes <- res(rt))
 
@@ -2162,8 +2161,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     # rasterizedPath <- 'C:/cola/colaGLO2024121820390005/out_crk_EGL2024121820455305.tif'
     suppressWarnings( g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE))
     # cat(g2)
-
-    #rft <- rast(rasterizedPath); plot(rft)
+    # rft <- rast(rasterizedPath); plot(rft)
 
     if (gdal){
       cat(' --- Rasterizing with gdal_calc.py')
@@ -2219,10 +2217,9 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   }
 
   if (file.exists(replacedPath) ){
-    cat (' Correct rasterizing')
+    cat (' Correct rasterizing\n')
   } else {
-    cat (' Error at rasterizing')
-
+    cat (' Error at rasterizing\n')
   }
 
   # plot(rast(rastPath))

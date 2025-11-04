@@ -1,4 +1,52 @@
 "
+
+############################ installing #################################
+detach('package:cola', unload=TRUE)
+.rs.restartR()
+remove.packages('cola')
+.rs.restartR()
+if(!require(devtools)){install.packages('devtools')}
+library(devtools)
+.rs.restartR()
+devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never') ## option 3: None
+devtools::install('N:/My Drive/git/cola')
+"
+
+# su shiny;
+# cd /home/shiny/cola; git pull
+# R -e "devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')"
+# sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
+# R -e "shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 25)"
+
+"
+library(cola)
+cola::diagnose_cola()
+cola::setup_cola()
+file.edit(file.path(Sys.getenv('HOME'), '.Renviron'))
+.rs.restartR()
+Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))
+Sys.getenv(c('COLA_DATA_PATH', 'COLA_SCRIPTS_PATH', 'COLA_DSS_UPL_MB', 'COLA_VIZ_THRES_PIX', 'COLA_VIZ_RES_NCOL', 'COLA_VIZ_RES_NROW', 'COLA_NCORES' ))
+cola::setup_cola_dss()
+.rs.restartR()
+
+library(cola)
+cola::cola_dss()
+# install.packages('C:/Users/gonza/Downloads/cola-main.zip', repos = NULL, type = 'win.binary')
+# devtools::install_local('C:/Users/gonza/Downloads/cola-main.zip')
+
+
+shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 25)
+install.packages('C:/temp/cola-main.zip')
+cola::setup_cola()
+
+library(reticulatete)
+reticulate::miniconda_path()
+miniconda_uninstall()
+
+reticulate::conda_remove('cola')
+
+
+
 if(!require(devtools)){
   install.packages('devtools')
 }
@@ -41,81 +89,6 @@ cola::diagnose_cola()
 library(cola)
 cola::cola_dss()
 
-
-## Example of back end
-python script.py input output parameter1 parameter2 …
-
-
-
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe
-C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/s2res.py
-C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sampleTif.tif
-C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif
-0.068 0.999 150 1 -9999 None
-
-
-# CML for corridors
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe
-C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/lcc.py
-
-C:/cola/colaMVX2025070801495305//out_simpts_ENP2025070801540405.shp
-C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif
-C:/cola/colaMVX2025070801495305//out_lcc_NJX2025070801575205.tif
-1000000 0 5 4 None 2>&1
-
-## Run lcc
-corridors <- lcc_py(inshp = 'C:/cola/colaMVX2025070801495305//out_simpts_ENP2025070801540405.shp',
-                    intif = 'C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif',
-                    outtif = ,'C:/cola/colaMVX2025070801495305//out_lcc_fromR.tif',
-                    maxdist = 1000000, smooth = 20, tolerance = 100,
-                    ncores = 4, cml = TRUE, show.result = TRUE)
-
-## Run crk
-library(cola)
-kernels <- crkJoblib_py(
-  inshp = 'C:/cola/singye/sampled_points_tiger_211_proj.shp',
-                    intif = 'C:/cola/singye/crk_tiger_impact_c10_proj.tif',
-                    outtif = ,'C:/cola/singye/out_crk.tif',
-                    maxdist = 440837.4, shape = 'linear', transform = 'yes',
-                    volume = 100000000, ncores = 4, cml = TRUE, show.result = TRUE)
-
-#################################3
-inshp = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/points_sabah_50.shp'
-intif = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sampleSR.tif'
-
-
-inshp = 'C:/cola/colaSWV2025100802211305//out_simpts_EHB2025100802213205.shp'
-intif = 'C:/cola/colaSWV2025100802211305//out_surface_VKG2025100802213505.tif'
-
-inshp = 'C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp'
-intif = 'C:/cola/colaSWV2025100802211305/out_surface_VKG2025100802213505.tif'
-
-
-out_crk <<- tryCatch(
-  crk_py(
-    inshp = inshp, intif = intif,
-    outtif = 'C:/cola//crk.tif',
-    maxdist = 1000,
-    transform = 'linear',
-    shape = 'no',
-    volume = '1'),
-  error = function(e) list(log = e$message, file = ''))
-
-out_cola <<- tryCatch(
-  cola::crk_py(
-    inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
-    intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
-    outtif = tempfile(fileext = '.tif'),
-    maxdist = 1000,
-    transform = 'linear',
-    shape = 'no',
-    volume = '1'),
-  error = function(e) list(log = e$message, file = ''))
-
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305//out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305//out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV2025100802221305.tif 100000 linear no 1 4 None 2>&1
-
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305/out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV.tif 10000 no linear 1 4 None 2>&1
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaCXZ2025100801562805/out_simpts_KAS2025100801574405.shp C:/cola/colaCXZ2025100801562805/out_surface_PRY2025100801574705.tif C:/cola/colaSWV2025100802211305//crk.tif 1000 no linear 1 4 None 2>&1
 
 
 inshp <- 'C:/cola/colaCMT2025080721174905//out_simpts_WRE2025080721182905.shp'
@@ -184,3 +157,41 @@ nodeidsFile = 'C:/cola/filea7a845ad590b_nodeidsFile.csv'
 # nThreads = '8'
 # upCRS = 'None'
 "
+
+# Server ON
+
+# <table align="center" border="0" >
+#   <tr>
+#   <td align="center" width="60%">
+#     <a href="http://34.57.191.163:3838/connecting-landscapes" target="_blank">
+#       <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="DON'T FORGET THIS">
+#         </a>
+#         </td>
+#         <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
+#           </tr>
+#           </table>
+#
+# <table align="center" border="0" >
+#   <tr>
+#   <td align="center" width="60%">
+#     <a href="34.121.114.48:3838/connecting-landscapes" target="_blank">
+#       <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="DON'T FORGET THIS">
+#         </a>
+#         </td>
+#         <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
+#           </tr>
+#           </table>
+#
+### Server off
+#
+# <table align="center" border="0" >
+#   <tr>
+#   <td align="center" width="60%">
+#     <a href="" target="_blank">
+#       <img src="" alt="DON'T FORGET THIS">
+#         </a>
+#         </td>
+#         <td align="center" width="40%"> No public server at this time.<br>Contact us for specific server time requests<br> at ig299@nau.edu </td>
+#           </tr>
+#           </table>
+#

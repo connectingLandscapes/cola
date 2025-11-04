@@ -52,6 +52,7 @@
 
   os <- Sys.info()[c("sysname")]
   os <<- os
+
   # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
   #  setwd('N:/Mi unidad/IG/server_IG/gedivis')
   #  #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
@@ -125,6 +126,10 @@
   (sessionID <<- sessionIDgen(folder = TRUE))
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
   dir.create(tempFolder)
+
+  # if( os %in% c('Darwin', 'Windows')){
+  #   shell.exec(tempFolder)
+  # }
 
   (cat(' >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
@@ -466,6 +471,37 @@ server <- function(input, output, session) {
 
   }))
 
+  colaUpdateSelectizeInput <- function(dfx = rv$layersList,
+                                       ids, typex, field, valx = NULL){  # Existing layers
+    # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
+    #   type = 'Resistance', field = 'public', val = newOutput)
+    if(is.null(dfx)){
+      dfx <<- rv$layersList
+    }
+    valOpts <-(subset(dfx, type %in% typex)[,field])
+    valOpts <- valOpts[valOpts != '']
+
+    # cat(' valOpts typex:', typex, '   field:',  field, '\n')
+    #  print(valOpts)
+    #  print('ids:')
+    #  print(ids)
+
+    # print('valx')
+    # print(valx)#
+    valx <- ifelse(is.null(valx), yes = last(valOpts), no = valx)
+    # print('valx')
+    # print(valx)
+
+    sapply(ids, FUN = function(ii){
+      updateSelectizeInput(
+        session, ii,
+        choices = unlist(valOpts),
+        selected = valx
+        #, server = TRUE
+      )
+    })
+  }
+
   updateColaLayersLists <- function(layersList){
     # input$restoreSession
     # layersList <- read.csv(file.path(tempFolder, sessionID, 'colaLayers.csv'))
@@ -506,7 +542,9 @@ server <- function(input, output, session) {
         lastx <- last(subset(layersList, type == 'Resistance'))
         rv$tifready <<- TRUE
         rv$tif <<- lastx$internal
-        #print(lastx$internal)
+
+        print("lastx$internal")
+        print(lastx$internal)
 
         # tiforig = NULL, # path
         # editready = FALSE,
@@ -738,27 +776,7 @@ server <- function(input, output, session) {
     return(nll)
   }
 
-  colaUpdateSelectizeInput <- function(dfx = rv$layersList,
-                                       ids, typex, field, valx = NULL){  # Existing layers
-    # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
-    #   type = 'Resistance', field = 'public', val = newOutput)
-    if(is.null(dfx)){
-      dfx <<- rv$layersList
-    }
-    valOpts <-(subset(dfx, type %in% typex)[,field])
-    valOpts <- valOpts[valOpts != '']
-    # cat(' valOpts typex:',typex , '   field:',  field, '\n')
-    # print(valOpts)
-    valx <- ifelse(is.null(valx), last(valOpts), valx)
-    sapply(ids, FUN = function(ii){
-      updateSelectizeInput(
-        session, ii,
-        choices = unlist(valOpts),
-        selected = valx
-        #, server = TRUE
-      )
-    })
-  }
+
 
   makeLLExtent <- function(new  = NULL, old = NULL){
     # -72, 40, -70, 43
@@ -3436,13 +3454,11 @@ server <- function(input, output, session) {
             inout = 'out', type =  'Resistance',
             internal = rv$tif, public = suggestedName)
 
-          newOutput <- suggestName(rv$layersList, type = 'Resistance')
-
           ## Inputs boxes
           colaUpdateSelectizeInput(
             ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
                     'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = newOutput)
+            typex = 'Resistance', field = 'public', val = suggestedName)
 
           #### ......
           updateSelectizeInput( # inputsPoints
@@ -3610,13 +3626,11 @@ server <- function(input, output, session) {
               inout = 'out', type =  'Resistance',
               internal = rv$tif, public = suggestedName)
 
-            newOutput <- suggestName(rv$layersList, type = 'Resistance')
-
             ## Inputs boxes
             colaUpdateSelectizeInput(
               ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
                       'in_name_sur_crk', 'in_name_sur_lcc'),
-              typex = 'Resistance', field = 'public', val = newOutput)
+              typex = 'Resistance', field = 'public', val = suggestedName)
 
             #### ......
             updateSelectizeInput( # inputsPoints
