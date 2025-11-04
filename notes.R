@@ -1,15 +1,14 @@
 "
-
 if(!require(devtools)){
   install.packages('devtools')
 }
 
 library(devtools)
-devtools::install_github('connectingLandscapes/cola', dependencies=NA, upgrade = 'never') 
+devtools::install_github('connectingLandscapes/cola', dependencies=NA, upgrade = 'never')
 devtools::install('N:/My Drive/git/cola')
 install.packages('N:/My Drive/git/cola', repos = NULL, type = 'source')
 
-# install.packages('C:/Users/gonza/Downloads/cola-main.zip', repos = NULL, type = 'win.binary') 
+# install.packages('C:/Users/gonza/Downloads/cola-main.zip', repos = NULL, type = 'win.binary')
 # 'C:/Users/gonza/Downloads/cola-main.zip'
 # reticulate::conda_remove('cola')
 
@@ -21,14 +20,14 @@ setup_cola(force = TRUE,# force any problems
 
 # Option B. Getting ask and split steps
 setup_cola() # Wait for 2 questions
-setup_cola_dss() 
+setup_cola_dss()
 cola_dss()
 
 
 ## Solve the user name space problem
 
-library(reticulate) 
-install_miniconda(path = 'C:/temp/R', update = TRUE, force = FALSE) 
+library(reticulate)
+install_miniconda(path = 'C:/temp/R', update = TRUE, force = FALSE)
 Sys.setenv(RETICULATE_MINICONDA_PATH = 'C:/temp/R')
 
 
@@ -48,34 +47,34 @@ python script.py input output parameter1 parameter2 …
 
 
 
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe 
+C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe
 C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/s2res.py
-C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sampleTif.tif 
+C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sampleTif.tif
 C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif
-0.068 0.999 150 1 -9999 None 
+0.068 0.999 150 1 -9999 None
 
 
 # CML for corridors
 C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe
 C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/lcc.py
 
-C:/cola/colaMVX2025070801495305//out_simpts_ENP2025070801540405.shp 
+C:/cola/colaMVX2025070801495305//out_simpts_ENP2025070801540405.shp
 C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif
 C:/cola/colaMVX2025070801495305//out_lcc_NJX2025070801575205.tif
 1000000 0 5 4 None 2>&1
 
 ## Run lcc
 corridors <- lcc_py(inshp = 'C:/cola/colaMVX2025070801495305//out_simpts_ENP2025070801540405.shp',
-                    intif = 'C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif', 
+                    intif = 'C:/cola/colaMVX2025070801495305//out_surface_FYG2025070801542005.tif',
                     outtif = ,'C:/cola/colaMVX2025070801495305//out_lcc_fromR.tif',
                     maxdist = 1000000, smooth = 20, tolerance = 100,
                     ncores = 4, cml = TRUE, show.result = TRUE)
- 
+
 ## Run crk
 library(cola)
 kernels <- crkJoblib_py(
   inshp = 'C:/cola/singye/sampled_points_tiger_211_proj.shp',
-                    intif = 'C:/cola/singye/crk_tiger_impact_c10_proj.tif', 
+                    intif = 'C:/cola/singye/crk_tiger_impact_c10_proj.tif',
                     outtif = ,'C:/cola/singye/out_crk.tif',
                     maxdist = 440837.4, shape = 'linear', transform = 'yes',
                     volume = 100000000, ncores = 4, cml = TRUE, show.result = TRUE)
@@ -88,7 +87,7 @@ intif = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sampleSR
 inshp = 'C:/cola/colaSWV2025100802211305//out_simpts_EHB2025100802213205.shp'
 intif = 'C:/cola/colaSWV2025100802211305//out_surface_VKG2025100802213505.tif'
 
-inshp = 'C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp' 
+inshp = 'C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp'
 intif = 'C:/cola/colaSWV2025100802211305/out_surface_VKG2025100802213505.tif'
 
 
@@ -104,7 +103,7 @@ out_crk <<- tryCatch(
 
 out_cola <<- tryCatch(
   cola::crk_py(
-    inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'), 
+    inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
     intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
     outtif = tempfile(fileext = '.tif'),
     maxdist = 1000,
@@ -113,15 +112,15 @@ out_cola <<- tryCatch(
     volume = '1'),
   error = function(e) list(log = e$message, file = ''))
 
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305//out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305//out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV2025100802221305.tif 100000 linear no 1 4 None 2>&1 
+C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305//out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305//out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV2025100802221305.tif 100000 linear no 1 4 None 2>&1
 
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305/out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV.tif 10000 no linear 1 4 None 2>&1 
-C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaCXZ2025100801562805/out_simpts_KAS2025100801574405.shp C:/cola/colaCXZ2025100801562805/out_surface_PRY2025100801574705.tif C:/cola/colaSWV2025100802211305//crk.tif 1000 no linear 1 4 None 2>&1 
+C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaSWV2025100802211305/out_simpts_EHB2025100802213205.shp C:/cola/colaSWV2025100802211305/out_surface_VKG2025100802213505.tif C:/cola/colaSWV2025100802211305//out_crk_IUV.tif 10000 no linear 1 4 None 2>&1
+C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/python/crk.py C:/cola/colaCXZ2025100801562805/out_simpts_KAS2025100801574405.shp C:/cola/colaCXZ2025100801562805/out_surface_PRY2025100801574705.tif C:/cola/colaSWV2025100802211305//crk.tif 1000 no linear 1 4 None 2>&1
 
 
-inshp <- 'C:/cola/colaCMT2025080721174905//out_simpts_WRE2025080721182905.shp' 
+inshp <- 'C:/cola/colaCMT2025080721174905//out_simpts_WRE2025080721182905.shp'
 intif <- 'C:/cola/colaCMT2025080721174905//in_points_RSH2025080721182905.tif'
-outtif <- 'C:/cola/colaCMT2025080721174905//2.tif' 
+outtif <- 'C:/cola/colaCMT2025080721174905//2.tif'
 maxdist <- 10000
 shape <- 'linear'
 transform <- 'no'
@@ -161,7 +160,7 @@ rg = intif = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sampledata/sam
 ofile = outtif = 'C:/cola/out_lfcc2.tif'
 tempFolder  = 'C:/cola',
 maxdist = 1000000
-gRad = smooth = 0 
+gRad = smooth = 0
 corrTolerance = tolerance = 0
 nThreads = ncores = 8
 maxram = 6

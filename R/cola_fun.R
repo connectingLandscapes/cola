@@ -492,7 +492,7 @@ guessNoData <- function(path){
   # path <- input_tif
   ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
-    gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
+    suppressWarnings( gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]] )
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
       (ans <- as.numeric(gsub('.+\\=', '', ndv)))
@@ -1712,7 +1712,7 @@ prio_py <- function(intif, incrk, inlcc,
 #' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return List of two slots: 'file' with the 'outpngabs' folder if success, 
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success,
 #' and 'log' with any resulting message.
 #' @examples
 #'library(cola)
@@ -1812,7 +1812,7 @@ crk_compare_py <- function(intif, intifs,
 #' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return List of two slots: 'file' with the 'outpngabs' folder if success, 
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success,
 #' and 'log' with any resulting message.
 #' @examples
 #' #'library(cola)
@@ -1918,16 +1918,16 @@ lcc_compare_py <- function(intif, intifs,
 #'   rastPath = intif1
 #' )
 #' plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
-#' 
+#'
 #' intif2 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
 #' rasterizedPol2 <- burnShp(
-#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'), 
-#'   burnval = 200, 
+#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'   burnval = 200,
 #'   rastPath = intif2
 #' )
 #' plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
-#' 
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1944,7 +1944,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
 
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_sceadd.tif'))
 
   file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
@@ -2034,7 +2034,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
 #' intif1 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
-#' 
+#'
 #' replacedPol1 <- replacePixels(
 #'  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
 #'  burnval = 'val2burn', colu = TRUE,
@@ -2042,7 +2042,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #'  rastPath = intif1
 #' )
 #' plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
-#' 
+#'
 #' intif2 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
 #' replacedPol2 <- replacePixels(
@@ -2063,24 +2063,27 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
   # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
   # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
-  # rasterizedPath <- NA 
+  # rastPath <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized.tif'
+  # rasterizedPath <- NA
   # if(Sys.info()['sysname'] == 'Windows'){
   #   stop(' This function is not available in Windows yet')
   # } else{ }
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
   ## Polygon to write
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
+
+
   ## Raster with new features
-  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_scefeat.tif'))
   ## Raster to create
-  (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
+  (replacedPath <- gsub(x = rastPath, '.tif$', '_scerpld.tif'))
 
 
   rtp <- terra::rast(rastPath)
   # (rastRes <- res(rt))
 
   # rastPath <- '/data/tempR//colaZTL2024101522171205//in_edit_fixed_ILK2024101522172305.tif'
-  gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+  suppressWarnings( gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE))
   rastRes0 <- grep('Pixel Size', strsplit(gi, '\n')[[1]], value = TRUE)
   base::options(scipen = 999)
   (rastRes <- (strsplit(x = gsub(pattern = '.+\\(|\\)|-', '', rastRes0), ',')[[1]]))
@@ -2157,7 +2160,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   } else {
 
     # rasterizedPath <- 'C:/cola/colaGLO2024121820390005/out_crk_EGL2024121820455305.tif'
-    g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
+    suppressWarnings( g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE))
     # cat(g2)
 
     #rft <- rast(rasterizedPath); plot(rft)
@@ -2173,7 +2176,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       runCMD <- tryCatch(system(cmdCalc, intern = TRUE), error = function(e) NA)
     } else {
-      cat(' --- Rasterizing with terra')
+      cat('\n --- Rasterizing with terra\n')
 
       ## GDAL calc
       ## works on win> C:\Users\gonza>C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\python.exe C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\Scripts\gdal_calc.py --help
@@ -2199,17 +2202,27 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
       # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'
+      # rastPath  <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized.tif'
+      # rasterizedPath <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized_rasterized2replace.tif'
+
       A <- terra::rast(rastPath)
       B <- terra::rast(rasterizedPath)
       # plot(A)
-      # plot(B)
+      # plot(B, add = TRUE)
       # plot(B)
 
-      newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )
+      newRast <- ((B == 0 | is.na(B)) * A ) + ((B != 0 | !is.na(B)) * B )
       # plot(newRast)
 
       terra::writeRaster(newRast, filename = replacedPath)
     }
+  }
+
+  if (file.exists(replacedPath) ){
+    cat (' Correct rasterizing')
+  } else {
+    cat (' Error at rasterizing')
+
   }
 
   # plot(rast(rastPath))

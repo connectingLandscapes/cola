@@ -145,6 +145,16 @@ server <- function(input, output, session) {
              text = paste0('Please save this sessionID in your records')
   )
 
+  if ( Sys.getenv('COLA_PYTHON_PATH') == ''){
+    shinyalert(html = TRUE, type = "error",
+               title = paste0("Error in the backend"),
+               text = paste0('The python executable CoLa file is not defined.<br>',
+                             "`Sys.getenv('COLA_PYTHON_PATH')` is empty, <br> ",
+                             'Check your installation logs ',
+                             'in details given by `cola::setup_cola( )` and refer to the known-issues',
+                             'page (https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)')
+    )
+  }
 
   # Disable buttons ---
   #shinyjs::disable("out_name_sur") # out_par_surA
@@ -511,6 +521,7 @@ server <- function(input, output, session) {
         colaUpdateSelectizeInput(
           df = layersListx, c('in_points_ly'),
           typex = c('Suitability', 'Resistance'), field = 'public')
+
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
       }
 
@@ -727,13 +738,15 @@ server <- function(input, output, session) {
     return(nll)
   }
 
-  colaUpdateSelectizeInput <- function(dfx = rv$layersList, ids, typex, field, valx = NULL){  # Existing layers
+  colaUpdateSelectizeInput <- function(dfx = rv$layersList,
+                                       ids, typex, field, valx = NULL){  # Existing layers
     # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
     #   type = 'Resistance', field = 'public', val = newOutput)
     if(is.null(dfx)){
       dfx <<- rv$layersList
     }
     valOpts <-(subset(dfx, type %in% typex)[,field])
+    valOpts <- valOpts[valOpts != '']
     # cat(' valOpts typex:',typex , '   field:',  field, '\n')
     # print(valOpts)
     valx <- ifelse(is.null(valx), last(valOpts), valx)
@@ -3137,6 +3150,7 @@ server <- function(input, output, session) {
 
         suggestedName <- suggestName(
           rv$layersList, type = 'Resistance')
+
         shinyalert(html = TRUE, type = "success",
                    title = paste0("Surface resistance loaded succesfully<br>",
                                   'Layer name: ', suggestedName)
@@ -3271,7 +3285,7 @@ server <- function(input, output, session) {
 
   isolate(observeEvent(input$in_name_sur_edi, {
     if(rv$tifready){
-      print('Second print LL for SR update')
+     # print('Second print LL for SR update')
       rv$tif <-   subset(rv$layersList, public == input$in_name_sur_edi)$internal
       rv$tiforig <- subset(rv$layersList, public == input$in_name_sur_edi)$internal
       rv$tif_sp <- terra::rast(rv$tif)

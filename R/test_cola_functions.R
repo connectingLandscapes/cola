@@ -1,5 +1,3 @@
-
-
 #' @title  Test cola functions
 #' @description Run the main geospatial CoLa tools: Suitability to Resistance, Kernels, Corridors
 #' @param run Logical. Run the tests? Default FALSE
