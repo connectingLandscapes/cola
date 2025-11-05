@@ -12,11 +12,13 @@ cdpop_mapdensity(
   method = "average",
   bandwidths = "None",
   type = "count",
-  crs = "None"
+  crs = "None",
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{py}{Python executable location}
 
 \item{grids}{String. Vector with the CDPOP output files to be interpolated}
 
@@ -24,13 +26,13 @@ cdpop_mapdensity(
 
 \item{method}{String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'}
 
-\item{type}{String.}
+\item{type}{String. Specify whether count per cell or count per km2 should be returned. Options are: 'count', 'density'}
 
 \item{crs}{String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.}
 
 \item{cdpopscript}{Python location}
 
-\item{bandwiths}{String.}
+\item{bandwiths}{String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer}
 }
 \value{
 List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
@@ -39,7 +41,13 @@ List with three slots: a) file, with NA if no result given or a single file if f
 Takes CDPOP results and generates a raster interpolation
 }
 \examples{
-cdpop_mapdensity( )
+
+grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
+template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
+densMap <- cdpop_mapdensity(
+ grids = grid, template = template,
+ method = 'average', bandwidths = 'None',
+ type = 'count', crs = 'None')
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

@@ -52,6 +52,7 @@
 
   os <- Sys.info()[c("sysname")]
   os <<- os
+
   # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
   #  setwd('N:/Mi unidad/IG/server_IG/gedivis')
   #  #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
@@ -126,6 +127,10 @@
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
   dir.create(tempFolder)
 
+  # if( os %in% c('Darwin', 'Windows')){
+  #   shell.exec(tempFolder)
+  # }
+
   (cat(' >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   (cat(' >>>> tempFolder: ', tempFolder, '\n'))
   (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
@@ -145,6 +150,16 @@ server <- function(input, output, session) {
              text = paste0('Please save this sessionID in your records')
   )
 
+  if ( Sys.getenv('COLA_PYTHON_PATH') == ''){
+    shinyalert(html = TRUE, type = "error",
+               title = paste0("Error in the backend"),
+               text = paste0('The python executable CoLa file is not defined.<br>',
+                             "`Sys.getenv('COLA_PYTHON_PATH')` is empty, <br> ",
+                             'Check your installation logs ',
+                             'in details given by `cola::setup_cola( )` and refer to the known-issues',
+                             'page (https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)')
+    )
+  }
 
   # Disable buttons ---
   #shinyjs::disable("out_name_sur") # out_par_surA
@@ -456,6 +471,37 @@ server <- function(input, output, session) {
 
   }))
 
+  colaUpdateSelectizeInput <- function(dfx = rv$layersList,
+                                       ids, typex, field, valx = NULL){  # Existing layers
+    # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
+    #   type = 'Resistance', field = 'public', val = newOutput)
+    if(is.null(dfx)){
+      dfx <<- rv$layersList
+    }
+    valOpts <-(subset(dfx, type %in% typex)[,field])
+    valOpts <- valOpts[valOpts != '']
+
+    # cat(' valOpts typex:', typex, '   field:',  field, '\n')
+    #  print(valOpts)
+    #  print('ids:')
+    #  print(ids)
+
+    # print('valx')
+    # print(valx)#
+    valx <- ifelse(is.null(valx), yes = last(valOpts), no = valx)
+    # print('valx')
+    # print(valx)
+
+    sapply(ids, FUN = function(ii){
+      updateSelectizeInput(
+        session, ii,
+        choices = unlist(valOpts),
+        selected = valx
+        #, server = TRUE
+      )
+    })
+  }
+
   updateColaLayersLists <- function(layersList){
     # input$restoreSession
     # layersList <- read.csv(file.path(tempFolder, sessionID, 'colaLayers.csv'))
@@ -496,7 +542,9 @@ server <- function(input, output, session) {
         lastx <- last(subset(layersList, type == 'Resistance'))
         rv$tifready <<- TRUE
         rv$tif <<- lastx$internal
-        #print(lastx$internal)
+
+        print("lastx$internal")
+        print(lastx$internal)
 
         # tiforig = NULL, # path
         # editready = FALSE,
@@ -511,6 +559,7 @@ server <- function(input, output, session) {
         colaUpdateSelectizeInput(
           df = layersListx, c('in_points_ly'),
           typex = c('Suitability', 'Resistance'), field = 'public')
+
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
       }
 
@@ -727,25 +776,7 @@ server <- function(input, output, session) {
     return(nll)
   }
 
-  colaUpdateSelectizeInput <- function(dfx = rv$layersList, ids, typex, field, valx = NULL){  # Existing layers
-    # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
-    #   type = 'Resistance', field = 'public', val = newOutput)
-    if(is.null(dfx)){
-      dfx <<- rv$layersList
-    }
-    valOpts <-(subset(dfx, type %in% typex)[,field])
-    # cat(' valOpts typex:',typex , '   field:',  field, '\n')
-    # print(valOpts)
-    valx <- ifelse(is.null(valx), last(valOpts), valx)
-    sapply(ids, FUN = function(ii){
-      updateSelectizeInput(
-        session, ii,
-        choices = unlist(valOpts),
-        selected = valx
-        #, server = TRUE
-      )
-    })
-  }
+
 
   makeLLExtent <- function(new  = NULL, old = NULL){
     # -72, 40, -70, 43
@@ -3137,6 +3168,7 @@ server <- function(input, output, session) {
 
         suggestedName <- suggestName(
           rv$layersList, type = 'Resistance')
+
         shinyalert(html = TRUE, type = "success",
                    title = paste0("Surface resistance loaded succesfully<br>",
                                   'Layer name: ', suggestedName)
@@ -3271,7 +3303,7 @@ server <- function(input, output, session) {
 
   isolate(observeEvent(input$in_name_sur_edi, {
     if(rv$tifready){
-      print('Second print LL for SR update')
+     # print('Second print LL for SR update')
       rv$tif <-   subset(rv$layersList, public == input$in_name_sur_edi)$internal
       rv$tiforig <- subset(rv$layersList, public == input$in_name_sur_edi)$internal
       rv$tif_sp <- terra::rast(rv$tif)
@@ -3422,13 +3454,11 @@ server <- function(input, output, session) {
             inout = 'out', type =  'Resistance',
             internal = rv$tif, public = suggestedName)
 
-          newOutput <- suggestName(rv$layersList, type = 'Resistance')
-
           ## Inputs boxes
           colaUpdateSelectizeInput(
             ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
                     'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = newOutput)
+            typex = 'Resistance', field = 'public', val = suggestedName)
 
           #### ......
           updateSelectizeInput( # inputsPoints
@@ -3596,13 +3626,11 @@ server <- function(input, output, session) {
               inout = 'out', type =  'Resistance',
               internal = rv$tif, public = suggestedName)
 
-            newOutput <- suggestName(rv$layersList, type = 'Resistance')
-
             ## Inputs boxes
             colaUpdateSelectizeInput(
               ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
                       'in_name_sur_crk', 'in_name_sur_lcc'),
-              typex = 'Resistance', field = 'public', val = newOutput)
+              typex = 'Resistance', field = 'public', val = suggestedName)
 
             #### ......
             updateSelectizeInput( # inputsPoints
@@ -5576,7 +5604,7 @@ server <- function(input, output, session) {
         tStartPri <- Sys.time()
         out_pri <- tryCatch(prio_py(
           # tif = rv$tif,
-          tif =   subset(rv2, public == input$in_name_sur_pri)$internal,
+          intif = subset(rv2, public == input$in_name_sur_pri)$internal,
           incrk = subset(rv2, public == input$in_name_crk_pri)$internal,
           inlcc = subset(rv2, public == input$in_name_lcc_pri)$internal,
 

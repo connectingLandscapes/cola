@@ -1,4 +1,3 @@
-
 instPack <- function(x, devt = FALSE){
   sapply(x, FUN = function(y){
 
@@ -40,6 +39,7 @@ setup_cola_dss <- function(
   'shiny',  'shinyBS',## Before shiny plugins
   "shinydashboard",  "shinycssloaders",
   'shinydashboardPlus', 'shinyjs',
+  'shinyalert',
   'shinyWidgets', 'dashboardthemes',
   "highcharter", 'plotly')){
 
@@ -111,6 +111,7 @@ setup_cola_dss <- function(
   library(rmarkdown)
   library(sf)
   library(shiny)
+  library(shinyalert)
   library(shinyBS)
   library(shinydashboard)
   library(shinydashboardPlus)

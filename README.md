@@ -1,21 +1,24 @@
 # Connectivity analysis software: Connecting landscapes - `cola` 
 
 
+
+
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
 <table align="center" border="0" >
-     <tr>
-      <td align="center" width="60%">
-       <a href="" target="_blank">
-        <img src="">
-        </a>
-      </td>
-       <td align="center" width="40%"> No public server at this time.<br>Contact us for specific server time requests<br> at ig299@nau.edu </td>
-    </tr>
+  <tr>
+  <td align="center" width="60%">
+    <a href="http://34.57.191.163:3838/connecting-landscapes" target="_blank">
+      <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="Ctrl+click"></a></td>
+    <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
+  </tr>
 </table>
 
 
+
 Check our CoLa publication [here](https://www.sciencedirect.com/science/article/pii/S1364815225002609)
+![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/paper.jpeg?raw=true)
+  
   
 > Decision Support System (DSS) Overview
   

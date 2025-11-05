@@ -11,7 +11,6 @@
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 cola_dss <- function(launch.browser = TRUE)  {
-  #app_path <- system.file("shiny", package = "wallace")
   dssLocation <- system.file('app', package = "cola")
   #knitcitations::cleanbib()
   #options("citation_format" = "pandoc")
@@ -23,17 +22,17 @@ cola_dss <- function(launch.browser = TRUE)  {
 
 #' @title Quote file path if space is detected
 #' @description This function add double quotes to the string if a space is detected
-#' @path The file path to be quoted
+#' @param path The file path to be quoted
 #' @examples
 #' library(cola)
-#' quotepath('C:/Users/First Second Name/Documents')
+#' quotepath(path = c('C:/Users/First Second Name/Documents', 'C:/Users/FirstSecondName/Documents'))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 quotepath <- function(path)  {
   #path <- 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/KAZA2025resamp/Leop_Clip_500m.tif'
   (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
-  return( path )
+  return( newpath )
 }
 
 
@@ -48,7 +47,13 @@ quotepath <- function(path)  {
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
-#' cdpop_mapstruct( )
+#' grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
+#' template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
+#'
+#' struMap <- cdpop_mapstruct(
+#'   grids = grid, template = template,
+#'   method = 'thin_plate_spline', neighbors = 'all', crs = 'None')
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -86,7 +91,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   if (cml){
     cat('\n\tCMD interpol struct: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-    cat('\n')
+    cat('\n\n')
   }
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
@@ -123,7 +128,13 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
-#' cdpop_mapdensity( )
+#'
+#' grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
+#' template <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
+#' densMap <- cdpop_mapdensity(
+#'  grids = grid, template = template,
+#'  method = 'average', bandwidths = 'None',
+#'  type = 'count', crs = 'None')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -154,7 +165,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   if (cml){
     cat('\n\tCMD interpol density: \n ')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-    cat('\n')
+    cat('\n\n')
   }
 
   prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
@@ -192,15 +203,25 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param cml String. Print the cola command line?. Default TRUE
 #' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
-#' runCDPOP( )
+#' (out_dir <- tempfile())
+#' dir.create(out_dir)
+#'
+#' (invarfile <- file.path(out_dir, 'invars.csv'))
+#' (xyfile <- file.path(out_dir, 'xy.csv'))
+#'
+#' file.copy(system.file(package = 'cola', 'sampledata/invars.csv'), invarfile)
+#' file.copy(system.file(package = 'cola', 'sampledata/xy.csv'), xyfile)
+#'
+#' cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
+#'                           prefix = 'test', tempFolder = out_dir)
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
 cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      cdpopscript = system.file(package = 'cola', 'CDPOP/src/CDPOP.py'),
-                     inputvars = NULL,
-                     agevars = NULL,
+                     inputvars = NULL, agevars = NULL,
                      cdmat = NULL,
                      xy = NULL,
                      tempFolder,
@@ -252,8 +273,10 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   # file.copy('invars.csv','/home/user/cola/inst/sampledata/invars.csv')
 
   file.copy(cdmat, paste0(datapath, '/cdmat.csv'), overwrite = TRUE)
-  file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
-  file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE)
+  tryCatch(file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE),
+           error = function(e) { NULL})
+  tryCatch(file.copy(agevars, paste0(datapath, '/age.csv'), overwrite = TRUE),
+           error = function(e) { NULL})
 
 
   (cmd <- paste0(
@@ -310,7 +333,11 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param porcEmpty Integer. percentage of locations (points) that randomly will be considered empty and possible to be colonized.
 #' @return String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 #' @examples
-#' shp2xy( shapefile = 'shapefilepathhere.shp',outxy = 'out.xy', tempDir = 'temFolder')
+#' (tempfolder <- tempfile())
+#' dir.create(tempfolder)
+#'
+#' (xyfile <- shp2xy( shapefile = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'         outxy = file.path(out_dir, 'out.xy'), tempDir = tempfolder))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -465,7 +492,7 @@ guessNoData <- function(path){
   # path <- input_tif
   ans <- -9999
   if (require(gdalUtilities) & file.exists(path)){
-    gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]]
+    suppressWarnings( gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]] )
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
       (ans <- as.numeric(gsub('.+\\=', '', ndv)))
@@ -566,15 +593,15 @@ adaptFilePath <- function(path){
 #' @param maxout Numeric. This is the maximum resistance value after transformation from suitability. Default value is 100.  Minimum value is set to 1.
 #' @param shape Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.
 #' @param nodata Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.
-#' @param prj string. Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param prj string. Projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param cml Logical. Print the back-end command line? Default  TRUE
 #' @param show.result Logical. Print the command line result? Default  TRUE
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' srp30 <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', #' minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
-#' hs_rast <- terra::rast(hs)
-#' plot(hs_rast, main = 'Habitat suitability')
+#' sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
+#' hs_rast <- terra::rast(sr$file)
+#' plot(hs_rast, main = 'Surface Resistance')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -615,7 +642,7 @@ sui2res_py <- function(intif, outtif,
   if (cml){
     cat('\n\tCMD Surface : \n')
     cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
@@ -671,22 +698,22 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed
 #' @param outtif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
-#' @param minval Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
-#' @param maxval Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
+#' @param smin Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
+#' @param smax Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
 #' @param npoints Integer. Number of points. Number of points to simulate.
-#' @param issuit String. Is it suitable? ‘Yes’ (default) or ‘No’. Indicates if the provided raster [1]  is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
-#' @param upcrs String. Update CRS | | upcrs| |String| |Projection information in the case the input raster [1] has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param issuit String. Is it suitable? ‘Yes’ (default) or ‘No’. Indicates if the provided raster `intif` is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
+#' @param upcrs String. Update CRS parameter projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with the created shapefile
 #' @examples
 #' library(cola)
 #' library(terra)
-#' hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
+#' hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
 #' # hs_path <- 'C:/path/to/raster.tif'
-#' points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
-#' # points_path <- 'C:/path/to/points.shp'
-#' pts_result <- points_py(intif = hs_path, outshp = 'out_pts.shp', minval = 0.2, maxval = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
+#' (points_path <- tempfile(fileext = '.shp'))
+#' pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2, smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
+#' plot(vect(pts_result$file))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -718,7 +745,7 @@ points_py <- function(intif, outshp,
   if (cml){
     cat('\n\tCMD Points: \n')
     cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
@@ -749,11 +776,12 @@ points_py <- function(intif, outshp,
 #' @return Path with the CSV matrix
 #' @examples
 #' library(cola)
-#' hs_path <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' # hs_path <- 'C:/path/to/raster.tif'
+#' rast_path <- system.file(package = 'cola', 'sampledata/sampleSR.tif')
+#' # rast_path <- 'C:/path/to/raster.tif'
 #' points_path <- system.file(package = 'cola', 'sampledata/samplePoints.shp')
 #' # points_path <- 'C:/path/to/points.shp'
-#' mat_result <- cdmat_py(inshp = points_path, intif = hs_path, outtif = 'out_mat.csv')
+#' outmat <- tempfile(fileext = '.csv')
+#'  mat_result <- cdmat_py(inshp = points_path, intif = rast_path, outcsv = outmat, maxdist = 100000)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -796,7 +824,7 @@ cdmat_py <- function(inshp, intif, outcsv,
   if (cml){
     cat('\n\n\tCMD cdmat: \n')
     cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
@@ -812,15 +840,29 @@ cdmat_py <- function(inshp, intif, outcsv,
 }
 
 
-#' @title  Corridors
-#' @description Calculate corridors
-#' @param py Python executable location
-#' @param pyscript Python script location
+#' @title  Factorial least cost corridors
+#' @description Run the factorial least cost corridors algorithm. Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
+#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' outdir <- tempdir()
+#' corridors <- lcc_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'corridors.tif'),
+#'   maxdist = 100000, smooth = 0, tolerance = 0)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -861,7 +903,7 @@ lcc_py <- function(inshp, intif, outtif,
   if (cml){
     cat('\n\tCMD LCC: \n')
     cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
-    cat('\n')
+    cat('\n\n')
   }
 
 
@@ -878,106 +920,108 @@ lcc_py <- function(inshp, intif, outtif,
 }
 
 
-#' @title  Create least cost corridors for heavy rasters
-#' @description Run CDPOP model
-#' @param py Python executable location
-#' @param pyscript Python script location
-#' @param py Python executable location
+# lccHeavy_py <- function(
+#     inshp, intif, outtif,
+#     maxdist, smooth, tolerance,
+#     ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+#     crs = 'None', tempFolder = NULL,
+#     py = Sys.getenv("COLA_PYTHON_PATH"),
+#     pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
+#     cml = TRUE, show.result = TRUE){
+#
+#   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
+#   # param3 = 25000
+#   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#   # [2] resistance surface
+#   # [3] output file name
+#   # [4] distance threshold (should be in meters*)
+#   # [5] corridor smoothing factor (in number of cells)
+#   # [6] corridor tolerance (in cost distance units)
+#   # [7] number of cores
+#   # [8] projection if missing
+#   # [9] first h5 temp file
+#   # [10] second h5 temp file
+#   # [11] Max GB ram allowed
+#
+#   if (is.null(tempFolder)){
+#     tempFolder <- tempdir()
+#   }
+#   tempH5 <- basename(tempfile())
+#   h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
+#   h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
+#
+#   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
+#
+#   (cmd_lcc <- paste0(
+#     quotepath(py), ' ',
+#     quotepath(pyscript), ' ',
+#     quotepath(inshp), ' ',
+#     quotepath(intif), ' ',
+#     quotepath(outtif), ' ',
+#     format(maxdist, scientific=F), ' ',
+#     format(smooth, scientific=F), ' ',
+#     format(tolerance, scientific=F), " ",
+#     format(ncores, scientific=F), " ",
+#     crs, " ",
+#     h5file1, " ",
+#     h5file2, " ",
+#     '50'
+#     , ' 2>&1 ' #, logname
+#   ))
+#
+#   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+#
+#   if (cml){
+#     cat('\n\tCMD LCC:\n', cmd_lcc)
+#     cat('\n\n')
+#   }
+#
+#   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+#
+#   suppressWarnings( tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL) )
+#
+#   if(show.result){
+#     print(intCMD)
+#   }
+#
+#   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+#               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+#               log = paste0("", intCMD) )
+#   # print('ANS LCC');print(ans)
+#   return( ans )
+#
+# }
+
+
+
+#' @title  Factorial least cost corridors on joblib
+#' @description Run the factorial least cost corridors algorithm using the parallel computing library joblib. Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
+#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' outdir <- tempdir()
+#' corridors <- lccJoblib_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'corridors.tif'),
+#'   maxdist = 100000, smooth = 0, tolerance = 0, maxram = 5)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lccHeavy_py <- function(inshp, intif, outtif,
-                        maxdist, smooth, tolerance,
-                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                        crs = 'None', tempFolder = NULL,
-                        py = Sys.getenv("COLA_PYTHON_PATH"),
-                        pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
-                        cml = TRUE, show.result = TRUE){
-
-  # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
-  # param3 = 25000
-  # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
-  # [2] resistance surface
-  # [3] output file name
-  # [4] distance threshold (should be in meters*)
-  # [5] corridor smoothing factor (in number of cells)
-  # [6] corridor tolerance (in cost distance units)
-  # [7] number of cores
-  # [8] projection if missing
-  # [9] first h5 temp file
-  # [10] second h5 temp file
-  # [11] Max GB ram allowed
-
-  if (is.null(tempFolder)){
-    tempFolder <- tempdir()
-  }
-  tempH5 <- basename(tempfile())
-  h5file1 <- paste0(tempFolder, '/', tempH5, '_A.h5')
-  h5file2 <- paste0(tempFolder, '/', tempH5, '_B.h5')
-
-  logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
-
-  (cmd_lcc <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(maxdist, scientific=F), ' ',
-    format(smooth, scientific=F), ' ',
-    format(tolerance, scientific=F), " ",
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    h5file1, " ",
-    h5file2, " ",
-    '50'
-    , ' 2>&1 ' #, logname
-  ))
-
-  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
-
-  if (cml){
-    cat('\n\tCMD LCC:\n', cmd_lcc)
-    cat('\n')
-  }
-
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-
-  tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
-
-  if(show.result){
-    print(intCMD)
-  }
-
-  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-              log = paste0("", intCMD) )
-  # print('ANS LCC');print(ans)
-  return( ans )
-
-}
-
-
-
-#' @title  Create least cost corridors using parallel computing
-#' @description Run CDPOP model
-#' @param py Python executable location
-#' @param pyscript Python script location
-#' @param py Python executable location
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
-#' @examples
-#' runCDPOP( )
-#' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#' @export
 
 lccJoblib_py <- function(inshp, intif, outtif,
                          maxdist, smooth, tolerance,
@@ -1033,7 +1077,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
   if (cml){
     cat('\n\tCMD LCC joblib:\n', cmd_lcc)
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
@@ -1042,7 +1086,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
     print(intCMD)
   }
 
-  tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL)
+  suppressWarnings(tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL))
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
@@ -1053,36 +1097,44 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
 
 
-#' @title  Create least cost corridors using zarr
-#' @description Create a corridor raster using zarr. This approach is used for big data analysis
-#' @param inshp String. Path to file holding xy coordinates
-#' @param intif String. Path to resistance grid
-#' @param outtif String. Path to corridor GeoTIFF result
-#' @param maxdist Numeric. Distance threshold
-#' @param smooth Numeric. Radius for gaussian smoother (in number of cells). The size of the kernel on each side is 2*radius + 1. E.g. a radius of 2 gives a 5x5 cell kernel
-#' @param tolerance Numeric. Amount to add to the least cost path (in cost distance units) in order to generate a swath of low cost pixels, termed the least cost corridor. If 0, returns the least cost path. If > 0, this amount is added to the least cost path value so that all pixels with values <= to that value will be returned. This results in a swath of pixels instead of a single pixel wide path.
-#' @param ncores Numeric. Number of threads to use
-#' @param maxram Numeric. Set memory size for processing corridors, i.e. set to 16 if you want to use 16GB of RAM, when processing. Make sure you have enough RAM available when setting this value. Consider the total amount of RAM available on your computer and the amount used by other programs that may be running.
-#' @param crs String. User provided CRS if using ascii or other file without projection info. Provide as EPSG or ESRI string e.g. "ESRI:102028"
+
+#' @title  Factorial least cost corridors on Zarr
+#' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
+#' The function uses two separate python scripts: lcc_hpc1_zarr.py and lcc_hpc2_zarr.py
+#' Here the usage order in the backend:
+#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
+#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+#' Here an example. Pleas provide full path to all the file arguments:
+#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr reOrderFile.csv nodeidsFile.csv 6
+#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+#'
+#'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
+#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use in GB
 #' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
 #' @param eci Numeric. End corridor index. Default is 'None'
-#' @param tempFolder Numeric.
-#' @param py Python executable location
-#' @param pyscript Python script location
+#' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
+#' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
-#' (outdir <- tempdir())
-#' zarr <- lccZarr_py(inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
-#' intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
-#' outtif = file.path(outdir, 'out_lfcc.tif')
-#' tempFolder  = outdir,
-#' maxdist = 1000000,
-#' smooth = 0, tolerance = 0,
-#' ncores = 8, maxram = 6,
-#' crs = 'None', sci = 'None', eci = 'None')
+#' outdir <- tempdir()
+#' corridors <- lccZarr_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'corridors.tif'),
+#'   maxdist = 100000, smooth = 0, tolerance = 0, maxram = 5)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1107,7 +1159,7 @@ lccZarr_py <- function(inshp, intif, outtif,
   # tempFolder = NULL;
   # tempFolder = '/home/shiny/test/'
 
-    # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
+  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
 
 
   if (is.null(tempFolder)){
@@ -1254,7 +1306,7 @@ lccZarr_py <- function(inshp, intif, outtif,
 
   if (cml){
     cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
@@ -1265,7 +1317,7 @@ lccZarr_py <- function(inshp, intif, outtif,
 
   if (cml){
     cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
@@ -1276,26 +1328,48 @@ lccZarr_py <- function(inshp, intif, outtif,
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
-            log = paste0(" A: ", intCMDA, '\n',
-                         " B: ", intCMDB, '\n') )
+              log = paste0(" A: ", intCMDA, '\n',
+                           " B: ", intCMDB, '\n') )
   #print('ANS LCC');print(ans)
   return( ans )
 }
 
 
 #' @title  Create cumulative resistance kernels
-#' @description Cumulative resistant kernels
-#' @param py Python executable location
-#' @param pyscript Python script location
-#' @param py Python executable location
+#' @description Run Cumulative resistant kernels algorithm
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.
+#' @param shape String This determines how the probability of dispersal declines with distance from the focal point.
+#'     'linear' implements the function "1 - (1/dThreshold) X d" where dThreshold is the specified distance threshold and
+#'      d is the distance from the focal point. 'gaussian' implements the function `exp(-1 x ((d^2)/(2 X (dispScale^2))))` where
+#'      d is the distance from the focal point and dispScale is equal to dThreshold/4. In future versions, users will be able to specify dispScale.
+#' @param transform String. ’yes’ or ‘no’. If it is set to ‘no’, then no kernel volume transformation is applied and the argument `volume` is ignored. If it is set to ‘yes’, then the value in argument `volume` is used to transform the kernel volume.
+#' @param volume Numeric. If 1, the default, the resistant kernel value at the origin is 1 and no kernel
+#'  volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is
+#'  determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use in GB
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' outdir <- tempdir()
+#' kernels <- crk_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'kernels.tif'),
+#'   maxdist = 100000, shape = 'linear',
+#'   transform = 'no', volume = '1' )
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
+
 crk_py <- function(inshp, intif, outtif,
                    maxdist, shape, transform = 'no', volume,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
@@ -1312,6 +1386,15 @@ crk_py <- function(inshp, intif, outtif,
   # [6] kernel volume
   # [7] cores
   # [8] proj
+
+  if ( ! any( c('yes', 'no') %in% transform ) ){
+    stop( 'transform needs to be "yes" or "no"' )
+  }
+
+  if ( ! any( c('linear', 'gaussian') %in% shape ) ){
+    stop( 'shaoe needs to be "linear" or "gaussian"' )
+  }
+
 
   (cmd_crk <- paste0(
     quotepath(py), ' ',
@@ -1331,7 +1414,8 @@ crk_py <- function(inshp, intif, outtif,
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
   if (cml){
     cat('\n\tCMD Kernel:\n',cmd_crk)
-    cat('\n')
+    cat('\n\n')
+
   }
 
   intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
@@ -1355,15 +1439,37 @@ crk_py <- function(inshp, intif, outtif,
   return( ans )
 }
 
-#' @title  Create least cost corridors using parallel computing
-#' @description Run CDPOP model
-#' @param py Python executable location
-#' @param pyscript Python script location
+#' @title  Create cumulative resistance kernels on joblib
+#' @description Run Cumulative resistant kernels algorithm using the parallel computing library joblib. Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.
+#' @param shape String This determines how the probability of dispersal declines with distance from the focal point.
+#'     'linear' implements the function `1 - (1/dThreshold) X d` where dThreshold is the specified distance threshold and
+#'      d is the distance from the focal point. 'gaussian' implements the function `exp(-1 x ((d^2)/(2 X (dispScale^2))))` where
+#'      d is the distance from the focal point and dispScale is equal to dThreshold/4. In future versions, users will be able to specify dispScale.
+#' @param transform String. ’yes’ or ‘no’. If it is set to ‘no’, then no kernel volume transformation is applied and the argument `volume` is ignored. If it is set to ‘yes’, then the value in argument `volume` is used to transform the kernel volume.
+#' @param volume Numeric. If 1, the default, the resistant kernel value at the origin is 1 and no kernel
+#'  volume transformation is applied. If > 1, the parameter value is used to scale distance values by a constant that is
+#'  determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use in GB
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' outdir <- tempdir()
+#' kernels <- crkJoblib_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'kernels.tif'),
+#'   maxdist = 100000, shape = 'linear',
+#'   transform = 'no', volume = '1' , maxram = 10)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1395,6 +1501,15 @@ crkJoblib_py <- function(
   # [10] second h5 temp file
   # [11] Max GB ram allowed
 
+  if ( ! any( c('yes', 'no') %in% transform ) ){
+    stop( 'transform needs to be "yes" or "no"' )
+  }
+
+  if ( ! any( c('linear', 'gaussian') %in% shape ) ){
+    stop( 'shaoe needs to be "linear" or "gaussian"' )
+  }
+
+
   if (is.null(tempFolder)){
     tempFolder <- tempdir()
   }
@@ -1422,7 +1537,7 @@ crkJoblib_py <- function(
 
   if (cml){
     cat('\n\tCMD CRK joblib:\n', cmd_crk)
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
@@ -1451,18 +1566,38 @@ crkJoblib_py <- function(
 
 
 #' @title  Runs prioritization
-#' @description Run CDPOP model
-#' @param py Python executable location
-#' @param pyscript Python script location
+#' @description Run corridors prioritization algorithm. It takes the kernels and corridors as arguments.
+#' @param py Python executable location. Default is `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscript Python script location. Default is `system.file(package = 'cola', 'python/prioritize_core_conn.py')`
+#' @param maskedcsname String. Temporal mask raster file
+#' @param outshppoint String. Path to the resulting centroid corridors shapefile
+#' @param outshppol String. Path to the resulting corridors shapefile
+#' @param outshppatch String. Path to the resulting patches shapefile
+#' @param outtifpatch String. Path to the resulting patches tif
+#' @param outtif String. Path to the resulting corridors raster
+#' @param threshold Decimal. Numeric value between zero and one (0 - 1) to convert continuous kernels into discrete patches.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path with CDPOP results
 #' @examples
-#' runCDPOP( )
+#' library(cola)
+#' outdir <- tempdir()
+#' prioritization <- prio_py(intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'                           incrk = system.file(package = 'cola', 'sampledata/kernels.tif'),
+#'                           inlcc = system.file(package = 'cola', 'sampledata/corridors.tif'),
+#'                           threshold = 0.7,  tolerance = 100000,
+#'                           maskedcsname = file.path(outdir, 'pri_mask.tif'),
+#'                           outshppoint = file.path(outdir, 'pri_points.shp'),
+#'                           outshppol = file.path(outdir, 'pri_polygon.shp'),
+#'                           outshppatch = file.path(outdir, 'pri_patch.shp'),
+#'                           outtifpatch = file.path(outdir, 'pri_patcht.tif'),
+#'                           outtif = file.path(outdir, 'corridors_zarr.tif'))
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-prio_py <- function(tif, incrk, inlcc,
+prio_py <- function(intif, incrk, inlcc,
                     maskedcsname = paste0(tempfile(), '.tif'),
                     outshppoint, outshppol, outshppatch,
                     outtifpatch, outtif,
@@ -1523,7 +1658,7 @@ prio_py <- function(tif, incrk, inlcc,
   (cmd_prio <- paste0(
     quotepath(py), ' ',
     quotepath(pyscript), ' ',
-    quotepath(tif), ' ',
+    quotepath(intif), ' ',
     quotepath(incrk), ' ',
     quotepath(inlcc), ' ',
     quotepath(maskedcsname), ' ',
@@ -1540,7 +1675,7 @@ prio_py <- function(tif, incrk, inlcc,
   if (cml){
     cat('\n\tCMD prio: \n')
     cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
-    cat('\n')
+    cat('\n\n')
   }
 
 
@@ -1564,12 +1699,38 @@ prio_py <- function(tif, incrk, inlcc,
 #' @description This tool compares the cumulative resistance kernels
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python executable location
+#' @param intif String. File path to the input file used as reference raster.
+#' @param intifs String. File path to files to be compared. A single string is required
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
+#' @param outcsvabs String. File path to the csv output absolute difference table
+#' @param outcsvrel String. File path to the csv output relative difference table
+#' @param outpngabs String. File path to the png output absolute difference plot
+#' @param outpngrel String. File path to the png output relative difference plot
+#' @param outfolder String. File path to the folder where pairwise comparison between
+#' ´intif´ and ´intifs´
+#' @param inshp String. File path to the shapefile used to mask the comparisson
+#' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success,
+#' and 'log' with any resulting message.
 #' @examples
-#' crk_compare_py( )
+#'library(cola)
+#'outdir <- tempdir()
+#'tifs2compare <- paste(sep = ',',
+#'  system.file(package = 'cola', 'sampledata/kernels.tif'),
+#'  system.file(package = 'cola', 'sampledata/kernels_short.tif'),
+#'  system.file(package = 'cola', 'sampledata/kernels_long.tif')
+#'  )
+#'comp_crk <- crk_compare_py(
+#'  intif = system.file(package = 'cola', 'sampledata/kernels.tif'),
+#'  intifs = tifs2compare,
+#'  outcsvabs = file.path(outdir, 'abs_table.csv'),
+#'  outcsvrel = file.path(outdir, 'rel_table.csv'),
+#'  outpngabs = file.path(outdir, 'abs_plot.png'),
+#'  outpngrel = file.path(outdir, 'rel_plot.png'),
+#'  outfolder = outdir
+#'  )
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
@@ -1619,7 +1780,7 @@ crk_compare_py <- function(intif, intifs,
   if (cml){
     cat('\n\tCMD Compare CRK: \n')
     cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
@@ -1638,12 +1799,39 @@ crk_compare_py <- function(intif, intifs,
 #' @description This tool compares the least cost paths
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param py Python executable location
+#' @param intif String. File path to the input file used as reference raster.
+#' @param intifs String. File path to files to be compared. A single string is required
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
+#' @param outcsvabs String. File path to the csv output absolute difference table
+#' @param outcsvrel String. File path to the csv output relative difference table
+#' @param outpngabs String. File path to the png output absolute difference plot
+#' @param outpngrel String. File path to the png output relative difference plot
+#' @param outfolder String. File path to the folder where pairwise comparison between
+#' ´intif´ and ´intifs´
+#' @param inshp String. File path to the shapefile used to mask the comparisson
+#' @param shpfield String. Field to be used for regionalize the comparisson.
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
-#' @return Path with CDPOP results
+#' @return List of two slots: 'file' with the 'outpngabs' folder if success,
+#' and 'log' with any resulting message.
 #' @examples
-#' crk_compare_py( )
+#' #'library(cola)
+#' outdir <- tempdir()
+#' tifs2compare <- paste(sep = ',',
+#'  system.file(package = 'cola', 'sampledata/corridors.tif'),
+#'  system.file(package = 'cola', 'sampledata/corridors_short.tif'),
+#'  system.file(package = 'cola', 'sampledata/corridors_long.tif')
+#'  )
+#' comp_lcc <- lcc_compare_py(
+#' intif = system.file(package = 'cola', 'sampledata/kernels.tif'),
+#' intifs = tifs2compare,
+#' outcsvabs = file.path(outdir, 'abs_table.csv'),
+#' outcsvrel = file.path(outdir, 'rel_table.csv'),
+#' outpngabs = file.path(outdir, 'abs_plot.png'),
+#' outpngrel = file.path(outdir, 'rel_plot.png'),
+#'  outfolder = outdir
+#' )
+
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
@@ -1693,7 +1881,7 @@ lcc_compare_py <- function(intif, intifs,
   if (cml){
     cat('\n\tCMD Comp LCC: \n ')
     cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
-    cat('\n')
+    cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
@@ -1713,13 +1901,33 @@ lcc_compare_py <- function(intif, intifs,
 #' @param polpath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
+#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
-#' burnShp( )
+#' library(cola)
+#' library(terra)
+#' intif1 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+#' rasterizedPol1 <- burnShp(
+#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'   burnval = 'val2burn', colu = TRUE,
+#'   rastPath = intif1
+#' )
+#' plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
+#'
+#' intif2 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+#' rasterizedPol2 <- burnShp(
+#'   polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'   burnval = 200,
+#'   rastPath = intif2
+#' )
+#' plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1736,7 +1944,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
 
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized.tif'))
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_sceadd.tif'))
 
   file.copy(rastPath, rasterizedPath, overwrite = TRUE)
 
@@ -1810,16 +2018,40 @@ burnShp <- function(polPath, burnval = 'val2burn',
 
 #' @title  Add values to  maps of least cost paths
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+#'  Not working on Windows at the moment.
 #' @param polpath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
+#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @param cml Logical. Print the back-end command line? Default TRUE
 #' @param show.result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
-#' replacePixels( )
+#' library(cola)
+#' library(terra)
+#' usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
+#' intif1 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
+#'
+#' replacedPol1 <- replacePixels(
+#'  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'  burnval = 'val2burn', colu = TRUE,
+#'  gdal = usegdal,
+#'  rastPath = intif1
+#' )
+#' plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
+#'
+#' intif2 <- tempfile(fileext = '.tif')
+#' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
+#' replacedPol2 <- replacePixels(
+#'  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+#'  burnval = 200,  gdal = usegdal,
+#'  rastPath = intif2
+#' )
+#' plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1831,21 +2063,26 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
   # polPath <- '/data/tempR/colaBMJ2024101517341605/proj_ADB_FeasibilityAlignment.shp'
   # rastPath <- '/data/tempR/colaBMJ2024101517341605/in_edit_fixed_TKG2024101517383805.tif'
-
+  # rastPath <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized.tif'
+  # rasterizedPath <- NA
+  # if(Sys.info()['sysname'] == 'Windows'){
+  #   stop(' This function is not available in Windows yet')
+  # } else{ }
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
   ## Polygon to write
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-  ## Raster with new features
-  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_rasterized2replace.tif'))
-  ## Raster to create
-  (replacedPath <- gsub(x = rastPath, '.tif$', '_replaced.tif'))
 
+
+  ## Raster with new features
+  (rasterizedPath <- gsub(x = rastPath, '.tif$', '_scefeat.tif'))
+  ## Raster to create
+  (replacedPath <- gsub(x = rastPath, '.tif$', '_scerpld.tif'))
 
   rtp <- terra::rast(rastPath)
   # (rastRes <- res(rt))
 
   # rastPath <- '/data/tempR//colaZTL2024101522171205//in_edit_fixed_ILK2024101522172305.tif'
-  gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+  suppressWarnings( gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE))
   rastRes0 <- grep('Pixel Size', strsplit(gi, '\n')[[1]], value = TRUE)
   base::options(scipen = 999)
   (rastRes <- (strsplit(x = gsub(pattern = '.+\\(|\\)|-', '', rastRes0), ',')[[1]]))
@@ -1889,6 +2126,8 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
+        init = 0,
+        a_nodata = -999,
         dst_filename = rasterizedPath,
         add = FALSE,
         a = burnval) #as.numeric(burnval)
@@ -1907,21 +2146,22 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
         ts = ts, # c(terra::ncol(rt), terra::nrow(rt)), # <width> <height>
         src_datasource = polPath,
         at = att,
+        a_nodata = -999,
+        init = 0,
         dst_filename = rasterizedPath,
         add = FALSE,
         burn = burnval) #as.numeric(burnval)
       , error = function(e) {print('Error rast pol for replacing'); print(e);e})
   }
 
-  if (!file.exists(rasterizedPath)){
+  if (! file.exists(rasterizedPath) ){
     cat (' Error at rasterizing')
   } else {
 
     # rasterizedPath <- 'C:/cola/colaGLO2024121820390005/out_crk_EGL2024121820455305.tif'
-    g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE)
-    cat(g2)
-
-    #rft <- rast(rasterizedPath); plot(rft)
+    suppressWarnings( g2 <- gdalUtilities::gdalinfo(rasterizedPath, quiet = TRUE))
+    # cat(g2)
+    # rft <- rast(rasterizedPath); plot(rft)
 
     if (gdal){
       cat(' --- Rasterizing with gdal_calc.py')
@@ -1934,7 +2174,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       runCMD <- tryCatch(system(cmdCalc, intern = TRUE), error = function(e) NA)
     } else {
-      cat(' --- Rasterizing with terra')
+      cat('\n --- Rasterizing with terra\n')
 
       ## GDAL calc
       ## works on win> C:\Users\gonza>C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\python.exe C:\Users\gonza\AppData\Local\r-miniconda\envs\cola\Scripts\gdal_calc.py --help
@@ -1960,16 +2200,26 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
       # rastPath  <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_rasterized2replace.tif'
       # rasterizedPath <- '/data/tempR//colaRFY2024100813020705/out_surface_GZO2024100813024405_replaced.tif'
+      # rastPath  <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized.tif'
+      # rasterizedPath <- 'C:/cola/colaKAR2025110310475405/out_surface_RRA2025110310480805_rasterized_rasterized2replace.tif'
+
       A <- terra::rast(rastPath)
       B <- terra::rast(rasterizedPath)
       # plot(A)
+      # plot(B, add = TRUE)
       # plot(B)
 
-      newRast <- ((B == 0 ) * A ) + ((B != 0 ) * B )
+      newRast <- ((B == 0 | is.na(B)) * A ) + ((B != 0 | !is.na(B)) * B )
       # plot(newRast)
 
       terra::writeRaster(newRast, filename = replacedPath)
     }
+  }
+
+  if (file.exists(replacedPath) ){
+    cat (' Correct rasterizing\n')
+  } else {
+    cat (' Error at rasterizing\n')
   }
 
   # plot(rast(rastPath))

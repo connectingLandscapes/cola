@@ -15,22 +15,64 @@ crk_compare_py(
   inshp = "None",
   shpfield = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/crk_compare.py")
+  pyscript = system.file(package = "cola", "python/crk_compare.py"),
+  cml = TRUE,
+  show.result = TRUE
 )
 }
 \arguments{
-\item{py}{Python location}
+\item{intif}{String. File path to the input file used as reference raster.}
+
+\item{intifs}{String. File path to files to be compared. A single string is required
+with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'}
+
+\item{outcsvabs}{String. File path to the csv output absolute difference table}
+
+\item{outcsvrel}{String. File path to the csv output relative difference table}
+
+\item{outpngabs}{String. File path to the png output absolute difference plot}
+
+\item{outpngrel}{String. File path to the png output relative difference plot}
+
+\item{outfolder}{String. File path to the folder where pairwise comparison between
+´intif´ and ´intifs´}
+
+\item{inshp}{String. File path to the shapefile used to mask the comparisson}
+
+\item{shpfield}{String. Field to be used for regionalize the comparisson.}
+
+\item{py}{Python executable location}
 
 \item{pyscript}{Python script location}
+
+\item{cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show.result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
-Path with CDPOP results
+List of two slots: 'file' with the 'outpngabs' folder if success, 
+and 'log' with any resulting message.
 }
 \description{
 This tool compares the cumulative resistance kernels
 }
 \examples{
-crk_compare_py( )
+library(cola)
+outdir <- tempdir()
+tifs2compare <- paste(sep = ',',
+ system.file(package = 'cola', 'sampledata/kernels.tif'),
+ system.file(package = 'cola', 'sampledata/kernels_short.tif'),
+ system.file(package = 'cola', 'sampledata/kernels_long.tif')
+ )
+comp_crk <- crk_compare_py(
+ intif = system.file(package = 'cola', 'sampledata/kernels.tif'),
+ intifs = tifs2compare,
+ outcsvabs = file.path(outdir, 'abs_table.csv'),
+ outcsvrel = file.path(outdir, 'rel_table.csv'),
+ outpngabs = file.path(outdir, 'abs_plot.png'),
+ outpngrel = file.path(outdir, 'rel_plot.png'),
+ outfolder = outdir
+ )
 }
 \author{
 Patrick Jantz <Patrick.Jantz@gmail.com>

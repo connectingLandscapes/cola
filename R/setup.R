@@ -340,6 +340,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     message(paste0('Is miniconda installed? Please run `reticulate::conda_list()` and be sure it returns a list of conda environments'))
     diagnose_cola()
     stop("Can't find miniconda :/ ")
+  } else {
+    if( class(condaLists) == 'data.frame'){
+      if(any(grep('Anaconda|anaconda', condaLists$python))){
+        warning(' STOP: Conda manager is Anaconda, not miniconda. Install miniconda by "reticulate::install_miniconda()"')
+      }
+    }
   }
 
   ## Check version

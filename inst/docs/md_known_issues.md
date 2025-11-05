@@ -290,6 +290,31 @@ and having a message from `cola::setup_cola()` similar to: `The python version i
 
 
 
+
+  **Known issue:** Error `CondaToSNonInteractiveError: Terms of service have not been accepted` and cola conda environment can't be installed. We need to accept the Terms of conda before continue.
+  For this we need to access the conda console.
+  
+ ***Solution:*** You need accept the terms manually on the console, since R can't run conda commands before this.
+ 
+ 1. Find the miniconda path in your system by typing in R `miniconda_path()`. In my case returns `C:/Users/Ivan/AppData/Local/r-miniconda`
+ 2. Open your system command line
+ 3. Check the existing base conda environment:  `C:/Users/Ivan/AppData/Local/r-miniconda/Scripts/conda.exe info --envs`. This should return the location of the base python. Take the path obtained
+ in the step 1 and add the `Scripts/conda.exe` suffix
+ 4. Create cola conda environment with the line
+ 
+ ```
+ C:/Users/Ivan/AppData/Local/r-miniconda/Scripts/conda.exe create -n cola gdal h5py numexpr rasterio pytables pandas cython numba networkit==11.0 fiona joblib shapely geopandas scikit-image -c conda-forge
+ ```
+
+ 5. Be sure to accept terms in the conda console.
+ 6. Run again `cola::setup_cola()` to finish the installation
+ 
+
+
+-------------
+
+
+
   
   **Known issue:** `cola` conda environment available but without name. Your conda manager installed the environment correctly but is not named. This might occur because the path where R install the environment is different than the manager conda path. Likely occur when changing users, permissions. 
   `(base) C:\Users\Admin>conda activate C:\Users\USER\AppData\Local\r-miniconda\envs\cola`
@@ -354,7 +379,7 @@ Installing the `cola` conda environment packages should be done by the `cola::se
   
  ***Solution:*** Create folder with writing permissions in your computer. Something like "C:/temp/R". Then in R type
  `library(reticulate)`
- `install_miniconda(path = 'C:/temp/R', update = TRUE, force = FALSE)`
+ `install_miniconda(path = 'C:/temp/R', update = TRUE, force = FALSE)`
  `Sys.setenv(RETICULATE_MINICONDA_PATH = "C:/temp/R")`
  
  Then restart R. [An eample here](https://github.com/rstudio/reticulate/issues/745),
@@ -394,11 +419,33 @@ COLA_SCRIPTS_PATH
  ***Solution:*** Use the 'base' conda environment instead of 'cola'. For this, we need to: 
   1. Follow these [instructions](https://gist.github.com/martinsotir/2bd2e16332dff71e0fa5be3ed3468a6c) to activate conda by default in the command line: 
     As Admin in powershell: `set-executionpolicy unrestricted`
-  2. Go to `%USERPROFILE%\Miniconda3\Scripts` or something like `C:\Users\Admin\miniconda3\Scripts`, using `cd` command: `cd C:\Users\Admin\miniconda3\Scripts`
+  2. Go to `%USERPROFILE%\Miniconda3\Scripts` or something like `C:\Users\Admin\miniconda3\Scripts`, `C:\Users\Admin\AppData\Local\r-miniconda` using `cd` command: `cd C:\Users\Admin\miniconda3\Scripts`
   3. Run `conda --version` to check the version
   4. Run `conda init powershell` to activate conda
   5. Run again `cola::setup_cola(envname = 'base')`
   
+-------------
+
+
+  **Known issue:** CoLa can't load all the required libraries. 
+```
+  +Step 5/5 Setting up local variables
+    Error: Can't load conda modules.
+
+	 Here the error: 
+	
+INTEL oneMKL ERROR: The specified module could not be found. mkl_intel_thread.2.dll.
+Intel oneMKL FATAL ERROR: Cannot load mkl_intel_thread.2.dll.
+```
+  
+  This occurs likely because you have an existing conda manager different than 'miniconda', such 'Anaconda'.
+  
+ ***Solution:*** Use the 'base' conda environment instead of 'cola'. For this, we need to: 
+  1. Run `reticulate::conda_list()` and see if 'miniconda' and not 'anaconda' is the python manager.
+  2. Run `reticulate::install_miniconda()` to install 'miniconda' if it is not the python manager
+  3. Setup CoLa again by `cola::setup_cola( )`
+  
+  Other solutions seems more complicated and can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/troubleshooting.html#numpy-mkl-library-load-failed) or [here](https://stackoverflow.com/questions/54453060/python-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll/56186333#56186333)
   
   -------------
 
@@ -513,6 +560,17 @@ The installation of the required packages for `cola` dashboard  should be done b
   
   
  ***Solution:*** Update the libraries. Mostly `shiny`, `leaflet`, `tera`. Use `install.packages('terra')`.
+
+
+-------------
+-------------
+
+
+
+  **Known issue:** In Linux, getting `ERROR: configuration failed for package ‘s2’` and `cmake not found`  
+  
+  
+ ***Solution:*** Installing cmake in your system terminal `sudo apt update` and `sudo apt install cmake`
 
 
 -------------
