@@ -209,114 +209,127 @@ def main() -> None:
             # Get sources as networkit nodeids
             sources = cf.inds2nodeids(cinds, r, idmap)
             del idmap
-        
+    
+    # Get number of sources
+    lenSources = len(sources)
+
     #%%
     # Calculate GB required by pairwise source points
     # number of nodes/750 is an empirical factor
     gbCf = 0.000000000125 # bits to gb conversion factor
-    memReq = (len(sources)**2)*64*gbCf*(nkG.numberOfNodes()/500)
     
-    # Use only 80% of user supplied threshold to be conservative
-    gbThreshold = gbLim*0.8
+    # Use only 90% of user supplied threshold to be conservative
+    gbThreshold = gbLim*0.9
     
-    #%%
-    # Split into batches if too many source points
-    # For --pairwise distance-- calculations
+    # Calculate space occupied by graph object
+    # This is based on an empirical relationship between
+    # number of nodes and memory use
+    graphRAM = ((0.0003*nodeidsLen)+319.03)/1000
 
-    # Create zarr array to hold point pair distance array
-    shape = (len(sources), len(sources))
-    chunks = (1, len(sources))
-    ppz = czf.createZarrBlosc(shape, np.float64, chunks, ppzarr)
+    # Calculate memory balance after subtracting graph size and 
+    # from available memory. Subtract another 6GB for misc. objects
+    memBalance = gbThreshold - graphRAM - 6
     
-    # Calculate number of batches
-    nPBatches = int(np.ceil(memReq/gbThreshold))
-    sLength = np.arange(len(sources))
-    sBatches = np.array_split(sLength, nPBatches)
-    # Remove any empty batches
-    sBatches = [sub_array for sub_array in sBatches if sub_array.size > 0]
-    print('Calculating pairwise distances between sources in ' + str(len(sBatches)) + ' batches', flush=True)
-    counter = 1
-    for s in sBatches:
+    # Run first stage? Default is "yes". This is primarily for debugging. 
+    # First stage is point pair processing and writes
+    # intermediate files to disk. Second stage is cost distance mapping. 
+    # If "no", first stage processing will be skipped. It is assumed that
+    # first stage files have already been created and these will be used
+    # for second stage processing.
+    rs1 = "yes"
+    
+    if rs1 == "yes":
+        #%%
+        # Split into batches if too many source points
+        # For --pairwise distance-- calculations
+        # Calculate number of batches
+        try:    
+            # Calculate mem needed for one pairwise array and use to 
+            # calculate the number of batches, given the available memory,
+            # needed to process pairwise arrays.
+            # The second half of the eq (np.floor(memBalance...)) calculates
+            # how many arrays can fit within memBalance. This is divided into the 
+            # number of sources to calculate the number of batches corresponding
+            # to the number of arrays that can fit within memBalance.
+            if memBalance > 0:
+                nPBatches = int(np.ceil(lenSources/np.floor(memBalance/((lenSources**2)*64*gbCf*3))))
+            else:
+                print("Available memory is low", flush=True)
+                print("The process may run out of memory", flush=True)
+                nPBatches = lenSources
+        except OverflowError:
+            print("Available memory is low", flush=True)
+            print("The process may run out of memory", flush=True)
+            nPBatches = lenSources
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}", flush=True)
+            print("This error occurred when calculating memory needed for processing", flush=True)
+            print("This may result in downstream errors", flush=True)
+            nPBatches = lenSources
+
+        # Create zarr array to hold point pair distance array
+        shape = (lenSources, lenSources)
+        chunks = (1, lenSources)
+        ppz = czf.createZarrBlosc(shape, np.float64, chunks, ppzarr)
+        
+        # Calculate number of batches
+        sLength = np.arange(lenSources)
+        sBatches = np.array_split(sLength, nPBatches)
+        # Remove any empty batches
+        sBatches = [sub_array for sub_array in sBatches if sub_array.size > 0]
+        #print('Calculating pairwise distances between sources in ' + str(len(sBatches)) + ' batches', flush=True)
+        print(f'Calculating pairwise distances between sources in {len(sBatches)} batches', flush=True)
+        counter = 1
+        for s in sBatches:
+            print(f'Working on batch {counter} of {len(sBatches)}', flush=True)
+            tic1 = time.perf_counter()
+            # Calculate shortest path distance from each source to
+            # every other source
+            # Networkit outputs a 64bit array all at once and this
+            # can swamp RAM, resulting in a value error.
+            try:            
+                spspDist = nk.distance.SPSP(nkG, sources[s[0]:s[-1]+1], sources)
+                spspDist.run()
+                ppArr = spspDist.getDistances(asarray=True)
+            except ValueError:
+                # print eror
+                print("""Calculating corridors failed.
+                      The process may have run out of memory.
+                      Consider setting a lower memory threshold.
+                      Exiting program.""")
+                sys.exit(1)    
+            del spspDist
+            # Insert in zarr file
+            ppz[np.min(s):(np.max(s)+1),:] = ppArr
+            del ppArr
+            print(f"finished batch {counter}", flush=True)
+            toc1 = time.perf_counter()
+            print(f"Batch {counter} took {toc1 - tic1:0.4f} seconds", flush=True)
+            if counter == 1:
+                print(f"Estimated time to complete this stage is {(toc1 - tic1)*len(sBatches):0.4f} seconds", flush=True)
+            counter += 1
+    
+        #%%
         tic1 = time.perf_counter()
-        # Calculate shortest path distance from each source to
-        # every other source
-        # Networkit outputs a 64bit array all at once and this
-        # can swamp RAM, resulting in a value error.
-        try:            
-            spspDist = nk.distance.SPSP(nkG, sources[s[0]:s[-1]+1], sources)
-            spspDist.run()
-            ppArr = spspDist.getDistances(asarray=True)
-        except ValueError:
-            # print eror
-            print("""Calculating corridors failed.
-                  The process may have run out of memory.
-                  Consider setting a lower memory threshold.
-                  Exiting program.""")
-            sys.exit(1)    
-        del spspDist
-        # Insert in zarr file
-        ppz[np.min(s):(np.max(s)+1),:] = ppArr
-        del ppArr
-        print(f"finished batch {counter}", flush=True)
+        print("Identifying neighboring points", flush=True)
+        reOrder = []
+        for s in sLength:
+            ppArr = ppz[s, :]
+            reOt = cf.newSourceTargetPairs2(ppArr, s, dThreshold)
+            # Append if there are any point pairs
+            if len(reOt) > 0:    
+                reOrder.append(reOt)
+        reOrder = np.unique(np.vstack(reOrder), axis=0)
         toc1 = time.perf_counter()
-        print(f"Batch {counter} took {toc1 - tic1:0.4f} seconds", flush=True)
-        counter += 1
-
-    #%%
-    # If threshold > 0, apply threshold
-    if dThreshold > 0:
-        print('Thresholding pairwise distances', flush=True)
-        # List to hold pairwise neighbor info
-        thBigList = []
-        for s in sBatches:
-            # Read in distance array from zarr
-            ppArr = ppz[s,:]                
-            # Get nodes that are less than the threshold distance from the target node
-            thList = [np.where(np.logical_and(lst<= dThreshold, lst > 0)) for lst in ppArr]
-            #thList = []
-            #for lst in ppArr:
-            #    thList.append(np.where(np.logical_and(lst<= dThreshold, lst > 0)))
-            del ppArr
-            # Need to iterate through sublists to check if there are any point pairs
-            # within the threshold distance.
-            if np.max([len(i[0]) for i in thList]) == 0:
-                raise Exception('No source points are within the threshold distance. You may want to increase the distance threshold.')
-            thBigList.append(thList)
-        thList = [val for sublist in thBigList for val in sublist]
-        del thBigList
-    else:
-        # List to hold pairwise neighbor info
-        thBigList = []
-        for s in sBatches:
-            # Read in distance array from zarr
-            ppArr = ppz[s,:]
-            # Remove self neighbors
-            thList = [np.where(lst > 0) for lst in ppArr]
-            #thList = []
-            #for lst in ppArr:
-            #    thList.append(np.where(lst > 0))
-            del ppArr
-            # Need to iterate through sublists to check if there are any point pairs
-            # within the threshold distance.
-            if np.max([len(i[0]) for i in thList]) == 0:
-                raise Exception('No source points are within the threshold distance. You may want to increase the distance threshold.')
-            thBigList.append(thList)
-        thList = [val for sublist in thBigList for val in sublist]
-        del thBigList
-    del ppz
+        print(f"Identifying neighbors took {toc1 - tic1:0.4f} seconds", flush=True)
+        del ppz
     
-    #%%
-    # Get unique source target pairs
-    reOrder = cf.newSourceTargetPairs(thList)
-    del thList
-    print('Processing ' + str(len(reOrder)) + ' source target pairs', flush=True)
-    # Save to file
-    np.savetxt(reOrderFile, reOrder, delimiter=",", fmt="%d")    
+        # Save to file
+        np.savetxt(reOrderFile, reOrder, delimiter=",", fmt="%d")    
 
     #%%
     # Estimate memory required for distance mapping by multiplying
     # the number of graph nodes by the number of sources
-    memReq = nodeidsLen*len(sources)*64*gbCf
     
     # Memory check
     process = psutil.Process(os.getpid())
@@ -336,26 +349,48 @@ def main() -> None:
     # And map the distance between each source point and every cell in the landscape
     # --distance mapping--
     # Create zarr array to hold distance arrays
-    shape = (len(sources), nodeidsLen)
+    shape = (lenSources, nodeidsLen)
     chunks = (1, nodeidsLen)
     daz = czf.createZarrBlosc(shape, np.float64, chunks, dazarr)
    
     # Divide sources into batches
-    sLength = np.arange(0,len(sources))
-    # Multiply number of batches by 2 to ensure batch size is small enough
-    # to fit in memory.
-    nCBatches = int(np.ceil(memReq/gbThreshold))*2
+    sLength = np.arange(0,lenSources)
+    
+    # Calculate batch size
+    try:    
+        # Calculate mem needed for one distance raster and use to 
+        # calculate the number of batches, given the available memory,
+        # needed to process distance rasters.
+        if memBalance > 0:
+            nCBatches = int(np.ceil(lenSources/np.floor(memBalance/(nodeidsLen*64*gbCf*4))))
+        else:
+            print("Available memory is low", flush=True)
+            print("The process may run out of memory", flush=True)
+            nCBatches = lenSources
+    except OverflowError:
+        print("Available memory is low", flush=True)
+        print("The process may run out of memory.", flush=True)
+        nCBatches = lenSources
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}", flush=True)
+        print("This error occurred when calculating memory needed for processing", flush=True)
+        print("This may result in downstream errors", flush=True)
+        nCBatches = lenSources
+
     sBatches = np.array_split(sLength, nCBatches)
     # Remove any empty batches
     sBatches = [sub_array for sub_array in sBatches if sub_array.size > 0]
     
-    print('Calculating cost distances in ' + str(len(sBatches)) + ' batches')
+    #print('Calculating cost distances in ' + str(len(sBatches)) + ' batches', flush=True)
+    print(f'Calculating cost distances in {len(sBatches)} batches', flush=True)
   
     # Loop over batches and calculate distance array
     for b, s in enumerate(sBatches):
         tic1 = time.perf_counter()
-        print('Working on batch ' + str(b+1) + ' of ' + str(len(sBatches)))
-        print('Batch size is ' + str(len(s)))
+        #print('Working on batch ' + str(b+1) + ' of ' + str(len(sBatches)), flush=True)
+        print(f'Working on batch {b+1} of {len(sBatches)}', flush=True)
+        #print('Batch size is ' + str(len(s)), flush=True)
+        print(f'Batch size is {len(s)}', flush=True)
         sourceBatchNK = np.array(sources)[s]
         # Memory check
         process = psutil.Process(os.getpid())
@@ -391,16 +426,18 @@ def main() -> None:
         del ccArr
         toc1 = time.perf_counter()
         print(f"Writing batch to file took {toc1 - tic1:0.4f} seconds")
+        if b+1 == 1:
+            print(f"Estimated time to complete this stage is {(toc1 - tic1)*len(sBatches):0.4f} seconds", flush=True)
 
-    # If zarr files were created, delete them
-    if os.path.exists(ppzarr):
-        try:
-            shutil.rmtree(ppzarr)
-            print(f"Successfully deleted Zarr store at: {ppzarr}")
-        except OSError as e:
-            print(f"Error deleting Zarr store at {ppzarr}: {e}")
-    else:
-        print(f"Zarr store not found at: {ppzarr}")
+#    # If zarr files were created, delete them
+#    if os.path.exists(ppzarr):
+#        try:
+#            shutil.rmtree(ppzarr)
+#            print(f"Successfully deleted Zarr store at: {ppzarr}")
+#        except OSError as e:
+#            print(f"Error deleting Zarr store at {ppzarr}: {e}")
+#    else:
+#        print(f"Zarr store not found at: {ppzarr}")
 
     toc = time.perf_counter()
     print(f"Calculating distance files took {toc - tic:0.4f} seconds", flush=True)
