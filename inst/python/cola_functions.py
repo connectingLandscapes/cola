@@ -662,6 +662,50 @@ def newSourceTargetPairs(thList):
     reOrder = np.unique(reOrder, axis=0)
     return reOrder
 
+@njit
+def newSourceTargetPairs2(thArr, s, dThreshold):
+    """
+    Get unique pairs of sources and targets,
+    omitting self-self pairs and duplicates
+    E.g. calculate only (1,2) if both (1,2) and (2,1)
+    pairs are present. Don't calculate (1,1), (2,2), etc.
+    Uses numpy functions instead of lists used in
+    original sourceTargetPairs function
+
+    Parameters
+    ----------
+    thList : List of lists. The top level list is the same length
+        as sources and its index corresponds the sources
+        node id at that position. The second level list corresponds
+        to the nodes that are within the threshold distance of the
+        corresponding source node.
+
+    Returns
+    ----------
+    reOrder : 2D numpy array where the first column is the source
+        point for least cost path mapping and the second column
+        is the target point
+
+    """
+    # Get points within the threshold distance but above zero
+    # Zero indicates distance with self
+    if (dThreshold == 0 or dThreshold == None):
+        thArr = np.where(thArr > 0)
+    else:
+        thArr = np.where(np.logical_and(thArr <= dThreshold, thArr > 0))
+    # Get array
+    thArr = thArr[0]
+    # If there are values, create pairs array
+    if len(thArr) > 0:
+        pairArr = np.vstack((np.repeat(s, len(thArr)), thArr)).T
+    # Reorder columns so that larger values are always on the left
+    reOrder = np.zeros((pairArr.shape[0],pairArr.shape[1]), dtype='int32')
+    reOrder[:,0] = np.array([np.min(i) for i in pairArr])
+    reOrder[:,1] = np.array([np.max(i) for i in pairArr])
+    # This is not needed if diagonals are zero
+    #reOrder = reOrder[reOrder[:,0] != reOrder[:,1]]
+    return reOrder
+
 def inds2nodeids(cinds, r, idmap):
     """
     Check for point-raster overlap, filter out 
@@ -1089,3 +1133,72 @@ def zoneAdjacency(zones):
     zOs = np.vstack(aList)
     return zOs
 
+def interLeavePairs(pairArray):
+    """
+    Function to interleave rows with adjacent values. Input array
+    is an nrow by two column array of point pairs. To improve efficiency
+    of caching when processing, order point pairs so that adjacent values
+    in the first column with the same neighbor alternate
+    e.g. [[1,3],[2,3],[1,4],[2,4]]
+    A subsequent algorithm uses these point pair values to index into a zarr file.
+    With a small cache, e.g. 4, this reduces cache turnover and decreases
+    disk reads.
+
+    Parameters
+    ----------
+    pairArray : ndArray
+        Two column integer array of point pair IDs.
+
+    Returns
+    -------
+    pairArray : ndArray
+        If the algorithm successfully reordered all pairs, return the
+        new, interleaved array. If not, return the original array
+
+    """
+    v1 = np.unique(pairArray[:,0])
+    print(f"Preparing {len(v1)} points for processing", flush=True)
+    alist = []
+    for i in range(0, len(v1), 2):
+        if i % 100 == 0:
+            print(f"Working on pair {i}", flush=True)
+        if i+1 != len(v1):
+            m1 = pairArray[pairArray[:,0] == v1[i]]
+            m2 = pairArray[pairArray[:,0] == v1[i+1]]
+            ce = np.intersect1d(m1[:,1], m2[:,1])
+            if len(ce) > 0:
+                reps = np.array([v1[i],v1[i+1]]*len(ce))
+                tarray = np.array(list(zip(reps, np.repeat(ce, 2))))
+                elist = []
+                for row in m1:
+                    if not any(np.equal(tarray,row).all(1)):
+                        elist.append(row)
+                for row in m2:
+                    if not any(np.equal(tarray,row).all(1)):
+                        elist.append(row)
+                #alist.append(np.array(list(zip(reps, np.repeat(ce, 2)))))
+                alist.append(tarray)
+                if len(elist) > 0:
+                    alist.append(elist)
+            else:
+                alist.append(m1)
+                alist.append(m2)
+    # Stack list of reordered arrays
+    tv = np.vstack(alist)
+
+    # Consistency check
+    # Convert each array to a set of tuples
+    data1 = set(tuple(pair) for pair in tv)
+    data2 = set(tuple(pair) for pair in pairArray)
+    mismatches = data2 - data1
+    if len(mismatches) > 0:
+        mm = np.array(list(mismatches))
+        tv = np.vstack((tv, mm))
+    # If arrays have the same ids, return the reordered array.
+    # Otherwise, return the original one as we've missed some rows somewhere.
+    if np.sum(tv) == np.sum(pairArray):
+        print("Point pairs interleaved successfully")
+        return tv
+    else:
+        print("Missing rows, couldn't interleave, returning original array")
+        return pairArray
