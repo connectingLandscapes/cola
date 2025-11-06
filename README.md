@@ -14,7 +14,7 @@
   </tr>
 </table>
 
-[Second large server for workshops] (http://136.116.72.169:3838/connecting-landscapes)
+[Second large server for workshops](http://136.116.72.169:3838/connecting-landscapes)
 
 Check our CoLa publication [here](https://www.sciencedirect.com/science/article/pii/S1364815225002609)
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/paper.jpeg?raw=true)
