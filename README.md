@@ -8,13 +8,13 @@
 <table align="center" border="0" >
   <tr>
   <td align="center" width="60%">
-    <a href="http://34.57.191.163:3838/connecting-landscapes" target="_blank">
+    <a href="http://136.114.15.95:3838/connecting-landscapes" target="_blank">
       <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="Ctrl+click"></a></td>
     <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
   </tr>
 </table>
 
-
+[Second large server for workshops] (http://136.116.72.169:3838/connecting-landscapes)
 
 Check our CoLa publication [here](https://www.sciencedirect.com/science/article/pii/S1364815225002609)
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/paper.jpeg?raw=true)
