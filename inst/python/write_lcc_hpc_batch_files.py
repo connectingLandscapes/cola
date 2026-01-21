@@ -11,7 +11,9 @@ import numpy as np
 # for running corridors on hpc systems. It can also be obtained by checking
 # the number of lines in the reorder.csv file, one of the outputs of the
 # 1st script.
-maxi = 1498359
+#maxi = 1498359 # SSP1
+#maxi = 1537120 # SSP2
+maxi = 1586139 # SSP3
 
 # Number of batches you want to run. E.g. if you want to cut procesing time
 # in half, run two batches. 
@@ -19,7 +21,7 @@ nBatches = 20
 
 # Batch size. Calculate this by dividing the number of corridors by the number
 # of batches you want to run.
-bsize = int(np.ceil(maxi/nBatches)) #74918
+bsize = int(np.ceil(maxi/nBatches)) #74918, 76856
 
 for i in range(1, nBatches + 1):
     # Get end index
@@ -31,6 +33,24 @@ for i in range(1, nBatches + 1):
         print("last batch")
         ei = maxi
         print((si,ei))
+        # Write batch text to file
+        # Left justify everything
+        aa = f"""#!/bin/bash
+#SBATCH --job-name=dhole{i}
+#SBATCH --chdir=/scratch/pj276/colatest/output
+#SBATCH --output=/scratch/pj276/colatest/logs/job_%A_%a.log
+#SBATCH --time=08:00:00
+#SBATCH --partition=core
+#SBATCH --cpus-per-task=10
+#SBATCH --mem 42000
+
+module load anaconda3
+
+srun ~/.conda/envs/colamonsoon/bin/python /home/pj276/projects/cola-main/inst/python/lcc_hpc2_zarr.py /scratch/pj276/usfsip_connectivity/dhole_scens/Accessibility_layer_ssp3_2050_M.tif /scratch/pj276/usfsip_connectivity/dhole_scens/lcc_ssp3_2050_M_r{i}.tif /scratch/pj276/usfsip_connectivity/dhole_scens/dazarr3.zarr 0 0 10 None /scratch/pj276/usfsip_connectivity/dhole_scens/reorder3.csv /scratch/pj276/usfsip_connectivity/dhole_scens/nodeids3.csv {si} {ei}
+"""
+        f = io.open(f'C:/Users/pj276/Downloads/dhole_scens/lcc2_ssp3_hpc_job_submit_{i}.sh', 'w', newline='\n')
+        f.write(aa)
+        f.close()
         break
     print((si,ei))
     # Write batch text to file
@@ -39,16 +59,16 @@ for i in range(1, nBatches + 1):
 #SBATCH --job-name=dhole{i}
 #SBATCH --chdir=/scratch/pj276/colatest/output
 #SBATCH --output=/scratch/pj276/colatest/logs/job_%A_%a.log
-#SBATCH --time=06:00:00
+#SBATCH --time=08:00:00
 #SBATCH --partition=core
 #SBATCH --cpus-per-task=10
 #SBATCH --mem 42000
 
 module load anaconda3
 
-srun ~/.conda/envs/colamonsoon/bin/python /home/pj276/projects/cola-main/inst/python/lcc_zarr_cache_test.py /scratch/pj276/usfsip_connectivity/dhole_scens/Accessibility_layer_ssp1_2050_M.tif /scratch/pj276/usfsip_connectivity/dhole_scens/lcc_ssp1_2050_M_r{i}.tif /scratch/pj276/usfsip_connectivity/dhole_scens/dazarr.zarr 0 0 10 None /scratch/pj276/usfsip_connectivity/dhole_scens/reorder.csv /scratch/pj276/usfsip_connectivity/dhole_scens/nodeids.csv {si} {ei}
+srun ~/.conda/envs/colamonsoon/bin/python /home/pj276/projects/cola-main/inst/python/lcc_hpc2_zarr.py /scratch/pj276/usfsip_connectivity/dhole_scens/Accessibility_layer_ssp3_2050_M.tif /scratch/pj276/usfsip_connectivity/dhole_scens/lcc_ssp3_2050_M_r{i}.tif /scratch/pj276/usfsip_connectivity/dhole_scens/dazarr3.zarr 0 0 10 None /scratch/pj276/usfsip_connectivity/dhole_scens/reorder3.csv /scratch/pj276/usfsip_connectivity/dhole_scens/nodeids3.csv {si} {ei}
 """
-    f = io.open(f'C:/Users/pj276/Downloads/dhole_scens/lcc2_hpc_job_submit_{i}.sh', 'w', newline='\n')
+    f = io.open(f'C:/Users/pj276/Downloads/dhole_scens/lcc2_ssp3_hpc_job_submit_{i}.sh', 'w', newline='\n')
     f.write(aa)
     f.close()
     
