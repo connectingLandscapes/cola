@@ -185,6 +185,8 @@ else:
                 zmask = mask.mask(src, zss.geometry, all_touched=True, invert=False, nodata=None, filled=True, crop=False, pad=False, pad_width=0.5, indexes=None)
                 # Extract array
                 zmask = zmask[0].squeeze()
+                # Set nan values to -9999
+                zmask[np.isnan(zmask)] = -9999
                 
                 # Check if there are any nodata values
                 if np.sum(zmask > -9999) > 0:
