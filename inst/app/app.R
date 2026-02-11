@@ -147,7 +147,8 @@ server <- function(input, output, session) {
              #system.file(package = 'cola', 'docs/logoA_bgNA.jpg'),
 
              title = paste0("Welcome to CoLa<br><br>", sessionID ),
-             text = paste0('Please save this sessionID in your records')
+             text = paste0('Please save this sessionID in your records. ',
+                           'This ID will be on the log box in the tools tabs')
   )
 
   if ( Sys.getenv('COLA_PYTHON_PATH') == ''){
@@ -7395,7 +7396,7 @@ if (FALSE){
             # ),
 
             fluidPage(
-              column(2,
+              column(1,
                      tags$table(style = "width: 100%", align = "left", tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))
               ),
               # column(2,
@@ -7404,9 +7405,9 @@ if (FALSE){
               #            "Use a positive or negative single value other than 0.",
               #            "Please remove existing polygons before running again. ")
               #          )),
-              column(2,
-                     textInput("in_edi_val", label = "Value:", value = 0)),
               column(1,
+                     textInput("in_edi_val", label = "Value:", value = 0)),
+              column(2,
                      numericInput("in_edi_wid", label = "Pixel width:", value = 1)
               ), # to add/replace
               # column(2,
