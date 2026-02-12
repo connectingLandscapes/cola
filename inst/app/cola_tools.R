@@ -150,6 +150,7 @@ resampIfNeeded <- function(rastPath){
 }
 
 canLeafletPlotIt <- function(x){
+  # x is rast file path or SpatRast
   epsg4326 <- "+proj=longlat +datum=WGS84 +no_defs"
   epsg3857 <- "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs" # nolint
   require(terra)
@@ -170,11 +171,13 @@ canLeafletPlotIt <- function(x){
         epsg3857
       ),
       epsg4326
-    )), error = function(e) {NULL})
+    )), error = function(e) {print(e); NULL})
 
   if (is.null(bounds)){
+    # Can't plot in dss
     return(FALSE)
   } else {
+    # Works
     return(TRUE)
   }
 }

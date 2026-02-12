@@ -544,8 +544,8 @@ server <- function(input, output, session) {
         rv$tifready <<- TRUE
         rv$tif <<- lastx$internal
 
-        print("lastx$internal")
-        print(lastx$internal)
+        # print("lastx$internal")
+        # print(lastx$internal)
 
         # tiforig = NULL, # path
         # editready = FALSE,
@@ -3389,7 +3389,7 @@ server <- function(input, output, session) {
 
         } else if( !is.null(polDraw) ) {
 
-          print(' Replace -- draw')
+          cat(' Replace -- draw \n')
           ## Uses draw polygon
           rt <- terra::rast(rv$tif)
           rastRes <- res(rt)
@@ -4592,7 +4592,7 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
 
-      cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+      cat('\n -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
       out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
       intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
 
@@ -7020,6 +7020,7 @@ if (FALSE){
               bsTooltip(id = 'in_dist_shp', title = 'Load vectorial point layer'),
               bsTooltip(id = 'cdpop_mort', title = 'Use mortality from the resistance layer? Values will be scaled between 0 and 100%'),
               bsTooltip(id = 'in_cdpop_tif', title = 'Upload a resistance that can be used as mortality layer'),
+              bsTooltip(id = 'in_name_sur_cdp', title = 'Resistance layer used as mortality'),
 
               bsTooltip(id = 'run_cdpop', title = 'Tun CDPOP simulation'),
               bsTooltip(id = 'cdpDwn', title = 'Download ZIP resulting files'),
