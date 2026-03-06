@@ -1,0 +1,2 @@
+conda activate cola
+conda install earthengine-api geemap
