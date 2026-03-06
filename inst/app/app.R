@@ -7344,7 +7344,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Habitat 2 resistance parameters info", status = "primary", collapsed = TRUE
+              title = "Habitat 2 resistance parameters info", status = "info", collapsed = TRUE
               ,
 
               includeMarkdown(system.file(package = 'cola', 'docs/fun_s2res_py.md'))
@@ -7437,7 +7437,7 @@ if (FALSE){
             #       ,
             #       shinydashboard::box(
             #        width = 12, solidHeader = T, collapsible = T,
-            #        title = "Editing resistance parameters info", status = "primary", collapsed = TRUE
+            #        title = "Editing resistance parameters info", status = "info", collapsed = TRUE
             #        ,
             #
             #        #fluidRow(
@@ -7483,7 +7483,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Create points parameters info", status = "primary", collapsed = TRUE
+              title = "Create points parameters info", status = "info", collapsed = TRUE
               ,
 
               #fluidRow(
@@ -7547,7 +7547,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Distance matrix 2 resistance parameters info", status = "primary", collapsed = TRUE
+              title = "Distance matrix 2 resistance parameters info", status = "info", collapsed = TRUE
               ,
               includeMarkdown(system.file(package = 'cola', 'docs/fun_cdmat_py.md'))
 
@@ -7633,7 +7633,7 @@ if (FALSE){
                 shinydashboard::box(
 
                   width = 12, solidHeader = T, collapsible = T,
-                  title = "Advanced parameters", status = "primary", collapsed = TRUE
+                  title = "Advanced parameters", status = "info", collapsed = TRUE
                   ,
 
                   fluidRow(
@@ -7721,7 +7721,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Kernels parameters info", status = "primary", collapsed = TRUE
+              title = "Kernels parameters info", status = "info", collapsed = TRUE
               ,
 
               includeMarkdown(system.file(package = 'cola', 'docs/fun_crk_py.md'))
@@ -7761,7 +7761,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Corridors parameters info", status = "primary", collapsed = TRUE
+              title = "Corridors parameters info", status = "info", collapsed = TRUE
               ,
               #fluidRow(
               # column(width = 4, h5('Hola')),
@@ -7821,7 +7821,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Priorization parameters info", status = "primary", collapsed = TRUE
+              title = "Priorization parameters info", status = "info", collapsed = TRUE
               ,
 
               includeMarkdown(system.file(package = 'cola', 'docs/fun_pri_py.md'))
@@ -7955,7 +7955,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Priorization parameters info", status = "primary", collapsed = TRUE
+              title = "Priorization parameters info", status = "info", collapsed = TRUE
               ,
               includeMarkdown(system.file(package = 'cola', 'docs/fun_lcc_compare_py.md'))
 
@@ -8023,7 +8023,7 @@ if (FALSE){
 
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "", status = "primary", collapsed = TRUE,
+              title = "", status = "info", collapsed = TRUE,
               column(4, textInput("sessInput", "", '')),
               column(4, actionButton("sessPath", "Run")),
               column(4, verbatimTextOutput("sessLog"))
@@ -8071,7 +8071,7 @@ if (FALSE){
             br(),
             shinydashboard::box(
               width = 12, solidHeader = T, collapsible = T,
-              title = "Coordinates parameters info", status = "primary", collapsed = TRUE
+              title = "Coordinates parameters info", status = "info", collapsed = TRUE
               ,
 
               #fluidRow(
