@@ -10,7 +10,7 @@
 #'
 #' @export
 
-diagnose_cola <- function(envName = 'cola',
+diagnose_cola <- function(envName = 'cola', cola2 = TRUE, zarr = TRUE,
                           libs2Install = c('gdal', 'h5py', # 'osgeo',
                                            'numexpr',
                                            'rasterio', 'pytables',
@@ -20,6 +20,13 @@ diagnose_cola <- function(envName = 'cola',
                                            'kdepy',
                                            'scikit-image')){
 
+  if (cola2){
+    libs2Install <- c('geemap', 'geemap', libs2Install)
+  }
+
+  if(zarr){
+    libs2Install <- c('zarr', 'psutil', libs2Install)
+  }
 
   cat(sep = '',
       ' \n\n\t ==== Diagnosing CoLa ==== \nWe will look for errors. Running `cola::setup_cola()` should help you to configure the package.\n',
@@ -203,7 +210,7 @@ install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = FALSE, ask = TRUE,
-                        dss = FALSE, zarr = FALSE, pyVer = "3.12.11",
+                        dss = FALSE, zarr = FALSE, cola2 = TRUE, pyVer = "3.12.11",
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
@@ -214,6 +221,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
   # envName = 'cola'; nSteps = 5; force = FALSE; yml = FALSE; onlyIndividual = F; ask = FALSE; dss = TRUE; zarr = T
 
+  if (cola2){
+    libs2Install <- c('geemap', 'geemap', libs2Install)
+  }
 
   if(zarr){
     libs2Install <- c('zarr', 'psutil', libs2Install)
@@ -910,6 +920,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       pos <- grep('COLA_VIZ_RES_NROW', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
       if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NROW=1000'}
+
+      if(cola2){
+        pos <- grep('COLA_EE', Renviron)
+        # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+        if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_EE=1'}
+      }
 
 
       #cat(Renviron, sep = '\n')

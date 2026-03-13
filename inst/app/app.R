@@ -2,7 +2,6 @@
 ### Ivan Gonzalez - ig299@nau.edu | gonzalezgarzonivan@gmail.com
 ### Patrick Jantz - Patrick.Jantz@nau.edu | jantzenator@gmail.com
 
-
 {
   library(cola)
 
@@ -43,8 +42,6 @@
   library(viridis)
 
 }
-(cat('\n\n >>>> Welcome to CoLa 2.2.1 \n >>>> getwd(): ', getwd(), '\n'))
-
 
 ## Init A
 {
@@ -52,12 +49,6 @@
 
   os <- Sys.info()[c("sysname")]
   os <<- os
-
-  # if ( identical ( unname(Sys.info()[c("sysname", 'nodename')]), c("Windows", 'HP-Z400')) ){
-  #  setwd('N:/Mi unidad/IG/server_IG/gedivis')
-  #  #setwd('N:/Mi unidad/IG/server_IG/gedivis/')
-  # }
-
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
   (dataFolder <<- ifelse( COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH),
@@ -94,14 +85,24 @@
             yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
 
+  ## EE
+  (COLA_EE <- as.numeric(Sys.getenv('COLA_EE')))
+  (COLA_EE <- as.numeric(
+    ifelse( COLA_EE == 1 & !is.na(COLA_EE),
+            yes = 1, no = 0) ))
+  base::options('COLA_EE' = COLA_EE)
+  cat('\n COLA_EE: ', COLA_EE, '\n')
+
   #(rootPath <- find.package('cola'))
   (rootPath <- system.file(package = 'cola'))
   path_error <<- '/var/log/shiny-server/'
 
+
+
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
-  # file.exists(hs2rs_file)
+  # file.exists(hs2rs_file)j m
 
   # py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
   (py <- Sys.getenv("COLA_PYTHON_PATH"))
@@ -125,17 +126,33 @@
 {
   (sessionID <<- sessionIDgen(folder = TRUE))
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
-  dir.create(tempFolder)
-
-  # if( os %in% c('Darwin', 'Windows')){
-  #   shell.exec(tempFolder)
-  # }
-
-  (cat(' >>>> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
-  (cat(' >>>> tempFolder: ', tempFolder, '\n'))
-  (cat(' >>>> R-tempdir(): ', tempdir(), '\n\n'))
+  dir.create(tempFolder, recursive = TRUE, showWarnings = TRUE)
+  # (cat(' >> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
+  # (cat(' >> tempFolder: ', tempFolder, '\n'))
+  # (cat(' >> R-tempdir(): ', cola::adaptFilePath(tempdir()), '\n\n'))
 }
 
+cat(paste0('\n\n
+                                 =++==+++=              >>>> ----------------------
+           -=-               ==+*#**==+*##+=-=          >>>>
+         =++=--:::::---------=+*#///####+#%###*=+       >>>> Welcome to CoLa 2.2.1
+       ==%%%%%%%@@@@@=+@@@%%%"#////########*++*+-       >>>>
+      +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****      >>>> -----------------------
+     ++%%%%%%%%%@@@@@@@@%%%%%%#||||||+=*#######****
+    *#*%%   %%   %% |%%%   %%%%#||||||++*#%####*+=++      >> getwd():', '
+   +###%  %%%  @  % |%%  @  %%%%%%%%%%%%+--++%%*+==+         ', getwd(),'
+  /+##%%%___%%___%%___%__%__%%%#####%%%%    |  *#==+      >> COLA_DATA_PATH: ', '
+ |   +%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-         ', COLA_DATA_PATH, '
+ |   %#%%%%%%%%%%%%%%%%%%%%%###########++         #*      >> tempFolder:', '
+ |   #%%%%%%%@%%#:::::::::::#####=*#####*         **         ', tempFolder, '
+ #   ###%#=-####-::::::::::+####=:::=+###+        **      >> R-tempdir():', '
+ #   #####+--###-:::::::::-#####:::::-=###        +*         ', cola::adaptFilePath(tempdir()), '
+     #####=--####=---------#####---::--####
+'))
+
+
+# https://convertico.com/image-to-ascii/
+#(cat('\n >> getwd(): ', getwd(), '\n'))
 
 
 # >> SERVER ---------------------------------------------------------------------------
@@ -180,6 +197,12 @@ server <- function(input, output, session) {
   shinyjs::disable("addcolumn") #
   shinyjs::disable("removecolumn") #
   shinyjs::disable("Splitcolumn") #
+
+  shinyjs::disable("ee_fc_upload")
+  shinyjs::disable("in_eeruncovs")
+
+  (eeparamscov <- system.file(package = 'cola', 'ee/params_extcov.csv'))
+  (eeparamsccd <- system.file(package = 'cola', 'ee/params_ccdc.csv'))
 
 
   getRastVal <- function(clk, grp){
@@ -417,7 +440,7 @@ server <- function(input, output, session) {
   })
 
 
-  # Restore session -------
+  ### Restore session -------
 
   isolate(observeEvent(input$restoreSession, {
     restPath <<- input$session2restore
@@ -1412,6 +1435,9 @@ server <- function(input, output, session) {
     crs_tif_temp = "",
     crs_tif = "",
 
+    # EE
+    eecola = COLA_EE == 1,
+
     last = NULL)
 
   # rv <- list()
@@ -1916,8 +1942,9 @@ server <- function(input, output, session) {
                      options = list(
                        paging =TRUE,
                        pageLength = nrow(rv$data)
-                     )))
-
+                     ))
+    )
+  ## edit table
   observeEvent(input$table1_cell_edit, {
     roww <- input$table1_cell_edit$row
     clmn <- input$table1_cell_edit$col
@@ -6655,9 +6682,289 @@ server <- function(input, output, session) {
         }
       })
   }
-}
 
-if (FALSE){
+  ## EE server ------
+  output$tabee <- renderMenu({
+    print(rv$eecola)
+    print('rv$eecola == 1')
+    if(rv$eecola){
+      print( ' rv$eecola == 1 ')
+      menuItem("EE", tabName = "tabee", icon = icon("map")
+               # ,
+               # menuSubItem("No option",tabName="RO_00"),
+               # menuSubItem("Option 1",tabName="RO_01")
+      )
+    }
+  })
+
+  #### SRV EE extcovs ---------
+
+  observeEvent(input$in_eeloadcovs, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+    inFiles <- input$in_eeloadcovs #
+    inFiles$newFile <- paste0(tempFolder, '/', basename(inFiles$name))
+    eeextcovstable <- read.csv(inFiles$datapath)
+    #print(eeextcovstable)
+    #eeextcovstable
+
+    output$out_eeextcovstable <- DT::renderDataTable(
+      if (exists('eeextcovstable')){
+        eeextcovstable <- datatable(eeextcovstable,
+                                    options = list( paging =TRUE,
+                                                    pageLength = nrow(eeextcovstable)
+                                    ))
+      } else {
+        eeextcovstable <- data.frame(empty = 'empty')
+      }
+    )
+  })
+
+
+  observeEvent(input$in_eeloadcovssample, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+    #print(eeextcovstable)
+    #eeextcovstable
+    (eeextcovsfile <- system.file(package = 'cola', 'ee/params_extcov.csv'))
+    if(!file.exists(eeextcovsfile)){
+      shinyalert(html = TRUE, type = "Warning",
+                 title = paste0(" File not found"),
+                 text = paste0(' Sample file is not found.<br>The file params_extcov.csv should exists in the path:<br>',
+                               system.file(package = 'cola'))
+      )
+    } else {
+      eeextcovstable <- read.csv(eeextcovsfile)
+      output$out_eeextcovstable <- DT::renderDataTable(
+        if (exists('eeextcovstable')){
+          dat <- datatable(eeextcovstable,
+                           options = list( paging =TRUE,
+                                           pageLength = nrow(eeextcovstable)
+                           ))
+        } else {
+          dat <- data.frame(empty = 'empty')
+        }
+      )
+    }
+  })
+
+  output$out_eeextcovstable <- DT::renderDataTable(
+    dat <- datatable(read.csv(eeparamsccd), editable = TRUE,
+                     options = list(
+                       paging = FALSE , pageLength = nrow(eeparamsccd)
+                     ))
+  )
+
+  observeEvent(input$out_eeextcovstable_cell_edit, {
+    roww <- input$out_eeextcovstable_cell_edit$row
+    clmn <- input$out_eeextcovstable_cell_edit$col
+    rv$data3[roww, clmn] <- input$out_eeextcovstable_cell_edit$value
+  })
+
+
+  isolate(observeEvent(input$in_eetablecovssave, {
+    ## no params provided
+    if (is.null(rv$data3)){
+      cat(' // No provided invars. Using default\n')
+      cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
+    } else {
+      cat(' // Provided invars\n')
+      cdpop_invars <- t(rv$data)
+      colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
+    }
+    invars_file_path <- file.path(tempFolder, 'invars_edited.csv')
+    cat(' Saving CDPOP invars: ', invars_file_path, '\n')
+    write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
+    print(rv$data)
+  }))
+
+  #
+  isolate(observeEvent(input$in_eeruncovs, {
+
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+    # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
+
+
+    cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_covsExtraction.py ',
+                    input$ee_project, ' ',
+                    cola::adaptFilePath(input$local_file), ' ', input$ee_ptspath, ' 2>&1')
+    #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
+    # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
+    cat(' Uploading points EE:\n')
+    cat(cmdee, '\n')
+
+    intCMD <- tryCatch(
+      capture.output(
+        system( cmdee , ignore.stdout = FALSE,
+                ignore.stderr = FALSE,
+                intern = TRUE)),
+      error = function(e) e$message)
+
+    cat(intCMD)
+
+    cond <- !any(grep('ERROR', intCMD))
+
+    if(cond){
+      taskid <- grep('Upload submitted', intCMD, value = TRUE)
+
+      shinyalert(html = TRUE, type = "success",
+                 title = paste0("Earth engine connected"),
+                 text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid)
+      )
+
+    } else {
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Task  not submitted"),
+                 text = paste0(intCMD)
+      )
+    }
+    #  ee.Authenticate()
+    # ee.Initialize(project='gonzalezivan')
+    #
+  }
+  ))
+
+  #### SRV EE Upload PTS ---------
+
+  isolate(observeEvent(input$ee_fc_upload, {
+
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+    (py <- Sys.getenv("COLA_PYTHON_PATH"))
+    (ee_scr_path <- system.file(package = 'cola', 'ee'))
+    if(ee_scr_path == ''){
+      (ee_scr_path <- ('C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sat_ts_fusion'))
+    }
+    file.exists(ee_scr_path)
+    # param1 = sys.argv[1] # project name
+    # param2 = sys.argv[2] # shapefile path
+    # param3 = sys.argv[3] # ee asset
+
+    # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
+
+
+    cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/ee_uploadFeature.py ',
+                    input$ee_project, ' ',
+                    cola::adaptFilePath(input$local_file), ' ', input$ee_ptspath, ' 2>&1')
+    #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
+    # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
+    cat(' Uploading points EE:\n')
+    cat(cmdee, '\n')
+
+    intCMD <- tryCatch(
+      capture.output(
+        system( cmdee , ignore.stdout = FALSE,
+                ignore.stderr = FALSE,
+                intern = TRUE)),
+      error = function(e) e$message)
+
+    cat(intCMD)
+
+    cond <- !any(grep('ERROR', intCMD))
+
+    if(cond){
+      taskid <- grep('Upload submitted', intCMD, value = TRUE)
+
+      shinyalert(html = TRUE, type = "success",
+                 title = paste0("Earth engine connected"),
+                 text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid)
+      )
+
+    } else {
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Task  not submitted"),
+                 text = paste0(intCMD)
+      )
+    }
+    #  ee.Authenticate()
+    # ee.Initialize(project='gonzalezivan')
+    #
+  }
+  ))
+
+  #### SRV EE connects ---------
+  isolate(observeEvent(input$ee_connect, {
+
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+    (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+    # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+    # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+    (ee_scr_path <- system.file(package = 'cola', 'ee'))
+    (ee_scr <- system.file(package = 'cola', 'ee/cml_connectEE.py'))
+
+
+    if (!file.exists(ee_scr)){
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Script not found"),
+                 text = paste0(' Files for this task not found<br>')
+      )
+
+    } else {
+
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0("Connecting to Earth Engine "),
+                 text = paste0(' Please close this window and wait few seconds')
+      )
+
+      # param1 = sys.argv[1] # project name
+      # param2 = sys.argv[2] # shapefile path
+      # param3 = sys.argv[3] # ee asset
+      # input <- list(ee_project = 'gonzalezivan')
+
+      cmdee <- paste0(py, ' ', ee_scr_path,'/cml_connectEE.py ',
+                      input$ee_project, ' ', tempFolder, ' ')
+      #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan /data/cola/colaXGY2026030209460105 2>&1'
+      # cmdee <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaIJD2026030509435605/ 2>&1'
+      cat(' Cola2: Connecting to EE\n')
+      cat(cmdee, '\n')
+
+      intCMD <- tryCatch(
+        #capture.output(
+        system( cmdee , ignore.stdout = FALSE,
+                ignore.stderr = FALSE,
+                intern = TRUE)
+        #)
+        ,
+        error = function(e) e$message)
+
+      cat('\n',intCMD[intCMD != ''], '\n')
+
+      cond <- !any(grep('ERROR', intCMD))
+
+      if(cond){
+        output$box1 <- shinydashboard::renderValueBox({
+          valueBox(width = 12, "EE connected", "Ready", icon = icon("thumbs-up", lib = "glyphicon"),
+                   color = "green"
+          )
+        })
+
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Earth engine connected"),
+                   text = paste0(input$ee_project, ' project found')
+        )
+
+      } else {
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Earth engine not connected"),
+                   text = paste0(intCMD)
+        )
+      }
+
+    }
+  })) # end isolate
+
+  output$box1 <-  shinydashboard::renderValueBox({
+    valueBox( "EE not conected", 'Not ready', icon = icon("thumbs-down", lib = "glyphicon"),
+              # icon = icon("thumbs-up", lib = "glyphicon")
+              color = "red"
+    )
+  })
+
+} # close server
+
+
+if (FALSE){ # if FALSE
   ## Debug
   if (TRUE){
 
@@ -6708,11 +7015,11 @@ if (FALSE){
     #                 editOptions = leaflet.extras::editToolbarOptions())
     # rv$llmap0 <- rv$llmap <- llmap
   }
-}
+} #  IF FALSE
 
 
+# >> UI ---------------------------------------------------------------------------
 {
-  # >> UI ---------------------------------------------------------------------------
   # https://cran.r-project.org/web/packages/dashboardthemes/vignettes/using_dashboardthemes.html
 
   css <- '.nav-tabs>li>a {
@@ -6743,6 +7050,9 @@ if (FALSE){
           #HTML(paste("Habitat suitability <>", "resistance surface", sep="<br/>"))
 
           # https://fontawesome.com/search?q=edit&o=r&m=free
+
+          menuItemOutput("tabee"),
+
 
           shinydashboard::menuItem(HTML(paste("Habitat suitability to", "resistance surface", sep="<br/>")),
                                    tabName = "tab_surface", icon = icon("right-left")),
@@ -7230,6 +7540,234 @@ if (FALSE){
                 # )
               )
             )),
+          ## UI EE  ----
+          shinydashboard::tabItem(
+            'tabee',
+            # fluidPage(
+            tabsetPanel(
+              type = "pills",
+              tabPanel(
+                "Check + Upload EE",
+                # verbatimTextOutput("cola_ee"),
+                # checkboxInput(inputId = "eecheckbox", label = "Earth Engine", value = TRUE),
+
+                #### EE check ---------
+                h2(' Check EE '),
+                shinydashboard::box( # open box ABC
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Connect to Earth Engine", status = "info", collapsed = FALSE
+                  ,
+
+                  fluidRow(
+                    column(width = 6,
+                           textInput(width = "100%",
+                                     value = 'gonzalezivan',
+                                     placeholder = 'EE project',
+                                     label =  'EE project',
+                                     'ee_project'),
+
+                           actionButton(width = "100%",
+                                        label = 'Check EE',
+                                        'ee_connect')),
+                    column(width = 6,
+                           shinydashboard::valueBoxOutput("box1", width = 12))
+                  ) # end box ABC
+                ),
+
+
+                # verbatimTextOutput("vout_ee"),
+
+
+                #### EE upload ---------
+
+
+                h2('  Upload Points '),
+
+                shinydashboard::box( # open box ABC
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Create feature collection and bounding box from local layer", status = "info", collapsed = FALSE
+                  ,
+                  column(width = 4,
+                         shiny::fileInput('local_file', 'Load points files', buttonLabel = 'Search',
+                                          placeholder = 'INC SHP, DBF, SHX and PRJ ',
+                                          accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
+                                          multiple=TRUE),
+                         div(style = "margin-top: -30px")
+                  ),
+
+                  column(width = 5,
+                         textInput(width = "100%",
+                                   #value = 'projects/gonzalezivan/assets/cola/name',
+                                   placeholder = 'projects/USER/assets/LAYER',
+                                   label =  'Layer to create', inputId = 'ee_ptspath')
+                  ),
+
+                  column(width = 3,
+                         tags$td(style = "width: 25%", align = "top",
+                                 actionButton(width = "100%", class = "btn-primary btn-lg",
+                                              label = 'Upload points', 'ee_fc_upload',
+                                              style="text-align: center;vertical-align: center")
+                         )
+                  )
+                ),
+
+
+                #### EE extcovs ---------
+                br(),
+                h2('Extract covariates '),
+
+                shinydashboard::box( # open box ABC
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Create a table with covariates layers from points", status = "info", collapsed = FALSE
+                  , # ), ## box
+
+                  column(
+                    width = 4 ,
+                    fileInput("in_eeloadcovs", "Params CSV File", accept = ".csv"),
+                    div(style = "margin-top: -30px"),
+                    actionButton(width = "80%", label = 'Load sample table',
+                                 'in_eeloadcovssample'),
+                    actionButton("in_eetablecovssave", "Save edited params file"),
+                  ),
+
+
+                  column(width = 5,
+                         selectizeInput(
+                           inputId = 'in_eecovlc',
+                           multiple = TRUE,
+                           choices = c(
+                             'True desert',
+                             'Semi-arid',
+                             'Dense short vegetation',
+                             'Tree cover',
+                             'Wetland Salt pan',
+                             'Wetland Sparse vegetation',
+                             'Wetland Dense short vegetation',
+                             'Wetland Tree cover',
+                             'Cropland',
+                             'Built-up'
+                           ),
+                           selected = c(
+                             'Dense short vegetation',
+                             'Tree cover',
+                             'Wetland Sparse vegetation',
+                             'Wetland Dense short vegetation',
+                             'Wetland Tree cover'
+                           ),
+                           label =  'Land cover types')),
+
+
+
+                  column(width = 3, offset = 0,
+                         numericInput('in_eeextabs', label = 'Number of absences',
+                                      value = 0,step = 1, max = 999999 ),
+                         actionButton(width = "100%",
+                                      label = 'Extract covariates',
+                                      'in_eeruncovs')
+                  ),
+                  DT::dataTableOutput(outputId = "out_eeextcovstable")
+
+                ), ## box
+
+                #### EE run model ---------
+                br(),
+                h2('Run model covariates '),
+
+                shinydashboard::box( # open box ABC
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Connect to Earth Engine", status = "info", collapsed = FALSE,
+
+
+                  column(width = 4,
+                         actionButton(width = "100%",
+                                      label = 'Upload model CSV',
+                                      'ee_push_params')),
+                  column(width = 4,
+                         selectizeInput(
+                           label = 'Algorithm',
+                           choices = c('CCDC', 'Landtrndr'),
+                           selected =  'CCDC',
+                           inputId = 'ee_ccdc_type')),
+
+                  column(width = 6,
+                         selectizeInput(
+                           multiple = TRUE,
+                           choices = c(
+                             'blue', 'green', 'red', 'NIR', 'SWIR1', 'SWIR2', 'QA_PIXEL', 'QA_RADSAT'
+                           ),
+                           label =  't Mmask Bands',
+                           inputId = 'ee_cov_list')),
+
+                  actionButton("in_eeext_pardef", "Load default parameters "),
+
+                  column(
+                    width = 4,
+                    actionButton("in_eeext_save", "Save edited params file"))
+                  ,
+                  fluidRow(
+                    column(width = 12,
+                           # DT::dataTableOutput(outputId = "table2"),
+                           plotOutput("eesext_params"))
+                  )
+                ), # end box ABC
+
+                #### EE predict model  ---------
+
+                h2('Predict model'),
+                shinydashboard::box( # open box
+                  width = 12, solidHeader = T, collapsible = T,
+                  title = "Run CCDC ", status = "info", collapsed = TRUE
+                  ,
+                  fluidRow(
+                    column(width = 4,
+                           selectizeInput(
+                             label = 'Algorithm',
+                             choices = c(
+                               'CCDC', 'Landtrndr'
+                             ),
+                             selected =  'CCDC',
+                             inputId = 'ee_ccdc_type')),
+
+                    column(width = 4,
+                           actionButton(width = "100%",
+                                        label = 'Get model CSV',
+                                        'ee_get_csv')),
+                    column(width = 4,
+                           actionButton(width = "100%",
+                                        label = 'Upload model CSV',
+                                        'ee_push_params'))
+                  ),
+                  column(
+                    width = 4,
+                    actionButton("in_eeccd_pardef", "Load default parameters "),
+                  ),
+                  column(
+                    width = 4,
+                    fileInput("in_eeccd_par", "Params CSV File", accept = ".csv"),
+                  ),
+                  column(
+                    width = 4,
+                    actionButton("in_eeccd_save", "Save edited params file"),
+                  ),
+                  fluidRow(
+                    column(width = 12,
+                           # DT::dataTableOutput(outputId = "table3"),
+                           plotOutput("eeccd_params"))
+                  )
+                ), # end box
+
+                #### EE END  ---------
+
+              ), # tab panel
+
+              tabPanel( "Make params", h2(' ')  ), # tab panel
+              tabPanel("Select covariates", h2(' ')), # tab panel
+              tabPanel("Model params", h2(' '))
+            ), # tab panel
+
+            tabPanel( "Run model", h2(' ') ) # tab panel
+            #  ) # Fluid page
+          ), # tabItem
 
           #### UI HS 2 SR ----
           shinydashboard::tabItem(
