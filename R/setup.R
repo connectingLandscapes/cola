@@ -222,7 +222,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   # envName = 'cola'; nSteps = 5; force = FALSE; yml = FALSE; onlyIndividual = F; ask = FALSE; dss = TRUE; zarr = T
 
   if (cola2){
-    libs2Install <- c('geemap', 'geemap', libs2Install)
+    libs2Install <- c('geemap', 'earthengine-api', libs2Install)
   }
 
   if(zarr){
@@ -387,7 +387,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
 
-  (numPyVers3  <- ifelse(!is.null(pyVer), pyVer, numPyVers2))
+  (numPyVers3  <- ifelse(!is.null(numPyVers), numPyVers, numPyVers2))
 
   ## Conda exists // check for cola
   if ( class(condaLists) == 'data.frame' ){
@@ -491,6 +491,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
+
   ## Confirm env name
   (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
   if ( is.null(pyCola) | length(pyCola) == 0 ){
@@ -554,7 +555,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## Step4. Install packages ----------------------------------------------
   cat (sep = '', '\n  +Step 4/', nSteps, ' Installing & checking conda modules\n')
 
-  if (!onlyIndividual){
+  if ( !onlyIndividual ){
 
     # Try 3 times to install all the packages with yml file
     for(i in 1:3){
@@ -591,7 +592,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         (gsub('==', '=', libs2Install) %in% avLibs$requirement))
   ])
 
-  if(length(libs2inst) != 0){
+  if( length(libs2inst) != 0){
+    cat (
+      paste0(' From the ',length(libs2Install), ' libraries, ', length(libs2inst),
+             ' are not installed yet: ', paste0(libs2Install, collapse = ', ') )
+    )
+
     for( l in 1:length(libs2inst)){ # l = 10
       (lib2inst <- libs2inst[l])
       (lib2 <- gsub('==.+', '', lib2inst))
@@ -894,8 +900,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       posB <- grep('COLA_SCRIPTS_PATH', Renviron)
       (posB <- ifelse(length(posB) == 0, length(Renviron) + 1, posB))
       Renviron[posB] <- paste0('COLA_SCRIPTS_PATH="', cola_scripts_path, '"')
-
-
 
       pos <- grep('COLA_DATA_PATH', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
