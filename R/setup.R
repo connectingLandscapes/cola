@@ -10,7 +10,7 @@
 #'
 #' @export
 
-diagnose_cola <- function(envName = 'cola', cola2 = TRUE, zarr = TRUE,
+diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
                           libs2Install = c('gdal', 'h5py', # 'osgeo',
                                            'numexpr',
                                            'rasterio', 'pytables',
@@ -210,7 +210,8 @@ install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = FALSE, ask = TRUE,
-                        dss = FALSE, zarr = FALSE, cola2 = TRUE, pyVer = "3.12.11",
+                        dss = FALSE, zarr = FALSE, cola2 = FALSE,
+                        pyVer = "3.12.11",
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
@@ -468,7 +469,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         ))
 
         if (ask){
-          user_permission <- utils::askYesNo(paste0("Uninstall and update '", envName, "' conda environment? Migth take some minutes"))
+          user_permission <- utils::askYesNo(
+            paste0("Uninstall and update '", envName, "' conda environment? We are attemping for ",
+                   ," but you have ", pyColaVersion, ". It migth take some minutes. 'Yes' for proceed if your version is older,  'no' to keep the the existing one, and 'cancel' to quit the isntallation"))
         }
 
         if ( isTRUE(user_permission) ) {
@@ -495,7 +498,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## Confirm env name
   (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
   if ( is.null(pyCola) | length(pyCola) == 0 ){
-    message(paste0('You should run `conda_create(",', envName ,'")` before using this package'))
+    message(paste0('You should run `conda_create("', envName ,'")` before using this package'))
     stop()
   } else {
     if( is.character(pyCola) & file.exists(pyCola) ){

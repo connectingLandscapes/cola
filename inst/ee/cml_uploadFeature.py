@@ -70,6 +70,9 @@ def main() -> None:
     # Read the shapefile into a GeoDataFrame
     gdf = gpd.read_file(shapefile_path)    
     minx, miny, maxx, maxy = gdf.total_bounds
+    
+    # gdf.assign(preabs=1)
+
 
     # Create bounding box polygon
     extent_poly = box(minx, miny, maxx, maxy)

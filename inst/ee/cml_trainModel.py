@@ -104,8 +104,6 @@ def main() -> None:
     # load the point FeatureCollection, and limit collection size
     pt_fc = ee.FeatureCollection(pt_fc_id).limit(maximum=ext_limit, prop='random_1')
     
-    # var columns = collection.first().propertyNames()
-    
     # make the ancillary covariate image (only elev, slope, and aspect in this case)
     anc_static_cov_img = ancillary_covariates.make_covar_topo_stack()
     

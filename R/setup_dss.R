@@ -7,7 +7,7 @@ instPack <- function(x, devt = FALSE){
 
     if(!lib2inst %in% rnIl) {
       if (!devt){
-        install.packages(lib2inst)
+        tryCatch(install.packages(lib2inst), error = function(e) print(e))
       } else {
         devtools::install_github(y)
       }
@@ -32,7 +32,8 @@ setup_cola_dss <- function(
   ## Spatial
   # "rgeos", "rgdal", 'raster',
   'sf', 'terra',
-  'rlang', "leaflet", "leaflet.extras",
+  'rlang', "leaflet",
+  # "leaflet.extras",
   'gdalUtilities',
 
   ## Shiny
@@ -44,7 +45,7 @@ setup_cola_dss <- function(
   "highcharter", 'plotly')){
 
   if(Sys.info()["sysname"] == 'Linux'){
-    cat('\n   Only for Linux: Consider install the next libraries in Linux console before installing R DSS packages (not required for command line): \n    ',
+    cat('\n   Only for Linux: Install the next libraries in Linux console before installing R DSS packages (not required for command line): \n    ',
     'sudo apt -y install libfontconfig1-dev libharfbuzz-dev libfribidi-dev libudunits2-dev\n')
     Sys.sleep(5)
   }
@@ -63,6 +64,7 @@ setup_cola_dss <- function(
   if (!require("remotes")) {
     install.packages("remotes")
   }
+
 
   cola::instPack(libs2colaDSS )
 
@@ -89,6 +91,10 @@ setup_cola_dss <- function(
 
   if(!require('highcharter') ){
     (remotes::install_github("jbkunst/highcharter"))
+  }
+
+  if(!require('leaflet.extras') ){
+    remotes::install_github("trafficonese/leaflet.extras")
   }
 
   library(bit) #
