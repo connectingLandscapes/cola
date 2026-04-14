@@ -35,7 +35,7 @@ def main() -> None:
   # project_name = 'gonzalezivan'
   # shapefile_path = '/home/shiny/test/anoa66.shp'
   # shapefile_path = 'C:/cola/Anoa/Anoa_present_ardianti.shp'
-  # ee_name = 'projects/gonzalezivan/assets/cola/anoa1'
+  # ee_name = 'projects/gonzalezivan/assets/cola/anoa6'
 
       
   
@@ -71,7 +71,11 @@ def main() -> None:
     gdf = gpd.read_file(shapefile_path)    
     minx, miny, maxx, maxy = gdf.total_bounds
     
-    # gdf.assign(preabs=1)
+    # Assign preabs column to 0 if not existing
+    if 'preabs' not in gdf.columns:
+        gdf.assign(preabs=1)
+        print (  ' Creating the missing "preabs" column, assigning 1 to all features')
+
 
 
     # Create bounding box polygon

@@ -12,11 +12,13 @@ devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade
 devtools::install('N:/My Drive/git/cola')
 "
 
-# su shiny;
-# cd /home/shiny/cola; git pull
-# R -e "devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')"
-# sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
-# R -e "shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 25)"
+' # command
+su shiny;
+cd /home/shiny/cola; git pull
+R -e "devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')"
+sudo rm /srv/shiny-server/connecting-landscapes -R; sudo cp /home/shiny/cola/inst/app/* /home/shiny/colashiny/connecting-landscapes/. -R
+R -e "shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-landscapes', max.sessions = 25)"
+'
 
 "
 library(cola)

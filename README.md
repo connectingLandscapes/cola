@@ -5,16 +5,6 @@
 
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/banner.png?raw=true)
 
-<table align="center" border="0" >
-  <tr>
-  <td align="center" width="60%">
-    <a href="http://136.114.15.95:3838/connecting-landscapes" target="_blank">
-      <img src="https://github.com/connectingLandscapes/cola/blob/main/other/servericon_small_wh.png?raw=true" alt="Ctrl+click"></a></td>
-    <td align="center" width="40%"> Wait some seconds<br>while the server<br>fully loads</td>
-  </tr>
-</table>
-
-[Second large server for workshops](http://136.116.72.169:3838/connecting-landscapes)
 
 Check our CoLa publication [here](https://www.sciencedirect.com/science/article/pii/S1364815225002609)
 ![.](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logo/paper.jpeg?raw=true)
@@ -40,17 +30,13 @@ Write Patrick.Jantz@nau.edu or Ivan.Gonzalez@nau.edu for questions and suggestio
   
 > Resources
 
- * [User manual](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?tab=t.0)
-
+ * Access here the [User's manual document (DSS) ](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)
+ 
  * For installation, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 
  * For installation known issues, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_known_issues.md)
 
  * For the functions documentation and examples, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_colafun.md)
-
- * Access here the live [Decision support system dashboard (DSS)](http://34.44.31.4:3838/connecting-landscapes)
- 
- * Access here the [User's manual document (DSS) ](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)
 
  * If you attended the workshops, please consider filling [this form](https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link)
 

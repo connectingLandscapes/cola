@@ -5,7 +5,7 @@
 #' @return NULL. Prints in console five (5) logs regarding different steps
 #' @examples
 #' diagnose_cola()
-#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #'
 #' @export
@@ -142,7 +142,7 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
 #' @examples
 #' install_conda_env(envName = 'cola',
 #'     ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
-#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@nau.edu>
 #' @export
 install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
@@ -202,16 +202,30 @@ install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
 #' @param pyVer. String. Python version to install
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @param zarr Logical. Are you planning to use zarr libary? Default FALSE
+#' @param cola2 Logical. Installing cola2 python dependencies? Default is FALSE
+#' @param COLA_DATA_PATH String. Path were CoLa DSS results and session folders
+#' @param COLA_NCORES Integer. Number of  cores to use
+#' @param COLA_DSS_UPL_MB Integer. In MB, max size of input rasters in the CoLa DSS
+#' @param COLA_VIZ_THRES_PIX Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor
+#' @param COLA_VIZ_RES_NCOL Integer. Number of columns to resample the raster to be displayed in the cola DSS.
+#' @param COLA_VIZ_RES_NROW Integer. Number of rows  to resample the raster to be displayed in the cola DSS.
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
 #' setup_cola()
-#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         yml = FALSE, onlyIndividual = FALSE, ask = TRUE,
                         dss = FALSE, zarr = FALSE, cola2 = FALSE,
                         pyVer = "3.12.11",
+                        COLA_DATA_PATH=NULL,
+                        COLA_NCORES=4,
+                        COLA_DSS_UPL_MB=250,
+                        COLA_VIZ_THRES_PIX=1000000,
+                        COLA_VIZ_RES_NCOL=1000,
+                        COLA_VIZ_RES_NROW=1000,
+
                         libs2Install =  c(
                           'geopandas',
                           'gdal', 'h5py', 'numexpr', 'rasterio',
@@ -219,16 +233,17 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                           'networkit==11.0', 'fiona', 'shapely',
                           'kdepy', 'scikit-image')
 ){
-
+  #
   # envName = 'cola'; nSteps = 5; force = FALSE; yml = FALSE; onlyIndividual = F; ask = FALSE; dss = TRUE; zarr = T
-
-  if (cola2){
-    libs2Install <- c('geemap', 'earthengine-api', libs2Install)
-  }
 
   if(zarr){
     libs2Install <- c('zarr', 'psutil', libs2Install)
   }
+
+  if (cola2){
+    libs2Install <- c('statsmodels', 'geemap', 'earthengine-api', libs2Install)
+  }
+
 
   if ( !ask ){
     user_permission <- TRUE
@@ -525,7 +540,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "pytables"
           ## Actual conda cmd solution
           # conda config --append envs_dirs C:\Users\Admin\AppData\Local\r-miniconda\envs ## add unamed envs
-          # system('"C:/Users/ig299/AppData/Local/r-miniconda/condabin/conda.bat" "info" "--envs"')
+          # system('"C:/Users/Ivan.Gonzalez/AppData/Local/r-miniconda/condabin/conda.bat" "info" "--envs"')
           cmd2add <- (paste0('"',minibat, '" "conda" "config" "--append" "envs_dirs" "', possiblePy, '"'))
           # cat(cmd2add)
           system(cmd2add)
@@ -685,7 +700,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
 
-  ## Step4. Set paths ----------------------------------------------
+  ## Step5. Set paths ----------------------------------------------
   cat (sep = '', '\n  +Step 5/', nSteps, ' Setting up local variables\n')
   # reticulate::py_available()
 
@@ -906,27 +921,27 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       pos <- grep('COLA_DATA_PATH', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DATA_PATH='}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_DATA_PATH=', COLA_DATA_PATH)}
 
       pos <- grep('COLA_NCORES', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_NCORES=1'}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_NCORES=',COLA_NCORES)}
 
       pos <- grep('COLA_DSS_UPL_MB', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_DSS_UPL_MB=250'}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_DSS_UPL_MB=',COLA_DSS_UPL_MB)}
 
       pos <- grep('COLA_VIZ_THRES_PIX', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_THRES_PIX=1000000'}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_THRES_PIX=',COLA_VIZ_THRES_PIX)}
 
       pos <- grep('COLA_VIZ_RES_NCOL', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NCOL=1000'}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_RES_NCOL=', COLA_VIZ_RES_NCOL)}
 
       pos <- grep('COLA_VIZ_RES_NROW', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_VIZ_RES_NROW=1000'}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_RES_NROW=', COLA_VIZ_RES_NROW)}
 
       if(cola2){
         pos <- grep('COLA_EE', Renviron)
@@ -949,7 +964,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n')
 
       if(dss){
-        ## Step4. Set paths ----------------------------------------------
         cat (sep = '', '\n  + Extra step   Installing DSS GUI\n\n')
         cola::setup_cola_dss()
       }
@@ -977,3 +991,4 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 ## Not run
 ## cola::setup_cola(ask = FALSE, zarr = TRUE)
 ## reticulate::conda_remove('cola')
+

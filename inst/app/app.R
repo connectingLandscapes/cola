@@ -6756,7 +6756,7 @@ server <- function(input, output, session) {
     dat <- datatable(rv$eecovstable, editable = TRUE,
                      options = list(
                        paging =TRUE,
-                       pageLength = nrow(rv$data)
+                       pageLength = nrow(rv$eecovstable)
                      ))
   )
 
@@ -6770,11 +6770,11 @@ server <- function(input, output, session) {
   observeEvent(input$out_eeextcovstable_cell_edit, {
     roww <- input$out_eeextcovstable_cell_edit$row
     clmn <- input$out_eeextcovstable_cell_edit$col
-    print(rv$eecovstable)
-    print(rv$eecovstable[roww, clmn])
-    print(roww)
-    print(clmn)
-    print(input$out_eeextcovstable_cell_edit$value)
+    # print(rv$eecovstable)
+    # print(rv$eecovstable[roww, clmn])
+    # print(roww)
+    # print(clmn)
+    # print(input$out_eeextcovstable_cell_edit$value)
     rv$eecovstable[roww, clmn] <- input$out_eeextcovstable_cell_edit$value
   })
 
@@ -6816,7 +6816,8 @@ server <- function(input, output, session) {
 
     cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_covsExtraction.py ',
                     input$ee_project, ' ',
-                    cola::adaptFilePath(input$ee_localfile), ' ', input$ee_ptspath, ' 2>&1')
+                    cola::adaptFilePath(input$ee_localfile), ' ', input$ee_ptspath,
+                    ' ', input$in_eeabs,'  2>&1')
     #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
     # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
     cat(' Uploading points EE:\n')
@@ -6909,7 +6910,7 @@ server <- function(input, output, session) {
 
           cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/ee_uploadFeature.py ',
                           input$ee_project, ' ',
-                          cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' 2>&1')
+                          cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, '  2>&1')
           #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
           # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
           cat(' Uploading points EE:\n')
@@ -7460,7 +7461,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eetablecovs1save', title = 'Save parameters table', placement = 'top'),
 
               bsTooltip(id = 'in_eecovlc', title = 'Land cover types to include', placement = 'top'),
-              bsTooltip(id = 'in_eeabs', title = 'Number of pseudoabsences to simulate', placement = 'top'),
+              bsTooltip(id = 'in_eeabs', title = 'Number of pseudoabsences to simulate. Will add features with 0 in the preabs field, leaving 1 to the remaining features', placement = 'top'),
               bsTooltip(id = 'in_eeruncovs', title = 'Run covariates extraction', placement = 'top'),
 
 
@@ -7675,7 +7676,7 @@ if (FALSE){ # if FALSE
                   width = 12, solidHeader = T, collapsible = T,
                   title = "Create feature collection and bounding box from local layer", status = "info", collapsed = FALSE
                   ,
-                  column(width = 4,
+                  column(width = 5,
                          shiny::fileInput('ee_localfile', 'Load points files', buttonLabel = 'Search',
                                           placeholder = 'INC SHP, DBF, SHX and PRJ ',
                                           accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
@@ -7691,22 +7692,19 @@ if (FALSE){ # if FALSE
 
                   ),
 
-                  column(width = 5,
+                  column(width = 4,
                          textInput(width = "100%",
                                    #value = 'projects/gonzalezivan/assets/cola/name',
                                    placeholder = 'projects/USER/assets/LAYER',
                                    label =  'Layer to create', inputId = 'ee_ptspath')
                   ),
 
-                  column(width = 3,
-                         tags$td(style = "width: 25%", align = "center",
-                                 # numericInput(inputId = 'in_eeabsnumer', step = 1,
-                                 #              label =  'Absences to simulate',
-                                 #              value = 0, min = 0, max = 9999),
-                                 actionButton(width = "100%", #class = "btn-primary btn-lg",
-                                              label = 'Upload points', 'ee_fcupload',
-                                              style="text-align: center;vertical-align: center")
-                         )
+
+                  column(width = 3,                         div(style = "margin-top: -30px"),
+                         div(style = "margin-top: 50px"),
+                         actionButton(width = "100%", #class = "btn-primary btn-lg",
+                                      label = 'Upload points', 'ee_fcupload',
+                                      style="text-align: center;vertical-align: center")
                   )
                 ),
 
@@ -7758,11 +7756,14 @@ if (FALSE){ # if FALSE
 
 
                   column(width = 3, offset = 0,
-                         numericInput('in_eeextabs', label = 'Number of absences',
-                                      value = 0,step = 1, max = 999999 ),
-                         actionButton(width = "100%",
-                                      label = 'Extract covariates',
+                         tags$td(style = "width: 25%", align = "center",
+                                 numericInput('in_eeabs', label = 'Number of absences',
+                                              value = 0,step = 1, max = 999999 ),
+
+                                 actionButton(width = "100%",
+                                              label = 'Extract covariates',
                                       'in_eeruncovs')
+                         )
                   ),
                   br(),
                   DT::dataTableOutput(outputId = "out_eeextcovstable")

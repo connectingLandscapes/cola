@@ -3,12 +3,6 @@ eeProject,gonzalezivan
 points,projects/gonzalezivan/assets/cola/anoa1
 maxNumbPoints,200000
 outName,projects/gonzalezivan/assets/cola/anoa1_covext
-ccdc_result_path,None
-ccdcStartYear,2000
-ccdcSegBands,"NBR2,NDMI,NDVI"
-ccdcSynBands,"NIR,SWIR1,SWIR2"
-ccdcTsinBands,"NBR2,NDVI"
-ccdcTsinThres,"0.1,0.25"
 landcoverIc,projects/glad/GLCLU2020/v2/LCLUC_2020
 landcoverIc2,projects/sat-io/open-datasets/USGS/ANNUAL_NLCD/LANDCOVER
 landcoverKeepClasses,"0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 255"
@@ -23,3 +17,10 @@ extScale,30
 temporalMatch,annual
 annualDateFrac,0.5
 regionName,anoa1
+absences,0
+ccdc_result_path,None
+ccdcStartYear,2000
+ccdcSegBands,"NBR2,NDMI,NDVI"
+ccdcSynBands,"NIR,SWIR1,SWIR2"
+ccdcTsinBands,"NBR2,NDVI"
+ccdcTsinThres,"0.1,0.25"
