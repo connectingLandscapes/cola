@@ -1,8 +1,9 @@
 ### COLA web app.
-### Ivan Gonzalez - ig299@nau.edu | gonzalezgarzonivan@gmail.com
+### Ivan Gonzalez - Ivan.Gonzalez@nau.edu | gonzalezgarzonivan@gmail.com
 ### Patrick Jantz - Patrick.Jantz@nau.edu | jantzenator@gmail.com
 
 {
+  # same time library vs require
   library(cola)
 
   #library(bit) #
@@ -40,7 +41,6 @@
   library(tibble)
   library(terra)
   library(viridis)
-
 }
 
 ## Init A
@@ -51,6 +51,7 @@
   os <<- os
 
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
+  warntemp <- ifelse(COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH), no = 1, yes = 0)
   (dataFolder <<- ifelse( COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH),
                           no = paste0(tempdir(), '/'), yes = COLA_DATA_PATH));
   # Keep last slash
@@ -91,6 +92,13 @@
     ifelse( COLA_EE == 1 & !is.na(COLA_EE),
             yes = 1, no = 0) ))
   base::options('COLA_EE' = COLA_EE)
+
+  ## Is COLA a server
+  (COLA_SERVER <- as.numeric(Sys.getenv('COLA_SERVER')))
+  (COLA_SERVER <- as.numeric(
+    ifelse( COLA_SERVER == 1 & !is.na(COLA_SERVER),
+            yes = 1, no = 0) ))
+  base::options('COLA_SERVER' = COLA_SERVER)
 
 
   #(rootPath <- find.package('cola'))
@@ -133,20 +141,20 @@
 }
 
 cat(paste0('\n\n
-                                 =++==+++=              >>>> ----------------------
-           -=-               ==+*#**==+*##+=-=          >>>>
-         =++=--:::::---------=+*#///####+#%####=-       >>>> Welcome to CoLa 2.2.1
-       ==%%%%%%%@@@@@=+@@@%%%"#////########*+++++       >>>>
-      +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****      >>>> -----------------------
+                                 =++==+++=            ---------------------
+           -=-               ==+*#**==+*##+=-=
+         =++=--:::::---------=+*#///####+#%####=-       Welcome to CoLa 2.2.1
+       ==%%%%%%%@@@@@=+@@@%%%"#////########*+++++
+      +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****    ----------------------
      ++%%%%%%%%%@@@@@@@@%%%%%%#||||||+=*#######****
-    *#*%%   %%   %% |%%%   %%%%#||||||++*#%####*+=++      >> getwd():', '
-   +###%  %%%  @  % |%%  @  %%%%%%%%%%%%+--++%%*+==+         ', getwd(),'
-  /+##%%%___%%___%%___%__%__%%%#####%%%%    |  *#==+      >> COLA_DATA_PATH: ', '
- |   +%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-         ', COLA_DATA_PATH, '
- |   %#%%%%%%%%%%%%%%%%%%%%%###########++         #*      >> tempFolder:', '
- |   #%%%%%%%@%%#:::::::::::#####=*#####*         **         ', tempFolder, '
- #   ###%#=-####-::::::::::+####=:::=+###+        **      >> R-tempdir():', '
- #   #####+--###-:::::::::-#####:::::-=###        +*         ', cola::adaptFilePath(tempdir()), '
+    *#*%%   %%   %% |%%%   %%%%#||||||++*#%####*+=++   getwd():', '
+   +###%  %%%  @  % |%%  @  %%%%%%%%%%%%+--++%%*+==+     ', getwd(),'
+  /+##%%%___%%___%%___%__%__%%%#####%%%%    |  *#==+   COLA_DATA_PATH: ', '
+ |   +%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-     ', COLA_DATA_PATH, '
+ |   %#%%%%%%%%%%%%%%%%%%%%%###########++         #*   tempFolder:', '
+ |   #%%%%%%%@%%#:::::::::::#####=*#####*         **     ', tempFolder, '
+ #   ###%#=-####-::::::::::+####=:::=+###+        **   R-tempdir():', '
+ #   #####+--###-:::::::::-#####:::::-=###        +*     ', cola::adaptFilePath(tempdir()), '
      #####=--####----------#####-------####
 '))
 cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
@@ -166,8 +174,16 @@ server <- function(input, output, session) {
 
              title = paste0("Welcome to CoLa<br><br>", sessionID ),
              text = paste0('Please save this sessionID in your records. ',
-                           'This ID will be on the log box in the tools tabs')
-  )
+                           'This ID will be on the log box in the tools tabs.',
+                            ifelse(warntemp == 1 & COLA_SERVER == 0,
+                                   yes = paste0(
+                                   '<br> Your temporal folder may ',
+                            'disappear after the session is closed. Consider create a ',
+                            'folder in an exiting folder. Write that folder path ',
+                            'in this file: "',
+                            cola::adaptFilePath(file.path(Sys.getenv("HOME"), ".Renviron")),
+                            '"'), no = ''))
+             )
 
   if ( Sys.getenv('COLA_PYTHON_PATH') == ''){
     shinyalert(html = TRUE, type = "error",
@@ -4392,6 +4408,7 @@ server <- function(input, output, session) {
 
   ####### > LCC ------------------
 
+  # load resistance
   observeEvent(input$in_lcc_tif, {
     pdebug(devug=devug,
            sep='\n',pre='\n---- LCC - TIF\n',
@@ -4513,7 +4530,7 @@ server <- function(input, output, session) {
     } else {
       rv$log <- paste0(rv$log, '\n -- Error uploading the "Surface resistance" TIF file')
       shinyalert(title = "Surface resistance wasn't loaded",
-                 text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
+                 text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB, 'MB\n',
                                'be a valid GeoTiff file, ',
                                'have a projected coordinate system, and\t',
                                'a valid NoData value.'),
@@ -5412,6 +5429,7 @@ server <- function(input, output, session) {
 
   ####### > PRIORI ------------------
 
+  ## Upload resistance
   observeEvent(input$in_pri_tif, {
     pdebug(devug=devug,
            sep='\n',pre='\n---- LCC - TIF\n',
@@ -5462,11 +5480,6 @@ server <- function(input, output, session) {
         rv$tif_sp <- terra::rast(rv$tif)
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
-        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
-        rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                             domain = rng_newtif+0.0, na.color = "transparent")
-
 
         suggestedNewName <- suggestName(rv$layersList, type = 'Resistance')
 
@@ -5480,10 +5493,24 @@ server <- function(input, output, session) {
                                        internal = rv$tif,
                                        public = suggestedNewName)
 
+        updateSelectizeInput( # inputs
+          session, "in_name_hs",
+          choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
+          selected = getLast(rv$layersList, 'Resistance', 'public')
+          #, server = TRUE
+        )
+
+        newOutput <- suggestName(rv$layersList, type = 'Corridors')
+        updateTextInput( # suggest output
+          session, "out_name_lcc",
+          value = newOutput
+          #, server = TRUE
+        )
+
         colaUpdateSelectizeInput(
           ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
                   'in_name_sur_crk', 'in_name_sur_lcc'),
-          typex = 'Resistance', field = 'public', val = suggestedNewName)
+          typex = 'Resistance', field = 'public', val = newOutput)
 
 
         updateSelectizeInput( # inputsPoints
@@ -5492,8 +5519,19 @@ server <- function(input, output, session) {
           selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
           , server = TRUE
         )
+        #
+        updateColaLayersLists(layersList = rv$layersList)
 
-        makeLL(last = 'Surface resistance' )
+
+        rv$tif_sp <- terra::rast(rv$tif)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
+        rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                             domain = rng_newtif+0.0, na.color = "transparent")
+
+        makeLL(lastLL = "Surface resistance" )
       })
     } else {
       shinyalert(title = "Surface resistance wasn't loaded",
@@ -5505,6 +5543,7 @@ server <- function(input, output, session) {
     }
   })
 
+  # Slider
   observeEvent(input$pri_slider, {
     if(rv$crkready){
 
@@ -5592,6 +5631,169 @@ server <- function(input, output, session) {
   })
 
 
+
+  ## load your LCC
+  observeEvent(input$in_pri_lcc, {
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+
+    rv$lccorig <- paste0(tempFolder, '/in_out_lcc_', rv$inLccSessID, '.tif')
+    file.copy(input$in_pri_lcc$datapath, rv$lccorig);
+
+    try(file.remove(input$in_pri_lcc$datapath))
+
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+    tifFixed <- paste0(tempFolder, '/in_out_crk_fixed', rv$inLccSessID, '.tif')
+
+    newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$lccorig,
+                                      outrasterpath = tifFixed)
+
+    rv$lcc <- ifelse(is.na(newtifPath_lcc), yes = rv$lccorig,
+                     no = newtifPath_lcc)
+
+    if (file.exists( rv$lcc)){
+      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+      rv$tifready <- TRUE
+
+      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+
+        suggestedNewName <- suggestName(rv$layersList, type = 'Corridors')
+
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Corridors loaded succesfully<br>",
+                                  'Layer name: ', suggestedNewName)
+        )
+
+        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                       inout = 'in', type =  'Corridors',
+                                       internal = rv$lcc,
+                                       public = suggestedNewName)
+
+        updateSelectizeInput( # inputs
+          session, "in_name_lcc_pri",
+          choices = unlist(subset(rv$layersList, type == 'Corridors')[,'public']),
+          selected = getLast(rv$layersList, 'Corridors', 'public')
+          #, server = TRUE
+        )
+
+        newOutput <- suggestName(rv$layersList, type = 'Corridors')
+
+        updateTextInput( # suggest output
+          session, "in_name_lcc_pri",
+          value = newOutput
+          #, server = TRUE
+        )
+
+        colaUpdateSelectizeInput(
+          ids = c('in_name_lcc_pri'),
+          typex = 'Corridors', field = 'public', val = newOutput)
+        #
+        updateColaLayersLists(layersList = rv$layersList)
+
+        rv$lcc_sp <- terra::rast(rv$lcc)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
+
+        makeLL(lastLL = "Corridors" )
+
+      })
+    } else {
+      rv$log <- paste0(rv$log, '\n -- Error uploading the "Corridors" TIF file')
+      shinyalert(title = "Corridors wasn't loaded",
+                 text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
+                               'be a valid GeoTiff file, ',
+                               'have a projected coordinate system, and\t',
+                               'a valid NoData value.'),
+                 type = "error")
+    }
+  })
+
+
+  ## load your crk
+  observeEvent(input$in_pri_crk, {
+
+    if(is.null(rv$inLccSessID)){
+      (inLccSessID <- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+    }
+
+    rv$crkorig <- paste0(tempFolder, '/in_out_crk_', rv$inLccSessID, '.tif')
+    file.copy(input$in_pri_crk$datapath, rv$crkorig);
+
+    try(file.remove(input$in_pri_crk$datapath))
+
+    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+    tifFixed <- paste0(tempFolder, '/in__out_crk_fixed', rv$inLccSessID, '.tif')
+
+    newtifPath_crk <<- fitRaster2cola(inrasterpath = rv$crkorig,
+                                      outrasterpath = tifFixed)
+
+    rv$crk <- ifelse(is.na(newtifPath_crk), yes = rv$crkorig,
+                     no = newtifPath_crk)
+
+    if (file.exists( rv$crk)){
+      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+      rv$tifready <- TRUE
+
+      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+
+        suggestedNewName <- suggestName(rv$layersList, type = 'Kernels')
+
+        shinyalert(html = TRUE, type = "success",
+                   title = paste0("Kernels loaded succesfully<br>",
+                                  'Layer name: ', suggestedNewName)
+        )
+
+        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                       inout = 'in', type =  'Kernels',
+                                       internal = rv$lcc,
+                                       public = suggestedNewName)
+
+        updateSelectizeInput( # inputs
+          session, "in_name_crk_pri",
+          choices = unlist(subset(rv$layersList, type == 'Kernels')[,'public']),
+          selected = getLast(rv$layersList, 'Kernels', 'public')
+          #, server = TRUE
+        )
+
+        newOutput <- suggestName(rv$layersList, type = 'Kernels')
+
+        updateTextInput( # suggest output
+          session, "in_name_crk_pri",
+          value = newOutput
+          #, server = TRUE
+        )
+
+        colaUpdateSelectizeInput(
+          ids = c('in_name_crk_pri'),
+          typex = 'Kernels', field = 'public', val = newOutput)
+        #
+        updateColaLayersLists(layersList = rv$layersList)
+
+        rv$crk_sp <- terra::rast(rv$crk)
+        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+
+        makeLL(lastLL = "Kernels" )
+
+      })
+    } else {
+      rv$log <- paste0(rv$log, '\n -- Error uploading the "Kernels" TIF file')
+      shinyalert(title = "Kernels wasn't loaded",
+                 text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
+                               'be a valid GeoTiff file, ',
+                               'have a projected coordinate system, and\t',
+                               'a valid NoData value.'),
+                 type = "error")
+    }
+
+  })
+
+  # Run prio
   isolate(observeEvent(input$pri, {
     condDist <- 0
     if(rv$crkready & rv$lccready){
@@ -5717,93 +5919,6 @@ server <- function(input, output, session) {
     }
   })
   ) # isolate
-
-
-  ## load your LCC
-  observeEvent(input$in_pri_lcc, {
-    if(is.null(rv$inLccSessID)){
-      (inLccSessID <- sessionIDgen())
-      rv$inLccSessID <- inLccSessID
-    }
-
-    rv$lccorig <- paste0(tempFolder, '/in_out_lcc_', rv$inLccSessID, '.tif')
-    file.copy(input$in_pri_lcc$datapath, rv$lccorig);
-
-    try(file.remove(input$in_pri_lcc$datapath))
-
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in_out_crk_fixed', rv$inLccSessID, '.tif')
-
-    newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$lccorig,
-                                      outrasterpath = tifFixed)
-
-    rv$lcc <- ifelse(is.na(newtifPath_lcc), yes = rv$lccorig,
-                     no = newtifPath_lcc)
-
-    if (file.exists( rv$lcc)){
-      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-      rv$lccready <- TRUE
-
-      output$ll_map_pri <- leaflet::renderLeaflet({
-
-        rv$lcc_sp <- terra::rast(rv$lcc)
-        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
-
-        #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
-        rv$lcc_pal <<- leaflet::colorNumeric(palette = "plasma",
-                                             reverse = TRUE,
-                                             domain = rng_newtif+0.0,
-                                             na.color = "transparent")
-
-        makeLL(lastLL = 'Corridors' )
-      })
-    }
-  })
-
-
-  ## load your crk
-  observeEvent(input$in_pri_crk, {
-
-    if(is.null(rv$inLccSessID)){
-      (inLccSessID <- sessionIDgen())
-      rv$inLccSessID <- inLccSessID
-    }
-
-    rv$crkorig <- paste0(tempFolder, '/in_out_crk_', rv$inLccSessID, '.tif')
-    file.copy(input$in_pri_crk$datapath, rv$crkorig);
-
-    try(file.remove(input$in_pri_crk$datapath))
-
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in__out_crk_fixed', rv$inLccSessID, '.tif')
-
-    newtifPath_crk <<- fitRaster2cola(inrasterpath = rv$crkorig,
-                                      outrasterpath = tifFixed)
-
-    rv$crk <- ifelse(is.na(newtifPath_crk), yes = rv$crkorig,
-                     no = newtifPath_crk)
-
-    if (file.exists( rv$crk)){
-      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-      rv$crkready <- TRUE
-
-      output$ll_map_pri <- leaflet::renderLeaflet({
-
-        rv$crk_sp <- terra::rast(rv$crk)
-        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-
-        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)
-        rv$crk_pal <<- leaflet::colorNumeric(palette = 'inferno',
-                                             reverse = TRUE,
-                                             domain = rng_newtif+0.0,
-                                             na.color = "transparent")
-
-        makeLL( lastLL = 'Kernels')
-      })
-    }
-  })
 
 
 
@@ -6813,7 +6928,6 @@ server <- function(input, output, session) {
 
     # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
 
-
     cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_covsExtraction.py ',
                     input$ee_project, ' ',
                     cola::adaptFilePath(input$ee_localfile), ' ', input$ee_ptspath,
@@ -6908,9 +7022,10 @@ server <- function(input, output, session) {
           # 3 amazon1.shp  128      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/2.shp
           # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
 
-          cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/ee_uploadFeature.py ',
+          cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_uploadFeature.py ',
                           input$ee_project, ' ',
-                          cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, '  2>&1')
+                          cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
+                          input$ee_absloc, '  2>&1')
           #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
           # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
           cat(' Uploading points EE:\n')
@@ -6919,8 +7034,7 @@ server <- function(input, output, session) {
           intCMD <- tryCatch(
             capture.output(
               system( cmdee , ignore.stdout = FALSE,
-                      ignore.stderr = FALSE,
-                      intern = TRUE)),
+                      ignore.stderr = FALSE, intern = TRUE)),
             error = function(e) e$message)
 
           cat(intCMD)
@@ -7268,7 +7382,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_pri', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_pr_tif', 'Load Resistance',
+                            shiny::fileInput('in_pri_tif', 'Load Resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
@@ -7676,11 +7790,13 @@ if (FALSE){ # if FALSE
                   width = 12, solidHeader = T, collapsible = T,
                   title = "Create feature collection and bounding box from local layer", status = "info", collapsed = FALSE
                   ,
-                  column(width = 5,
-                         shiny::fileInput('ee_localfile', 'Load points files', buttonLabel = 'Search',
+                  column(width = 3,
+                         shiny::fileInput('ee_localfile', 'Load points shapefile', buttonLabel = 'Search',
                                           placeholder = 'INC SHP, DBF, SHX and PRJ ',
-                                          accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
-                                          multiple=TRUE),
+                                          accept=c('.shp'
+                                                   #,'.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'
+                                                   ),
+                                          multiple=FALSE),
                          div(style = "margin-top: -30px"),
                          bsTooltip(
                            id = "ee_localfile",
@@ -7696,11 +7812,16 @@ if (FALSE){ # if FALSE
                          textInput(width = "100%",
                                    #value = 'projects/gonzalezivan/assets/cola/name',
                                    placeholder = 'projects/USER/assets/LAYER',
-                                   label =  'Layer to create', inputId = 'ee_ptspath')
+                                   label =  'Layer to create in EE:', inputId = 'ee_ptspath')
+                  ),
+                  column(width = 3,
+                         numericInput(width = "100%",min = 0, max = 9999, step = 1, value = 0,
+                                   #value = 'projects/gonzalezivan/assets/cola/name',
+                                   label =  'Number of local absences:', inputId = 'ee_absloc')
                   ),
 
 
-                  column(width = 3,                         div(style = "margin-top: -30px"),
+                  column(width = 2,                         div(style = "margin-top: -30px"),
                          div(style = "margin-top: 50px"),
                          actionButton(width = "100%", #class = "btn-primary btn-lg",
                                       label = 'Upload points', 'ee_fcupload',

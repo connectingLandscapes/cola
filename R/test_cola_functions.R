@@ -41,7 +41,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
     ## SR
     cat("\noutdir <- tempdir()
     \n################## SURFACE RESISTANCE -----------\n
-    resistance <- sui2res_py(
+    resistance <- cola::sui2res_py(
       intif = system.file(package = 'cola', 'sampledata/sampleHS.tif'),
       outtif = file.path(outdir, 'resistance.tif'), minval = 0, maxval = 1,
       maxout = 100, shape = 1
@@ -51,7 +51,9 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
     ")
 
     outdir <- tempdir()
-    resistance <- sui2res_py(
+
+    cat('  -- outdir is:', outdir, '\n')
+    resistance <- cola::sui2res_py(
       intif = system.file(package = 'cola', 'sampledata/sampleHS.tif'),
       outtif = file.path(outdir, 'resistance.tif'), minval = 0, maxval = 1,
       maxout = 100, shape = 1
@@ -63,7 +65,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
 
     ## Kernels
     cat("\n\n################## KERNELS -----------\n\n
-    kernels <- crk_py(
+    kernels <- cola::crk_py(
           inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
           # intif = file.path(outdir, 'resistance.tif'),
           intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
@@ -77,7 +79,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
 
         ")
 
-    kernels <- crk_py(
+    kernels <- cola::crk_py(
       inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
       # intif = file.path(outdir, 'resistance.tif'),
       intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
@@ -93,7 +95,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
 
 
     cat("\n
-    kernels_joblib <- crk_py(
+    kernels_joblib <- cola::crk_py(
           inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
           # intif = file.path(outdir, 'resistance.tif'),
           intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
@@ -108,7 +110,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
         ")
 
     ## kernels
-    kernels_joblib <- crk_py(
+    kernels_joblib <- cola::crkJoblib_py(
       inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
       # intif = file.path(outdir, 'resistance.tif'),
       intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),

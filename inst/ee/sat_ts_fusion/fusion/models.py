@@ -70,4 +70,38 @@ def clip_mask_cov_img(cov_img: ee.Image = None,
     return img_cm
 
 
-
+def get_gbif_species_data(species_name, country_code):
+    '''
+    Retrieves observational data for a specific species using the GBIF API and returns it as a pandas DataFrame.
+    Parameters:
+    species_name (str): The scientific name of the species to query.
+    country_code (str): The country code of the where the observation data will be queried.
+    Returns:
+    pd.DataFrame: A pandas DataFrame containing the observational data.
+    '''
+    # species_name = 'Bubalus depressicornis'
+    # country_code = 'ID'
+    base_url = 'https://api.gbif.org/v1/occurrence/search'
+    params = {
+        'scientificName': species_name,
+        'country': country_code,
+        'hasCoordinate': 'true',
+        'basisOfRecord': 'HUMAN_OBSERVATION',
+        'limit': 10000,
+    }
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()  # Raises an exception for a response error.
+        data = response.json()
+        occurrences = data.get('results', [])
+        if occurrences:  # If data is present
+            df = pd.json_normalize(occurrences)
+            return df
+        else:
+            print('No data found for the given species and country code.')
+            return pd.DataFrame()  # Returns an empty DataFrame
+    except requests.RequestException as e:
+        print(f'Request failed: {e}')
+        return pd.DataFrame()  # Returns an empty DataFrame in case of an exception
+    
+    

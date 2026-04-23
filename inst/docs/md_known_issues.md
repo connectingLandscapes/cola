@@ -109,7 +109,7 @@ Running `cola::setup_cola()` should set up all the different steps and print whi
   
  ***Solution:*** Try `remove.packages('cola')` to remove previous installations, or checBe sure to close all R sessions that might be using or writing the folder with the libraries. Then, try the command again. If the error persist, when closing all the R sessions, check if the library folder (found them by typing: `.libPaths()` or `sapply(.libPaths(), list.files, pattern = 'cola', recursive = FALSE)`) still have the lock file or folder, and remove it manually.
  
-    -------------
+-------------
 
 
  **Known issue:** Can't install the package, probbaly for a interruption in the internet connection or was interrupted by a process in your system. You can get the message: 
@@ -191,8 +191,22 @@ Downloading GitHub repo connectingLandscapes/cola@HEAD
 -------------
 
 
-
+  **Known issue:**  `Error creating conda environment 'r-reticulate' [exit code 1]` or `CondaToSNonInteractiveError: Terms of Service have not been accepted for the following channels`
+ 
+ ***Solution:*** Accept the terms of service (TOS) at the conda console. In 
   
+  Windows: Open Anaconda prompt, or in a regular shell activate conda console by `C:\Users\USER-HERE\AppData\Local\r-miniconda\Scripts\activate.bat C:\Users\USER-HERE\C:\Users\USER-HERE\AppData\Local\r-miniconda`
+  
+  Then, to accept these channels' Terms of Service, run the following commands:
+    `conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main`
+    `conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r`
+    `conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2`
+
+
+Then run `setup_cola()` again in R
+-------------
+
+
   **Known issue:** Getting `Error: Miniconda installation failed [unknown reason]`. This might result from a broken installation, so some files and folders can exists on your machine, but not completed.
   
   ```
@@ -314,8 +328,6 @@ and having a message from `cola::setup_cola()` similar to: `The python version i
 -------------
 
 
-
-  
   **Known issue:** `cola` conda environment available but without name. Your conda manager installed the environment correctly but is not named. This might occur because the path where R install the environment is different than the manager conda path. Likely occur when changing users, permissions. 
   `(base) C:\Users\Admin>conda activate C:\Users\USER\AppData\Local\r-miniconda\envs\cola`
    `Error -- no name of conda under "conda info --envs"`
@@ -337,6 +349,30 @@ base                  **  C:\ProgramData\Miniconda3
 
 
 -------------
+
+
+  **Known issue:** `cola` conda environment installation get stuck. The console message looks like:
+  
+  ```
+    +Step 3/5 Installing & checking conda environment
+      Using Python 3.13.12 for ´base´ conda environment
+      Installing ´ cola ´ conda environment ... 
+    + "C:/Users/Admin/AppData/Local/r-miniconda/condabin/conda.bat" create --yes --name cola "python=3.13" geopandas gdal h5py numexpr rasterio pytables pandas cython numba "networkit==11.0" fiona shapely kdepy scikit-image --quiet -c conda-forge
+    3 channel Terms of Service accepted
+    Channels:
+     - conda-forge
+     - defaults
+    Platform: win-64
+    Collecting package metadata (repodata.json): ...working... done
+```
+
+ ***Solution:*** Run the setup function using the parameter `onlyIndividual = TRUE`, forcing the system to iterate over independent libraries, and installing the environment with base libraries.
+ 
+ Another option is, on the windows console, running `"C:/Users/Admin/AppData/Local/r-miniconda/condabin/conda.bat" create --yes --name cola "python=3.13"`, then run again `setup_cola( )` function in R
+ 
+
+
+-------------
 -------------
 
 ###  **5. Install cola conda environment packages**
@@ -345,7 +381,6 @@ Installing the `cola` conda environment packages should be done by the `cola::se
   **Testing:** Running `cola::setup_cola()` and `cola::commonErrors()` getting the following messages:
   
  ***Expected answer:*** `All required modules installed!` or `4. All 'cola' conda environment packages installed`
-
 
 
 -------------
@@ -369,7 +404,7 @@ Installing the `cola` conda environment packages should be done by the `cola::se
 
 
 -------------
--------------
+
 
 
   **Known issue:** Your installing `path miniconda_path()` contains spaces:
@@ -447,7 +482,7 @@ Intel oneMKL FATAL ERROR: Cannot load mkl_intel_thread.2.dll.
   
   Other solutions seems more complicated and can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/troubleshooting.html#numpy-mkl-library-load-failed) or [here](https://stackoverflow.com/questions/54453060/python-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll/56186333#56186333)
   
-  -------------
+-------------
 
 
   **Known issue:** The `cola::cola_setup () `log doesn't print `=== Ready to connect landscapes! ===`. We can't guess the appropriate way to run `cola`.
@@ -552,19 +587,24 @@ The installation of the required packages for `cola` dashboard  should be done b
 
 
 -------------
--------------
 
+
+  **Known issue:** In Linux, getting `ERROR: configuration failed for package ‘s2’` and `cmake not found`  
+  
+  
+ ***Solution:*** Installing cmake in your system terminal `sudo apt update` and `sudo apt install cmake`
+
+
+-------------
 
 
   **Known issue:** Error in the front-end when loading raster files `Error in addRasterImage: inherits(x, "RasterLayer") is not TRUE`  
   
   
- ***Solution:*** Update the libraries. Mostly `shiny`, `leaflet`, `tera`. Use `install.packages('terra')`.
+ ***Solution:*** Remove the system environment variable `PROJ_LIB`. Here an [example](https://www.tenforums.com/tutorials/121797-delete-user-system-environment-variables-windows.html). Check for the text 'OPTION FOUR Delete System Environment Variables in Environment Variables'
 
 
 -------------
--------------
-
 
 
   **Known issue:** In Linux, getting `ERROR: configuration failed for package ‘s2’` and `cmake not found`  
@@ -591,10 +631,8 @@ The errors in this section are usually related with some libraries which require
   
  ***Expected answer:*** `=== All libraries required for COLA's DSS installed ===`
   
-  
 
 -------------
-
 
 
   **Known issue:** `Error in library(tidyverse) : there is no package called ‘tidyverse’`
@@ -603,7 +641,6 @@ The errors in this section are usually related with some libraries which require
   
   
 -------------
-
 
 
   **Known issue:**  R tries to install a package that requires another dependeny. Install that dependency first.
@@ -652,8 +689,15 @@ Command for installing conda in Windows:
 
 ***Install cola conda environment*** 
 
+In Linux or Anaconda shell
 ```
 conda create -n cola gdal h5py numexpr rasterio pytables pandas cython numba networkit fiona shapely geopandas scikit-image -c conda-forge
+```
+
+In Windows command line
+
+```
+"C:/Users/USERHERE/AppData/Local/r-miniconda/condabin/conda.bat" create --yes --name cola "python=3.13" statsmodels geemap earthengine-api zarr psutil geopandas gdal h5py numexpr rasterio pytables pandas cython numba "networkit==11.0" fiona shapely kdepy scikit-image --quiet -c conda-forge
 ```
 
 

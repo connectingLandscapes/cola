@@ -17,6 +17,8 @@ from shapely.geometry import Point, box
 
 
 # /home/shiny/.local/share/r-miniconda/envs/cola/bin/python /home/shiny/sat_ts_fusion/cml_uploadFeature.py gonzalezivan /home/shiny/test/anoa66sp.shp projects/gonzalezivan/assets/cola/anoa66sp
+# C:/Users/ig299/AppData/Local/r-miniconda/envs/cola/python.exe "N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py" gonzalezivan C:/Users/ig299/cola/ptsa.shp projects/gonzalezivan/assets/cola/aaupl20 20
+# C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe "N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py" gonzalezivan C:/cola/anoa/anoa_test.shp projects/gonzalezivan/assets/cola/anoa66 20
 def main() -> None:
     #%%
 
@@ -25,21 +27,16 @@ def main() -> None:
     project_name = sys.argv[1] # project name
     shapefile_path = sys.argv[2] # shapefile path
     ee_name = sys.argv[3] # ee asset
+    nabs = int(sys.argv[4]) # number of absences
     
-
-  # param2 = '/data/tempR/colaBWW2025081407481705/Anoa_present_ardianti.shp'
+    # project_name = 'gonzalezivan'
+    # shapefile_path = '/home/shiny/test/anoa66.shp'
+    # shapefile_path = 'C:/cola/anoa/anoa66.shp'
+    # shapefile_path = 'C:/Users/ig299/cola/ptsa.shp'
+    # shapefile_path = 'C:/cola/anoa/anoa_test.shp'
+    # ee_name = 'projects/gonzalezivan/assets/cola/anoa'  
+    # nabs = 60
   
-  # project_name = 'gonzalezivan'
-  # shapefile_path = '/home/shiny/test/anoa66.shp'
-  # ee_name = 'projects/gonzalezivan/assets/cola/anoa66'
-  # project_name = 'gonzalezivan'
-  # shapefile_path = '/home/shiny/test/anoa66.shp'
-  # shapefile_path = 'C:/cola/Anoa/Anoa_present_ardianti.shp'
-  # ee_name = 'projects/gonzalezivan/assets/cola/anoa6'
-
-      
-  
-  #param = 'gonzalezivan'
   # Convert distance threshold to float or integer
     try:
       ee1 = ee.Initialize(project = project_name)
@@ -68,21 +65,54 @@ def main() -> None:
   
     #print('reading')
     # Read the shapefile into a GeoDataFrame
-    gdf = gpd.read_file(shapefile_path)    
+    gdf = gpd.read_file(shapefile_path)
+    if 'MultiPoint' in list(set(gdf.geom_type)):
+        print (1)
+        # Convert MULTIPOINT to individual POINT features
+        from shapely.geometry import MultiPoint
+        #
+        def explode_multipoints(geom):
+            if geom.geom_type == 'MultiPoint':
+                return list(geom.geoms)
+            return [geom]
+        #
+    #
+    gdf = gdf.explode(index_parts=False)
+    #
     minx, miny, maxx, maxy = gdf.total_bounds
     
     # Assign preabs column to 0 if not existing
     if 'preabs' not in gdf.columns:
-        gdf.assign(preabs=1)
+        gdf = gdf.assign(preabs=1)
         print (  ' Creating the missing "preabs" column, assigning 1 to all features')
-
-
 
     # Create bounding box polygon
     extent_poly = box(minx, miny, maxx, maxy)
 
     # Save as shapefile
     gpdbox = gpd.GeoDataFrame(geometry=[extent_poly], crs=gdf.crs)
+    
+    
+    if nabs != 0:
+        # bounds = ee.Geometry.Rectangle(extents.values(["longitude_min", "latitude_min", "longitude_max", "latitude_max"]))
+        # bounds = ee.Geometry.Rectangle([minx, miny, maxx, maxy])
+        # refimage = ee.Image("USGS/SRTMGL1_003").clip(bounds)
+        # extabs = refimage.sample(scale=30, numPixels=nabs, geometries=True)
+        from shapely.geometry import Polygon
+        # x = 3, 4; y = -1, 1
+        # s = gpd.GeoSeries([Polygon([(3, -1), (4, -1), (4, 1), (3, 1)])])
+        pol = gpd.GeoSeries([Polygon([(minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)])])
+        extabs = pol.sample_points(size=nabs)
+        abspts = gpd.GeoDataFrame(geometry=extabs, crs=gdf.crs).explode(index_parts=True)
+        abspts = abspts.assign(preabs=0)
+        # abspts.plot()
+        print (  ' Creating ' + str(nabs) +' absences, assigning 0 to all new features in the "preabs" column')
+        gdf = pd.concat([gdf, abspts], ignore_index=True)
+        # gdf2.plot(c=gdf2['preabs']+1) 
+        gdf.to_file(shapefile_path.replace(".shp", "and" + str(nabs) + "simabs.shp") )
+        print (  ' Writing file ')
+        
+    
     
     # convert it into geo-json 
     json_df = json.loads(gdf.explode(index_parts=False).to_json())

@@ -95,7 +95,8 @@ delFiles <- function(...){
 ## Evals if the raster is GEO or PROJ
 isProjected <- function(rastPath, details = FALSE){
   #rastPath = 'C:/temp/cola/colaRKW2024081218272505//in_points_CHL2024081218292405.tif'
-  cat(' +++ Evaluaring if is proj: ', rastPath, '\n')
+
+  # cat(' +++ Evaluaring if is proj: ', rastPath, '\n')
 
   if (require('gdalUtilities')){
     gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
