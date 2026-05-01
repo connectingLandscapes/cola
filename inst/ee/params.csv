@@ -5,6 +5,7 @@ regionName,anoa1
 regionOfInterest,projects/gonzalezivan/assets/cola/anoa66_box
 absencesToSimulate,0
 maxNumbPoints,200000
+stackType,1
 outExtCovs,projects/gonzalezivan/assets/cola/anoa66_covext
 ptsWithCovs,projects/gonzalezivan/assets/cola/anoa66_covext
 eeFolderPredic,projects/gonzalezivan/assets/cola/pred_anoa0

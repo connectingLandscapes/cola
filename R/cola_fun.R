@@ -1004,7 +1004,7 @@ lcc_py <- function(inshp, intif, outtif,
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
-#' @param maxram Numeric. RAM to use
+#' @param maxram Numeric. RAM to use in GB
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param cml Logical. Print the back-end command line? Default TRUE
@@ -1027,7 +1027,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
                          maxdist, smooth, tolerance,
                          ncores = as.numeric(Sys.getenv('COLA_NCORES')),
                          crs = 'None',
-                         maxram = 6,
+                         maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
                          tempFolder = NULL,
                          py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
@@ -1142,7 +1142,8 @@ lccJoblib_py <- function(inshp, intif, outtif,
 lccZarr_py <- function(inshp, intif, outtif,
                        maxdist, smooth, tolerance,
                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                       maxram = 6, crs = 'None',
+                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+                       crs = 'None',
                        sci = 'None', eci = 'None',
                        tempFolder = NULL,
                        py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -1427,7 +1428,8 @@ crk_py <- function(inshp, intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
   metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
-                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                shape = shape, transform = transform, volume = volume,
+                ncores = ncores, crs = crs,
                 log = paste0(intCMD, collapse = ' - '),
                 done = ifelse(file.exists(outtif), 'yes', 'no'))
   write.table(metaFile, logname )
@@ -1481,7 +1483,7 @@ crkJoblib_py <- function(
     volume,
     ncores = as.numeric(Sys.getenv('COLA_NCORES')),
     crs = 'None',
-    maxram = 6,
+    maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
     tempFolder = NULL,
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
@@ -1548,7 +1550,8 @@ crkJoblib_py <- function(
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
   metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
-                shape = shape, transform = transform, volume = volume, ncores = ncores, crs = crs,
+                shape = shape, transform = transform, volume = volume,
+                ncores = ncores, crs = crs,
                 maxram = maxram,
                 log = paste0(intCMD, collapse = ' - '),
                 done = ifelse(file.exists(outtif), 'yes', 'no'))

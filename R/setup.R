@@ -13,7 +13,8 @@
 #' @param zarr Logical. Are you planning to use zarr libary? Default FALSE
 #' @param cola2 Logical. Installing cola2 python dependencies? Default is FALSE
 #' @param COLA_DATA_PATH String. Path were CoLa DSS results and session folders
-#' @param COLA_NCORES Integer. Number of  cores to use
+#' @param COLA_NCORES Integer. Number of cores to use
+#' @param COLA_RAMGB Integer. GB or RAM to use
 #' @param COLA_DSS_UPL_MB Integer. In MB, max size of input rasters in the CoLa DSS
 #' @param COLA_VIZ_THRES_PIX Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor
 #' @param COLA_VIZ_RES_NCOL Integer. Number of columns to resample the raster to be displayed in the cola DSS.
@@ -41,7 +42,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         pyVer = "3.12.11",
                         oldestPyVer = '3.11',
                         COLA_DATA_PATH=NULL,
-                        COLA_NCORES=4,
+                        COLA_NCORES = 4,
+                        COLA_RAMGB = 6,
                         COLA_DSS_UPL_MB=250,
                         COLA_VIZ_THRES_PIX=1000000,
                         COLA_VIZ_RES_NCOL=1000,
@@ -810,6 +812,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       pos <- grep('COLA_NCORES', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
       if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_NCORES=',COLA_NCORES)}
+
+      pos <- grep('COLA_RAMGB', Renviron)
+      # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_RAMGB=',COLA_RAMGB)}
+
 
       pos <- grep('COLA_DSS_UPL_MB', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))

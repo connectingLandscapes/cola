@@ -1,0 +1,19 @@
+header,Keep this line
+eeProject,gonzalezivan
+points,projects/gonzalezivan/assets/cola/anoa66
+path = 'C:/Users/ig299/cola/'
+showplots,False
+npres,100
+nabs,100
+nclus,2
+disfun,Euclidean
+scale_,50000, # grid size for random
+split,0.7
+numiter, 10
+export_scale, 1000 # 
+descExp = ' Export binary ' + str(seed)
+pointsBuffMeters, 100 # buffer to extract aoi inmeters
+saveIndividuals,True
+eeLogPath,
+grainSize,100 # pixel size
+removeSpatDup,False

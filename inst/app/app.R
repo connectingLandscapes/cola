@@ -50,6 +50,31 @@
   os <- Sys.info()[c("sysname")]
   os <<- os
 
+  ## Check internals file.edit( file.path(Sys.getenv("HOME"), ".Renviron") )
+
+  ## Is COLA a server
+  (COLA_SERVER <- as.numeric(Sys.getenv('COLA_SERVER')))
+  (COLA_SERVER <- as.numeric(
+    ifelse( COLA_SERVER == 1 & !is.na(COLA_SERVER),
+            yes = 1, no = 0) ))
+  base::options('COLA_SERVER' = COLA_SERVER)
+
+  (COLA_NCORES <- as.numeric(Sys.getenv('COLA_NCORES')))
+  (COLA_NCORES <- as.numeric(
+    ifelse( is.numeric(COLA_NCORES) & !is.na(COLA_NCORES),
+            yes = COLA_NCORES, no = 1) ))
+
+  (COLA_RAMGB <- as.numeric(Sys.getenv('COLA_RAMGB')))
+  (COLA_RAMGB <- as.numeric(
+    ifelse( is.numeric(COLA_RAMGB) & !is.na(COLA_RAMGB),
+            yes = COLA_RAMGB, no = 4) ))
+
+  (COLA_DSS_UPL_MB <- as.numeric(Sys.getenv('COLA_DSS_UPL_MB')))
+  (COLA_DSS_UPL_MB <- as.numeric(
+    ifelse( is.numeric(COLA_DSS_UPL_MB) & !is.na(COLA_DSS_UPL_MB),
+            yes = COLA_DSS_UPL_MB, no = 250) ))
+  base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
+
   (COLA_DATA_PATH <- Sys.getenv('COLA_DATA_PATH'))
   warntemp <- ifelse(COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH), no = 1, yes = 0)
   (dataFolder <<- ifelse( COLA_DATA_PATH != '' & dir.exists(COLA_DATA_PATH),
@@ -58,13 +83,6 @@
   # /data/temp/'; dir.create(dataFolder)
 
   base::options(scipen = 999)
-
-  (COLA_DSS_UPL_MB <- as.numeric(Sys.getenv('COLA_DSS_UPL_MB')))
-  (COLA_DSS_UPL_MB <- as.numeric(
-    ifelse( is.numeric(COLA_DSS_UPL_MB) & !is.na(COLA_DSS_UPL_MB),
-            yes = COLA_DSS_UPL_MB, no = 250) ))
-  base::options('shiny.maxRequestSize' = COLA_DSS_UPL_MB * 1024^2)
-
 
   (COLA_VIZ_THREs_PIX <- as.numeric(Sys.getenv('COLA_VIZ_THREs_PIX')))
   (COLA_VIZ_THREs_PIX <- as.numeric(
@@ -93,12 +111,6 @@
             yes = 1, no = 0) ))
   base::options('COLA_EE' = COLA_EE)
 
-  ## Is COLA a server
-  (COLA_SERVER <- as.numeric(Sys.getenv('COLA_SERVER')))
-  (COLA_SERVER <- as.numeric(
-    ifelse( COLA_SERVER == 1 & !is.na(COLA_SERVER),
-            yes = 1, no = 0) ))
-  base::options('COLA_SERVER' = COLA_SERVER)
 
 
   #(rootPath <- find.package('cola'))
@@ -110,7 +122,7 @@
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
-  # file.exists(hs2rs_file)j m
+  # file.exists(hs2rs_file)
 
   # py <- '/home/shiny/anaconda3/envs/cola3/bin/python'
   (py <- Sys.getenv("COLA_PYTHON_PATH"))
@@ -135,6 +147,10 @@
   (sessionID <<- sessionIDgen(folder = TRUE))
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
   dir.create(tempFolder, recursive = TRUE, showWarnings = TRUE)
+  if (COLA_EE == 1){
+    eeLogFolder <<- paste0(dataFolder, '/eetimelog/')
+    dir.create(eeLogFolder, recursive = TRUE, showWarnings = FALSE)
+  }
   # (cat(' >> COLA_DATA_PATH: ', COLA_DATA_PATH, '\n'))
   # (cat(' >> tempFolder: ', tempFolder, '\n'))
   # (cat(' >> R-tempdir(): ', cola::adaptFilePath(tempdir()), '\n\n'))
@@ -172,18 +188,28 @@ server <- function(input, output, session) {
              imageUrl = 'https://github.com/connectingLandscapes/cola/blob/main/inst/docs/logoA_bgNA.jpg?raw=true',
              #system.file(package = 'cola', 'docs/logoA_bgNA.jpg'),
 
-             title = paste0("Welcome to CoLa<br><br>", sessionID ),
-             text = paste0('Please save this sessionID in your records. ',
-                           'This ID will be on the log box in the tools tabs.',
-                            ifelse(warntemp == 1 & COLA_SERVER == 0,
-                                   yes = paste0(
-                                   '<br> Your temporal folder may ',
-                            'disappear after the session is closed. Consider create a ',
-                            'folder in an exiting folder. Write that folder path ',
-                            'in this file: "',
-                            cola::adaptFilePath(file.path(Sys.getenv("HOME"), ".Renviron")),
-                            '"'), no = ''))
-             )
+             title = paste0('Welcome to CoLa<br><p class="paragraph2"><b>', sessionID, '</b></p>'),
+
+             text = paste0('Please save this sessionID in your records.<br>',
+                           'This ID will be on the log box in the tools tabs.<br>',
+                           ifelse(COLA_SERVER == 0, yes =
+                                    '<br> Check your R console for processing details.<br>', no = ''),
+                           paste0('<br> The max. raster upload size is ', COLA_DSS_UPL_MB, 'MB.'),
+                           ifelse(COLA_SERVER == 0, yes =
+                                    paste0('Your system is using ', COLA_NCORES, ' cores, and ', COLA_RAMGB, ' as RAM GB. You can change those',
+                                           ' parameters in this file: ',
+                                           cola::adaptFilePath(file.path(Sys.getenv("HOME"), ".Renviron"))),
+                                  no = ''),
+                           ifelse(warntemp == 1 & COLA_SERVER == 0,
+                                  yes = paste0(
+                                    '<br> Your temporal folder could ',
+                                    'disappear after the session is closed, and the restoring ',
+                                    'session feature may not wotk. Consider create a ',
+                                    'folder in an exiting folder. Write that folder path ',
+                                    'in this file: "',
+                                    cola::adaptFilePath(file.path(Sys.getenv("HOME"), ".Renviron")),
+                                    '"'), no = ''))
+  )
 
   if ( Sys.getenv('COLA_PYTHON_PATH') == ''){
     shinyalert(html = TRUE, type = "error",
@@ -813,7 +839,7 @@ server <- function(input, output, session) {
     nll <- rbind.data.frame(df, df2)
     write.csv(nll, file.path(tempFolder, 'colaLayers.csv'), row.names = FALSE )
     cat('Layer List: \n')
-    print(nll)
+    print(nll[, c('id', 'inout', 'type', 'public', 'internal')])
     return(nll)
   }
 
@@ -1534,6 +1560,8 @@ server <- function(input, output, session) {
                        selected = NA, server = TRUE)
 
   observeEvent(input$in_uncrs_pts, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
     invisible(suppressWarnings(
       tryCatch(file.remove(c(rv$crs_pts_orig, rv$crs_pts)),
                error = function(e) NULL)))
@@ -1557,6 +1585,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$in_uncrs_tif, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     invisible(suppressWarnings(
       tryCatch(file.remove(c(rv$crs_tif_orig, rv$crs_tif)),
                error = function(e) NULL)))
@@ -1579,6 +1608,7 @@ server <- function(input, output, session) {
   # # crs_tif_temp = "", # # crs_tif = "", # input$sel_crs # "" # input$in_uncrs_pts # input$in_uncrs_tif
 
   observe({
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     ## Create an ID
     if(input$sel_crs != '' | input$sel_crs2 != '') {
       if(is.null(rv$inProjSessID)){
@@ -1653,7 +1683,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$coo_tif, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(!is.null(rv$tif_uncrs) & exists(crs_selected2)){
 
       # rv$tif_uncrs
@@ -1857,6 +1887,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$in_cdpop_par, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(devug){ print('cdpop_par: '); print(input$in_cdpop_par)}
     file <- input$in_cdpop_par
     ext <- tools::file_ext(file$datapath)
@@ -1874,6 +1905,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$in_cdpop_xy, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(devug){ print('in_cdpop_xy: '); print(input$in_cdpop_xy)}
     xyfile <- input$in_cdpop_xy
     ext <- tools::file_ext(xyfile$datapath)
@@ -1901,6 +1933,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$in_cdpop_age, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(devug){ print('in_cdpop_age: '); print(input$in_cdpop_age)}
 
     agefile <- input$in_cdpop_age
@@ -2000,6 +2033,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$cdpop_check1, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     writeParamCDPOP <- t(rv$data)[1, ]
     #writeParamCDPOP <- t(writeParamCDPOP)
     writeParamCDPOP$xyfilename <- 'xy'
@@ -2049,6 +2083,7 @@ server <- function(input, output, session) {
   })
 
   isolate(observeEvent(input$in_cdpop_save, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     ## no params provided
     if (is.null(rv$data)){
       cat(' // No provided invars. Using default\n')
@@ -2070,7 +2105,7 @@ server <- function(input, output, session) {
 
 
   isolate(observeEvent(input$run_cdpop, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
     # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
 
@@ -2683,7 +2718,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$in_cdpop_tif, {
     #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inDistSessID)){
       (inDistSessID <- sessionIDgen())
       rv$inDistSessID <- inDistSessID
@@ -2729,7 +2764,7 @@ server <- function(input, output, session) {
   observeEvent(input$in_cdpop_shp, {
     pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_dist_shp)') # _____________
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp, newin_distance_shp)), error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     rv$log <- paste0(rv$log, '\nLoading shapefile');updateVTEXT(rv$log) # _______
 
     inCdpopSessID <- sessionIDgen()
@@ -2774,7 +2809,7 @@ server <- function(input, output, session) {
   ####### > SURFACE ------------------
 
   observeEvent(input$in_sur_tif, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     output$ll_map_h2r <- leaflet::renderLeaflet({
 
       # if(is.na(newtifPath)){
@@ -2924,7 +2959,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$h2rsample, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
     #      inSurSessID = 'V-2023082911285705_file3112303ea820')
     # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
@@ -2999,6 +3034,7 @@ server <- function(input, output, session) {
 
   ## Run h2s
   isolate(observeEvent(input$h2r, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(rv$hsready){
       # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
       #      inSurSessID = 'V-2023082911285705_file3112303ea820')
@@ -3176,7 +3212,7 @@ server <- function(input, output, session) {
 
   ## Load tif
   observeEvent(input$in_edi_tif, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     #try(file.remove(c(tifpath, newtifPath)))
     invisible(suppressWarnings(tryCatch(file.remove(c(tifpath, newtifPath, tifpathfixed)),
                                         error = function(e) NULL)))
@@ -3283,7 +3319,7 @@ server <- function(input, output, session) {
 
   ## Load shp
   observeEvent(input$in_edi_shp, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
     pdebug(devug=devug,sep='\n',pre='\n---- EDI - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
 
@@ -3349,6 +3385,7 @@ server <- function(input, output, session) {
   })
 
   isolate(observeEvent(input$in_name_sur_edi, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(rv$tifready){
       # print('Second print LL for SR update')
       rv$tif <-   subset(rv$layersList, public == input$in_name_sur_edi)$internal
@@ -3366,7 +3403,7 @@ server <- function(input, output, session) {
 
   ## Run Edi sum ---
   isolate(observeEvent(input$edi, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     #polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
     save(polDraw, file = paste0(tempFolder, '/draw.RData'))
@@ -3720,7 +3757,7 @@ server <- function(input, output, session) {
   observeEvent(input$in_points_tif, {
     # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)),
     #                   error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inSurSessID)){
       #pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
       (inSurSessID <- sessionIDgen())
@@ -3825,7 +3862,7 @@ server <- function(input, output, session) {
   observeEvent(input$in_points_hs, {
     # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)),
     #                   error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inSurSessID)){
       (inSurSessID <- sessionIDgen())
       rv$inSurSessID <- inSurSessID
@@ -4091,6 +4128,7 @@ server <- function(input, output, session) {
 
   ## update values
   observeEvent(input$in_points_ly, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     in_points_ly <<- input$in_points_ly
     if(any(grepl('Suitability|Resistance', input$in_points_ly))){
 
@@ -4122,7 +4160,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$in_dist_tif, {
     #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inSurSessID)){
       #pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
       (inSurSessID <- sessionIDgen())
@@ -4235,7 +4273,7 @@ server <- function(input, output, session) {
   ##> vout_dist; ll_map_dist; distance_py; in_distance_3,
   ##> in_distance_shp in_dist_tif, inDistSessID distmap newtifPath_dist newshpPath_dist
   observeEvent(input$in_shp, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_shp)') # _____________
 
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_distance_shp,  newin_distance_shp)), error = function(e) NULL)))
@@ -4315,6 +4353,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$dist_py, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n', pre ='\nRUN CDMat\n', 'rv$tif','rv$pts','rv$tifready','rv$ptsready') # _____________
 
     if( ! all(rv$ptsready, rv$tifready)){ # not ready
@@ -4410,6 +4449,7 @@ server <- function(input, output, session) {
 
   # load resistance
   observeEvent(input$in_lcc_tif, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,
            sep='\n',pre='\n---- LCC - TIF\n',
            'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
@@ -4540,7 +4580,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$in_lcc_shp, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
     pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
 
@@ -4619,6 +4659,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$lcc, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     shinyjs::enable("lcc")
     pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
     condDist <<- 0
@@ -4739,6 +4780,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$lcc2, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
     condDist <<- 0
     #pdebug(devug=devug, ... = 'condDist') # _____________
@@ -4856,7 +4898,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$in_crk_tif, {
     #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathcrk, rv$newtifPath_crk)), error = function(e) NULL)))
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n',pre='---\nloadTIFCRK\n','rv$inSurSessID', 'rv$incrkSessID')
     if(is.null(rv$inSurSessID)){
       (inSurSessID <- sessionIDgen())
@@ -4950,7 +4992,7 @@ server <- function(input, output, session) {
   ##> vout_crk; ll_map_crk; crkance_py; in_crkance_3,
   ##> in_crkance_shp in_crk_tif, incrkSessID crkmap newtifPath_crk newshpPath_crk
   observeEvent(input$in_crk_shp, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     #pdebug(devug=devug,sep='\n',pre='--','names(input)', 'str(input$in_crk_shp)') # _____________
 
     invisible(suppressWarnings(tryCatch(file.remove(c(in_crk_shp, newin_crk_shp)), error = function(e) NULL)))
@@ -5431,6 +5473,7 @@ server <- function(input, output, session) {
 
   ## Upload resistance
   observeEvent(input$in_pri_tif, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,
            sep='\n',pre='\n---- LCC - TIF\n',
            'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
@@ -5634,6 +5677,7 @@ server <- function(input, output, session) {
 
   ## load your LCC
   observeEvent(input$in_pri_lcc, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inLccSessID)){
       (inLccSessID <- sessionIDgen())
       rv$inLccSessID <- inLccSessID
@@ -5714,7 +5758,7 @@ server <- function(input, output, session) {
 
   ## load your crk
   observeEvent(input$in_pri_crk, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(is.null(rv$inLccSessID)){
       (inLccSessID <- sessionIDgen())
       rv$inLccSessID <- inLccSessID
@@ -5926,7 +5970,7 @@ server <- function(input, output, session) {
 
   ## Load shp
   observeEvent(input$in_com_shp, {
-
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # invisible(suppressWarnings(tryCatch(file.remove(c(in_lcc_shp, newin_lcc_shp)), error = function(e) NULL)))
     pdebug(devug=devug,sep='\n',pre='\n---- LCC - SHP\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
 
@@ -5989,6 +6033,7 @@ server <- function(input, output, session) {
 
   ## Run comparisson
   observeEvent(input$com_py, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
 
     in_com_ly <- input$in_com_ly
@@ -6347,6 +6392,7 @@ server <- function(input, output, session) {
 
 
   observeEvent( input$in_com_ly, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # in_com_ly <- 'Dispersal kernels'
     # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridors')
     #tempFolder <- '/data/temp/scenario_folder'
@@ -6371,7 +6417,6 @@ server <- function(input, output, session) {
 
   ####### > Change session folder ------------------
   observeEvent(input$sessPath, {
-
     sessInput <- input$sessInput
     newTempFolder <- paste0(dataFolder, sessInput)
     print(paste('---New session: ', newTempFolder))
@@ -6829,10 +6874,10 @@ server <- function(input, output, session) {
     output$out_eeextcovstable <- DT::renderDataTable(
       if (exists('eeextcovstable')){
         rv$eecovstable <<- eeextcovstable <- datatable(eeextcovstable,
-                                    editable = TRUE,
-                                    options = list( paging = TRUE,
-                                                    pageLength = nrow(eeextcovstable)
-                                    ))
+                                                       editable = TRUE,
+                                                       options = list( paging = TRUE,
+                                                                       pageLength = nrow(eeextcovstable)
+                                                       ))
       } else {
         rv$eecovstable <<- eeextcovstable <- data.frame(empty = 'empty')
       }
@@ -6857,12 +6902,12 @@ server <- function(input, output, session) {
       eeextcovstable <- read.csv(eeextcovsfile)
       # output$out_eeextcovstable <- DT::renderDataTable(
       # )
-        if (exists('eeextcovstable')){
-          rv$eecovstable <<- eeextcovstable
+      if (exists('eeextcovstable')){
+        rv$eecovstable <<- eeextcovstable
 
-        } else {
-          rv$eecovstable <<- dat <- data.frame(empty = 'empty')
-        }
+      } else {
+        rv$eecovstable <<- dat <- data.frame(empty = 'empty')
+      }
     }
   })
 
@@ -6895,6 +6940,7 @@ server <- function(input, output, session) {
 
 
   isolate(observeEvent(input$in_eetablecovssave, {
+    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     ## no params provided
     if (is.null(rv$data3)){
       cat(' // No provided invars. Using default\n')
@@ -6925,6 +6971,7 @@ server <- function(input, output, session) {
   isolate(observeEvent(input$in_eeruncovs, {
 
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+    (ee_scr_path <- system.file(package = 'cola', 'ee'))
 
     # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
 
@@ -7116,7 +7163,7 @@ server <- function(input, output, session) {
 
       if(cond){
         output$box1 <- shinydashboard::renderValueBox({
-          valueBox(width = 12, "EE connected", "Ready", icon = icon("thumbs-up", lib = "glyphicon"),
+          valueBox(width = 12, "Connected", "EE ready", icon = icon("thumbs-up", lib = "glyphicon"),
                    color = "green"
           )
         })
@@ -7137,8 +7184,10 @@ server <- function(input, output, session) {
   })) # end isolate
 
   output$box1 <-  shinydashboard::renderValueBox({
-    valueBox( "EE not conected", 'Not ready', icon = icon("thumbs-down", lib = "glyphicon"),
+    valueBox( "Disconnected", 'EE not ready',
+              icon = icon("xmark", lib = "glyphicon"),
               # icon = icon("thumbs-up", lib = "glyphicon")
+              # https://fontawesome.com/search?q=edit&o=r&m=free
               color = "red"
     )
   })
@@ -7465,6 +7514,10 @@ if (FALSE){ # if FALSE
         tags$style(HTML("
   .tabbable > .nav > li > a {background-color: grey; color:white;}
  ")),
+        #         tags$head(tags$style(HTML('
+        # .box {margin-top: 2px;margin-left: 0px; margin-right: 0px; margin-bottom:2px;padding:-10px}
+        # div {padding: 0 !important;}'
+        #         ))),
         shinydashboard::tabItems(
 
           #### UI Tabs ----
@@ -7746,250 +7799,289 @@ if (FALSE){ # if FALSE
           # UI EE  ----
           shinydashboard::tabItem(
             'tabee',
-            # fluidPage(
-            tabsetPanel(
-              type = "pills",
-              tabPanel(
-                "Check + Upload EE",
-                # verbatimTextOutput("cola_ee"),
-                # checkboxInput(inputId = "eecheckbox", label = "Earth Engine", value = TRUE),
+            fluidPage(
 
-                #### EE check ---------
-                h2(' Check EE '),
+              # tabsetPanel(
+              #   type = "pills",
+              #   tabPanel(
+              #     "Check + Upload EE",
+
+              # verbatimTextOutput("cola_ee"),
+              # checkboxInput(inputId = "eecheckbox", label = "Earth Engine", value = TRUE),
+
+              #### EE check ---------
+              div(style =
+                    # "margin-top: -30px"
+                    HTML('.box {margin-top: 2px;margin-left: 0px; margin-right: 0px; margin-bottom:2px;padding:-10px}
+                    div {padding: 0 !important;}'
+                    )),
+              h2(' Check EE '),
+              fluidRow(
                 shinydashboard::box( # open box ABC
                   width = 12, solidHeader = T, collapsible = T,
                   title = "Connect to Earth Engine", status = "info", collapsed = FALSE
                   ,
 
-                  fluidRow(
-                    column(width = 6,
-                           textInput(width = "100%",
-                                     value = 'gonzalezivan',
-                                     placeholder = 'EE project',
-                                     label =  'EE project',
-                                     'ee_project'),
-
-                           actionButton(width = "100%",
-                                        label = 'Check EE',
-                                        'ee_connect')),
-                    column(width = 6,
-                           shinydashboard::valueBoxOutput("box1", width = 12))
-                  ) # end box ABC
-                ),
-
-
-                # verbatimTextOutput("vout_ee"),
-
-
-                #### EE upload ---------
-
-
-                h2('  Upload Points '),
-
-                shinydashboard::box( # open box ABC
-                  width = 12, solidHeader = T, collapsible = T,
-                  title = "Create feature collection and bounding box from local layer", status = "info", collapsed = FALSE
-                  ,
-                  column(width = 3,
-                         shiny::fileInput('ee_localfile', 'Load points shapefile', buttonLabel = 'Search',
-                                          placeholder = 'INC SHP, DBF, SHX and PRJ ',
-                                          accept=c('.shp'
-                                                   #,'.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'
-                                                   ),
-                                          multiple=FALSE),
-                         div(style = "margin-top: -30px"),
-                         bsTooltip(
-                           id = "ee_localfile",
-                           title = "Upload a Spatial file(s). Either a shapefile (shp, shx, dbf, proj) or CSV",
-                           placement = "right",  # top, bottom, left, right
-                           trigger = "hover",    # hover, click, focus
-                           options = list(container = "body") # Prevents clipping
-                         )
-
-                  ),
-
                   column(width = 4,
                          textInput(width = "100%",
-                                   #value = 'projects/gonzalezivan/assets/cola/name',
-                                   placeholder = 'projects/USER/assets/LAYER',
-                                   label =  'Layer to create in EE:', inputId = 'ee_ptspath')
+                                   value = 'gonzalezivan',
+                                   placeholder = 'EE project',
+                                   label =  'EE project',
+                                   'ee_project'),
+
+                         actionButton(width = "100%",
+                                      label = 'Check EE',
+                                      'ee_connect')),
+                  column(width = 5,
+                         shinydashboard::valueBoxOutput("box1", width = 12)
                   ),
                   column(width = 3,
-                         numericInput(width = "100%",min = 0, max = 9999, step = 1, value = 0,
-                                   #value = 'projects/gonzalezivan/assets/cola/name',
-                                   label =  'Number of local absences:', inputId = 'ee_absloc')
-                  ),
+                         textInput(width = "100%",
+                                   value = '',
+                                   placeholder = 'EE username',
+                                   label =  'EE username',
+                                   'ee_userquota'),
 
-
-                  column(width = 2,                         div(style = "margin-top: -30px"),
-                         div(style = "margin-top: 50px"),
-                         actionButton(width = "100%", #class = "btn-primary btn-lg",
-                                      label = 'Upload points', 'ee_fcupload',
-                                      style="text-align: center;vertical-align: center")
+                         actionButton(width = "100%",
+                                      label = 'Check quota',
+                                      'ee_quota')
                   )
+                ) # end box ABC
+              ), #FR
+
+              #### EE upload ---------
+
+              div(style = "margin-top: -20px"),
+              h2('  Upload Points '),
+
+              shinydashboard::box( # open box ABC
+                width = 12, solidHeader = T, collapsible = T,
+                title = "Create feature collection and bounding box from local layer", status = "info", collapsed = FALSE
+                ,
+                column(width = 3,
+                       shiny::fileInput('ee_localfile', 'Load points shapefile', buttonLabel = 'Search',
+                                        placeholder = 'INC SHP, DBF, SHX and PRJ ',
+                                        accept=c('.shp'
+                                                 #,'.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'
+                                        ),
+                                        multiple=FALSE),
+                       div(style = "margin-top: -30px"),
+                       bsTooltip(
+                         id = "ee_localfile",
+                         title = "Upload a Spatial file(s). Either a shapefile (shp, shx, dbf, proj) or CSV",
+                         placement = "right",  # top, bottom, left, right
+                         trigger = "hover",    # hover, click, focus
+                         options = list(container = "body") # Prevents clipping
+                       )
+
+                ),
+
+                column(width = 4,
+                       textInput(width = "100%",
+                                 #value = 'projects/gonzalezivan/assets/cola/name',
+                                 placeholder = 'projects/USER/assets/LAYER',
+                                 label =  'Layer to create in EE:', inputId = 'ee_ptspath')
+                ),
+                column(width = 3,
+                       numericInput(width = "100%",min = 0, max = 9999, step = 1, value = 0,
+                                    #value = 'projects/gonzalezivan/assets/cola/name',
+                                    label =  'Local absences (% of pres.):', inputId = 'ee_absloc')
                 ),
 
 
-                #### EE extcovs ---------
+                column(width = 2,                         div(style = "margin-top: -30px"),
+                       div(style = "margin-top: 50px"),
+                       actionButton(width = "100%", #class = "btn-primary btn-lg",
+                                    label = 'Upload points', 'ee_fcupload',
+                                    style="text-align: center;vertical-align: center")
+                )
+              ),
+
+
+              #### EE extcovs ---------
+              div(style = "margin-top: -30px"),
+              h2('Extract covariates '),
+
+              shinydashboard::box( # open box ABC
+                width = 12, solidHeader = T, collapsible = T,
+                title = "Create a table with covariates layers from points", status = "info", collapsed = FALSE
+                , # ), ## box
+
+                column(
+                  width = 4 ,
+                  fileInput("in_eeloadcovs", "Params CSV File", accept = ".csv"),
+
+                  div(style = "margin-top: -5px"),
+
+                  actionButton(width = "100%", label = 'Load sample parameters', 'in_eeloadcovssample'),
+                  div(style = "margin-top: 10px"),
+
+                  actionButton(width = "100%", "in_eetablecovssave", "Save edited params file"),
+                ),
+
+                column(width = 5,
+                       selectizeInput(
+                         label =  'Covariates stack',
+                         inputId = 'in_eecovstack',
+                         multiple = FALSE,
+                         choices = c('1', '2', '3')),
+
+                       selectizeInput(
+                         label =  'Covariates',
+                         inputId = 'in_eecovlist',
+                         multiple = TRUE,
+                         choices = c('BioClim','LandCover','ForestCover'),
+                         selected = c(
+                           'BioClim',
+                           'LandCover',
+                           'ForestCover')
+                       ),
+
+                       selectizeInput(
+                         inputId = 'in_eecovlc',
+                         multiple = TRUE,
+                         choices = c(
+                           'True desert',
+                           'Semi-arid',
+                           'Dense short vegetation',
+                           'Tree cover',
+                           'Wetland Salt pan',
+                           'Wetland Sparse vegetation',
+                           'Wetland Dense short vegetation',
+                           'Wetland Tree cover',
+                           'Cropland',
+                           'Built-up'
+                         ),
+                         selected = c(
+                           'Dense short vegetation',
+                           'Tree cover',
+                           'Wetland Sparse vegetation',
+                           'Wetland Dense short vegetation',
+                           'Wetland Tree cover'
+                         ),
+                         label =  'Land cover types')
+                ),
+                #
+                column(width = 3, offset = 0,
+                       tags$td(style = "width: 25%", align = "center",
+
+                               selectizeInput(
+                                 label =  'Spatial res. (m)',
+                                 inputId = 'in_eecovres',
+                                 multiple = FALSE,
+                                 choices = c(
+                                   '250', '500',
+                                   '1000', '10000'
+                                 ),
+                                 selected = c(
+                                   '500'
+                                 )
+                               ),
+
+                               numericInput('in_eeabs', label = 'Absences (%):',
+                                            value = 0,step = 1, max = 999999 ),
+
+                               actionButton(width = "100%",
+                                            label = 'Extract covariates',
+                                            'in_eeruncovs')
+                       )
+                ),
                 br(),
-                h2('Extract covariates '),
+                DT::dataTableOutput(outputId = "out_eeextcovstable")
 
-                shinydashboard::box( # open box ABC
-                  width = 12, solidHeader = T, collapsible = T,
-                  title = "Create a table with covariates layers from points", status = "info", collapsed = FALSE
-                  , # ), ## box
+              ), ## box
 
-                  column(
-                    width = 4 ,
-                    fileInput("in_eeloadcovs", "Params CSV File", accept = ".csv"),
-                    div(style = "margin-top: -30px"),
+              #### EE train model ---------
+              br(),
+              h2('Train model & predict'),
 
-                    actionButton(width = "100%", label = 'Load sample parameters',
-                                 'in_eeloadcovssample'),
-                    actionButton(width = "100%", "in_eetablecovssave", "Save edited params file"),
-                  ),
+              shinydashboard::box( # open box ABC
+                width = 12, solidHeader = T, collapsible = T,
+                title = "Train model based on extracted values", status = "info", collapsed = FALSE,
 
-                  column(width = 5,
-                         selectizeInput(
-                           inputId = 'in_eecovlc',
-                           multiple = TRUE,
-                           choices = c(
-                             'True desert',
-                             'Semi-arid',
-                             'Dense short vegetation',
-                             'Tree cover',
-                             'Wetland Salt pan',
-                             'Wetland Sparse vegetation',
-                             'Wetland Dense short vegetation',
-                             'Wetland Tree cover',
-                             'Cropland',
-                             'Built-up'
-                           ),
-                           selected = c(
-                             'Dense short vegetation',
-                             'Tree cover',
-                             'Wetland Sparse vegetation',
-                             'Wetland Dense short vegetation',
-                             'Wetland Tree cover'
-                           ),
-                           label =  'Land cover types')),
+                fluidRow(
+                column(width = 4,
+                  textInput(width = "100%",
+                            #value = 'projects/gonzalezivan/assets/cola/name',
+                            placeholder = 'projects/USER/assets/LAYER',
+                            label =  'Local or EE dataset:', inputId = 'in_eeloadcovs')
+                  # fileInput("in_eeloadcovs", "Local or EE dataset", accept = c(".dbf", '.gpkg', '.csv')),
+                  #div(style = "margin-top: -10px"),
 
+                ),
+                column(width = 2,
+                       div(style = "margin-top: 25px"),
+                       actionButton(width = "100%", "in_eetablecovssave", "Check train dataset")
+                ),
+                column(width = 2,
+                       selectizeInput(
+                         choices = c('R', 'Python', 'EE'),
+                         selected =  'EE', label = 'Algorithm',
+                         inputId = 'in_eemodeltype')),
+                #
+                column(width = 2,
+                       selectizeInput(
+                         label =  'Spatial res. (m)',
+                         inputId = 'in_eetrainres',
+                         multiple = TRUE,
+                         choices = c('250', '500', '1000', '10000'),
+                         selected = c('500'))
+                       ),
+                column(width = 2,
+                       div(style = "margin-top: 20px"),
+                       actionButton(width = "100%",
+                                    label = 'Train model',
+                                    'ee_push_train')
+                       ),
+                #
+                ),
+                #), # end box ABC
 
-
-                  column(width = 3, offset = 0,
-                         tags$td(style = "width: 25%", align = "center",
-                                 numericInput('in_eeabs', label = 'Number of absences',
-                                              value = 0,step = 1, max = 999999 ),
-
-                                 actionButton(width = "100%",
-                                              label = 'Extract covariates',
-                                      'in_eeruncovs')
-                         )
-                  ),
-                  br(),
-                  DT::dataTableOutput(outputId = "out_eeextcovstable")
-
-                ), ## box
-
-                #### EE run model ---------
-                br(),
-                h2('Run model covariates '),
-
-                shinydashboard::box( # open box ABC
-                  width = 12, solidHeader = T, collapsible = T,
-                  title = "Connect to Earth Engine", status = "info", collapsed = FALSE,
-
-
-                  column(width = 4,
-                         actionButton(width = "100%",
-                                      label = 'Upload model CSV',
-                                      'ee_push_params')),
-                  column(width = 4,
-                         selectizeInput(
-                           label = 'Algorithm',
-                           choices = c('CCDC', 'Landtrndr'),
-                           selected =  'CCDC',
-                           inputId = 'ee_ccdc_type')),
-
-                  column(width = 6,
-                         selectizeInput(
-                           multiple = TRUE,
-                           choices = c(
-                             'blue', 'green', 'red', 'NIR', 'SWIR1', 'SWIR2', 'QA_PIXEL', 'QA_RADSAT'
-                           ),
-                           label =  't Mmask Bands',
-                           inputId = 'ee_cov_list')),
-
-                  actionButton("in_eeext_pardef", "Load default parameters "),
-
-                  column(
-                    width = 4,
-                    actionButton("in_eeext_save", "Save edited params file"))
-                  ,
-                  fluidRow(
-                    column(width = 12,
-                           # DT::dataTableOutput(outputId = "table2"),
-                           plotOutput("eesext_params"))
-                  )
-                ), # end box ABC
 
                 #### EE predict model  ---------
 
-                h2('Predict model'),
-                shinydashboard::box( # open box
-                  width = 12, solidHeader = T, collapsible = T,
-                  title = "Run CCDC ", status = "info", collapsed = TRUE
-                  ,
-                  fluidRow(
-                    column(width = 4,
-                           selectizeInput(
-                             label = 'Algorithm',
-                             choices = c(
-                               'CCDC', 'Landtrndr'
-                             ),
-                             selected =  'CCDC',
-                             inputId = 'ee_ccdc_type')),
+                # h2('Predict model'),
+                # shinydashboard::box( # open box
+                #   width = 12, solidHeader = T, collapsible = T,
+                #   title = "Predict wall to wall ", status = "info", collapsed = FALSE,
+                h2(),
+                fluidRow(
+                  column(width = 6,
+                         selectizeInput(
+                           label = 'Stack',
+                           choices = c('1', '2', '3'),
+                           selected =  '1',
+                           inputId = 'in_eestacktopredict'),
+                         textInput(width = "100%",
+                                   #value = 'projects/gonzalezivan/assets/cola/name',
+                                   placeholder = 'projects/USER/assets/LAYER',
+                                   label =  'Area of interest:',
+                                   inputId = 'ee_ptspath')
+                  ),
+                  column(width = 6,
+                         textInput(width = "100%",
+                                   #value = 'projects/gonzalezivan/assets/cola/name',
+                                   placeholder = 'projects/USER/assets/LAYER',
+                                   label =  'Layer to create in EE:', inputId = 'ee_ptspath'),
+                         div(style = "margin-top: 25px"),
+                         actionButton(width = "100%",
+                                      label = 'Predict model',
+                                      'ee_push_predict')
 
-                    column(width = 4,
-                           actionButton(width = "100%",
-                                        label = 'Get model CSV',
-                                        'ee_get_csv')),
-                    column(width = 4,
-                           actionButton(width = "100%",
-                                        label = 'Upload model CSV',
-                                        'ee_push_params'))
-                  ),
-                  column(
-                    width = 4,
-                    actionButton("in_eeccd_pardef", "Load default parameters "),
-                  ),
-                  column(
-                    width = 4,
-                    fileInput("in_eeccd_par", "Params CSV File", accept = ".csv"),
-                  ),
-                  column(
-                    width = 4,
-                    actionButton("in_eeccd_save", "Save edited params file"),
-                  ),
-                  fluidRow(
-                    column(width = 12,
-                           # DT::dataTableOutput(outputId = "table3"),
-                           plotOutput("eeccd_params"))
                   )
-                ), # end box
+                ) #FR
+              ), # end box
 
-                #### EE END  ---------
+              # ), # tab panel
+              # tabPanel( "Make params", h2(' ')  ), # tab panel
+              # tabPanel("Select covariates", h2(' ')), # tab panel
+              # tabPanel("Model params", h2(' '))
+            ) # tab panel
 
-              ), # tab panel
-
-              tabPanel( "Make params", h2(' ')  ), # tab panel
-              tabPanel("Select covariates", h2(' ')), # tab panel
-              tabPanel("Model params", h2(' '))
-            ), # tab panel
-
-            tabPanel( "Run model", h2(' ') ) # tab panel
             #  ) # Fluid page
           ), # tabItem
+
+          #### EE END  ---------
 
           #### UI HS 2 SR ----
           shinydashboard::tabItem(

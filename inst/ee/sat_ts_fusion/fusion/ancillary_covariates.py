@@ -1,6 +1,33 @@
 import ee
 
 
+def precooked_mosaic(stack = 1):
+    """Create default stack
+    :param stack : integer
+    :return: mosaiced ee.Image
+    """
+    if stack == 1:
+        # WorldClim V1 Bioclim
+        bio = ee.Image('WORLDCLIM/V1/BIO')
+        terrain = ee.Algorithms.Terrain(ee.Image('USGS/SRTMGL1_003'))
+        tcc = ee.ImageCollection('NASA/MEASURES/GFCC/TC/v3')
+        median_tcc = (
+            tcc.filterDate('2000-01-01', '2015-12-31')
+            .select(['tree_canopy_cover'], ['TCC'])
+            .median() )
+        
+        predictors = bio.addBands(terrain).addBands(median_tcc)
+        # Create a water mask
+        watermask = terrain.select('elevation').gt(0)
+        # Mask out ocean pixels and clip to the area of interest
+        predictors = predictors.updateMask(watermask)
+    elif stack == 2:
+        predictors = make_covar_topo_stack()
+            
+    return predictors 
+
+
+
 def mosaic_gee_ic(ic:ee.ImageCollection = None):
     """Mosaic an image collection and use the projection from the first image in the collection
 
@@ -21,7 +48,7 @@ def get_best_dem():
     :return: DEM image
     """
     # order DEMs (best to worst)
-    dem_3dep = ee.Image("USGS/3DEP/10m").select('elevation') # orthometric heights (NAVD88)
+    dem_3dep = ee.Image("USGS/3DEP/10m_collection").select('elevation') # orthometric heights (NAVD88) #before: '10m' wo collection
     dem_glo30 = ee.Image(mosaic_gee_ic(ee.ImageCollection("COPERNICUS/DEM/GLO30").select(0))).rename('elevation') # orthometric heights (EGM2008)
     dem_alos = ee.Image(mosaic_gee_ic(ee.ImageCollection("JAXA/ALOS/AW3D30/V4_1").select(0))).rename('elevation') # orthometric heights (EGM96)
     dem_nasa = ee.Image("NASA/NASADEM_HGT/001").select('elevation') # orthometric heights (EGM96)

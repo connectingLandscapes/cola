@@ -51,6 +51,8 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
     ")
 
     outdir <- tempdir()
+    cat("\noutdir: ", adaptFilePath(outdir) )
+
 
     cat('  -- outdir is:', outdir, '\n')
     resistance <- cola::sui2res_py(
@@ -71,6 +73,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
           outtif = file.path(outdir, 'kernels.tif'),
           maxdist = 1000,
+          ncores = 10,
           transform = 'linear',
           shape = 'no',
           volume = '1')
@@ -86,6 +89,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       outtif = file.path(outdir, 'kernels.tif'),
       maxdist = 100000,
       transform = 'no',
+      ncores = 10,
       shape = 'linear',
       volume = '1')
 

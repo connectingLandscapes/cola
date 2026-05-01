@@ -375,3 +375,51 @@ def extract_covariates_at_points2(fc: ee.FeatureCollection = None,
     # fc_cov_ext.size().getInfo() 
     # fc_cov_ext_gi =  fc_cov_ext.getInfo() 
     return fc_cov_ext
+
+
+def make_sample_stack():
+    """Creates default sample covs stack. Needs to be clipped .clip(aoi)
+    :param feat: ee.Feature
+    :return: ee.Feature with covariate fields added
+    """
+    # WorldClim V1 Bioclim
+    bio = ee.Image('WORLDCLIM/V1/BIO')
+    # =============================================================================
+    # NASA SRTM Digital Elevation 30m: This dataset contains digital elevation data 
+    # from the Shuttle Radar Topography Mission (SRTM). The data was primarily colle
+    # cted around the year 2000 and is provided at a resolution of approximately 30 
+    # meters (1 arc-second). The following code calculates elevation, slope, aspect,
+    #  and hillshade layers from the SRTM data.
+    # =============================================================================
+    # NASA SRTM Digital Elevation 30m
+    terrain = ee.Algorithms.Terrain(ee.Image('USGS/SRTMGL1_003'))
+    # =============================================================================
+    # Global Forest Cover Change (GFCC) Tree Cover Multi-Year Global 30m: The Vegeta
+    # tion Continuous Fields (VCF) dataset from Landsat estimates the proportion of 
+    # vertically projected vegetation cover when the vegetation height is greater th
+    # an 5 meters. This dataset is provided for four time periods centered around th
+    # e years 2000, 2005, 2010, and 2015, with a resolution of 30 meters. Here, the 
+    # median values from these four time periods are used.
+    # =============================================================================
+    # Global Forest Cover Change (GFCC) Tree Cover Multi-Year Global 30m
+    tcc = ee.ImageCollection('NASA/MEASURES/GFCC/TC/v3')
+    median_tcc = (
+        tcc.filterDate('2000-01-01', '2015-12-31')
+        .select(['tree_canopy_cover'], ['TCC'])
+        .median()
+    )
+    # =============================================================================
+    # bio (Bioclimatic variables), terrain (topography), and median_tcc (tree canopy
+    #  cover) are combined into a single multiband image. The elevation band is sele
+    # cted from terrain, and a watermask is created for locations where elevation is
+    #  greater than 0. This masks regions below sea level (e.g. the ocean) and prepa
+    # res the researcher to analyze various environmental factors for the AOI compre
+    # hensively.
+    # =============================================================================
+    # Combine bands into a multi-band image
+    predictors = bio.addBands(terrain).addBands(median_tcc)
+    # Create a water mask
+    watermask = terrain.select('elevation').gt(0)
+    # Mask out ocean pixels and clip to the area of interest
+    predictors = predictors.updateMask(watermask)
+    return predictors 
