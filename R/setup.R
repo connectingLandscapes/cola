@@ -6,15 +6,15 @@
 #' @param nSteps The number of steps for printing log in console
 #' @param force Force miniconda installation? Passed to ´reticulate::install_miniconda()´
 #' @param yml Use YML file to build the conda environment? Default FALSE
-#' @param ask Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking
-#' @param dss Install cola DSS as well? Default FALSE
+#' @param ask Ask before installing reticulate, miniconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking
+#' @param dss Install cola DSS as well? Default TRUE
 #' @param pyVer. String. Python version to install
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
-#' @param zarr Logical. Are you planning to use zarr libary? Default FALSE
+#' @param zarr Logical. Are you planning to use zarr libary? Default TRUE
 #' @param cola2 Logical. Installing cola2 python dependencies? Default is FALSE
 #' @param COLA_DATA_PATH String. Path were CoLa DSS results and session folders
 #' @param COLA_NCORES Integer. Number of cores to use
-#' @param COLA_RAMGB Integer. GB or RAM to use
+#' @param COLA_RAMGB Integer. GB or RAM to use in the 'heavy' or Joblib functions. Setting a RAM will allow you to run big analysis
 #' @param COLA_DSS_UPL_MB Integer. In MB, max size of input rasters in the CoLa DSS
 #' @param COLA_VIZ_THRES_PIX Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor
 #' @param COLA_VIZ_RES_NCOL Integer. Number of columns to resample the raster to be displayed in the cola DSS.
@@ -35,8 +35,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                           'kdepy', 'scikit-image')
                         ,
 
-                        yml = FALSE, onlyIndividual = FALSE, ask = TRUE,
-                        dss = FALSE, zarr = FALSE, cola2 = FALSE,
+                        onlyIndividual = FALSE, ask = TRUE,
+                        dss = FALSE, zarr = TRUE,
+                        cola2 = FALSE, yml = FALSE,
                         spyder = FALSE, updateCola = FALSE,
 
                         pyVer = "3.12.11",
@@ -824,15 +825,18 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       pos <- grep('COLA_VIZ_THRES_PIX', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_THRES_PIX=',COLA_VIZ_THRES_PIX)}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <-
+        paste0('COLA_VIZ_THRES_PIX=',format(as.numeric(COLA_VIZ_THRES_PIX), scientific = FALSE))}
 
       pos <- grep('COLA_VIZ_RES_NCOL', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_RES_NCOL=', COLA_VIZ_RES_NCOL)}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <-
+        paste0('COLA_VIZ_RES_NCOL=', format(as.numeric(COLA_VIZ_RES_NCOL), scientific = FALSE))}
 
       pos <- grep('COLA_VIZ_RES_NROW', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-      if (length(pos) == 0){Renviron[length(Renviron) + 1] <- paste0('COLA_VIZ_RES_NROW=', COLA_VIZ_RES_NROW)}
+      if (length(pos) == 0){Renviron[length(Renviron) + 1] <-
+        paste0('COLA_VIZ_RES_NROW=', format(as.numeric(COLA_VIZ_RES_NROW), scientific = FALSE))}
 
       pos <- grep('COLA_SERVER', Renviron)
       # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))

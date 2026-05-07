@@ -31,11 +31,25 @@ def writeTask(task, folder):
     df.to_csv(outFile, index=False)
 
 
-def checkMyTasks ():
+def checkMyTasksSeconds ():
     mytasks = ee.batch.Task.list()
-    for t in mytasks:
-        print(t.status())
+    eecu_secs = 0
+    for e1 in mytasks:
+        eecu_secs  += e1.status().get('batch_eecu_usage_seconds')
+        # print( eecu_secs  )
+    #    
     mytasks2 = ee.data.listOperations()
-    return 1
-    #len(mytasks2)
+    eecu_secs2 = 0
+    for e2 in mytasks2:
+        eecu_secs2 += float(e2.get('metadata').get('batchEecuUsageSeconds'))
+        #print( eecu_secs2 )
+    #
+    return eecu_secs2
 #
+#
+def asset_exists(asset_id):
+    try:
+        ee.data.getAsset(asset_id)
+        return True
+    except ee.EEException:
+        return False

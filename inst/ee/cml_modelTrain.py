@@ -20,6 +20,8 @@ import numpy as np, matplotlib.pyplot as plt
 import requests, math, random
 from ipyleaflet import TileLayer
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+
 import os
 
 # os.chdir('N:/My Drive/git/cola/inst/ee')
@@ -27,13 +29,32 @@ import os
 # C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe "N:/My Drive/git/cola/inst/ee/cml_covsExtraction.py" "N:/My Drive/git/cola/inst/ee/params_extcovs.csv"
 # C:/Users/Admin/AppData/Local/r-miniconda/envs/cola/python.exe "N:/My Drive/git/cola/inst/ee/cml_covsExtraction.py" "N:/My Drive/git/cola/inst/ee/params_extcovs.csv" 
 
-def main() -> None:
-    
+
+def main() -> None:    
     #%% Load EE
+    def asset_exists(asset_id):
+        try:
+            ee.data.getAsset(asset_id)
+            return True
+        except ee.EEException:
+            return False
 
     # INPUTS
     paramcsv = sys.argv[1] # project name
     # paramcsv = "N:/My Drive/git/cola/inst/ee/params_train.csv"
+    
+    try:
+        eelogpath = str(sys.argv[2]) # 
+        if not os.path.isdir(eelogpath):
+            os.makedirs(eelogpath, exist_ok=True)
+        if not os.path.isdir(eelogpath):
+            eelogpath = ""
+    except IndexError:
+        eelogpath = ""
+    # eelogpath = 'C:/Users/ig299/cola'
+    #    
+    #
+    # LOAD PARAMS CSV
     with open(paramcsv) as f:
         dic = dict(filter(None, csv.reader(f)))
     dic
@@ -43,145 +64,134 @@ def main() -> None:
     try:
         ee.Authenticate( )
         ee.Initialize(project = eeproject)
-        print('EE initialized')
-
+        print('  EE initialized')
     except:
         print(' ERROR: no EE initialized')
         exit(1)
-    
+    #
+    points_path = dic.get('ptsWithCovs',False)
+    if points_path is False:
+        print(' ERROR: ptsWithCovs not provided')
+        exit(1)
+    #
+    #
+    # check if dataset+covs are EE or local file
+    if points_path.find('projects/') == 0:
+        try:
+            ee.data.getAsset(points_path)
+            print(' Points file was found in EE')
+            covs_local = False
+        except ee.EEException:
+            print(' ERROR: points path was not found in EE')
+            exit(1)
+    elif os.path.splitdrive(points_path)[0] != '':
+         if not os.path.isfile(points_path):
+             print(' ERROR: local file was not found in EE')
+             exit(1)
+         else:
+             covs_local = True
+    #
+    #       
     ###########################################
     from sat_ts_fusion.imagery import lsat_utils
     from sat_ts_fusion.ccdc import ccdc_utils
-    from sat_ts_fusion.fusion import ancillary_covariates
+    from sat_ts_fusion.fusion import ancillary_covariates as anc
     from sat_ts_fusion.fusion import covariates as covs
-    from sat_ts_fusion import eecolatools
-
+    from sat_ts_fusion import eecolatools as ct
+    
     # from sat_ts_fusion.fusion.models import models
 
-
-    points_path = dic.get('points',False)
-    ee_path = dic.get('path', '') # C:/Users/ig299/cola/
-    eeLogPath = dic.get('eeLogPath','')
+    out_ee_path = dic.get('outEEPath', '') # C:/Users/ig299/cola/
+    out_local_path = dic.get('outLocalPath', '') # C:/Users/ig299/cola/
+    ee_log_path = dic.get('eeLogPath','')
     showplots = dic.get('showPlots',False) #False
     npres = dic.get('nPres',False) #100
     nabs = dic.get('nAbs',False) #100
     nclus = dic.get('nClus',False) #2
-    disfun = dic.get('disFun',False) #Euclidean
-    gridRandScale = dic.get('gridRandScale',False) #50000
+    disfun = dic.get('distFun',False) #Euclidean
+    rand_grid_size = dic.get('randGridSize',False) #50000
+    spat_dup_pixsize = int(dic.get('spatDupPixSize',200)) #50000
     split = dic.get('splot', 0.7)
     numiter = dic.get('numiter', 1)
-    exportScale = dic.get('exportScale',1000)  
-    descExp = dic.get('descExp', '') 
-    pointsBuffMeters = dic.get('pointsBuffMeters', 0)
-    saveIndividuals = dic.get('saveIndividuals',False)
-    pixelSize = dic.get('',False),100
-    removeSpatDup = dic.get('',False)
+    stack_type = int(dic.get('stackType', 1))
+    pointsBuffMeters = int(dic.get('pointsBuffMeters', 0))
+    pixel_size = int(dic.get('pixelSize',False)) # ,100
+    removeSpatDup = dic.get('removeSpatDup',False)
+    area_of_interest = dic.get('areaOfInterest', '')
     
-    num_folds = int(dic.get('numFolds', '0')) # 10
-    num_subforests=int(dic.get('numSubForests', '0')) #10
-    export_scale = int(dic.get('exportScale', '0')) # 30
-    export_crs = dic.get('exportCrs', 'error')# 'EPSG:6350'
+    num_folds = int(dic.get('numFolds', 0)) # 10
+    num_subforests=int(dic.get('numSubForests', 0)) #10
     nodata_value = int(dic.get('noDataValue', -9999)) # -9999
+    run_local = dic.get('runLocal', False) # -9999
+    run_local = False
     
-    
-    region_name = dic.get('regionOfInterest')
+    region_name = dic.get('regionOfInterest', None)
     gcs_mod_path  = dic.get('gcsModPath') #     gcs_mod_path = 'gs://rf_mods/'+region_name+'/'
     
-    pts_path = dic.get('ptsWithCovs', 'error')
-    if pts_path == 'error':
-        print( '  Points file or asset is missing')
-        exit(1)
-    
-    eeFolderPredic = dic.get('eeFolderPredic')
-    saveIndividualResults = dic.get('saveIndividualResults')
+    export_crs = dic.get('exportCrs', 'error')# 'EPSG:6350'
+    export_scale = int(dic.get('exportScale', 0)) # 30
+    export_descr = dic.get('descExp', '') 
+    save_each_results = dic.get('saveIndividualResults', None)
+    export_size = dic.get('exportSize', None)
     seed = dic.get('seed', 'noseed')
-    
+    #
+    #
+    if not os.path.isdir(out_local_path):
+        os.makedirs(out_local_path, exist_ok=True)
+        
+    #%% Load EE
 # =============================================================================
 #     if seed == 'noseed' or int(seed) is not int:
 #         import random
 #         seed = random.randint(1, 100000)
 #         print ( 'Seed used is ', seed)
 # =============================================================================
-    
-    assID
-    eeFolderPredic 
-    
-    pts = pts_path
-    if local:
-        
+    #
+    ## Provide local files
+    if covs_local:
+        print(' Using Local dataset')
+        data = gpd.read_file( points_path ) # species  year  month 
+        data_ee = geemap.geopandas_to_ee(data)
+        # Have local dataset
+        ## Run the things in Python+R
+        #if run_local:
+        #    data = df # Keep local files
+        #else:
+            # Convert local to ee dataset
+            #print('    Converting local to EE')
+            #
+        #
+    ## Provide EE dataset
+    else: 
+        print(' Using EE dataset')
+        data_ee = ee.FeatureCollection( points_path )
+        data = geemap.ee_to_gdf(data_ee)
+        # Convert EE to local
+        if run_local:
+            #data = geemap.ee_to_gdf(df)
+            print('    Converting EE to local')
         else:
-            
-# =============================================================================
-#     gdf = gpd.GeoDataFrame( df,
-#         geometry=gpd.points_from_xy(df.decimalLongitude,
-#                                     df.decimalLatitude),
-#         crs='EPSG:4326')[['species', 'year', 'month', 'geometry']]
-#     gdf = gpd.read_file('Bubalus_depressicornis.gpkg') 
-# =============================================================================
-    gdf = gpd.read_file('ptsa.shp') # species  year  month 
-    
-    
-    filtered_gdf = gdf
-    # =============================================================================
-    # Now, the filtered GeoDataFrame is converted into a Google Earth Engine object.
-    # =============================================================================
-    
-    data_raw = geemap.geopandas_to_ee(filtered_gdf)
-    
-    # Next, wewill define the raster pixelsizeof the SDM results as 1km resolution.
-    # Spatial resolution setting (meters)
-    # =============================================================================
-    # When multiple occurrence points are present within the same 1km resolution ras
-    # ter pixel, there is a high likelihood that they share the same environmental c
-    # onditions at the same geographic location. Using such data directly in the ana
-    # lysis can introduce bias into the results.
-    # 
-    # In other words, we need to limit the potential impact of geographic sampling b
-    # ias. To achieve this, we will retain only one location within each 1km pixel a
-    # nd remove all others, allowing the model to more objectively reflect the envir
-    # onmental conditions.
-    # 
-    # =============================================================================
+            # Keep EE
+            1
+            #data_ee = df
+        #
+    #
+    #
     if removeSpatDup:
-        def remove_duplicates(data, grainSize):
+        def remove_duplicates(data, pixel_size):
             # Select one occurrence record per pixel at the chosen spatial resolution
-            random_raster = ee.Image.random().reproject('EPSG:4326', None, grainSize)
+            random_raster = ee.Image.random().reproject('EPSG:4326', None, spat_dup_pixsize)
             rand_point_vals = random_raster.sampleRegions(
                 collection=ee.FeatureCollection(data), geometries=True
             )
             return rand_point_vals.distinct('random')
         #
-        data = remove_duplicates(data_raw, grainSize)
+        print('  Removing spatial duplicates')
+        print('   --  Original data size:', data_ee.size().getInfo())
+        data_ee = remove_duplicates(data_ee, pixel_size)
         # Before selection and after selection
-        print('   --  Original data size:', data_raw.size().getInfo())
-        print('   -- Final data size:', data.size().getInfo())
+        print('   -- Final data size:', data_ee.size().getInfo())
     
-    # =============================================================================
-    # The visualization comparing geographic sampling bias before preprocessing (in 
-    # blue) and after preprocessing (in red) is shown below. To facilitate compariso
-    # n, the map has been centered on the area with a high concentration of Fairy pi
-    # tta occurrence coordinates in Hallasan National Park.
-    # =============================================================================
-    # Visualization of geographic sampling bias before (blue) and after (red) prepro
-    # cessing
-    
-     if showplots:
-        Map = geemap.Map(layout={'height': '400px', 'width': '800px'})
-        # Add the random raster layer
-        random_raster = ee.Image.random().reproject('EPSG:4326', None, grainSize)
-        Map.addLayer(
-            random_raster,
-            {'min': 0, 'max': 1, 'palette': ['black', 'white'], 'opacity': 0.5},
-            'Random Raster',
-        )
-        # Add the original data layer in blue
-        Map.addLayer(data_raw, {'color': 'blue'}, 'Original data')
-        # Add the final data layer in red
-        Map.addLayer(data, {'color': 'red'}, 'Final data')
-        # Set the center of the map to the coordinates
-        Map.setCenter(126.712, 33.516, 14)
-        Map
-    #
     # =============================================================================
     # Definition of the Area of Interest
     # Defining the Area of Interest (AOI below) refers to the term used by researche
@@ -191,36 +201,29 @@ def main() -> None:
     # In this context, we obtained the bounding box of the occurrence point layer ge
     # ometry and created a 50-kilometer buffer around it (with a maximum tolerance o
     # f 1,000 meters) to define the AOI.
-    # 
     # =============================================================================
-    # Define the AOI
-    if aoiPath =! "":
-        # Create aoi
-        aoi = data.geometry().bounds().buffer(distance=pointsBuffMeters, maxError=1000)
-    else:
-        # load aoi
-        aoi = ee.FeatureCollection(aoiPath).first()
     
-     if showplots:     
-        # Add the AOI to the map
-        outline = ee.Image().byte().paint(
-            featureCollection=aoi, color=1, width=3)
-        Map.remove_layer('Random Raster')
-        Map.addLayer(outline, {'palette': 'FF0000'}, 'AOI')
-        Map.centerObject(aoi, 6)
-        Map
-    #Map.to_image(filename="C:/Users/ig299/cola/map.png")
-
-    # We will convert the extracted predictor values for each point into a DataFrame
-    #  and then check the first row.
-    # =============================================================================
+    
+    # Define the AOI
+    if area_of_interest != "":
+        # load aoi
+        if asset_exists(area_of_interest):
+            aoi = ee.FeatureCollection(area_of_interest).first()
+        else:
+            print(' AOI not found ', area_of_interest)
+    else:
+        # Create aoi
+        aoi = data_ee.geometry().bounds().buffer(distance=pointsBuffMeters, maxError=1000)
+        if  not run_local:
+            1
+  
     # Converting predictor values from Earth Engine to a DataFrame
     
     # =============================================================================
     # Calculating Spearman correlation coefficients between the given predictor vari
     # ables and visualizing them in a heatmap.
     # =============================================================================
-    def plot_correlation_heatmap(dataframe, h_size=10, show_labels=False, path = '', showplots = False):
+    def plot_correlation_heatmap(dataframe, h_size=20, show_labels=False, path = '', showplots = False, idd = '_'):
         # Calculate Spearman correlation coefficients
         correlation_matrix = dataframe.corr(method='spearman')
         # Create a heatmap
@@ -237,14 +240,22 @@ def main() -> None:
         plt.yticks(range(len(columns)), columns)
         plt.title('Variables Correlation Matrix')
         plt.colorbar(label='Spearman Correlation')
-        plt.savefig(path + 'correlation_heatmap_plot.png')
+        if path != '':
+            try:
+                plt.savefig(path + '/correlation_heatmap_plot_' + idd + '.png')
+            except:
+                print(" Can't save the correlation heatmap plot")  
         if not showplots:
             plt.close()
             plt.ioff()
         else:
             plt.show()
+    #
+    #
     # Plot the correlation heatmap of variables
-    plt_cor = plot_correlation_heatmap(pvals_df)
+    #if run_local:
+    plt_cor = plot_correlation_heatmap(dataframe=data.select_dtypes(exclude=['object','geometry', 'string']), 
+                                       path = out_local_path)
     
     
     # =============================================================================
@@ -266,7 +277,11 @@ def main() -> None:
     # =============================================================================
     # Filter variables based on Variance Inflation Factor (VIF)
     def filter_variables_by_vif(dataframe, threshold=10):
-        original_columns = dataframe.columns.tolist()
+        # dataframe = data
+        ignore_columns = ['geometry', 'preabs', 'lc', 'Latitude', 'Longitude', 'date', 'wrong']
+        df = dataframe.select_dtypes(exclude=['object', 'string'])
+        df = df.drop(columns=ignore_columns, errors='ignore')
+        original_columns = df.columns.tolist()
         remaining_columns = original_columns[:]
         while True:
             vif_data = dataframe[remaining_columns]
@@ -280,146 +295,27 @@ def main() -> None:
                 break
             print(f"Removing '{remaining_columns[max_vif_index]}' with VIF {max_vif:.2f}")
             del remaining_columns[max_vif_index]
-        filtered_data = dataframe[remaining_columns]
-        bands = filtered_data.columns.tolist()
+        removed_columns = list(set(original_columns) - set(remaining_columns))
+        #filtered_data = dataframe[remaining_columns]
+        bands = remaining_columns # filtered_data.columns.tolist()
         print('Bands:', bands)
-        return filtered_data, bands
+        return bands, removed_columns, ignore_columns
     
-    filtered_pvals_df, bands = filter_variables_by_vif(pvals_df)
+    #if run_local:
     # Variable Selection Based on VIF
-    predictors = predictors.select(bands)
+    selected_columns, removed_columns, ignore_columns = filter_variables_by_vif(data)
+    
     # Plot the correlation heatmap of variables
-    p_corrh = plot_correlation_heatmap(filtered_pvals_df, h_size=6, show_labels=True)
+    p_corrh = plot_correlation_heatmap(data[selected_columns], h_size=6, show_labels=True)
     
-    # =============================================================================
-    # Next, let's visualize the 6 selected predictor variables on the map. Predictor
-    #  Variables for Analysis
-    # 
-    # You can explore the available palettes for map visualization using the followi
-    # ng code. For example, the terrain palette looks like this. cm.plot_colormaps(w
-    # idth=8.0, height=0.2)
-    # 
-    # =============================================================================
     
-    if showplots:
-        cm.plot_colormap('terrain', width=8.0, height=0.2, orientation='horizontal')
-        # Elevation layer
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'})
-        vis_params = {'bands':['elevation'], 'min': 0, 'max': 1800, 'palette': cm.palettes.terrain}
-        Map.addLayer(predictors, vis_params, 'elevation')
-        Map.add_colorbar(vis_params, label='Elevation (m)', orientation='vertical', layer_name='elevation')
-        Map.centerObject(aoi, 6)
-        Map
-    
-        
-        # Calculate the minimum and maximum values for bio09
-        min_max_val = (
-            predictors.select('bio09')
-            .multiply(0.1)
-            .reduceRegion(reducer=ee.Reducer.minMax(), scale=1000)
-            .getInfo()
-        )
-        # bio09 (Mean temperature of driest quarter) layer
-        Map = geemap.Map(layout={'height': '400px', 'width': '800px'})
-        vis_params = {
-            'min': math.floor(min_max_val['bio09_min']),
-            'max': math.ceil(min_max_val['bio09_max']),
-            'palette': cm.palettes.hot,
-        }
-        Map.addLayer(predictors.select('bio09').multiply(0.1), vis_params, 'bio09')
-        Map.add_colorbar(
-            vis_params,
-            label='Mean temperature of driest quarter (℃)',
-            orientation='vertical',
-            layer_name='bio09',
-        )
-        Map.centerObject(aoi, 6)
-        Map
-        # Slope layer
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'})
-        vis_params = {'bands':['slope'], 'min': 0, 'max': 25, 'palette': cm.palettes.RdYlGn_r}
-        Map.addLayer(predictors, vis_params, 'slope')
-        Map.add_colorbar(vis_params, label='Slope', orientation='vertical', layer_name='slope')
-        Map.centerObject(aoi, 6)
-        Map
-        # Aspect layer
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'})
-        vis_params = {'bands':['aspect'], 'min': 0, 'max': 360, 'palette': cm.palettes.rainbow}
-        Map.addLayer(predictors, vis_params, 'aspect')
-        Map.add_colorbar(vis_params, label='Aspect', orientation='vertical', layer_name='aspect')
-        Map.centerObject(aoi, 6)
-        Map
-        # Calculate the minimum and maximum values for bio14
-        min_max_val = (
-            predictors.select('bio14')
-            .reduceRegion(reducer=ee.Reducer.minMax(), scale=1000)
-            .getInfo()
-        )
-        # bio14 (Precipitation of driest month) layer
-        Map = geemap.Map(layout={'height': '400px', 'width': '800px'})
-        vis_params = {
-            'bands': ['bio14'],
-            'min': math.floor(min_max_val['bio14_min']),
-            'max': math.ceil(min_max_val['bio14_max']),
-            'palette': cm.palettes.Blues,
-        }
-        Map.addLayer(predictors, vis_params, 'bio14')
-        Map.add_colorbar(
-            vis_params,
-            label='Precipitation of driest month (mm)',
-            orientation='vertical',
-            layer_name='bio14',
-        )
-        Map.centerObject(aoi, 6)
-        Map
-        # TCC layer
-        Map = geemap.Map(layout={'height': '400px', 'width': '800px'})
-        vis_params = {
-            'bands': ['TCC'],
-            'min': 0,
-            'max': 100,
-            'palette': ['ffffff', 'afce56', '5f9c00', '0e6a00', '003800'],
-        }
-        Map.addLayer(predictors, vis_params, 'TCC')
-        Map.add_colorbar(
-            vis_params, label='Tree Canopy Cover (%)', orientation='vertical', layer_name='TCC'
-        )
-        Map.centerObject(aoi, 6)
-        Map
+    ## Create predictors stack
+    anc_static_cov_img = anc.precooked_mosaic(stack = stack_type ) 
+    # anc_static_cov_img.bandNames().getInfo()
+    predictors = anc_static_cov_img.select( selected_columns )
+    # predictors.bandNames().getInfo()
+    # 
     # =============================================================================
-    # Generation of pseudo-absence data
-    # In the process of SDM, the selection of input data for a species is mainly app
-    # roached using two methods:
-    # 
-    # Presence-Background Method: This method compares the locations where a particu
-    # lar species has been observed (presence) with other locations where the specie
-    # s has not been observed (background). Here, the background data does not neces
-    # sarily mean areas where the species does not exist but rather is set up to ref
-    # lect the overall environmental conditions of the study area. It is used to dis
-    # tinguish suitable environments where the species could exist from less suitabl
-    # e ones.
-    # 
-    # Presence-Absence Method: This method compares locations where the species has 
-    # been observed (presence) with locations where it has definitively not been obs
-    # erved (absence). Here, absence data represents specific locations where the sp
-    # ecies is known not to exist. It does not reflect the overall environmental con
-    # ditions of the study area but rather points to locations where the species is 
-    # estimated not to exist.
-    # 
-    # In practice, it is often difficult to collect true absence data, so pseudo-abs
-    # ence data generated artificially is frequently used. However, it's important t
-    # o acknowledge the limitations and potential errors of this method, as artifici
-    # ally generated pseudo-absence points may not accurately reflect true absence a
-    # reas.
-    # 
-    # The choice between these two methods depends on data availability, research ob
-    # jectives, model accuracy and reliability, as well as time and resources. Here,
-    #  we will use occurrence data collected from GBIF and artificially generated ps
-    # eudo-absence data to model using the 'Presence-Absence' method.
-    # 
-    # The generation of pseudo-absence data will be done through the 'environmental 
-    # profiling approach', and the specific steps are as follows:
-    # 
     # Environmental Classification Using k-means Clustering: The k-means clustering 
     # algorithm, based on Euclidean distance, will be used to divide the pixels with
     # in the study area into two clusters. One cluster will represent areas with sim
@@ -431,44 +327,44 @@ def main() -> None:
     # acteristics from the presence data), randomly generated pseudo-absence points 
     # will be created. These pseudo-absence points will represent locations where th
     # e species is not expected to exist.
-    # 
     # =============================================================================
     
     # Randomly select 100 locations for occurrence
-    pvals = predictors.sampleRegions(
-        collection=data.randomColumn().sort('random').limit(nabs),
-        properties=[],
-        scale=grainSize
-    )
-    # Perform k-means clustering
-    clusterer = ee.Clusterer.wekaKMeans(
-        nClusters=nclus,
-        distanceFunction=disfun
-    ).train(pvals)
-    cl_result = predictors.cluster(clusterer)
-    # Get cluster ID for locations similar to occurrence
-    cl_id = cl_result.sampleRegions(
-        collection=data.randomColumn().sort('random').limit(200),
-        properties=[],
-        scale=grainSize
-    )
-    # Define non-occurrence areas in dissimilar clusters
-    cl_id = ee.FeatureCollection(cl_id).reduceColumns(ee.Reducer.mode(),['cluster'])
-    cl_id = ee.Number(cl_id.get('mode')).subtract(1).abs()
-    cl_mask = cl_result.select(['cluster']).eq(cl_id)
-    # Presence location mask
-    presence_mask = data.reduceToImage(properties=['random'],
-    reducer=ee.Reducer.first()
-    ).reproject('EPSG:4326', None,
-                grainSize).mask().neq(1).selfMask()
-    # Masking presence locations in non-occurrence areas and clipping to AOI
-    area_for_pa = presence_mask.updateMask(cl_mask).clip(aoi)
-    # Area for Pseudo-absence
-    if showplots:
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'})
-        Map.addLayer(area_for_pa, {'palette': 'black'}, 'AreaForPA')
-        Map.centerObject(aoi, 6)
-        Map
+    # Presence 
+    #pvals = predictors.sampleRegions(
+    #    collection=data.randomColumn().sort('random').limit(nabs),
+    #    properties=[],
+     #   scale=pixel_size
+    #)
+    sim_pseabs = False
+    if sim_pseabs:
+        pvals = data_ee.filterMetadata('preabs', 'equals', 1).limit(int(npres)).select(selected_columns)
+        
+        # Perform k-means clustering
+        clusterer = ee.Clusterer.wekaKMeans(
+            nClusters=int(nclus),
+            distanceFunction=str(disfun)
+        ).train(pvals)
+        
+        cl_result = predictors.cluster(clusterer)
+        # Get cluster ID for locations similar to occurrence
+        cl_id = cl_result.sampleRegions(
+            collection=data_ee.randomColumn().sort('random').limit(200),
+            properties=[],
+            scale=finalmap 
+        )
+        # Define non-occurrence areas in dissimilar clusters
+        cl_id = ee.FeatureCollection(cl_id).reduceColumns(ee.Reducer.mode(),['cluster'])
+        cl_id = ee.Number(cl_id.get('mode')).subtract(1).abs()
+        cl_mask = cl_result.select(['cluster']).eq(cl_id)
+        # Presence location mask
+        presence_mask = data_ee.reduceToImage(properties=['random'],
+                                              reducer=ee.Reducer.first()
+                                              ).reproject('EPSG:4326', None,
+                                                          pixel_size).mask().neq(1).selfMask()
+        # Masking presence locations in non-occurrence areas and clipping to AOI
+        area_for_pa = presence_mask.updateMask(cl_mask).clip(aoi)
+
     # =============================================================================
     # Model fitting and prediction
     # We will now divide the data into training data and test data. The training dat
@@ -508,18 +404,15 @@ def main() -> None:
     # randomly generated to evaluate the model's performance.
     # 
     # =============================================================================
-    
+    #rand_grid_size = 100
+    terrain = ee.Algorithms.Terrain(ee.Image('USGS/SRTMGL1_003'))
+    watermask = terrain.select('elevation').gt(0)
     grid = watermask.reduceRegions(
-        collection=aoi.coveringGrid(scale=scale_, proj='EPSG:4326'),
+        collection=aoi.coveringGrid(scale=int(rand_grid_size), proj='EPSG:4326'),
         reducer=ee.Reducer.mean()).filter(ee.Filter.neq('mean', None))
+    #grid.size().getInfo()
     
-    if showplots:
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'})
-        Map.addLayer(grid, {}, 'Grid for spatial block cross validation')
-        Map.addLayer(outline, {'palette': 'FF0000'}, 'Study Area')
-        Map.centerObject(aoi, 6)
-        Map
-    # =============================================================================
+      # =============================================================================
     # Now we can fit the model. Fitting a model involves understanding the patterns 
     # in the data and adjusting the model's parameters (weights and biases) accordin
     # gly. This process enables the model to make more accurate predictions when pre
@@ -528,60 +421,63 @@ def main() -> None:
     # 
     # We will use the Random Forest algorithm.
     # =============================================================================
+    
+    presence_points = data_ee.filterMetadata('preabs', 'equals', 1).limit(int(npres)).select(selected_columns + ['preabs'])
+    absence_points = data_ee.filterMetadata('preabs', 'equals', 0).limit(int(nabs)).select(selected_columns + ['preabs'] )
+    #presence_points.first().getInfo() 
+    # data_ee.size().getInfo() 
+    # presence_points.size().getInfo() 
+    # absence_points.size().getInfo()
+    
     def sdm(x, save = False, eelogpath = ''):
+        # x = 305
         seed = ee.Number(x)
         # Random block division for training and validation
         rand_blk = ee.FeatureCollection(grid).randomColumn(seed=seed).sort('random')
         training_grid = rand_blk.filter(ee.Filter.lt('random', split))  # Grid for training
         testing_grid = rand_blk.filter(ee.Filter.gte('random', split))  # Grid for testing
         # Presence points
-        presence_points = ee.FeatureCollection(data)
-        presence_points = presence_points.map(lambda feature: feature.set('PresAbs', 1))
-        tr_presence_points = presence_points.filter(
-            ee.Filter.bounds(training_grid)
-        )  # Presence points for training
-        te_presence_points = presence_points.filter(
-            ee.Filter.bounds(testing_grid)
-        )  # Presence points for testing
+        #presence_points = ee.FeatureCollection(data)
+        #presence_points = presence_points.map(lambda feature: feature.set('PresAbs', 1))
+
+        tr_presence_points = presence_points.filter( ee.Filter.bounds(training_grid) )  # Presence points for training
+        te_presence_points = presence_points.filter( ee.Filter.bounds(testing_grid) )  # Presence points for testing
+        # tr_presence_points.size().getInfo() 
+        # te_presence_points.size().getInfo()
+        
         # Pseudo-absence points for training
-        tr_pseudo_abs_points = area_for_pa.sample(
-            region=training_grid,
-            scale=grainSize,
-            numPixels=tr_presence_points.size().add(300),
-            seed=seed,
-            geometries=True,
-        )
+        # tr_pseudo_abs_points = area_for_pa.sample(
+        #    region=training_grid, scale=pixel_size,
+        #    numPixels=tr_presence_points.size().add(300),
+        #    seed=seed, geometries=True)
+        tr_pseudo_abs_points = absence_points.filter( ee.Filter.bounds(training_grid) )
+        te_pseudo_abs_points = absence_points.filter( ee.Filter.bounds(testing_grid) )
+        # tr_pseudo_abs_points.size().getInfo() 
+        # te_pseudo_abs_points.size().getInfo()
+        
         # Same number of pseudo-absence points as presence points for training
-        tr_pseudo_abs_points = (
-            tr_pseudo_abs_points.randomColumn()
-            .sort('random')
-            .limit(ee.Number(tr_presence_points.size()))
-        )
-        tr_pseudo_abs_points = tr_pseudo_abs_points.map(lambda feature: feature.set('PresAbs', 0))
-        te_pseudo_abs_points = area_for_pa.sample(
-            region=testing_grid,
-            scale=grainSize,
-            numPixels=te_presence_points.size().add(100),
-            seed=seed,
-            geometries=True,
-        )
+        #tr_pseudo_abs_points = (tr_pseudo_abs_points.randomColumn().sort('random').limit(ee.Number(tr_presence_points.size()))        )
+        #tr_pseudo_abs_points = tr_pseudo_abs_points.map(lambda feature: feature.set('PresAbs', 0))
+        
+        #te_pseudo_abs_points = area_for_pa.sample(region=testing_grid, scale=pixel_size,
+         #  numPixels=te_presence_points.size().add(100),seed=seed,geometries=True )
         # Same number of pseudo-absence points as presence points for testing
-        te_pseudo_abs_points = (
-            te_pseudo_abs_points.randomColumn()
-            .sort('random')
-            .limit(ee.Number(te_presence_points.size()))
-        )
-        te_pseudo_abs_points = te_pseudo_abs_points.map(lambda feature: feature.set('PresAbs', 0))
+        #te_pseudo_abs_points = ( te_pseudo_abs_points.randomColumn()
+         #   .sort('random').limit(ee.Number(te_presence_points.size())))
+        #te_pseudo_abs_points = te_pseudo_abs_points.map(lambda feature: feature.set('PresAbs', 0))
         # Merge training and pseudo-absence points
+        
         training_partition = tr_presence_points.merge(tr_pseudo_abs_points)
         testing_partition = te_presence_points.merge(te_pseudo_abs_points)
+        # training_partition.size().getInfo()
+        # testing_partition.size().getInfo()
+        
         # Extract predictor variable values at training points
-        train_pvals = predictors.sampleRegions(
-            collection=training_partition,
-            properties=['PresAbs'],
-            scale=grainSize,
-            geometries=True,
-        )
+        #train_pvals = predictors.sampleRegions(
+        #    collection=training_partition, properties=['PresAbs'],
+        #    scale=pixel_size, geometries=True,
+        #)
+        
         # Random Forest classifier
         classifier = ee.Classifier.smileRandomForest(
             numberOfTrees=500,
@@ -593,22 +489,42 @@ def main() -> None:
         )
         # Presence probability: Habitat suitability map
         classifier_pr = classifier.setOutputMode('PROBABILITY').train(
-            train_pvals, 'PresAbs', bands
+            training_partition, 'preabs', selected_columns
         )
-        classified_img_pr = predictors.select(bands).classify(classifier_pr)
+        classified_img_pr = predictors.classify(classifier_pr)
+        
+        if save:        
+            taskA = ee.batch.Export.image.toAsset(
+                image = classified_img_pr ,
+                assetId = str(out_ee_path + '/export_classified_img_pr'+str(x)).replace('//', '/'),
+                description = 'classified_img_pr'+str(x) ,
+                scale = export_scale,  region = grid.geometry(), #crs=export_crs,
+                maxPixels=1e13)
+            taskA.start()
+        
         # Binary presence/absence map: Potential distribution map
         classifier_bin = classifier.setOutputMode('CLASSIFICATION').train(
-            train_pvals, 'PresAbs', bands
+            training_partition, 'preabs', selected_columns
         )
-        classified_img_bin = predictors.select(bands).classify(classifier_bin)
+        classified_img_bin = predictors.classify(classifier_bin)
         
+        if save:        
+            taskB = ee.batch.Export.image.toAsset(
+                image = classified_img_bin ,
+                assetId = str(out_ee_path + '/export_classified_img_bin_'+str(x)).replace('//', '/'),
+                description = 'classified_img_bin_'+str(x) ,
+                scale = export_scale,  region = grid.geometry(), #crs=export_crs,
+                maxPixels=1e13)
+            taskB.start()
         
-        return [
-            classified_img_pr,
-            classified_img_bin,
-            training_partition,
-            testing_partition,
-        ], classifier_pr
+        answer = [classified_img_pr, classified_img_bin, training_partition, testing_partition], classifier_pr
+        
+        return answer
+    #
+    #
+    #
+    #
+    
     # =============================================================================
     # Spatial blocks are divided into 70% for model training and 30% for model testi
     # ng, respectively. Pseudo-absence data are randomly generated within each train
@@ -624,9 +540,12 @@ def main() -> None:
     # items = [287, 288, 553, 226, 151, 255, 902, 267, 419, 538]
     results_list = [] # Initialize SDM results list
     importances_list = [] # Initialize variable importance list
+    #
     for item in items:
-        result, trained = sdm(item)
-        # Accumulate SDM results into the list
+        print( item )
+        result, partition, trained = sdm(item)
+        # result, partition, trained = answer
+        ## Accumulate SDM results into the list
         results_list.extend(result)
         # Accumulate variable importance into the list
         importance = ee.Dictionary(trained.explain()).get('importance')
@@ -634,7 +553,7 @@ def main() -> None:
     
     # Flatten the SDM results list
     results = ee.List(results_list).flatten()
-    gir = results.getInfo()
+    # gir = results.getInfo()
     # =============================================================================
     # Now we can visualize the habitat suitability map and potential distribution ma
     # p for the Fairy pitta. In this case, the habitat suitability map is created by
@@ -653,55 +572,28 @@ def main() -> None:
     
     model_average = ee.ImageCollection.fromImages(images).mean()
     
-    if showplots:
-        #
-        Map = geemap.Map(layout={'height':'400px', 'width':'800px'}, basemap='Esri.WorldImagery')
-        vis_params = {
-            'min': 0,
-            'max': 1,
-            'palette': cm.palettes.viridis_r}
-        Map.addLayer(model_average, vis_params, 'Habitat suitability')
-        Map.add_colorbar(vis_params, label='Habitat suitability',
-                         orientation='horizontal',
-                         layer_name='Habitat suitability')
-        Map.addLayer(data, {'color':'red'}, 'Presence')
-        Map.centerObject(aoi, 6)
-        Map
+
     # Potential distribution map
     images2 = ee.List.sequence(1, ee.Number(numiter).multiply(4).subtract(1), 4).map(
         lambda x: results.get(x)
     )
-    distribution_map = ee.ImageCollection.fromImages(images2).mode()
+    distribution_map = ee.ImageCollection.fromImages(images2).mode().rename('binary')
     distribution_map.id
     
+    finalmap = model_average.rename('average') 
+    finalmap = finalmap.addBands(distribution_map )
+    # xgi = finalmap.getInfo() 
     
-    taskk = ee.batch.Export.image.toAsset(image = distribution_map,
-                                          assetId = assID,
-                                          description = descExp ,
-                                          scale=export_scale, 
-                                          region=grid.geometry(),
+    taskk = ee.batch.Export.image.toAsset(image = distribution_map ,
+                                          assetId = str(out_ee_path + '/export_finalmap').replace('//', '/'),
+                                          description = export_descr ,
+                                          scale = export_scale, 
+                                          region = grid.geometry(),
                                           #crs=export_crs,
                                           maxPixels=1e13)
     taskk.start()
      
-    #
-    if showplots:
-        #
-        Map = geemap.Map(
-            layout={'height': '400px', 'width': '800px'}, basemap='Esri.WorldImagery'
-        )
-        vis_params = {'min': 0, 'max': 1, 'palette': ['white', 'green']}
-        Map.addLayer(distribution_map, vis_params, 'Potential distribution')
-        Map.addLayer(data, {'color': 'red'}, 'Presence')
-        Map.add_colorbar(
-            vis_params,
-            label='Potential distribution',
-            discrete=True,
-            orientation='horizontal',
-            layer_name='Potential distribution',
-        )
-        Map.centerObject(data.geometry(), 6)
-        Map
+   
     # =============================================================================
     # Variable importance and accuracy assessment
     # Random Forest (ee.Classifier.smileRandomForest) is one of the ensemble learnin
@@ -742,14 +634,14 @@ def main() -> None:
         # Adjust the x-axis range
         plt.xlim(0, max(avg_importances) + 5)  # Adjust to the desired range
         plt.tight_layout()
-        plt.savefig(path + 'variable_importance.png')
+        plt.savefig(path + '/variable_importance.png')
         if not showplots:
             plt.close()
             plt.ioff()
         else:
             plt.show()
     #    
-    plot_variable_importance(importances_list, path=path, showplots=showplots)
+    plot_variable_importance(importances_list, path=out_local_path, showplots=showplots)
     # =============================================================================
     # Using the Testing Datasets, we calculate AUC-ROC and AUC-PR for each run. Then
     # , we compute the average AUC-ROC and AUC-PR over n iterations.
@@ -799,9 +691,9 @@ def main() -> None:
     
     print_pres_abs_sizes(testing_datasets, numiter)
     #
-    def get_acc(hsm, t_data, grainSize):
+    def get_acc(hsm, t_data, pixel_size):
         pr_prob_vals = hsm.sampleRegions(
-            collection=t_data, properties=['PresAbs'], scale=grainSize
+            collection=t_data, properties=['PresAbs'], scale=pixel_size
         )
         seq = ee.List.sequence(start=0, end=1, count=25)  # Divide 0 to 1 into 25 intervals
         def calculate_metrics(cutoff):
@@ -850,12 +742,12 @@ def main() -> None:
             )
         return ee.FeatureCollection(seq.map(calculate_metrics))
         #
-    def calculate_and_print_auc_metrics(images, testing_datasets, grainSize, numiter, path):
+    def calculate_and_print_auc_metrics(images, testing_datasets, pixel_size, numiter, path):
         # Calculate AUC-ROC and AUC-PR
         def calculate_auc_metrics(x):
             hsm = ee.Image(images.get(x))
             t_data = ee.FeatureCollection(testing_datasets.get(x))
-            acc = get_acc(hsm, t_data, grainSize)
+            acc = get_acc(hsm, t_data, pixel_size)
             # Calculate AUC-ROC
             x = ee.Array(acc.aggregate_array('FPR'))
             y = ee.Array(acc.aggregate_array('TPR'))
@@ -884,9 +776,10 @@ def main() -> None:
         mean_auc_pr, std_auc_pr = df['AUC-PR'].mean(), df['AUC-PR'].std()
         print(f'Mean AUC-ROC = {mean_auc_roc:.4f} ± {std_auc_roc:.4f}')
         print(f'Mean AUC-PR = {mean_auc_pr:.4f} ± {std_auc_pr:.4f}')
-    %%time
+    
+    #%%time
     # Calculate AUC-ROC and AUC-PR
-    metr = calculate_and_print_auc_metrics(images, testing_datasets, grainSize, numiter, path = path)
+    metr = calculate_and_print_auc_metrics(images, testing_datasets, pixel_size, numiter, path = path)
     metr
 # End function
 #%%

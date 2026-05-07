@@ -151,7 +151,8 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
     }
 
 
-    cat("\n\ncorridors_joblib <- lccJoblib_py(
+    cat("\n\n
+    corridors_joblib <- lccJoblib_py(
           inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
           intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
           outtif = file.path(outdir, 'corridors_joblib.tif'),

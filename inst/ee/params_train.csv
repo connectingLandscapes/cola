@@ -1,19 +1,24 @@
 header,Keep this line
 eeProject,gonzalezivan
-points,projects/gonzalezivan/assets/cola/anoa66
-path,C:/Users/ig299/cola/
+ptsWithCovs,projects/gonzalezivan/assets/cola/a_covext
+outEEPath,projects/gonzalezivan/assets/cola/
+outLocalPath,C:/Users/ig299/cola/eetests
+stackType,1
+runLocal,True
 showPlots,False
+descExp,Export binary 
 nPres,100
 nAbs,100
 nClus,2
-disSun,Euclidean
-gridRandScale,50000
+distFun,Euclidean
+randGridSize,50000
+spatDupPixSize,250
 split,0.7
-numIter, 10
-exportScale, 1000 
-descExp, Export binary 
-pointsBuffMeters, 100
-saveIndividuals,True
-eeLogPath,
-pixelSize,100
+numIter,10
+exportScale,1000 
+pointsBuffMeters,100
+saveIndividualResults,True
+pixelSize,1000
+exportSize,1000
 removeSpatDup,False
+areaOfInterest,

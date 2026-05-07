@@ -1,7 +1,7 @@
 import ee
 
 
-def precooked_mosaic(stack = 1):
+def precooked_mosaic(stack = 1, yyyy = 2020):
     """Create default stack
     :param stack : integer
     :return: mosaiced ee.Image
@@ -15,15 +15,41 @@ def precooked_mosaic(stack = 1):
             tcc.filterDate('2000-01-01', '2015-12-31')
             .select(['tree_canopy_cover'], ['TCC'])
             .median() )
-        
+        #
+        predictors = bio.addBands(terrain).addBands(median_tcc)
+        # Create a water mask
+        watermask = terrain.select('elevation').gt(0)
+        # Mask out ocean pixels and clip to the area of interest
+        def_stack = make_covar_topo_stack()
+        # def_stack.bandNames().getInfo()
+        gg_stack = get_google_sat_embed( yyyy )
+        # gg_stack.bandNames().getInfo()
+        predictors = predictors.addBands( def_stack )
+        predictors = predictors.addBands( gg_stack )
+        predictors = predictors.updateMask(watermask)
+        # predictors.bandNames().getInfo()
+    #
+    elif stack == 2:
+        predictors = make_covar_topo_stack()    
+        # predictors.bandNames().getInfo()
+    #
+    elif stack == 3:
+        bio = ee.Image('WORLDCLIM/V1/BIO')
+        terrain = ee.Algorithms.Terrain(ee.Image('USGS/SRTMGL1_003'))
+        tcc = ee.ImageCollection('NASA/MEASURES/GFCC/TC/v3')
+        median_tcc = (
+            tcc.filterDate('2000-01-01', '2015-12-31')
+            .select(['tree_canopy_cover'], ['TCC'])
+            .median() )
+        #
         predictors = bio.addBands(terrain).addBands(median_tcc)
         # Create a water mask
         watermask = terrain.select('elevation').gt(0)
         # Mask out ocean pixels and clip to the area of interest
         predictors = predictors.updateMask(watermask)
-    elif stack == 2:
-        predictors = make_covar_topo_stack()
-            
+        # predictors.bandNames().getInfo()
+        #
+    #
     return predictors 
 
 
@@ -45,15 +71,18 @@ def mosaic_gee_ic(ic:ee.ImageCollection = None):
 def get_best_dem():
     """Stack several available digital elevation models (ranked from best to worst) and take the first non null value
 
-    :return: DEM image
+    :return: DEM image ['elevation']
     """
     # order DEMs (best to worst)
-    dem_3dep = ee.Image("USGS/3DEP/10m_collection").select('elevation') # orthometric heights (NAVD88) #before: '10m' wo collection
+    #dem_3dep2 = ee.ImageCollection("USGS/3DEP/10m_collection").select('elevation').first() # orthometric heights (NAVD88) #before: '10m' wo collection
+    dem_3dep = ee.Image("USGS/3DEP/10m").select('elevation') # orthometric heights (NAVD88) #before: '10m' wo collection
+    # dem_3dep.bandNames().getInfo()
     dem_glo30 = ee.Image(mosaic_gee_ic(ee.ImageCollection("COPERNICUS/DEM/GLO30").select(0))).rename('elevation') # orthometric heights (EGM2008)
     dem_alos = ee.Image(mosaic_gee_ic(ee.ImageCollection("JAXA/ALOS/AW3D30/V4_1").select(0))).rename('elevation') # orthometric heights (EGM96)
     dem_nasa = ee.Image("NASA/NASADEM_HGT/001").select('elevation') # orthometric heights (EGM96)
     dem_ic = ee.ImageCollection(ee.List([dem_3dep, dem_glo30, dem_alos, dem_nasa]))
     best_dem = ee.Image(dem_ic.reduce(ee.Reducer.firstNonNull())).reproject(crs='EPSG:4326', crsTransform=None, scale=30).rename('elevation')
+    # best_dem.bandNames().getInfo()
     return best_dem
 
 
@@ -68,12 +97,19 @@ def make_covar_topo_stack(dem:ee.Image = get_best_dem()):
     :param dem: ee.Image digital elevation model
     :return: an image with these bands: elevation, slope (in radians), aspect (in radians)
     """
+    # dem = get_best_dem()
+    # dem.bandNames().getInfo()
     slope_rad = ee.Image(degrees_to_radians(ee.Terrain.slope(dem)))
+    # slope_rad.bandNames().getInfo()
     aspect_rad = ee.Image(degrees_to_radians(ee.Terrain.aspect(dem)))
+    # slope_rad.bandNames().getInfo()
     topo_img_stack = (ee.Image.cat([dem, slope_rad, aspect_rad])
                               .rename(['elevation', 'slope_rad', 'aspect_rad']))
-    return topo_img_stack.set({'temporal_res': 'static',
-                               'nominal_spatial_res': 30})
+    # topo_img_stack.bandNames().getInfo()
+    stk = topo_img_stack.set({'temporal_res': 'static',
+                        'nominal_spatial_res': 30})
+    # stk.bandNames().getInfo()
+    return stk 
 
 
 

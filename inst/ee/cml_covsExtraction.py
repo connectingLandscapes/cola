@@ -70,7 +70,7 @@ def main() -> None:
     # point feature collection to use for covariate extraction
     # needs to have a 'date' field with dates like '2020-06-25'
     points_path = dic['points']
-    pt_fc_id = points
+    pt_fc_id = points_path
     
     # maximum number of points to extract covariates
     # ext_limit = 200000

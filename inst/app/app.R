@@ -110,15 +110,11 @@
     ifelse( COLA_EE == 1 & !is.na(COLA_EE),
             yes = 1, no = 0) ))
   base::options('COLA_EE' = COLA_EE)
-
-
-
+  #
   #(rootPath <- find.package('cola'))
   (rootPath <- system.file(package = 'cola'))
   path_error <<- '/var/log/shiny-server/'
-
-
-
+  #
   source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
@@ -136,17 +132,15 @@
   per <- cola::per ## Performance table
   crs_df <- cola::crs_df ## CRS available
 
-
   ## Showcase -----
   sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
-
 }
 
 ## Init B
 {
   (sessionID <<- sessionIDgen(folder = TRUE))
   tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
-  dir.create(tempFolder, recursive = TRUE, showWarnings = TRUE)
+  # dir.create(tempFolder, recursive = TRUE, showWarnings = TRUE)
   if (COLA_EE == 1){
     eeLogFolder <<- paste0(dataFolder, '/eetimelog/')
     dir.create(eeLogFolder, recursive = TRUE, showWarnings = FALSE)
@@ -166,11 +160,11 @@ cat(paste0('\n\n
     *#*%%   %%   %% |%%%   %%%%#||||||++*#%####*+=++   getwd():', '
    +###%  %%%  @  % |%%  @  %%%%%%%%%%%%+--++%%*+==+     ', getwd(),'
   /+##%%%___%%___%%___%__%__%%%#####%%%%    |  *#==+   COLA_DATA_PATH: ', '
- |   +%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-     ', COLA_DATA_PATH, '
+ |   #%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-     ', COLA_DATA_PATH, '
  |   %#%%%%%%%%%%%%%%%%%%%%%###########++         #*   tempFolder:', '
- |   #%%%%%%%@%%#:::::::::::#####=*#####*         **     ', tempFolder, '
- #   ###%#=-####-::::::::::+####=:::=+###+        **   R-tempdir():', '
- #   #####+--###-:::::::::-#####:::::-=###        +*     ', cola::adaptFilePath(tempdir()), '
+ |   #%%%%%%%@%%#:::::::::::#####===#####         **     ', tempFolder, '
+ #   #####=-####-::::::::::#####=::::=####        **   R-tempdir():', '
+ #   #####=--###-:::::::::-#####::::::####        +*     ', cola::adaptFilePath(tempdir()), '
      #####=--####----------#####-------####
 '))
 cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
@@ -266,9 +260,7 @@ server <- function(input, output, session) {
       # rv$tiforig <- '/data/temp/XC2024012300322305file1392143e34bb6//out_surface_PF2024012300322605file13921692a78bb.tif'
       # # rv$hs_sp <- terra::rast(rv$h)
       # sapply(X = c(rv$hs_sp, rv$tif_sp, rv$lcc_sp, rv$crk_sp, rv$pritif_sp), FUN = is.null)
-
       #}
-
 
       if("Habitat suitability" %in% grp){
         rast_sp <- rv$hs_sp
@@ -533,9 +525,7 @@ server <- function(input, output, session) {
                  text = paste0('Check if the folder ', file.path(dataFolder, restPath),
                                ' exists. Also check if the file "colaLayers.csv" exists, as the layers listed there'),
                  type = "error")
-
     }
-
   }))
 
   colaUpdateSelectizeInput <- function(dfx = rv$layersList,
@@ -547,18 +537,15 @@ server <- function(input, output, session) {
     }
     valOpts <-(subset(dfx, type %in% typex)[,field])
     valOpts <- valOpts[valOpts != '']
-
     # cat(' valOpts typex:', typex, '   field:',  field, '\n')
     #  print(valOpts)
     #  print('ids:')
     #  print(ids)
-
     # print('valx')
     # print(valx)#
     valx <- ifelse(is.null(valx), yes = last(valOpts), no = valx)
     # print('valx')
     # print(valx)
-
     sapply(ids, FUN = function(ii){
       updateSelectizeInput(
         session, ii,
@@ -600,9 +587,7 @@ server <- function(input, output, session) {
           df = layersListx,
           c('in_points_ly'), typex = c('Suitability', 'Resistance'), field = 'public')
         params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
-
       }
-
 
       if (any(layersList$type %in% 'Resistance') ){
         cat(' - Resistance - ')
@@ -629,8 +614,6 @@ server <- function(input, output, session) {
 
         params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
       }
-
-
 
       if (any(layersList$type %in% 'Points') ){
         cat('- Points -')
@@ -838,7 +821,7 @@ server <- function(input, output, session) {
 
     nll <- rbind.data.frame(df, df2)
     write.csv(nll, file.path(tempFolder, 'colaLayers.csv'), row.names = FALSE )
-    cat('Layer List: \n')
+    cat(' \n  Layer List: \n')
     print(nll[, c('id', 'inout', 'type', 'public', 'internal')])
     return(nll)
   }
@@ -1056,9 +1039,7 @@ server <- function(input, output, session) {
             )
         )
         pdebug(devug=devug,pre='\n MakeLL - LCC POST',sep='\n','rv$lcc', 'bounds')
-
       }
-
 
       if((rv$priready)){
 
@@ -1607,7 +1588,8 @@ server <- function(input, output, session) {
 
   # # crs_tif_temp = "", # # crs_tif = "", # input$sel_crs # "" # input$in_uncrs_pts # input$in_uncrs_tif
 
-  observe({
+  ## FIX THIS
+  observeEvent(input$in_uncrs_tif, {
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     ## Create an ID
     if(input$sel_crs != '' | input$sel_crs2 != '') {
@@ -1717,8 +1699,6 @@ server <- function(input, output, session) {
       #                   domain = rng_newtif+0.0, na.color = "transparent")
       #
       # makeLL( )
-
-
     }
   })
 
@@ -3990,7 +3970,7 @@ server <- function(input, output, session) {
 
       inPts <<- rv$hs
       intif4pts <<- subset(rv$layersList, public == in_points_ly)
-      pdebug(devug=T,sep='\n',pre='---PTS\n',
+      pdebug(devug=devug,sep='\n',pre='---PTS\n',
              "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
              'rv$hs', 'rv$tif')
 
@@ -4835,6 +4815,12 @@ server <- function(input, output, session) {
                    title = paste0("Corridors not generated"),
                    text = out_lcc$log
         )
+        if (any(grep('negative dimensions are not allowed', log))){
+          cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("RAM not enough"),
+                     text = 'Your system tun out of RAM. Consider using the "Heavy" button')
+        }
         lastLLx <- NULL
       } else {
         rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
@@ -5075,6 +5061,7 @@ server <- function(input, output, session) {
     }
   })
 
+  ## Run crk
   isolate(observeEvent(input$crk, {
     pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
     condDist <- 0
@@ -5127,13 +5114,24 @@ server <- function(input, output, session) {
 
       rv$crk <- out_crk$file
 
+      ## Error
       if(!file.exists(out_crk$file)){
         rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
         shinyalert(html = TRUE, type = "warning",
-                   title = paste0("Points no generated"),
+                   title = paste0("Kernels no generated"),
                    text = out_crk$log)
+
+        if (any(grep('negative dimensions are not allowed', log))){
+          cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
+
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("RAM not enough"),
+                     text = 'Your system tun out of RAM. Consider using the "Heavy" button')
+        }
+
         lastLLx <- NULL
 
+        ## Generated
       } else {
         rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
 
@@ -5214,7 +5212,7 @@ server <- function(input, output, session) {
       }
 
 
-      isolate(
+      isolate( # small crk
         output$ll_map_pri_prev <- leaflet::renderLeaflet({
 
           if((rv$crkready)){
@@ -5257,7 +5255,7 @@ server <- function(input, output, session) {
             #llcrk2 %>% clearImages()
           }
         })
-      )
+      ) # small crk
 
       output$ll_map_crk <- leaflet::renderLeaflet({
         makeLL(lastLL = lastLLx)
@@ -5433,7 +5431,6 @@ server <- function(input, output, session) {
               brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
               rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
 
-
               # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
               #stp <<- diff(range(brks)) / 10 # length(brks)
 
@@ -5485,13 +5482,13 @@ server <- function(input, output, session) {
       rv$inLccSessID <- inLccSessID
     }
 
-    rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+    rv$tiforig <- paste0(tempFolder, '/in_sr_', rv$inLccSessID, '.tif')
     file.copy(input$in_pri_tif$datapath, rv$tiforig);
 
     # try(file.remove(input$in_lcc_tif$datapath))
 
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+    tifFixed <- paste0(tempFolder, '/in_sr_fixed', rv$inLccSessID, '.tif')
     pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
 
     # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
@@ -5508,7 +5505,7 @@ server <- function(input, output, session) {
     #rv$tif <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
     #rv$tif <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
 
-    pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
+    pdebug(devug=devug,sep='\n',pre='\n','newtifPath', 'rv$tif') # _____________
 
 
 
@@ -5516,7 +5513,7 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
       rv$tifready <- TRUE
 
-      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
+      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF \n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
 
       output$ll_map_pri <- leaflet::renderLeaflet({
 
@@ -5543,12 +5540,12 @@ server <- function(input, output, session) {
           #, server = TRUE
         )
 
-        newOutput <- suggestName(rv$layersList, type = 'Corridors')
-        updateTextInput( # suggest output
-          session, "out_name_lcc",
-          value = newOutput
-          #, server = TRUE
-        )
+        # newOutput <- suggestName(rv$layersList, type = 'Corridors')
+        # updateTextInput( # suggest output
+        #   session, "out_name_lcc",
+        #   value = newOutput
+        #   #, server = TRUE
+        # )
 
         colaUpdateSelectizeInput(
           ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
@@ -5586,7 +5583,8 @@ server <- function(input, output, session) {
     }
   })
 
-  # Slider
+
+  # Slider CRK
   observeEvent(input$pri_slider, {
     if(rv$crkready){
 
@@ -5633,19 +5631,18 @@ server <- function(input, output, session) {
 
         #(posC <<- which(as.character(seq(0.1, 1, 0.1)) == as.character(pri_slider)))
         ## if 0.9 is selected, then only top 10% pixels are shown
-        (posC <<- which(as.character(round(rv$crk_quan$q)) ==
-                          as.character(round(pri_slider)))[1])
+        # (posC <<- which(as.character(round(rv$crk_quan$q)) == as.character(round(pri_slider)))[1])
 
         (posC <<- which(rv$crk_quan$q == pri_slider))
 
         # posK <- (length(rv$crk_quan) - posC)+1;cat('posK: ', posK, '\n')
         newmin <- rv$crk_quan$value[posC]
         # print('newmin:: '); print(newmin)
-        # cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
 
         if(newmin == 0){newDm <- 0.01}
         newDm <<- c(newmin, max(rv$crk_rng))
-        # cat('newDmn min: ', newmin, ' newDmn CRK: ', newDm, '\n')
+        cat('pri_slider: ', pri_slider, ' posC: ', posC, ', newmin:', newmin,'\n');
+        cat('newDmn min: ', newmin, ' newDmn CRK: ', newDm, '\n')
 
         updateTextInput(session, "in_pri_5",
                         value = input$pri_slider)
@@ -5689,7 +5686,7 @@ server <- function(input, output, session) {
     try(file.remove(input$in_pri_lcc$datapath))
 
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in_out_crk_fixed', rv$inLccSessID, '.tif')
+    tifFixed <- paste0(tempFolder, '/in_out_lcc_fixed', rv$inLccSessID, '.tif')
 
     newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$lccorig,
                                       outrasterpath = tifFixed)
@@ -5759,18 +5756,20 @@ server <- function(input, output, session) {
   ## load your crk
   observeEvent(input$in_pri_crk, {
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    if(is.null(rv$inLccSessID)){
-      (inLccSessID <- sessionIDgen())
-      rv$inLccSessID <- inLccSessID
+
+    if(is.null(rv$inCrkSessID)){
+      (inCrkSessID <- sessionIDgen())
+      rv$inCrkSessID <- inCrkSessID
     }
 
-    rv$crkorig <- paste0(tempFolder, '/in_out_crk_', rv$inLccSessID, '.tif')
-    file.copy(input$in_pri_crk$datapath, rv$crkorig);
-
-    try(file.remove(input$in_pri_crk$datapath))
+    rv$crkorig <- paste0(tempFolder, '/in_out_crk_', rv$inCrkSessID, '.tif')
+    # input <- list(in_pri_crk = list(datapath = c("C:/tempR\\RtmpeABlsT/2290f93751532b3fe118f38e/0.tif", "C:/tempR\\RtmpeABlsT/2290f93751532b3fe118f38e/1.csv")))
+    # print(input$in_pri_crk)
+    incrk <- grep('.tif', input$in_pri_crk$datapath, value = TRUE)
+    file.copy(incrk, rv$crkorig);
 
     rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in__out_crk_fixed', rv$inLccSessID, '.tif')
+    tifFixed <- paste0(tempFolder, '/in_out_crk_fixed', rv$inCrkSessID, '.tif')
 
     newtifPath_crk <<- fitRaster2cola(inrasterpath = rv$crkorig,
                                       outrasterpath = tifFixed)
@@ -5778,13 +5777,17 @@ server <- function(input, output, session) {
     rv$crk <- ifelse(is.na(newtifPath_crk), yes = rv$crkorig,
                      no = newtifPath_crk)
 
+    file.copy(grep('.csv', input$in_pri_crk$datapath, value = TRUE),
+              gsub('.tif', '_quantiles.csv', rv$crk));
+
+    try(file.remove(input$in_pri_crk$datapath))
+
+
     if (file.exists( rv$crk)){
       rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-      rv$tifready <- TRUE
+      rv$crkready <- TRUE
 
-      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
-
-      output$ll_map_pri <- leaflet::renderLeaflet({
+      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF CRK\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
 
         suggestedNewName <- suggestName(rv$layersList, type = 'Kernels')
 
@@ -5795,7 +5798,7 @@ server <- function(input, output, session) {
 
         rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
                                        inout = 'in', type =  'Kernels',
-                                       internal = rv$lcc,
+                                       internal = rv$crk,
                                        public = suggestedNewName)
 
         updateSelectizeInput( # inputs
@@ -5820,11 +5823,58 @@ server <- function(input, output, session) {
         updateColaLayersLists(layersList = rv$layersList)
 
         rv$crk_sp <- terra::rast(rv$crk)
+        rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)[1:2]
+
         params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
 
-        makeLL(lastLL = "Kernels" )
+        # if( is.null (crk_quan) ){
+        ## CREATE CRK
+        if( !file.exists(gsub('.tif', '_quantiles.csv', rv$crk)) ){
 
+          cat(' Calculating quantiles\n')
+          # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
+          qq0 <- global(terra::rast(rv$crk), fun=quantile, probs = seq(0.01, 1, 0.01))
+          brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
+          crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
+          write.csv(crk_quan, gsub('.tif', '_quantiles.csv', rv$crk))
+        } else {
+          ## LOAD CRRK
+          crk_quan <- read.csv(gsub('.tif', '_quantiles.csv', rv$crk))
+          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+        }
+        rv$crk_quan <<- crk_quan
+
+        crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+        rv$crk_quan <- crk_quan
+
+
+        isolate( # small crk
+          output$ll_map_pri_prev <- leaflet::renderLeaflet({
+
+            if((rv$crkready)){
+              ## Refresh prio tab
+              rv$crk2s <- resampIfNeeded(rv$crk)
+              rv$crk2s_sp <- terra::rast(rv$crk2s)
+              # cat('adding CRK for prio:', rv$crk2s, '\n')
+
+              bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+
+              rv$crk_pal2 <- leaflet::colorNumeric(
+                palette = "plasma", reverse = TRUE,
+                domain = rv$crk_rng + 0.01 , na.color = "transparent")
+
+              # leafletProxy("ll_map_pri_prev") %>%
+              llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
+                addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                               colors = rv$crk_pal2, opacity = .7)
+            }
+          })
+        ) # small crk
+
+      output$ll_map_pri <- leaflet::renderLeaflet({
+        makeLL(lastLL = "Kernels" )
       })
+
     } else {
       rv$log <- paste0(rv$log, '\n -- Error uploading the "Kernels" TIF file')
       shinyalert(title = "Kernels wasn't loaded",
@@ -7419,9 +7469,7 @@ if (FALSE){ # if FALSE
                                              multiple=TRUE),
                             div(style = "margin-top: -30px"),
                             #actionButton("dist_shp", "Load points!"),
-
           ),
-
 
           #shinydashboard::menuItem("Plotting", tabName = "tab_plotting", icon = icon("image")),
           #shinydashboard::menuItem("Mapping", tabName = "tab_maping", icon = icon("map")),
@@ -7439,15 +7487,16 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -50px"),
                             # textInput('name_pri_lcc', label = '', value = "", width = NULL, placeholder = 'Corridors name:'),
                             # div(style = "margin-top: -10px"),
+                            shiny::fileInput('in_pri_crk', 'Load kernels',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept = c('.tif', '.csv'), multiple = TRUE),
+                            div(style = "margin-top: -50px"),
+                            # textInput('name_pri_crk', label = '', value = "", width = NULL, placeholder = 'Kernels name:'),
                             shiny::fileInput('in_pri_lcc', 'Load corridors',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
-                            div(style = "margin-top: -50px"),
-                            # textInput('name_pri_crk', label = '', value = "", width = NULL, placeholder = 'Kernels name:'),
-                            div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_pri_crk', 'Load kernels',
-                                             buttonLabel = 'Search TIF', placeholder = 'No file',
-                                             accept=c('.tif'), multiple=FALSE),              div(style = "margin-top: -30px"),
+                            # div(style = "margin-top: -10px"),
+                            div(style = "margin-top: -30px"),
                             #actionButton("dist_shp", "Load points!"),
           ),
 
@@ -7464,31 +7513,26 @@ if (FALSE){ # if FALSE
                                              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj", '.zip', '.gpkg', '.SQLite', '.GeoJSON', '.csv', '.xy'),
                                              multiple=TRUE),
                             div(style = "margin-top: -40px"),
-                            # textInput('name_com_lcc', label = '', value = "",
-                            #      width = NULL, placeholder = 'Corridors name:'),
-                            shiny::fileInput('in_com_lcc', 'Load corridors',
-                                             buttonLabel = 'Search TIF', placeholder = 'No file',
-                                             accept=c('.tif'), multiple=FALSE),
-                            # div(style = "margin-top: -50px"),
-                            # textInput('name_com_crk', label = '', value = "",
-                            #      width = NULL, placeholder = 'Kernels name:'),
-                            div(style = "margin-top: -40px"),
                             shiny::fileInput('in_com_crk', 'Load kernels',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
-                            div(style = "margin-top: -40px")
-
+                            div(style = "margin-top: -40px"),
+                            # textInput('name_com_lcc', label = '', value = "",
+                            #      width = NULL, placeholder = 'Corridors name:'),
+                            # div(style = "margin-top: -50px"),
+                            # textInput('name_com_crk', label = '', value = "",
+                            #      width = NULL, placeholder = 'Kernels name:'),
+                            shiny::fileInput('in_com_lcc', 'Load corridors',
+                                             buttonLabel = 'Search TIF', placeholder = 'No file',
+                                             accept=c('.tif'), multiple=FALSE),
+                            div(style = "margin-top: -30px")
           ),
-
           shinydashboard::menuItem("Assign coords", tabName = "tab_coords", icon = icon("globe")),
           shinydashboard::menuItem("App demo slides", tabName = "tab_pdf", icon = icon("file")),
           shinydashboard::menuItem("Run locally", tabName = "tab_local", icon = icon("code-fork"))
           #,
-          #menuItem("Local paths", tabName = "tab_paths", icon = icon("python"))
-
-
-
-          #shinydashboard::menuItem("Page 1", tabName = "page1"),
+          # menuItem("Local paths", tabName = "tab_paths", icon = icon("python"))
+          # shinydashboard::menuItem("Page 1", tabName = "page1"),
           # conditionalPanel(
           #  'input.sidebarid == "page1"',
           #  sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30),
@@ -8000,40 +8044,40 @@ if (FALSE){ # if FALSE
                 title = "Train model based on extracted values", status = "info", collapsed = FALSE,
 
                 fluidRow(
-                column(width = 4,
-                  textInput(width = "100%",
-                            #value = 'projects/gonzalezivan/assets/cola/name',
-                            placeholder = 'projects/USER/assets/LAYER',
-                            label =  'Local or EE dataset:', inputId = 'in_eeloadcovs')
-                  # fileInput("in_eeloadcovs", "Local or EE dataset", accept = c(".dbf", '.gpkg', '.csv')),
-                  #div(style = "margin-top: -10px"),
+                  column(width = 4,
+                         textInput(width = "100%",
+                                   #value = 'projects/gonzalezivan/assets/cola/name',
+                                   placeholder = 'projects/USER/assets/LAYER',
+                                   label =  'Local or EE dataset:', inputId = 'in_eeloadcovs')
+                         # fileInput("in_eeloadcovs", "Local or EE dataset", accept = c(".dbf", '.gpkg', '.csv')),
+                         #div(style = "margin-top: -10px"),
 
-                ),
-                column(width = 2,
-                       div(style = "margin-top: 25px"),
-                       actionButton(width = "100%", "in_eetablecovssave", "Check train dataset")
-                ),
-                column(width = 2,
-                       selectizeInput(
-                         choices = c('R', 'Python', 'EE'),
-                         selected =  'EE', label = 'Algorithm',
-                         inputId = 'in_eemodeltype')),
-                #
-                column(width = 2,
-                       selectizeInput(
-                         label =  'Spatial res. (m)',
-                         inputId = 'in_eetrainres',
-                         multiple = TRUE,
-                         choices = c('250', '500', '1000', '10000'),
-                         selected = c('500'))
-                       ),
-                column(width = 2,
-                       div(style = "margin-top: 20px"),
-                       actionButton(width = "100%",
-                                    label = 'Train model',
-                                    'ee_push_train')
-                       ),
-                #
+                  ),
+                  column(width = 2,
+                         div(style = "margin-top: 25px"),
+                         actionButton(width = "100%", "in_eetablecovssave", "Check train dataset")
+                  ),
+                  column(width = 2,
+                         selectizeInput(
+                           choices = c('R', 'Python', 'EE'),
+                           selected =  'EE', label = 'Algorithm',
+                           inputId = 'in_eemodeltype')),
+                  #
+                  column(width = 2,
+                         selectizeInput(
+                           label =  'Spatial res. (m)',
+                           inputId = 'in_eetrainres',
+                           multiple = TRUE,
+                           choices = c('250', '500', '1000', '10000'),
+                           selected = c('500'))
+                  ),
+                  column(width = 2,
+                         div(style = "margin-top: 20px"),
+                         actionButton(width = "100%",
+                                      label = 'Train model',
+                                      'ee_push_train')
+                  ),
+                  #
                 ),
                 #), # end box ABC
 
@@ -8101,12 +8145,12 @@ if (FALSE){ # if FALSE
             fluidRow(
               column(1,
                      fluidRow(
-                       br(),
                        tags$table(
                          style = "width: 100%", align = "left",
                          tags$tr(tags$td(style = "width: 25%", align = "center",
                                          htmlOutput(outputId = 'out_par_surA', fill = TRUE))
-                         ))
+                         )),
+                       br()
                        # ,
                        #                     br(), br(),
                      )
@@ -8125,7 +8169,7 @@ if (FALSE){ # if FALSE
               ),
               column(2,
                      textInput("in_sur_5", "Max-resistance:", '150')),
-              column(1,
+              column(2,
                      textInput("in_sur_6", "Shape:", '1')
               ),
               column(1,
@@ -8147,7 +8191,7 @@ if (FALSE){ # if FALSE
                      #tags$tr(tags$td(style = "width: 20%", align = "center",),
               ),
 
-              column(2,
+              column(1,
 
                      # tags$table(
                      #   style = "width: 100%", align = "left",
@@ -8168,9 +8212,10 @@ if (FALSE){ # if FALSE
                      #             ## -
                      #     ))
                      # ),
-
+                     div(style = "margin-top: 20px"),
                      actionButton("h2r", HTML("Get Resistance"), icon = icon("play"))),
-              column(1, downloadButton('tifDwn', 'Download') )
+              column(1,  div(style = "margin-top: 20px"),
+                     downloadButton('tifDwn', 'Download') )
             ),
 
             # tags$tr(tags$td(style = "width: 20%", align = "center", ), ),
@@ -8250,7 +8295,8 @@ if (FALSE){ # if FALSE
 
             fluidPage(
               column(1,
-                     tags$table(style = "width: 100%", align = "left", tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))
+                     tags$table(style = "width: 100%", align = "left",
+                                tags$tr( tags$td(style = "width: 25%", align = "center", htmlOutput(outputId = 'out_par_ediA', fill = TRUE))))
               ),
               # column(2,
               #        h6(
@@ -8258,7 +8304,7 @@ if (FALSE){ # if FALSE
               #            "Use a positive or negative single value other than 0.",
               #            "Please remove existing polygons before running again. ")
               #          )),
-              column(1,
+              column(2,
                      textInput("in_edi_val", label = "Value:", value = 0)),
               column(2,
                      numericInput("in_edi_wid", label = "Pixel width:", value = 1)
@@ -8270,14 +8316,17 @@ if (FALSE){ # if FALSE
                      selectInput("in_name_sur_edi", "Source layer:", '', choices = '', selectize = FALSE)
                      # , textInput('out_name_sur_edi', label = 'New layer name:', value = "", width = '100%', placeholder = 'NameNewResistance')
               ),
-              column(1, checkboxInput("in_edi_che", "All pix. touched", FALSE)),
+              column(1, div(style = "margin-top: 10px"),
+                     checkboxInput("in_edi_che", "All pix. touched", FALSE)),
               #column(2, selectInput("in_edi_rs", "Source layer:", '50', choices = '')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(1, actionButton("edi", HTML("Add vals"), icon = icon("plus"))),
-              column(2, actionButton("rpl", HTML("Replace vals"), icon = icon("repeat"))),
-
-              column(1, downloadButton('editifDwn', 'Download'))
+              column(1, div(style = "margin-top: 20px"),
+                     actionButton("edi", HTML("Add vals"), icon = icon("plus"))),
+              column(1, div(style = "margin-top: 20px"),
+                     actionButton("rpl", HTML("Replace vals"), icon = icon("repeat"))),
+              column(1, div(style = "margin-top: 20px"),
+                     downloadButton('editifDwn', 'Download'))
 
             ),
 
@@ -8327,8 +8376,8 @@ if (FALSE){ # if FALSE
               #                     width = '100%', placeholder = 'Name new layer')),
               # column(2, textInput('name_edi', label = 'New layer name:', value = "",
               #           width = '100%', placeholder = 'NameOfNewLayertoCreate')),
-              column(1, actionButton("points_py", "Create points", icon = icon("play"))),
-              column(1, downloadButton('ptsDwn', 'Download'))
+              column(1, div(style = "margin-top: 20px"), actionButton("points_py", "Create points", icon = icon("play"))),
+              column(1, div(style = "margin-top: 20px"), downloadButton('ptsDwn', 'Download'))
             ),
             leaflet::leafletOutput("ll_map_points", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1"),
 
@@ -8384,8 +8433,8 @@ if (FALSE){ # if FALSE
                                                     htmlOutput(outputId = 'out_par_distC', fill = TRUE))
                                           ))
                        ),
-                       column(1, actionButton("dist_py", "Get matrix", icon = icon("play"))),
-                       column(1, downloadButton('csvDwn', 'Download'))
+                       column(1, div(style = "margin-top: 20px"), actionButton("dist_py", "Get matrix", icon = icon("play"))),
+                       column(1, div(style = "margin-top: 20px"), downloadButton('csvDwn', 'Download'))
                      )
               )
               # , column(3,
@@ -8444,6 +8493,7 @@ if (FALSE){ # if FALSE
                 column(2, selectInput("in_name_sur_cdp", "Source mortality layer:", '', choices = '')),
 
                 column(width = 2,
+                       div(style = "margin-top: 20px"),
                        actionButton("run_cdpop", 'Run CDPOP'),
                        downloadButton('cdpDwn', 'Download'))
 
@@ -8547,8 +8597,8 @@ if (FALSE){ # if FALSE
               )
             ),
             fluidPage(
-              column(1, htmlOutput(outputId = 'out_par_crkA', fill = TRUE)),
-              column(1, htmlOutput(outputId = 'out_par_crkB', fill = TRUE)),
+              column(1, div(style = "margin-top: 0px"), htmlOutput(outputId = 'out_par_crkB', fill = TRUE)),
+              column(1, div(style = "margin-top: 10px"), htmlOutput(outputId = 'out_par_crkA', fill = TRUE)),
               column(2, textInput("in_crk_4", "Max. dispersal distance:", '100000')),
               column(1, selectInput(inputId = "in_crk_5", label = "Shape:",
                                     choices = c( 'linear', 'gaussian'), # 'RH',
@@ -8592,8 +8642,8 @@ if (FALSE){ # if FALSE
               )
             ),
             fluidPage(
-              column(2, htmlOutput(outputId = 'out_par_lccA', fill = TRUE),
-                     htmlOutput(outputId = 'out_par_lccB', fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_lccB', fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_lccA', fill = TRUE)),
 
               column(2, textInput("in_lcc_4", "Max. dispersal distance:", '10000000')),
               column(2, textInput("in_lcc_5", "Smoothing factor:", '0')),
@@ -8646,8 +8696,8 @@ if (FALSE){ # if FALSE
 
             fluidPage(
               column(1, htmlOutput(outputId = 'out_par_prioA', fill = TRUE)),
-              column(1, htmlOutput(outputId = 'out_par_prioB', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioC', fill = TRUE)),
+              column(1, htmlOutput(outputId = 'out_par_prioB', fill = TRUE)),
               column(2, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
               column(2, selectInput("in_name_sur_pri", "Source resistance:", '50', choices = '')),
               column(2, selectInput("in_name_crk_pri", "Source kernel:", '50', choices = '')),
@@ -8661,8 +8711,7 @@ if (FALSE){ # if FALSE
 
             fluidPage(
               column(4,
-
-                     sliderInput(inputId = 'pri_slider',label = 'Percentile:', 0.01, 0.99, 0.5, step = 0.01),
+                     sliderInput(inputId = 'pri_slider',label = 'Percentile:', 0.01, 0.99, 0.5, step = 0.01, width = '100%'),
                      tags$head(tags$style("#vout_pri{overflow-y:scroll; max-height: 70px}")),
 
                      leaflet::leafletOutput("ll_map_pri_prev", height = "500px") %>%shinycssloaders::withSpinner(color="#0dc5c1") ),
@@ -8696,10 +8745,10 @@ if (FALSE){ # if FALSE
                                  choices = c('', #'Surface resistance',
                                              'Dispersal kernels', 'Corridors'))
               ),
-              column(1,
+              column(1, div(style = "margin-top: 20px"),
                      actionButton("com_py", "Compare", icon = icon("play"))
               ),
-              column(1,
+              column(1, div(style = "margin-top: 20px"),
                      downloadButton('comDwn', 'Download'))
 
             ),
@@ -8708,9 +8757,6 @@ if (FALSE){ # if FALSE
             # column(8, verbatimTextOutput("vout_com") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
             #    tags$head(tags$style("#vout_crk{overflow-y:scroll; max-height: 70px}"))
             #)
-
-
-
 
             # fluidRow(
             #  column(2, br()),
@@ -8883,7 +8929,6 @@ if (FALSE){ # if FALSE
           ),
 
 
-
           #### UI COORDS ----
           shinydashboard::tabItem(
             tabName = 'tab_coords',
@@ -8903,17 +8948,19 @@ if (FALSE){ # if FALSE
               column(3,
                      selectizeInput("sel_crs", "Select", choices = NULL), #
               ),
-              column(3,
+              column(3,div(style = "margin-top: 20px"),
                      actionButton("coo_tif",
                                   HTML("Assign raster projection"), icon = icon("play")),
+                     div(style = "margin-top: 20px"),
                      downloadButton('newtifDwn', 'Download')
               ),
               column(3,
                      selectizeInput("sel_crs2", "Select", choices = NULL), #
               ),
-              column(3,
+              column(3,div(style = "margin-top: 20px"),
                      actionButton("coo_pts",
                                   HTML("Assign raster proyection"), icon = icon("play")),
+                     div(style = "margin-top: 20px"),
                      downloadButton('newshpDwn', 'Download')
               ),
             ),
