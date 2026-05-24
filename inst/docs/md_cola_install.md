@@ -19,6 +19,9 @@ devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade
 # install.packages("D:/path/to/cola-main.zip", repos = NULL, type = "win.binary")
 ## or
 # devtools::install_local('D:/path/to/cola-main.zip')
+## or
+# devtools::install_local('D:/path/to/cola-main')
+
 
 library(cola) # Load cola
 cola::setup_cola() # Setup cola. Run this line until all problems are solved.

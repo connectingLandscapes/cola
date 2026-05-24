@@ -510,7 +510,7 @@ server <- function(input, output, session) {
           rv$tempFolder <<- tempFolder <<- paste0(dataFolder, '/', sessionID, '/')
 
           shinyalert(title = "The session was restored",
-                     text = paste0('Your session ID now is:', restPath ),
+                     text = paste0('Your session ID now is: ', restPath ),
                      type = "success")
 
         }else{
@@ -4660,7 +4660,7 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
 
-      cat('\n -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+      cat('\n\n -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
       out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
       intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
 
@@ -4778,7 +4778,7 @@ server <- function(input, output, session) {
       rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
 
-      cat(' -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+      cat('\n\n  -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
 
       out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
       intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
@@ -5081,7 +5081,7 @@ server <- function(input, output, session) {
 
 
       intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
-      cat(' -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
+      cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
 
       shinyalert(html = TRUE, type = "info",
                  title = paste0("Task submitted. Please wait until the map is updated."))
@@ -5291,7 +5291,7 @@ server <- function(input, output, session) {
       out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
 
       intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
-      cat(' -- Using ', input$in_name_sur_crk, intif4py, '\n')
+      cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, '\n')
 
       shinyalert(html = TRUE, type = "info",
                  title = paste0("Task submitted. Please wait until the map is updated."))
@@ -6631,6 +6631,8 @@ server <- function(input, output, session) {
           # setwd(rv$tempFolder)
           #filename <- paste0('points_', rv$inPointsSessID , '.zip')
           zip_file <- paste0(tempfile(), '_tempCDPOP.zip')
+          print(paste0(' - Making temp CDPOP zip file: ', zip_file))
+
           #'',
           #file.path(rv$tempFolder ,
           #filename)
@@ -6687,7 +6689,7 @@ server <- function(input, output, session) {
           #filename)
           #)
           #zip_file <- file.path(tempdir(), filename)
-          print(paste0('Making temp zip file: ', zip_file))
+          print(paste0(' - Making comparison temp zip file: ', zip_file))
 
           com_files <- list.files(path = rv$comFolder,
                                   all.files = TRUE, include.dirs = TRUE,
@@ -6697,12 +6699,12 @@ server <- function(input, output, session) {
                                    path = dirname(rv$comFolder),
                                    pattern = layer_type_compare2
                                    # gsub('comp_|_.+', '', basename(rv$comFolder))
-          )
+                                   )
 
-          #files2down <- c(com_files, otherFiles)
-          files2down <- c(avail_layers, com_tifs)
+          files2down <- c(com_files, otherFiles)
+          #files2down <- c(avail_layers, com_tifs)
           # paste0(c(com_files, '||||', otherFiles)
-          print(paste('incluiding: ', paste(files2down, collapse = ' ')))
+          print(paste(' Zip incluiding: ', paste(files2down, collapse = ' ')))
 
           if (os == 'Windows'){
             zip(zipfile = zip_file, files = files2down, flags = '-r9X')
@@ -6725,7 +6727,40 @@ server <- function(input, output, session) {
         }
       })
 
+    ## Download prio
+    output$priDwn <- downloadHandler(
+      filename = paste0('prioritization',
+                        '',
+                        #ifelse(!is.null(rv$inPriSessID), rv$inPriSessID, rv$sessionID),
+                        '.zip'),
+      content = function(filename) {
+        if(!is.null( rv$pritif ) & !is.null( rv$prishp ) ){
 
+          zip_file <- paste0(tempfile(), '_tempPrio.zip')
+          print(paste0('Making prioritization temp zip file: ', zip_file))
+
+          #zip_file <- file.path(tempdir(), filename)
+          shp_files <- list.files(path = rv$tempFolder,
+                                  pattern = rv$inpriSessID, full.names = TRUE)
+
+          if (os == 'Windows'){
+            zip(zipfile = zip_file, shp_files, flags = '-r9X')
+          } else {
+
+            # the following zip method works for me in linux but substitute with whatever method working in your OS
+            zip_command <<- paste("zip -j", zip_file, paste(shp_files, collapse = " "))
+
+            pdebug(devug=devug,sep='\n',pre='\n---- WritePTI\n',
+                   'filename', 'zip_file') # _____________ , 'zip_command'
+
+            system(zip_command)
+          }
+          # copy the zip file to the file argument
+          file.copy(zip_file, filename)
+          # remove all the files created
+          try(file.remove(zip_file))
+        }
+      })
 
     ## Download points
     output$ptsDwn <- downloadHandler(
@@ -6771,52 +6806,6 @@ server <- function(input, output, session) {
         }
       })
 
-    ## Download prio
-    output$priDwn <- downloadHandler(
-      filename = paste0('prioritization',
-                        '',
-                        #ifelse(!is.null(rv$inPriSessID), rv$inPriSessID, rv$sessionID),
-                        '.zip'),
-      content = function(filename) {
-        if(!is.null( rv$pritif ) & !is.null( rv$prishp ) ){
-          # rv <- list(tempFolder = '/data/temp/O2023090713414105file522721b3f66/', sessionID = 'O2023090713414105file522721b3f66')
-          #filename <- paste0('points_', rv$inPointsSessID , '.zip')
-          # zip_file <- gsub(tempdir(), '',
-          #         #file.path(rv$tempFolder ,
-          #              filename)
-          #         #)
-          zip_file <- paste0(tempfile(), '_tempPrio.zip')
-
-          #zip_file <- file.path(tempdir(), filename)
-
-
-          # rv$pritif <- out_pri$tif
-          # rv$prishp <- out_pri$shp
-          # rv <- list(tempFolder = '/data/temp/OW2024011618275905filebfa315b6584', inpriSessID = 'IZ2024011618510605filebfa6271938d')
-
-          shp_files <- list.files(path = rv$tempFolder,
-                                  pattern = rv$inpriSessID, full.names = TRUE)
-
-          if (os == 'Windows'){
-            zip(zipfile = zip_file, shp_files, flags = '-r9X')
-          } else {
-
-            # the following zip method works for me in linux but substitute with whatever method working in your OS
-            zip_command <<- paste("zip -j",
-                                  zip_file,
-                                  paste(shp_files, collapse = " "))
-
-            pdebug(devug=devug,sep='\n',pre='\n---- WritePTI\n',
-                   'filename', 'zip_file') # _____________ , 'zip_command'
-
-            system(zip_command)
-          }
-          # copy the zip file to the file argument
-          file.copy(zip_file, filename)
-          # remove all the files created
-          try(file.remove(zip_file))
-        }
-      })
 
     ## Download surface
     output$tifDwn <- downloadHandler(

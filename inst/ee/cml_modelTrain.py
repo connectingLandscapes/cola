@@ -60,7 +60,9 @@ def main() -> None:
     dic
     #
     eeproject = dic.get('eeProject')
-    #
+    
+    
+    #%% Start EE
     try:
         ee.Authenticate( )
         ee.Initialize(project = eeproject)
@@ -91,8 +93,8 @@ def main() -> None:
          else:
              covs_local = True
     #
-    #       
     ###########################################
+    #%% Load modules and create local variables 
     from sat_ts_fusion.imagery import lsat_utils
     from sat_ts_fusion.ccdc import ccdc_utils
     from sat_ts_fusion.fusion import ancillary_covariates as anc
@@ -114,9 +116,9 @@ def main() -> None:
     split = dic.get('splot', 0.7)
     numiter = dic.get('numiter', 1)
     stack_type = int(dic.get('stackType', 1))
-    pointsBuffMeters = int(dic.get('pointsBuffMeters', 0))
+    points_buff_meters = int(dic.get('pointsBuffMeters', 0))
     pixel_size = int(dic.get('pixelSize',False)) # ,100
-    removeSpatDup = dic.get('removeSpatDup',False)
+    remove_spat_dup = dic.get('removeSpatDup',False)
     area_of_interest = dic.get('areaOfInterest', '')
     
     num_folds = int(dic.get('numFolds', 0)) # 10
@@ -134,8 +136,9 @@ def main() -> None:
     save_each_results = dic.get('saveIndividualResults', None)
     export_size = dic.get('exportSize', None)
     seed = dic.get('seed', 'noseed')
-    #
-    #
+    
+    
+    # Create outdir if not available
     if not os.path.isdir(out_local_path):
         os.makedirs(out_local_path, exist_ok=True)
         
@@ -176,8 +179,14 @@ def main() -> None:
             #data_ee = df
         #
     #
+    sim_abs = False
+    if len(data[data["preabs"] == 0]):
+        sim_abs = True
+        #s.lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']
+
+        
     #
-    if removeSpatDup:
+    if remove_spat_dup:
         def remove_duplicates(data, pixel_size):
             # Select one occurrence record per pixel at the chosen spatial resolution
             random_raster = ee.Image.random().reproject('EPSG:4326', None, spat_dup_pixsize)
@@ -213,7 +222,7 @@ def main() -> None:
             print(' AOI not found ', area_of_interest)
     else:
         # Create aoi
-        aoi = data_ee.geometry().bounds().buffer(distance=pointsBuffMeters, maxError=1000)
+        aoi = data_ee.geometry().bounds().buffer(distance = points_buff_meters, maxError=1000)
         if  not run_local:
             1
   
@@ -429,7 +438,7 @@ def main() -> None:
     # presence_points.size().getInfo() 
     # absence_points.size().getInfo()
     
-    def sdm(x, save = False, eelogpath = ''):
+    def sdm(x, save_ind = False, eelogpath = ''):
         # x = 305
         seed = ee.Number(x)
         # Random block division for training and validation
@@ -482,7 +491,7 @@ def main() -> None:
         classifier = ee.Classifier.smileRandomForest(
             numberOfTrees=500,
             variablesPerSplit=None,
-            minLeafPopulation=10,
+            minLeafPopulation=3,
             bagFraction=0.5,
             maxNodes=None,
             seed=seed,
@@ -493,7 +502,7 @@ def main() -> None:
         )
         classified_img_pr = predictors.classify(classifier_pr)
         
-        if save:        
+        if save_ind:
             taskA = ee.batch.Export.image.toAsset(
                 image = classified_img_pr ,
                 assetId = str(out_ee_path + '/export_classified_img_pr'+str(x)).replace('//', '/'),
@@ -508,7 +517,7 @@ def main() -> None:
         )
         classified_img_bin = predictors.classify(classifier_bin)
         
-        if save:        
+        if save_ind:        
             taskB = ee.batch.Export.image.toAsset(
                 image = classified_img_bin ,
                 assetId = str(out_ee_path + '/export_classified_img_bin_'+str(x)).replace('//', '/'),

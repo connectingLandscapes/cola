@@ -1504,13 +1504,12 @@ crkJoblib_py <- function(
   # [11] Max GB ram allowed
 
   if ( ! any( c('yes', 'no') %in% transform ) ){
-    stop( 'transform needs to be "yes" or "no"' )
+    stop( ' transform needs to be "yes" or "no"' )
   }
 
   if ( ! any( c('linear', 'gaussian') %in% shape ) ){
-    stop( 'shaoe needs to be "linear" or "gaussian"' )
+    stop( ' shape needs to be "linear" or "gaussian"' )
   }
-
 
   if (is.null(tempFolder)){
     tempFolder <- tempdir()
@@ -1533,8 +1532,8 @@ crkJoblib_py <- function(
     h5file, " ",
     maxram
     , ' 2>&1 ' #, logname
-
   ))
+
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
   if (cml){
@@ -1543,6 +1542,17 @@ crkJoblib_py <- function(
   }
 
   intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
+  # intCMD2 <- tryCatch(system2(cmd_crk, stdout = TRUE), error = function(e) e$message)
+  # output <- system2(py, args = c (
+  #   quotepath(pyscript),
+  #   quotepath(inshp),
+  #   quotepath(intif), quotepath(outtif),
+  #   format(maxdist, scientific=F),
+  #   shape, transform,
+  #   format(volume, scientific=F),
+  #   format(ncores, scientific=F),
+  #   crs, h5file, maxram), stdout = TRUE)
+
 
   if(show.result){
     print(intCMD)
@@ -1566,6 +1576,12 @@ crkJoblib_py <- function(
   #print('ANS CRK'); print(ans)
   return( ans )
 }
+# https://github.com/rstudio/reticulate/blob/main/R/conda.R
+#conda_envs <- system2(conda, c("env", "list", "--json"), stdout = TRUE, stderr = FALSE)
+#out <- system2(conda_bin, "--version", stdout = TRUE)
+#system2t(conda, c("update", "--prefix", maybe_shQuote(prefix), "--yes", name))
+#result <- system2(python, stdout = TRUE, args = c("-c", shQuote("import sys; import platform; sys.stdout.write(platform.architecture()[0])"))
+
 
 
 #' @title  Runs prioritization
@@ -2234,4 +2250,160 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   return(replacedPath)
 
   #} else { return(NA) }
+}
+
+
+
+
+
+
+
+### Orig fitRaster2cola, cell size and nodata
+
+
+#' @title  Fit rasters to CoLa formats
+#' @description Adjust pixels to squared shape and assigns
+#' @param inrasterpath String. Path of the input raster
+#' @param outrasterpath String. Optional. Path of the fixed raster.If no provided will be
+#' same as input with the prefix out_
+#' @return Path of the resulting raster layer. Will be same as input if no change was made
+#' @examples
+#' library(cola)
+#' fitRaster2cola(inrasterpath = system.file(package = 'cola', 'sampledata/sampleSR.tif'))
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
+  # setwd('/home/shiny')
+  # inrasterpath = 'orig_tifs/size6.tif'
+  # outrasterpath = 'size6.tif'
+  # inrasterpath = '/data/tempR/colaELU2024080412561105//in_points_JLT2024080412564005.tif'
+  # outrasterpath = '/data/tempR/colaELU2024080412561105//in_points_fixed_JLT2024080412564005.tif'
+
+  inraster <- inrasterpath
+  outraster <- outrasterpath
+
+  outraster0 <- NA
+
+  if( ! (file.exists(inraster) | is.na(inraster) | is.null(inraster)) ){
+    stop( print(paste('  >>> Infile not found - ', inraster)))
+  }
+
+  if( is.null(outraster) ){
+    outraster <- paste0(tools::file_path_sans_ext(inraster), 'out',
+                        basename(tempfile()) ,'.tif')
+  } else {
+    if( !file.exists(inraster)){
+      stop( print(paste('  >>> Outfile not found - ', inraster)))
+    }
+  }
+
+
+  if (!isProjected(inraster)){
+    return(NA)
+    print(' Raster MUST have proceted coordinate system. Please update your layer.')
+  } else {
+
+    if( require('gdalUtilities') ){
+      # options(scipen = 999)
+      # options(scipen = 9)
+
+      gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+      (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd <- (length(nd0) == 1) & (nd0 == -9999)
+      if ( is.nan(nd0) | is.na(nd0)){ nd <- FALSE }
+
+      pixsize0 <- unlist(strsplit(split = ',', gsub('Pixel Size = \\(|\\)', '',
+                                                    grep('Pixel Size', gi, value = TRUE))))
+      options(digits = max(nchar(pixsize0)))
+      (pixsize <- abs(as.numeric(pixsize0 )))
+      (ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] ))
+
+      #if( !( nd & ps ) ) {
+      if( !( ps ) ) {
+        gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+                                # ot = 'Float64',
+                                #srcband  = 1,
+                                tr = rep(max(pixsize), 2)
+                                #, dstnodata = -9999
+        )
+        outraster0 <- outraster
+        # }
+        # else if( nd & !ps ){
+        #   cat ( ' \n Converting raster: Changing no data \n' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster, dstfile = outraster,
+        #                           #srcband  = 1,
+        #                           #srcnodata = nd0,
+        #                           ot = 'Float64',
+        #                           tr = rep(max(pixsize), 2)
+        #                           )
+        #   outraster0 <- outraster
+        #
+        # } else if (!nd & ps ){
+        #   cat ( ' \n Converting raster: Changing no data \n' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster,
+        #                           dstfile = outraster,
+        #                           #b = 1,
+        #                           ot = 'Float64'
+        #                           #, srcnodata = nd0 ,
+        #                           #dstnodata = -9999
+        #   )
+        #   outraster0 <- outraster
+        # } else if (!ps ){
+        #   cat ( '  Making pixel squared' )
+        #   gdalUtilities::gdalwarp(srcfile = inraster,
+        #                           dstfile = outraster,
+        #                           #b = 1,
+        #                           ot = 'Float64'
+        #                           #, srcnodata = nd0 ,
+        #                           #dstnodata = -9999
+        #   )
+        #   outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+
+    } else if(require('raster')){
+      # print(3)
+
+      options(digits = 20)
+      rx <- raster(inraster)
+      nd0 <- rx@file@nodatavalue
+      if (length(nd0) == 0) { nd0 <- 0}
+      nd0 <- nd0 == -9999
+
+      (pixsize <- res(rx))
+      ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      if( !( nd & ps ) ) {
+        templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+        raster::resample(x = rx, y = templ, filename = outraster,
+                         # NAflag = -9999,
+                         overwrite = FALSE)
+        outraster0 <- outraster
+      } else{
+        outraster0 <- inraster
+      }
+      # } else if(require('raster')){
+      #     # print(3)
+      #
+      #     options(digits = 20)
+      #     rx <- raster(inraster)
+      #     nd <- rx@file@nodatavalue == -9999
+      #
+      #     (pixsize <- res(rx))
+      #     ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
+      #     if( !( nd & ps ) ) {
+      #       templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+      #       raster::resample(x = rx, y = templ, filename = outraster, NAflag = -9999, overwrite = FALSE)
+      #       outraster0 <- outraster
+      #     } else{
+      #       outraster0 <- inraster
+      #     }
+      #   }
+    }
+
+    options(digits = 5)
+    return(outraster0) # file path
+  }
 }

@@ -30,7 +30,7 @@ Write Patrick.Jantz@nau.edu or Ivan.Gonzalez@nau.edu for questions and suggestio
   
 > Resources
 
- * Access here the [User's manual document (DSS) ](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)
+ * Access here the [CoLa User's manual document](https://docs.google.com/document/d/1vcb1ZVdUdKpOTRWj9KQih4xpf5UzLJkQjYpY7Hglfyk/edit?usp=sharing)
  
  * For installation, click [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
 
