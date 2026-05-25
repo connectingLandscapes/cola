@@ -8159,7 +8159,7 @@ if (FALSE){ # if FALSE
               column(2,
                      textInput("in_sur_5", "Max-resistance:", '150')),
               column(2,
-                     textInput("in_sur_6", "Shape:", '1')
+                     textInput("in_sur_6", "Shape:", '4')
               ),
               column(1,
                      textInput("in_sur_7", "No Data:", '')
@@ -8359,7 +8359,7 @@ if (FALSE){ # if FALSE
               column(1, htmlOutput(outputId = 'out_par_ptsA', fill = TRUE)),
               column(2, textInput("in_points_3", "Min. val:", '2')),
               column(2, textInput("in_points_4", "Max. val:", '95')),
-              column(2, textInput("in_points_5", "# of points:", '50')),
+              column(2, textInput("in_points_5", "# of points:", '100')),
               column(2, selectInput("in_points_ly", "Source layer:", '', choices = '')),
               # column(2, textInput('out_name_pts', label = 'New layer name:', value = "",
               #                     width = '100%', placeholder = 'Name new layer')),
@@ -8588,7 +8588,7 @@ if (FALSE){ # if FALSE
             fluidPage(
               column(1, div(style = "margin-top: 0px"), htmlOutput(outputId = 'out_par_crkB', fill = TRUE)),
               column(1, div(style = "margin-top: 10px"), htmlOutput(outputId = 'out_par_crkA', fill = TRUE)),
-              column(2, textInput("in_crk_4", "Max. dispersal distance:", '100000')),
+              column(2, textInput("in_crk_4", "Max. dispersal distance:", '1000000')),
               column(1, selectInput(inputId = "in_crk_5", label = "Shape:",
                                     choices = c( 'linear', 'gaussian'), # 'RH',
                                     selected = 'linear')),
