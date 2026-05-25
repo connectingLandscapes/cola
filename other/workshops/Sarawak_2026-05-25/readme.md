@@ -24,9 +24,14 @@
     - [SDM 1km](https://rcdata.nau.edu/above_gedi/sarawak/sdm1km/)
     - [ZIP file of 39 species, 85MB](https://rcdata.nau.edu/above_gedi/sarawak/sdm1km/__sdm1km.zip)
     - [SDM 90m](https://rcdata.nau.edu/above_gedi/sarawak/proj/)
+    - Flat headed cat 5km [raster](https://drive.google.com/file/d/1kqP4ybCgueY7hfMoe4BI0BIvgoeDe7Bf/view?usp=sharing)
     
- 4. Fill out this survey to tell us about yourselves and your experience (2 min):
- (https://forms.gle/jW98Aa5X7Gp5FnnU6). And an another survey about your the DSS perspective (https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link)
+ 4. Fill out this survey to tell us about yourselves and your experience: [2 min survey](https://forms.gle/jW98Aa5X7Gp5FnnU6). And an another [3 min survey](https://docs.google.com/forms/d/e/1FAIpQLSdE9QMHnBv3FhXy8zJgOrvvx39ltetJf7-mtIbv4kZQuElubg/viewform?usp=sf_link) about your the DSS perspective 
+ 
+ 5. Sunda species distribution models [publication](https://www.frontiersin.org/journals/remote-sensing/articles/10.3389/frsen.2025.1563430/full)
+ 
+ 6. WildCRU [WildMAPS](https://wildcru.org/map-app) online application
+
 
 
 # Installing
