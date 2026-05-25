@@ -2,7 +2,7 @@
 ## Kuching, Sarawak, Malaysia. May 25th 2026
 
 ##### *Scan this code*
-![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/Sarawak_2026-05-25/qr.png)
+![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/Sarawak_2026-05-25/qrcode.png)
 
 
 # Agenda
