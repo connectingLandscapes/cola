@@ -1,8 +1,8 @@
 # Workshop
-## Kasane, Botswana. April 1st-3rd 2025
+## Kuching, Sarawak, Malaysia. May 25th 2026
 
 ##### *Scan this code*
-![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/KAZA_2025-04-01/qr-kaza.png)
+![QRcode](https://raw.githubusercontent.com/connectingLandscapes/cola/refs/heads/main/workshops/Sarawak_2026-05-25/qr.png)
 
 
 # Agenda
@@ -31,6 +31,7 @@
 
 # Installing
 Follow the steps presented [here](https://github.com/connectingLandscapes/cola/blob/main/inst/docs/md_cola_install.md)
+Need a video? [Here a tutorial](https://www.youtube.com/playlist?list=PLX78lvJRKOGW0-31es_Xoh40GANeK7n14)
  
 Main steps (follow this order):
 1. Install Git
