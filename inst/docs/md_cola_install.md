@@ -1,6 +1,6 @@
 # Installing Connecting landscapes `cola` 
 
-Non-expert code users can follow [this tutorial](https://docs.google.com/presentation/d/1d2TgZGqDut8_HRP-xZnRnmA3W0OzP3-U/edit#slide=id.p1)
+Non-expert code users can follow [these tutorial slides](https://docs.google.com/presentation/d/1d2TgZGqDut8_HRP-xZnRnmA3W0OzP3-U/edit#slide=id.p1) and this [youtube video](https://youtube.com/playlist?list=PLX78lvJRKOGW0-31es_Xoh40GANeK7n14&si=H57Pl-u1cF8Qwrmm)
 
 Find on this page the details and instructions for **a)** installation and **b)** customization *cola* installation parameters.
 

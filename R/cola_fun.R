@@ -1146,6 +1146,8 @@ lccZarr_py <- function(inshp, intif, outtif,
                        crs = 'None',
                        sci = 'None', eci = 'None',
                        tempFolder = NULL,
+                       pairzarr = NULL,
+                       distzarr = NULL,
                        py = Sys.getenv("COLA_PYTHON_PATH"),
                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
@@ -1169,8 +1171,12 @@ lccZarr_py <- function(inshp, intif, outtif,
   }
 
   (tempH5 <- basename(tempfile()))
-  (pazarr <- paste0(tempFolder, '/', tempH5, '_pazarr.zarr'))
-  (dazarr <- paste0(tempFolder, '/', tempH5, '_dazarr.zarr'))
+  if(is.null(pairzarr)){
+    (pairzarr <- paste0(tempFolder, '/', tempH5, '_pair.zarr'))
+  }
+  if(is.null(distzarr)){
+    (distzarr <- paste0(tempFolder, '/', tempH5, '_dist.zarr'))
+  }
   (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
   (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
 
@@ -1278,8 +1284,8 @@ lccZarr_py <- function(inshp, intif, outtif,
     format(maxdist, scientific=F), ' ',
     format(ncores, scientific=F), " ",
     crs, " ",
-    pazarr, " ",
-    dazarr, " ",
+    pairzarr, " ",
+    distzarr, " ",
     reOrderFile, " ",
     nodeidsFile, " ",
     maxram
@@ -1293,7 +1299,7 @@ lccZarr_py <- function(inshp, intif, outtif,
     quotepath(pyscriptB), ' ',
     quotepath(intif), ' ',
     quotepath(outtif), ' ',
-    dazarr, " ",
+    distzarr, " ",
     format(smooth, scientific=F), ' ',
     format(tolerance, scientific=F), " ",
     format(ncores, scientific=F), " ",
@@ -1335,6 +1341,324 @@ lccZarr_py <- function(inshp, intif, outtif,
   return( ans )
 }
 
+
+#' @title  Factorial least cost corridors on Zarr part A
+#' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
+#' The function uses :
+#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
+#' Here an example. Pleas provide full path to all the file arguments:
+#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr reOrderFile.csv nodeidsFile.csv 6
+#'
+#'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
+#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use in GB
+#' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
+#' @param eci Numeric. End corridor index. Default is 'None'
+#' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
+#' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
+#' @examples
+#' library(cola)
+#' outdir <- tempdir()
+#' corridors <- lccZarr_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'corridors.tif'),
+#'   maxdist = 100000, smooth = 0, tolerance = 0, maxram = 5)
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+lccZarrA_py <- function(inshp, intif,
+                       maxdist,
+                       ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+                       crs = 'None',
+                       tempFolder = NULL,
+                       pairzarr = NULL,
+                       distzarr = NULL,
+                       py = Sys.getenv("COLA_PYTHON_PATH"),
+                       pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                       pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                       cml = TRUE, show.result = TRUE){
+
+  # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
+  # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
+  # outtif = '/home/shiny/test/testzarr.tif';
+  # maxdist = 1000000; smooth = 0; tolerance = 0 ;
+  # ncores = 8; maxram = 6;
+  # crs = 'None'; sci = 'None'; eci = 'None'
+  # tempFolder = NULL;
+  # tempFolder = '/home/shiny/test/'
+
+  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
+
+
+  if (is.null(tempFolder)){
+    #tempFolder <- tempdir()
+    tempFolder <- dirname(intif)
+  }
+
+  (tempH5 <- basename(tempfile()))
+  if(is.null(pairzarr)){
+    (pairzarr <- paste0(tempFolder, '/', tempH5, '_pair.zarr'))
+  }
+  if(is.null(distzarr)){
+    (distzarr <- paste0(tempFolder, '/', tempH5, '_dist.zarr'))
+  }
+  (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
+  (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
+
+  # # INPUTS part A
+  # # Path to file holding xy coordinates
+  # xyf = sys.argv[1]  --- inshp
+  #
+  # # Path to resistance grid
+  # rg = sys.argv[2] --- intif
+  #
+  # # Distance threshold
+  # dThreshold = sys.argv[3]
+  #
+  # # Number of threads to use
+  # nThreads = sys.argv[4] # Default 1
+  #
+  # # User provided CRS if using ascii or other file without projection info
+  # # Provide as epsg or esri string e.g. "ESRI:102028"
+  # upCRS = sys.argv[5] # Default None
+  #
+  # # Output pairwise point hdf name
+  # # This is a temporary file and gets deleted at the end of the script,
+  # # unless there's a script failure.
+  # ppzarr = sys.argv[6]
+  #
+  # # Output distance array hdf name
+  # # This is a temporary file and gets deleted at the end of the script,
+  # # unless there's a script failure.
+  # dazarr = sys.argv[7]
+  #
+  # # point pair output file name
+  # reOrderFile = sys.argv[8]
+  #
+  # # Node ids output
+  # nodeidsFile = sys.argv[9]
+  #
+  # # Set memory size for processing corridors
+  # # I.e. set to 16 if you want to use 16GB of RAM
+  # # when processing. Make sure you have enough RAM
+  # # available when setting this value. Consider
+  # # the total amount of RAM available on your computer
+  # # and the amount used by other programs that may
+  # # be running.
+  # gbLim = sys.argv[10] # Default 6
+
+  (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
+
+
+  (cmd_lcc_zarrA <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscriptA), ' ',
+    quotepath(inshp), ' ',
+    quotepath(intif), ' ',
+    format(maxdist, scientific=F), ' ',
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    pairzarr, " ",
+    distzarr, " ",
+    reOrderFile, " ",
+    nodeidsFile, " ",
+    maxram
+    , ' 2>&1 ' #, logname
+  ))
+
+  # A: inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
+
+  if (cml){
+    cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
+    cat('\n\n')
+  }
+
+  intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMDA)
+  }
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0(" A: ", intCMDA, '\n' ) )
+  #print('ANS LCC');print(ans)
+  return( ans )
+}
+
+
+#' @title  Factorial least cost corridors on Zarr part B
+#' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
+#' The function uses : lcc_hpc2_zarr.py
+#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+#' Here an example. Pleas provide full path to all the file arguments:
+#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+#'
+#'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
+#' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
+#' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
+#' @param outif String. Path output GeoTIFF file name.
+#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
+#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
+#' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
+#' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
+#' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
+#' @param maxram Numeric. RAM to use in GB
+#' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
+#' @param eci Numeric. End corridor index. Default is 'None'
+#' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
+#' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
+#' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
+#' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
+#' @param cml Logical. Print the back-end command line? Default TRUE
+#' @param show.result Logical. Print the command line result? Default TRUE
+#' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
+#' @examples
+#' library(cola)
+#' outdir <- tempdir()
+#' corridors <- lccZarr_py(
+#'   inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
+#'   intif = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'   outtif = file.path(outdir, 'corridors.tif'),
+#'   maxdist = 100000, smooth = 0, tolerance = 0, maxram = 5)
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+lccZarrB_py <- function(inshp, intif, outtif,
+                       maxdist, smooth, tolerance,
+                       ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+                       crs = 'None',
+                       sci = 'None', eci = 'None',
+                       tempFolder = NULL,
+                       pairzarr = NULL,
+                       py = Sys.getenv("COLA_PYTHON_PATH"),
+                       pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                       pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                       cml = TRUE, show.result = TRUE){
+
+  # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
+  # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
+  # outtif = '/home/shiny/test/testzarr.tif';
+  # maxdist = 1000000; smooth = 0; tolerance = 0 ;
+  # ncores = 8; maxram = 6;
+  # crs = 'None'; sci = 'None'; eci = 'None'
+  # tempFolder = NULL;
+  # tempFolder = '/home/shiny/test/'
+
+  # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+
+
+  # INPUTS part 2 ---------------
+  # # Path to resistance grid
+  # rg = sys.argv[1]
+  #
+  # # Output file path
+  # ofile = sys.argv[2]
+  #
+  # # Zarr file name
+  # dazarr = sys.argv[3]
+  #
+  # # Radius for gaussian smoother (in number of cells)
+  # # The size of the kernel on each side is 2*radius + 1
+  # # E.g. a radius of 2 gives a 5x5 cell kernel
+  # gRad = sys.argv[4]
+  #
+  # # Amount to add to the least cost path (in cost distance units)
+  # # in order to generate a swath of low cost pixels,
+  # # termed the least cost corridor.
+  # # If 0, returns the least cost path.
+  # # If > 0, this amount is added to the least cost path
+  # # value so that all pixels with values <= to that value
+  # # will be returned. This results in a swath of pixels
+  # # instead of a single pixel wide path.
+  # corrTolerance = sys.argv[5]
+  #
+  # # Number of threads to use
+  # nThreads = sys.argv[6] # Default 1
+  #
+  # # User provided CRS if using ascii or other file without projection info
+  # # Provide as epsg or esri string e.g. "ESRI:102028"
+  # upCRS = sys.argv[7] # Default None
+  #
+  # # point pair output file name
+  # reOrderFile = sys.argv[8]
+  #
+  # # nodeids file name
+  # nodeidsFile = sys.argv[9]
+  #
+  # # Start corridor index
+  # # For now, these should be zero indexed python style
+  # # E.g. for a landscape with 10,000 corridors
+  # # a first batch of corridors could be 0-500
+  # # Python range is such that this would process
+  # # corridors 0-499. Then next batch would be 500-1000,
+  # # which would process corridors 500-999. The next
+  # # batch would be 1000-1500, and so on.
+  # sci = sys.argv[10] # Default is None
+  #
+  # # End corridor index
+  # eci = sys.argv[11] # Default is None
+
+  (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
+
+  # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+  (cmd_lcc_zarrB <- paste0(
+    quotepath(py), ' ',
+    quotepath(pyscriptB), ' ',
+    quotepath(intif), ' ',
+    quotepath(outtif), ' ',
+    distzarr, " ",
+    format(smooth, scientific=F), ' ',
+    format(tolerance, scientific=F), " ",
+    format(ncores, scientific=F), " ",
+    crs, " ",
+    reOrderFile, " ",
+    nodeidsFile, " ",
+    format(sci, scientific=F), " ",
+    format(eci, scientific=F), " "
+    , '2>&1 ' #, logname
+  ))
+
+  intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMDA)
+  }
+
+  if (cml){
+    cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
+    cat('\n\n')
+  }
+
+  intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
+
+  if(show.result){
+    print(intCMDB)
+  }
+
+  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              log = paste0(" B: ", intCMDB, '\n') )
+  #print('ANS LCC');print(ans)
+  return( ans )
+}
 
 #' @title  Create cumulative resistance kernels
 #' @description Run Cumulative resistant kernels algorithm
@@ -1715,12 +2039,13 @@ prio_py <- function(intif, incrk, inlcc,
 
 
 #' @title  Compare maps of cumulative resistance kernels
-#' @description This tool compares the cumulative resistance kernels
+#' @description This tool compares the cumulative resistance kernels. Compares the first layer with the other provided.
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param intif String. File path to the input file used as reference raster.
+#' @param intif String. Full file path to the input file used as reference raster.
 #' @param intifs String. File path to files to be compared. A single string is required
-#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'. The first file
+#' used as the baseline scenario (sc0)
 #' @param outcsvabs String. File path to the csv output absolute difference table
 #' @param outcsvrel String. File path to the csv output relative difference table
 #' @param outpngabs String. File path to the png output absolute difference plot
@@ -1815,13 +2140,13 @@ crk_compare_py <- function(intif, intifs,
 }
 
 #' @title  Compare maps of least cost paths
-#' @description This tool compares the least cost paths
+#' @description This tool compares the least cost paths layers. Compares the first layer with the other provided.
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param intif String. File path to the input file used as reference raster.
+#' @param intif String. Full file path to the input file used as reference raster.
 #' @param intifs String. File path to files to be compared. A single string is required
-#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'
-#' @param outcsvabs String. File path to the csv output absolute difference table
+#' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'. The first file
+#' used as the baseline scenario (sc0)#' @param outcsvabs String. File path to the csv output absolute difference table
 #' @param outcsvrel String. File path to the csv output relative difference table
 #' @param outpngabs String. File path to the png output absolute difference plot
 #' @param outpngrel String. File path to the png output relative difference plot
@@ -2402,8 +2727,101 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
       #     }
       #   }
     }
-
     options(digits = 5)
     return(outraster0) # file path
+  }
+}
+
+
+#' @title  Compile TIFS from
+#' @description Compile tifs from a path and pattern
+#' @param pathh String. Folder path
+#' @param patt String. Pattern
+#' @param outt String. TIF path
+#' @param del0 Logical. Replace 0 by NA. Default TRUE
+#' @param ow Logical. Overwrite? Default TRUE
+#' @return Path of the resulting raster layer. Will be same as input if no change was made
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
+  # (tifs = list.files(path = '/scratch/ig299/', pattern = 'rsv2.+tif', full.names = TRUE))
+  (tifs = list.files(path = pathh, pattern = patt, full.names = TRUE))
+  stk <- rast(tifs)
+  if(del0){
+    r <- app(stk, 'sum')
+    r[r[] == 0] <- NA
+    writeRaster(r, filename = outt, overwrite = ow)
+  } else {
+    sumstk <- app(stk, 'sum', filename = outt, overwrite = ow)
+  }
+}
+
+
+#' @title  Create and submit BASH task for second part of Zarr FLCC
+#' @description Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
+#' resulting order csv file (number of pairs FLCC to run) and divide it by the nBatches, creating
+#' different bash files for lcc_hpc2_zarr.py. Each bash file is intended to create a raster tif
+#' with the name /{outFolder}/{prefTif}_{pref}_{i}.tif
+#' @param py Python executable location
+#' @param src Python script location
+#' @param pathh String. Folder path
+#' @param nBatches Integer. Number of batches.
+#' @param shFolder String. Path where to save the sh
+#' @param outFolder String. Path where to save tif file
+#' @param pref String. Prefix name to incluide into job, log, tif file.
+#' @param prefTif String. Out TIF prefix. Default is 'out_lczB'
+#' @param rs String. Full path to surface resistance raster layer
+#' @param smt Integer. Smooth as lcc_py( )
+#' @param tole Integer. Tolerance as lcc_py( )
+#' @param dzarr String. Full path to distance zarr file/folder.
+#' @param idcsv String. Full path to nodes ids csv file.
+#' @param ordcsv. String. Full path to pairs order csv file
+#' @param hours Integer.
+#' @param ncores Integer.
+#' @param ramGB Integer.
+#' @param RUN Logical. Submit the sh job? Only is submited if out tif file not exists.
+#' @return Path of the resulting raster layer. Will be same as input if no change was made
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+
+batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALSE,
+                       pref, prefTif = 'outlczB',
+                       py = '/home/ig299/.conda/envs/cola/bin/python',
+                       src = '/home/ig299/cola/inst/python/lcc_hpc2_zarr.py',
+                       sr,  dzarr, smt = 0, tole = 0,
+                       ncores, ordcsv, idcsv, ramGB, hours){
+  # (ocsv <- '/scratch/ig299/kuching/temp/asian_palm_civet_i5.csv')
+  cat(' --  This only works on linux cluster -- ')
+  if ( ! all( unlist(sapply(c(dzarr, ordcsv, idcsv), file.exists)))  ){
+    stop(' Some files not existing')
+  }
+  (maxi <- as.numeric(system(paste0('cat ', ordcsv, ' | wc -l'), intern = TRUE)))
+  cat ( '   Max rows: ', maxi, '\n')
+  (bsize = as.numeric(ceiling(maxi/nBatches))) #74918
+  for (i in 1:(nBatches)){
+    # i = 1
+    out_bsh <- paste0(shFolder, '/', pref, '_',i,'.sh')
+    (ei <- i*bsize);
+    (si <- ei-bsize)
+    (ei <-  min(maxi,ei))
+
+    # if (ei >= maxi){ cat(" - Last batch \n"); (ei <-  maxi); break }
+    outtif <- paste0(outFolder, '/', ,'_', pref, '_', i, '.tif')
+    jb <- paste0('#!/bin/bash\n#SBATCH --job-name=',pref,'_', i, '\n#SBATCH --output=',
+                 logFolder, '/', pref,'_', i, '_%A.log\n#SBATCH --time=',hours,
+                 ':00:00\n#SBATCH --partition=core\n#SBATCH --cpus-per-task=',
+                 ncores,'\n#SBATCH --mem ', ramGB, '000\nsrun ',
+                 py,' ', src ,' ',sr ,' ', outtif, ' ', dzarr, ' ', smt, ' ', tole, ' ', ncores, ' None ',
+                 ordcsv, ' ', idcsv,' ', si,' ', ei,'\n\n')
+    # cat(jb)
+    base::writeLines(text = jb, con = out_bsh)
+
+    if ( RUN & !file.exists(outtif)) {
+      cat('\t', si,ei, out_bsh ,'\n', sep = ' ')
+      system(paste0('sbatch ', out_bsh))
+    }
   }
 }

@@ -494,7 +494,7 @@ server <- function(input, output, session) {
       #myLayersList <<- rv$layersList
       shinyalert(title = "Trying to restore your session. Please wait",
                  #text = paste0('Your session ID now is:', restPath ),
-                 type = "info"
+                 type = "info", text = ' Checking if the folder and the layers exists'
       )
       if(!is.null(myLayersList) & nrow(myLayersList)>0){
         myLayersList$X <- NULL
@@ -1102,7 +1102,7 @@ server <- function(input, output, session) {
         # bbWGS <- 9999999
         if( is.null(rv$pts_sp_gcs) ){
           #if ( !any(grepl('ID\\["EPSG",4326\\]\\]', sf::st_crs(points_shp))) ){
-          cat(' Projecting points to EPSG4326')
+          cat(' Projecting points to EPSG4326 -- \n')
           rv$pts_sp_gcs <<- sf::st_transform(rv$pts_sp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
           #}
         }
@@ -1546,7 +1546,7 @@ server <- function(input, output, session) {
     invisible(suppressWarnings(
       tryCatch(file.remove(c(rv$crs_pts_orig, rv$crs_pts)),
                error = function(e) NULL)))
-    tempID <- sessionIDgen()
+    tempID <-sessionIDgen()
     rv$crs_pts_orig <- input$in_uncrs_pts$datapath
     rv$crs_pts <- file.path(tempFolder, paste0('/in_uncrs_',
                                                tempID, '_', basename(rv$crs_pts_orig)))
@@ -6011,8 +6011,8 @@ server <- function(input, output, session) {
       )
 
     }
-  })
-  ) # isolate
+  }))
+   # isolate
 
 
 
@@ -6096,30 +6096,38 @@ server <- function(input, output, session) {
       # in_com_ly <- 'Dispersal kernels'
       # in_com_ly <- 'Corridors'
       # tempFolder <- '/data/temp/scenario_folder'
-      layer_type_compare <- switch(in_com_ly,
-                                   #'Surface resistance' = 'out_surface_.+.tif$',
-                                   'Dispersal kernels' = 'out_crk_.+.tif$',
-                                   'Corridors' = 'out_lcc_.+.tif$')
-      layer_type_compare2 <<- layer_type_compare
-      # tempFolder <- '/data/tempR//colaGPW2024100117131905';
-      # tempFolder <- 'C:/cola/colaORD2025071501015605';
+      #' layer_type_compare <- switch(in_com_ly,
+      #'                              #'Surface resistance' = 'out_surface_.+.tif$',
+      #'                              'Dispersal kernels' = 'out_crk_.+.tif$',
+      #'                              'Corridors' = 'out_lcc_.+.tif$')
+      #' # layer_type_compare <- 'out_lcc_.+.tif$'
+      #' (avail_layers <- list.files(path = tempFolder,
+      #'                             pattern = layer_type_compare,
+      #'                             full.names = TRUE))
+      #'
+      #' (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+      #'
+      #' if(any( length(grep('resam.tif$', avail_layers, invert = FALSE))) ) {
+      #'   #pri nt(1)
+      #'   (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+      #' }
+      #' # avail_layers <- rev(avail_layers)
+      #' (avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
+      #'                                            basename(avail_layers)) )])
+      #' (avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
+      #'                                           basename(avail_layers)) )])
+      ## ///
+      layer_type_compare2 <- switch(in_com_ly,
+                                    #'Surface resistance' = 'out_surface_.+.tif$',
+                                    'Dispersal kernels' = 'Kernels',
+                                    'Corridors' = 'Corridors')
 
-      # layer_type_compare <- 'out_lcc_.+.tif$'
-      (avail_layers <- list.files(path = tempFolder,
-                                  pattern = layer_type_compare,
-                                  full.names = TRUE))
-
-      (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
-
-      if(any( length(grep('resam.tif$', avail_layers, invert = FALSE))) ) {
-        #print(1)
-        (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
-      }
-      # avail_layers <- rev(avail_layers)
-      (avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '', basename(avail_layers)) )])
-      (avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
-                                                basename(avail_layers)) )])
-      print(avail_layers)
+      # tempFolder <- '/data/temp/scenario_folder'
+      laylist <- rv$layersList
+      avail_layers  <<- laylist$internal[laylist$public %in% input$in_com_sX]
+      sce0 <- laylist$internal[laylist$public == input$in_com_s0]
+      sceX <- laylist$internal[laylist$public %in% input$in_com_sX]
+      ## ///
 
       # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
       cat(' Compare: ', in_com_ly, '\n')
@@ -6141,7 +6149,6 @@ server <- function(input, output, session) {
       (outComCsvRel <- paste0(outComFolder, '/compRel.csv'))
 
       dir.create(outComFolder, recursive = TRUE)
-      # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
 
       pdebug(devug=devug,sep='\n',pre='---COMP\n', "rv$comready", 'rv$com','in_com_ly') # = = = = = = = = = = = = = = = = = = =
       inCompShp <- 'None'
@@ -6162,8 +6169,8 @@ server <- function(input, output, session) {
           if(in_com_ly == 'Corridors'){
 
             comp_out <- tryCatch(
-              lcc_compare_py(intif = avail_layers[1],
-                             intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+              lcc_compare_py(intif = sce0,
+                             intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
                              outcsvabs = outComCsvAbs,
                              outcsvrel = outComCsvRel,
                              outpngabs = outComPngAbs,
@@ -6172,14 +6179,14 @@ server <- function(input, output, session) {
                              inshp = inCompShp,
                              shpfield = inCompShpField), error = function(e) NULL)
             cat("\n --- LCC Compare out:\n")
-            print(comp_out)
+            cat(comp_out, '\n')
 
 
           } else if(in_com_ly == 'Dispersal kernels'){
 
             comp_out <- tryCatch(
-              crk_compare_py(intif = avail_layers[1],
-                             intifs = paste0('"', paste0(avail_layers, collapse = ','), '"'),
+              crk_compare_py(intif = sce0,
+                             intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
                              outcsvabs = outComCsvAbs,
                              outcsvrel = outComCsvRel,
                              outpngabs = outComPngAbs,
@@ -6189,7 +6196,6 @@ server <- function(input, output, session) {
                              shpfield = inCompShpField), error = function(e) NULL)
             cat("\n --- CRK Comp out:\n")
             print(comp_out)
-
 
           }
           com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
@@ -6411,28 +6417,6 @@ server <- function(input, output, session) {
               # }
             }
           }
-          {
-            #   if (!file.exists(points_file$file)){
-            #    rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
-            #   } else {
-            #    params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
-            #    rv$pts <- points_file$file
-            #    rv$ptsready <- TRUE
-            #    output$ll_map_points <- leaflet::renderLeaflet({
-            #     #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-            #     points_shpO <- sf::read_sf(points_file$file)
-            #     points_shp <- sf::st_transform(points_shpO, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
-            #     points_shp$ID <- 1:nrow(points_shp)
-            #     #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-            #     rv$pts_sp <- points_shp
-            #     rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-            #     #temLL <- rv$llmap
-            #     #save(temLL, file = '/data/tempR/ll.RData')
-            #     #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
-            #     makeLL( )
-            #    })
-            #   }
-          }
 
           llc
         })
@@ -6440,9 +6424,9 @@ server <- function(input, output, session) {
     }
   })
 
-
+  ## Update list of layers to compare
   observeEvent( input$in_com_ly, {
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+    if(input$in_com_ly != ''){
     # in_com_ly <- 'Dispersal kernels'
     # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridors')
     #tempFolder <- '/data/temp/scenario_folder'
@@ -6453,17 +6437,37 @@ server <- function(input, output, session) {
                                  'Dispersal kernels' = 'out_crk_.+.tif$',
                                  'Corridors' = 'out_lcc_.+.tif$')
 
+    layer_type_compare2 <- switch(in_com_ly,
+                                 #'Surface resistance' = 'out_surface_.+.tif$',
+                                 'Dispersal kernels' = 'Kernels',
+                                 'Corridors' = 'Corridors')
+
     # tempFolder <- '/data/temp/scenario_folder'
     avail_layers <- list.files(path = tempFolder, pattern = layer_type_compare,
                                full.names = TRUE)
-    (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
-
-
+    (avail_layers <<- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+    laylist <- rv$layersList
+    avail_layers2  <<- laylist$public[laylist$type %in% layer_type_compare2]
     mssg2Display <- paste0(length(avail_layers), ' layer(s) found for ', in_com_ly, ': ',
-                           paste0(basename(avail_layers), collapse = ' '))
+                           paste0(basename(avail_layers2), collapse = ' '))
     output$vout_com <- renderText({isolate( mssg2Display )})
 
+    updateSelectInput(session, "in_com_s0", label = 'Reference:',
+                choices = avail_layers2,
+                selected = avail_layers2[1])
+    updateCheckboxGroupInput(session, "in_com_sX", choices = avail_layers2[-1],
+                         selected = avail_layers2[-1])
+    }
   })
+
+  isolate(observeEvent( input$in_com_s0, {
+    if( exists('avail_layers2')){
+
+    optscomp <- setdiff(avail_layers2, input$in_com_s0)
+    updateCheckboxGroupInput(session, "in_com_sX",
+                             choices = optscomp, selected = optscomp)
+    }
+  }))
 
   ####### > Change session folder ------------------
   observeEvent(input$sessPath, {
@@ -7565,7 +7569,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
-              bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a greater increase in resistance as suitability declines.'),
+              bsTooltip(id = 'in_sur_6', title = 'The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitats. Negative values result in a smaller increase in resistance as suitability declines.'),
               bsTooltip(id = 'in_sur_7', title = 'The no data value of the input raster. This value will be extracted form the raster if not provided'),
               bsTooltip(id = 'in_name_hs', title = 'Name of the layer to use'),
               bsTooltip(id = 'out_name_sur', title = 'Name of the output'),
@@ -7664,11 +7668,6 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeabs', title = 'Number of pseudoabsences to simulate. Will add features with 0 in the preabs field, leaving 1 to the remaining features', placement = 'top'),
               bsTooltip(id = 'in_eeruncovs', title = 'Run covariates extraction', placement = 'top'),
 
-
-
-
-
-
               #includeMarkdown("md_intro.md")
               tabsetPanel(
                 type = "pills",
@@ -7678,7 +7677,7 @@ if (FALSE){ # if FALSE
                   fluidRow(
                     column(width = 4,
                            textInput(width = "100%",
-                                     value = '',
+                                     value = 'colaCAR2026052319210005', ## REMOVE
                                      placeholder = 'sessionID here...',
                                      label =  NULL,
                                      'session2restore')),
@@ -8724,8 +8723,9 @@ if (FALSE){ # if FALSE
           shinydashboard::tabItem(
             tabName = 'tab_compare',
 
+            # Top banner
             fluidRow(
-              column(3, h2(' Compare results', style="text-align: center;")),
+              column(2, h2(' Compare results', style="text-align: up;")),
               column(5, verbatimTextOutput("vout_com1") #%>%shinycssloaders::withSpinner(color="#0dc5c1")
                      ,tags$head(tags$style("#vout_com1{overflow-y:scroll; max-height: 70px}"))
               ),
@@ -8734,12 +8734,9 @@ if (FALSE){ # if FALSE
                                  choices = c('', #'Surface resistance',
                                              'Dispersal kernels', 'Corridors'))
               ),
-              column(1, div(style = "margin-top: 20px"),
-                     actionButton("com_py", "Compare", icon = icon("play"))
-              ),
-              column(1, div(style = "margin-top: 20px"),
+              column(2, div(style = "margin-top: 20px"),
+                     actionButton("com_py", "Compare", icon = icon("play")),
                      downloadButton('comDwn', 'Download'))
-
             ),
 
             # ,
@@ -8805,15 +8802,20 @@ if (FALSE){ # if FALSE
             # ),
 
             fluidRow(
-              # fluidRow(
-              #  column(4, selectInput("in_com_rasA", "First scenario:", '', choices = c(''))),
-              #  column(4, selectInput("in_com_rasB", "Second scenario:", '', choices = c(''))),
-              #  column(4, selectInput("in_com_rasC", "Scenario diff:", '', choices = c('')))
-              # ),
-              column(6, leaflet::leafletOutput("ll_map_com", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")),
+              column(6, leaflet::leafletOutput("ll_map_com", height = "600px") %>%
+                       shinycssloaders::withSpinner(color="#0dc5c1")),
               column(6,
                      fluidRow(
                        column(12, verbatimTextOutput("vout_com") ),
+                     ),
+                     #conditionalPanel('input.in_com_ly =! ""',
+                      # )
+                     fluidRow(
+                       column(6, selectInput("in_com_s0", label = 'Reference:',
+                                             choices = c(''), selected = '',
+                                             multiple = FALSE) ),
+                       column(6,   checkboxGroupInput(inputId = "in_com_sX", label = 'Scenarios:',
+                                                choices = c(''), selected = '') )
                      ),
 
                      tabsetPanel(
@@ -8847,8 +8849,7 @@ if (FALSE){ # if FALSE
               includeMarkdown(system.file(package = 'cola', 'docs/fun_lcc_compare_py.md'))
 
             ) # close box
-          )
-          ,
+          ), # close tabitem
 
 
           #### UI PDF ----
@@ -8871,7 +8872,7 @@ if (FALSE){ # if FALSE
                 )
               )
             )
-          ),
+          ), # close tabitem
 
           #### UI GENETICS ----
 
@@ -8970,18 +8971,19 @@ if (FALSE){ # if FALSE
               # column(width = 4, h5('Hello'))
               #)
             ) # close box
-          ),
+          ), # close tabitem
 
           shinydashboard::tabItem('tab_example',
                                   fluidPage(plotOutput('plot0'),
                                             plotOutput('plot1'))
-          )
+          ) # close tabitem
           # tab_home tab_surface tab_points tab_distance tab_cdpop
           # tab_corridors tab_kernels tab_plotting tab_Mapping tab_priori tab_genetics tablocal
-        )
-      )
-  )
-}
+        ) # Close TabItems
+      ) # Close dashboardBody
+  ) # close dashboardPage
+
+ } # UI + css
 
 ## Run the APP
 shinyApp(ui, server)

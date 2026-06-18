@@ -8,7 +8,7 @@
 # Agenda
 
 1. Intro by David McDonald. 
-2. Concepts and workflow by Dawn Burnham. 
+2. Concepts and workflow by Dawn Burnham. [Slides](https://drive.google.com/file/d/1JeRTczMac85vLqbl2aVFeC0ZGRoBb_2u/view?usp=sharing)
 3. CoLa DSS by Patrick Jantz and Ivan Gonzalez. [Slides](https://docs.google.com/presentation/d/1ZSHY7Xd6p3OlisT7DTARHNSgWUdjwYd4/edit?slide=id.g3e9ee1163d6_0_69#slide=id.g3e9ee1163d6_0_69)
 4. Study case by Andrew Hearn.
 
