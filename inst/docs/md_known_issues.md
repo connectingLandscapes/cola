@@ -651,6 +651,35 @@ The errors in this section are usually related with some libraries which require
     
 -------------
 
+
+  **Known issue:**  Having an error in red when loading raster layers in the DSS. The back end looks like this:
+  
+  ```
+[1] "C:\\Users\\FFI\\AppData\\Local\\R-MINI~1\\envs\\cola\\Lib\\site-packages\\pyproj\\network.py:59: UserWarning: pyproj unable to set PROJ database path."                                                                                        
+[2] "  _set_context_ca_bundle_path(ca_bundle_path)"                                                                                                                                                                                                 
+[3] "ERROR 1: PROJ: proj_create_from_database: C:\\Program Files\\PostgreSQL\\15\\share\\contrib\\postgis-3.5\\proj\\proj.db contains DATABASE.LAYOUT.VERSION.MINOR = 2 whereas a number >= 6 is expected. It comes from another PROJ installation."
+[4] "C:\\Users\\FFI\\AppData\\Local\\R-MINI~1\\envs\\cola\\Lib\\site-packages\\pyogrio\\core.py:35: RuntimeWarning: Could not detect PROJ data files. Set PROJ_LIB environment variable to the correct path."                                       
+[5] "  _init_proj_data()" 
+
+Error: [project] Cannot do this transformation
+In addition: Warning message:
+  Cannot find coordinate operations from 
+`{"$schema": "https://proj.org/schemas/v0.7/projjson.schema.json";,
+    "type": "EngineeringCRS", "name": "WGS 84 / World Mercator",
+    "datum": { "name": "Unknown engineering datum" },
+    "coordinate_system": {"subtype": "Cartesian", "axis": [{"name": "Easting",
+          "abbreviation": "E", "direction": "east", "unit": "metre" },
+        { "name": "Northing", "abbreviation": "N", "direction": "north", "unit": "metre"} ] }}'
+to +proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs' (GDAL error 6) 
+```
+  
+ ***Solution:*** Open 'environment variables' editor under 'System properties menu'. Under system or user variables, remove the PROJ_LIB variable.
+ 
+ In this case PROJ_lib variable and path existed probably linked to an old PostgreSQL installation. By removing the local environment variable (now does not exist, or empty) PROJ_LIB is not defined so R and Python uses their own PROJ installations, not the one installed by other software.
+ Conclusion: remove the saved PROJ_LIB variable son the system uses their local ones.
+ 
+-------------
+
   **Known issue:**  R can't load raster maps.
   
   ```

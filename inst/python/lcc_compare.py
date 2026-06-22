@@ -80,7 +80,7 @@ if shpZones == 'None':
         # Convert data and profile to float32
         r, profile = cf.read2flt32array("None", i)
         # Sum raster values
-        rSum = np.sum(r[r != -9999])
+        rSum = np.nansum(r[r != -9999])
         # Append to list
         csumlist.append(rSum)
     

@@ -372,19 +372,21 @@ tif2rsg <- function(path, outdir = NULL){
   ## If no oudir provided, input folder is used
   ## Returns the RSG filename
 
+  require(terra)
+
 
   # path = 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/Sabah_example_CDPOP+UNICOR/roads.tif'
   # path = 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/Sabah_example_CDPOP+UNICOR/'
   # outdir <- path
   if (file.exists(path)){
-    tif <- raster(path)
+    tif <- rast(path)
 
     (outdir <- ifelse(is.null(outdir), yes = dirname(path), no = gsub(pattern = basename(outdir), x = outdir, replacement = '') ))
     (outdir <- ifelse(outdir == '', '.', outdir))
-    fname <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '_temp.asc')
-    fname_rsg <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.rsg')
+    (fname <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '_temp.asc'))
+    (fname_rsg <- paste0(outdir, '/', tools::file_path_sans_ext( basename(path)), '.rsg'))
 
-    terra::writeRaster(x = tif, format = 'ascii', overwrite = TRUE, filename = fname )
+    terra::writeRaster(x = tif, overwrite = TRUE, filename = fname, NAflag=-9999 ) # format = 'ascii'
 
     asc <- read.delim(fname, header = FALSE)
     asc[1:5, 1] <- gsub('[[:blank:]]', '\t', gsub(' $', '', tolower(asc[1:5, 1])))
