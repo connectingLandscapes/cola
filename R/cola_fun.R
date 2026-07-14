@@ -2825,3 +2825,384 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
     }
   }
 }
+
+
+
+## CoLa 2 -------------------------
+
+#' @title SDM MODIS Export Pipeline
+#' @description Exports gap-filled 16-day NDVI/EVI composites at 250m as EE assets, aready for use in wall-to-wall SDM prediction.
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String.
+#' @param species String.
+#' @param target_year Integer.
+#' @param stage String. 'export_annual', 'gap_fill', 'reduce_to_metrics'
+#' @param run_mode String. 'test' or 'full'
+#' @param max_concurrent Integer. Default is 3.
+#' @param gap_years Integer . Default is 2.
+#' @param min_year Integer. Default is 2025.
+#' @param max_year Integer. Default is 2025.
+#' @param crs String. Default is EPSG:4326
+#' @param scale Integer. Default is 250
+#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
+#' @param gee_assets String. EE path to
+#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @return List with log sloth
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+sdm_modis_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                         pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_export.py'),
+                         ee_project, species, target_year,
+                         stage = '', run_mode = 'full',
+                         max_concurrent = 3,
+                         gap_years = 2,
+                         min_year = 2000,
+                         max_year = 2025,
+                         crs = 'EPSG:4326',
+                         scale = 250,
+                         tile_degrees = 2,
+                         gee_assets,
+                         range_asset,
+                         cml = TRUE, show.result = TRUE,
+                         dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  if( !run_mode %in% c('test', 'full')){
+    stop('Not valid method. It must be test or full')
+  }
+  if( !stage %in% c('export_annual', 'gap_fill', 'reduce_to_metrics')){
+    stop('Not valid method. It must be export_annual, gap_fill,  or reduce_to_metrics')
+  }
+
+  ### Create CMD
+  (cmd_ <- paste0(
+    py, ' ', pyscript,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --target_year ', target_year,
+    ' --stage ', stage,
+    ' --run_mode ', run_mode,
+    ' --max_concurrent ', max_concurrent,
+    ' --gap_years ', gap_years,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --crs ', crs,
+    ' --scale ', scale,
+    ' --tile_degrees ', tile_degrees,
+    ' --gee_assets ', gee_assets,
+    ' --range_asset ', range_asset,
+    #' 2>&1'
+    ''
+  ))
+  if (cml | dry_run){
+    cat('\n\tCMD sdm MODIS: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n')
+  }
+
+  if (!dry_run){
+    intCMD <- tryCatch(system( cmd_ ,
+                               intern = TRUE),
+                       error = function(e) e$message)
+    if(show.result){
+      print(intCMD)
+    }
+  } else {
+    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+  }
+
+  return( list(log = paste0("", intCMD) ) )
+}
+
+#' @title SDM MODIS Predictor Extraction
+#' @description Extracts predictor variables at species occurrence locations using
+#' MODIS 250m NDVI/EVI. All outputs are named after SPECIES and MODEL_ID so multiple
+#' runs never overwrite each other.
+#' Usage:    python sdm_modis_extraction.py --species puma --model_id puma_modis_m2
+#'  --run_mode full [--ee_project geersprocessing] [--batch_size 25] ...
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String.
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param run_mode String. Execution mode, 'single', 'full', 'resume'
+#' @param batch_year Integer. Year for single-batch test run
+#' @param batch_num Integer. Batch number for single-batch test run
+#' @param batch_size Integer. Points per batch. Default is 25
+#' @param max_concurrent Integer. Max concurrent GEE tasks. Default is 5.
+#' @param occurrence_asset String. GEE asset path for occurrence points.
+#' Default: {gee_assets}/{species}_occurrences_batched
+#' @param gee_assets String. Root GEE assets folder (no trailing slash).
+#' @param min_year Integer. Default is 2000.
+#' @param max_year Integer. Default is 2025.
+#' @param gap_years Integer . Default is 2.
+#' @param target_scale Integer. Export scale in metres. Default is 250
+#' @param point_buffer Integer. Buffer around each point for predictor stack (m)
+#' @return List with log sloth
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+sdm_modis_extract_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_extraction.py'),
+    ee_project, species,
+    model_id,
+    run_mode = 'single',
+    batch_year, batch_num, batch_size,
+    max_concurrent = 3,
+    occurrence_asset,
+    gee_assets,
+    min_year = 2000,
+    max_year = 2025,
+    gap_years = 2,
+    target_scale = 250,
+    point_buffer = 15000,
+    cml = TRUE, show.result = TRUE,
+    dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  if( !run_mode %in% c('single', 'full', 'resume')){
+    stop('Not valid method. It must be single, resume or full')
+  }
+
+  ### Create CMD
+  (cmd_ <- paste0(
+    py, ' ', pyscript,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --run_mode ', run_mode,
+    ' --batch_year ', batch_year,
+    ' --batch_num ', batch_num,
+    ' --batch_size ', batch_size,
+    ' --max_concurrent ', max_concurrent,
+    ' --occurrence_asset ', occurrence_asset,
+    ' --gee_assets ', gee_assets,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --gap_years ', gap_years,
+    ' --target_scale ', target_scale,
+    ' --point_buffer ', point_buffer,
+    #' 2>&1'
+    ''
+  ))
+  if (cml | dry_run){
+    cat('\n\tCMD sdm MODIS extraction: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n')
+  }
+
+  if (!dry_run){
+    intCMD <- tryCatch(system( cmd_ ,
+                               intern = TRUE),
+                       error = function(e) e$message)
+    if(show.result){
+      print(intCMD)
+    }
+  } else {
+    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+  }
+
+  return( list(log = paste0("", intCMD) ) )
+}
+
+
+
+#' @title SDM RF Model Fitting Pipeline
+#' @description All outputs named after MODEL_ID — multiple runs never overwrite each other.
+#' Usage: python sdm_model_fitting.py --species species --model_id speciesmodid
+#       --working_dir C:/Users/.../...
+#       [--ee_project geersprocessing] [--mode binary] ...
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String.
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param mode String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'
+#' @param target_col String. Column with the absence/presence values, 0 and 1. Default is 'presence'
+#' @param gee_asset String. Root GEE assets folder (no trailing slash)
+#' @param working_dir String. Local working directory for model outputs. Skip spcaces.
+#' @param local_csv String. Path to local training CSV to skip EE asset loading.
+#' Default: {working_dir}/{model_id}_training.csv'
+#' @param imp_thresh Float. Relative importance threshold for feature pruning. Default is 0.10
+#' @param categorical_threshold Integer. Max unique values to treat a variable as categorical. Default is 20
+#' @return List with log sloth
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+sdm_model_fitting_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                                 pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
+                                 ee_project, species,
+                                 model_id,
+                                 modex = 'binary',
+                                 target_col = 'presence',
+                                 gee_asset,
+                                 working_dir,
+                                 local_csv,
+                                 imp_thresh = 0.1,
+                                 categorical_threshold = 2025,
+                                 cml = TRUE, show.result = TRUE,
+                                 dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  if( !modex %in% c('binary', 'regression', 'multiclass')){
+    stop("Not valid method. It must be s'binary', 'regression', or 'multiclass'")
+  }
+
+  ### Create CMD
+  (cmd_ <- paste0(
+    py, ' ', pyscript,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --mode ', modex,
+    ' --target_col ', target_col,
+    ' --gee_asset ', gee_asset,
+    ' --working_dir ', working_dir,
+    ' --local_csv ', local_csv,
+    ' --imp_thresh ', imp_thresh,
+    ' --categorical_threshold ', categorical_threshold,
+    #' 2>&1'
+    ''
+  ))
+  if (cml | dry_run){
+    cat('\n\tCMD sdm model fitting: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n')
+  }
+
+  if (!dry_run){
+    intCMD <- tryCatch(system( cmd_ ,
+                               intern = TRUE),
+                       error = function(e) e$message)
+    if(show.result){
+      print(intCMD)
+    }
+  } else {
+    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+  }
+
+  return( list(log = paste0("", intCMD) ) )
+}
+
+
+
+#' @title SDM MODIS wall-to-wall prediction script
+#' @description Applies a pre-trained RF classifier to pre-exported MODIS metrics tiles
+#' to produce a wall-to-wall habitat suitability map.
+#' All inputs derived from MODEL_ID (classifier, features) and
+#' SPECIES + TARGET_YEAR (metrics tiles). Output folder also
+#' derived from MODEL_ID + TARGET_YEAR.
+#' IMPORTANT: Gaussian kernel parameters must be identical to those used in
+#' sdm_modis_extraction.py — predictor values must match between training
+#' and prediction or model performance will degrade.
+#' Usage:
+#'   python sdm_modis_wall_to_wall.py --species puma --model_id puma_modis_m2 \
+#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String.
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
+#' @param run_mode String. Execution mode, 'test', 'full'
+#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
+#' @param crs String. Year for single-batch test run
+#' @param scale Integer. Pixel size in meters. Default is 250m
+#' @param min_year Integer. Default is 2000.
+#' @param max_year Integer. Default is 2025.
+#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
+#' @param gee_assets String. EE path to
+#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @return List with log sloth
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+sdm_modis_prediction_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+                                 pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
+                                 ee_project, species,
+                                 target_year, run_mode,
+                                 max_concurrent = 3,
+                                 crs, scale = 250,
+                                 min_year, max_year,
+                                 tile_degrees,
+                                 gee_assets, range_assets,
+                                 cml = TRUE, show.result = TRUE,
+                                 dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  if( !modex %in% c('binary', 'regression', 'multiclass')){
+    stop("Not valid method. It must be s'binary', 'regression', or 'multiclass'")
+  }
+
+  ### Create CMD
+  (cmd_ <- paste0(
+    py, ' ', pyscript,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --mode ', modex,
+    ' --target_col ', target_col,
+    ' --gee_asset ', gee_asset,
+    ' --working_dir ', working_dir,
+    ' --local_csv ', local_csv,
+    ' --imp_thresh ', imp_thresh,
+    ' --categorical_threshold ', categorical_threshold,
+    #' 2>&1'
+    ''
+  ))
+  if (cml | dry_run){
+    cat('\n\tCMD sdm model fitting: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n')
+  }
+
+  if (!dry_run){
+    intCMD <- tryCatch(system( cmd_ ,
+                               intern = TRUE),
+                       error = function(e) e$message)
+    if(show.result){
+      print(intCMD)
+    }
+  } else {
+    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+  }
+
+  return( list(log = paste0("", intCMD) ) )
+}
+
+

@@ -60,6 +60,8 @@ def parse_args():
                    help='Export scale in metres')
     p.add_argument('--point_buffer',    type=int, default=15000,
                    help='Buffer around each point for predictor stack (m)')
+    p.add_argument('--working_dir',  type=str, required=True,
+                   help='Local working directory for model outputs')
 
     return p.parse_args()
 
@@ -84,7 +86,7 @@ MAX_YEAR         = args.max_year
 GAP_YEARS        = args.gap_years
 TARGET_SCALE     = args.target_scale
 POINT_BUFFER     = args.point_buffer
-
+WORKING_DIR      = args.working_dir
 GEE_ASSETS       = args.gee_assets
 
 # Input asset
@@ -95,7 +97,7 @@ OCCURRENCE_ASSET = (args.occurrence_asset or
 EXPORT_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL_ID}'
 
 # Log file — derived from SPECIES + MODEL_ID
-LOG_FILE         = f'completed_batches_{SPECIES}_{MODEL_ID}.txt'
+LOG_FILE         = f'{WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt'
 
 # =============================================================================
 # 2. FIXED PARAMETERS (not user-facing)

@@ -20,6 +20,18 @@ Primary inputs to the tools include habitat suitability layers or spatially expl
 
 For recent examples of how the individual tools have been used for wildlife research and conservation assessments see Kaszta *et al.* (2020a), Kaszta *et al*. (2020b), Zeller *et al*. (2021), Ash *et al.* (2023), Makwana *et al.* (2023).
   
+ 
+> Installing 
+
+In R, type:
+ 
+```  
+library(devtools)
+devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')
+library(cola) 
+cola::setup_cola() 
+```
+ 
   
 > Contact
 
