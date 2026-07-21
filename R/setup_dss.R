@@ -40,7 +40,7 @@ setup_cola_dss <- function(
   'shiny',  'shinyBS',## Before shiny plugins
   "shinydashboard",  "shinycssloaders",
   'shinydashboardPlus', 'shinyjs',
-  'shinyalert',
+  'shinyalert', 'shinyFiles',
   'shinyWidgets', 'dashboardthemes',
   "highcharter", 'plotly')){
 

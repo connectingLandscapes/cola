@@ -921,7 +921,7 @@ lcc_py <- function(inshp, intif, outtif,
 
 
 # lccHeavy_py <- function(
-#     inshp, intif, outtif,
+    #     inshp, intif, outtif,
 #     maxdist, smooth, tolerance,
 #     ncores = as.numeric(Sys.getenv('COLA_NCORES')),
 #     crs = 'None', tempFolder = NULL,
@@ -1381,17 +1381,17 @@ lccZarr_py <- function(inshp, intif, outtif,
 #' @export
 
 lccZarrA_py <- function(inshp, intif,
-                       maxdist,
-                       ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
-                       crs = 'None',
-                       tempFolder = NULL,
-                       pairzarr = NULL,
-                       distzarr = NULL,
-                       py = Sys.getenv("COLA_PYTHON_PATH"),
-                       pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
-                       pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                       cml = TRUE, show.result = TRUE){
+                        maxdist,
+                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                        maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+                        crs = 'None',
+                        tempFolder = NULL,
+                        pairzarr = NULL,
+                        distzarr = NULL,
+                        py = Sys.getenv("COLA_PYTHON_PATH"),
+                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                        cml = TRUE, show.result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -1541,17 +1541,17 @@ lccZarrA_py <- function(inshp, intif,
 #' @export
 
 lccZarrB_py <- function(inshp, intif, outtif,
-                       maxdist, smooth, tolerance,
-                       ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
-                       crs = 'None',
-                       sci = 'None', eci = 'None',
-                       tempFolder = NULL,
-                       pairzarr = NULL,
-                       py = Sys.getenv("COLA_PYTHON_PATH"),
-                       pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
-                       pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                       cml = TRUE, show.result = TRUE){
+                        maxdist, smooth, tolerance,
+                        ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+                        maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+                        crs = 'None',
+                        sci = 'None', eci = 'None',
+                        tempFolder = NULL,
+                        pairzarr = NULL,
+                        py = Sys.getenv("COLA_PYTHON_PATH"),
+                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                        cml = TRUE, show.result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -2854,7 +2854,7 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-sdm_modis_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
+sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_export.py'),
                          ee_project, species, target_year,
                          stage = '', run_mode = 'full',
@@ -2886,7 +2886,7 @@ sdm_modis_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   ### Create CMD
   (cmd_ <- paste0(
-    py, ' ', pyscript,
+    quotepath(py), ' ', quotepath(pyscript),
     ' --ee_project ', ee_project,
     ' --species ', species,
     ' --target_year ', target_year,
@@ -2921,7 +2921,7 @@ sdm_modis_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
   }
 
-  return( list(log = paste0("", intCMD) ) )
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
 #' @title SDM MODIS Predictor Extraction
@@ -2942,6 +2942,7 @@ sdm_modis_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param max_concurrent Integer. Max concurrent GEE tasks. Default is 5.
 #' @param occurrence_asset String. GEE asset path for occurrence points.
 #' Default: {gee_assets}/{species}_occurrences_batched
+#' @param column_train String. Column with the presence/absense [0-1] values
 #' @param gee_assets String. Root GEE assets folder (no trailing slash).
 #' @param min_year Integer. Default is 2000.
 #' @param max_year Integer. Default is 2025.
@@ -2959,10 +2960,12 @@ sdm_modis_extract_py <- function(
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_extraction.py'),
     ee_project, species,
     model_id,
+    working_dir,
     run_mode = 'single',
     batch_year, batch_num, batch_size,
     max_concurrent = 3,
     occurrence_asset,
+    column_train,
     gee_assets,
     min_year = 2000,
     max_year = 2025,
@@ -2983,18 +2986,22 @@ sdm_modis_extract_py <- function(
     stop('Not valid method. It must be single, resume or full')
   }
 
+  ## Fix working directory
+  working_dir <- cola::quotepath(working_dir)
   ### Create CMD
   (cmd_ <- paste0(
-    py, ' ', pyscript,
+    quotepath(py), ' ', quotepath(pyscript),
     ' --ee_project ', ee_project,
     ' --species ', species,
     ' --model_id ', model_id,
+    ' --working_dir ', working_dir,
     ' --run_mode ', run_mode,
     ' --batch_year ', batch_year,
     ' --batch_num ', batch_num,
     ' --batch_size ', batch_size,
     ' --max_concurrent ', max_concurrent,
     ' --occurrence_asset ', occurrence_asset,
+    ' --column_train ', column_train,
     ' --gee_assets ', gee_assets,
     ' --min_year ', min_year,
     ' --max_year ', max_year,
@@ -3004,6 +3011,7 @@ sdm_modis_extract_py <- function(
     #' 2>&1'
     ''
   ))
+
   if (cml | dry_run){
     cat('\n\tCMD sdm MODIS extraction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
@@ -3021,7 +3029,7 @@ sdm_modis_extract_py <- function(
     intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
   }
 
-  return( list(log = paste0("", intCMD) ) )
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
 
@@ -3050,19 +3058,20 @@ sdm_modis_extract_py <- function(
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-sdm_model_fitting_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                                 pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
-                                 ee_project, species,
-                                 model_id,
-                                 modex = 'binary',
-                                 target_col = 'presence',
-                                 gee_asset,
-                                 working_dir,
-                                 local_csv,
-                                 imp_thresh = 0.1,
-                                 categorical_threshold = 2025,
-                                 cml = TRUE, show.result = TRUE,
-                                 dry_run = FALSE){
+sdm_model_fitting_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
+    ee_project, species,
+    model_id,
+    modex = 'binary',
+    target_col = 'presence',
+    gee_assets,
+    working_dir,
+    local_csv,
+    imp_thresh = 0.1,
+    categorical_threshold = 20,
+    cml = TRUE, show.result = TRUE,
+    dry_run = FALSE){
 
   if( !file.exists(py)){
     stop('Python not found')
@@ -3077,13 +3086,13 @@ sdm_model_fitting_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   ### Create CMD
   (cmd_ <- paste0(
-    py, ' ', pyscript,
+    quotepath(py), ' ', quotepath(pyscript),
     ' --ee_project ', ee_project,
     ' --species ', species,
     ' --model_id ', model_id,
     ' --mode ', modex,
     ' --target_col ', target_col,
-    ' --gee_asset ', gee_asset,
+    ' --gee_assets ', gee_assets,
     ' --working_dir ', working_dir,
     ' --local_csv ', local_csv,
     ' --imp_thresh ', imp_thresh,
@@ -3108,7 +3117,7 @@ sdm_model_fitting_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
   }
 
-  return( list(log = paste0("", intCMD) ) )
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
 
@@ -3146,17 +3155,20 @@ sdm_model_fitting_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-sdm_modis_prediction_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                                 pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
-                                 ee_project, species,
-                                 target_year, run_mode,
-                                 max_concurrent = 3,
-                                 crs, scale = 250,
-                                 min_year, max_year,
-                                 tile_degrees,
-                                 gee_assets, range_assets,
-                                 cml = TRUE, show.result = TRUE,
-                                 dry_run = FALSE){
+sdm_modis_prediction_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
+    ee_project, species,
+    model_id,
+
+    target_year, run_mode,
+    max_concurrent = 3,
+    crs, scale = 250,
+    min_year, max_year,
+    tile_degrees,
+    gee_assets, range_asset,
+    cml = TRUE, show.result = TRUE,
+    dry_run = FALSE){
 
   if( !file.exists(py)){
     stop('Python not found')
@@ -3165,28 +3177,31 @@ sdm_modis_prediction_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     stop('Script not found')
   }
 
-  if( !modex %in% c('binary', 'regression', 'multiclass')){
-    stop("Not valid method. It must be s'binary', 'regression', or 'multiclass'")
+  if( !run_mode %in% c('test', 'full')){
+    stop("Not valid method. It must be 'test', or 'full'")
   }
 
   ### Create CMD
   (cmd_ <- paste0(
-    py, ' ', pyscript,
+    quotepath(py), ' ', quotepath(pyscript),
     ' --ee_project ', ee_project,
     ' --species ', species,
     ' --model_id ', model_id,
-    ' --mode ', modex,
-    ' --target_col ', target_col,
-    ' --gee_asset ', gee_asset,
-    ' --working_dir ', working_dir,
-    ' --local_csv ', local_csv,
-    ' --imp_thresh ', imp_thresh,
-    ' --categorical_threshold ', categorical_threshold,
+    ' --target_year ', target_year,
+    ' --run_mode ', run_mode,
+    ' --max_concurrent ', max_concurrent,
+    ' --crs ', crs,
+    ' --scale ', scale,
+    ' --tile_degrees ', tile_degrees,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --gee_assets ', gee_assets,
+    ' --range_asset ', range_asset,
     #' 2>&1'
     ''
   ))
   if (cml | dry_run){
-    cat('\n\tCMD sdm model fitting: \n')
+    cat('\n\tCMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
@@ -3202,7 +3217,5 @@ sdm_modis_prediction_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
   }
 
-  return( list(log = paste0("", intCMD) ) )
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
-
-

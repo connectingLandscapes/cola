@@ -16,6 +16,8 @@ import json
 from shapely.geometry import Point, box
 from sat_ts_fusion import eecolatools as ect
 import os
+from pathlib import Path
+
 
 # import os
 # os.chdir('N:/My Drive/git/cola/inst/ee')

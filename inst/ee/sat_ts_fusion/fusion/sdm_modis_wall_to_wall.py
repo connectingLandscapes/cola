@@ -58,6 +58,7 @@ def parse_args():
                    help='Default: {gee_assets}/{species}_iucn_range')
 
     return p.parse_args()
+## Output to be saved here:  desc = safe_name(f'{MODEL_ID}_suitability_{TARGET_YEAR}_{tile["name"]}')
 
 args = parse_args()
 ee.Initialize(project=args.ee_project)
@@ -353,6 +354,8 @@ def main():
     selected_features = (ee.FeatureCollection(FEATURES_ASSET)
                            .first().get('selected_features')
                            .getInfo().split(','))
+   
+    ## Remove column
     print(f'Features ({len(selected_features)}): {selected_features}')
 
     # Load range + build tiles
@@ -371,29 +374,32 @@ def main():
     for tile in tiles:
         asset_id = (f'{OUTPUT_FOLDER}/'
                     f'{MODEL_ID}_suitability_{TARGET_YEAR}_{tile["name"]}')
-
+        
         if asset_exists(asset_id):
             print(f'  Skipping (exists): {tile["name"]}')
             skipped += 1
             continue
-
+        
         metrics_id = f'{METRICS_FOLDER}/{tile["name"]}_metrics'
         if not asset_exists(metrics_id):
-            print(f'  Skipping (no metrics): {tile["name"]}')
+            print(f'  Skipping (no metrics): {tile["name"]} | metrics_id: {metrics_id}')
             skipped += 1
             continue
-
+        
         stack = build_predictor_stack(TARGET_YEAR, tile['name'])
-
+        
         # Check all selected features are present
         missing = ee.List(selected_features).removeAll(stack.bandNames())
         n_miss  = missing.size().getInfo()
         if n_miss > 0:
             print(f'  WARNING {tile["name"]}: {n_miss} features missing: '
                   f'{missing.getInfo()}')
+        
 
         # Sentinel fraction check
         sel_stack     = stack.select(selected_features)
+        # print('all good 2')
+
         sentinel_frac = (sel_stack.eq(-9999).reduce(ee.Reducer.mean())
                                   .reduceRegion(reducer=ee.Reducer.mean(),
                                                 geometry=tile['geom'],

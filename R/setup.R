@@ -36,7 +36,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         ,
 
                         onlyIndividual = FALSE, ask = TRUE,
-                        dss = FALSE, zarr = TRUE,
+                        dss = TRUE, zarr = TRUE,
                         cola2 = FALSE, yml = FALSE,
                         spyder = FALSE, updateCola = FALSE,
 
@@ -58,7 +58,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
   if (cola2){
-    libs2Install <- c('statsmodels', 'geemap', 'earthengine-api', libs2Install)
+    libs2Install <- c('tabulate', 'statsmodels', 'geemap', 'earthengine-api', 'mrmr_selection'
+                      , libs2Install)
   }
 
   if (spyder){ # for use in spyder IDE

@@ -42,12 +42,14 @@ def parse_args():
                    help='Max concurrent GEE tasks')
 
     # ── Asset paths ───────────────────────────────────────────────────────────
-    p.add_argument('--occurrence_asset', type=str, default=None,
-                   help='GEE asset path for occurrence points '
-                        '(default: {gee_assets}/{species}_occurrences_batched)')
     p.add_argument('--gee_assets',      type=str,
                    default='projects/geersprocessing/assets',
                    help='Root GEE assets folder (no trailing slash)')
+    p.add_argument('--occurrence_asset', type=str, default=None,
+                   help='GEE asset path for occurrence points '
+                        '(default: {gee_assets}/{species}_occurrences_batched)')
+    p.add_argument('--column_train', type=str, default=None,
+                   help='Column with the presence/absense [0-1] values')
 
     # ── Temporal range (shared across scripts) ────────────────────────────────
     p.add_argument('--min_year',        type=int, default=2000)
@@ -88,6 +90,7 @@ TARGET_SCALE     = args.target_scale
 POINT_BUFFER     = args.point_buffer
 WORKING_DIR      = args.working_dir
 GEE_ASSETS       = args.gee_assets
+COLUMN_TRAIN     = args.column_train
 
 # Input asset
 OCCURRENCE_ASSET = (args.occurrence_asset or
@@ -131,7 +134,7 @@ GHSL  = {y: ee.Image(f'JRC/GHSL/P2023A/GHS_POP/{y}')
          for y in [2000,2005,2010,2015,2020]}
 
 def _nearest(d, year):
-    year = max(MIN_YEAR, min(MAX_YEAR, year))
+    year = max(MIN_YEAR, min(MAX_YEAR, int(year)))
     if year < 2003: return d[2000]
     if year < 2008: return d[2005]
     if year < 2013: return d[2010]
@@ -415,7 +418,7 @@ def get_lcluc_stack(lcluc, aoi):
 # =============================================================================
 
 def build_predictor_stack(year, aoi):
-    yr   = max(MIN_YEAR, min(MAX_YEAR, year))
+    yr   = max(MIN_YEAR, min(MAX_YEAR, int(year)))
     srtm = ee.Image('USGS/SRTMGL1_003')
     topo = (srtm.select('elevation').rename('elevation')
                 .addBands(ee.Terrain.slope(srtm).rename('slope'))
@@ -430,6 +433,7 @@ def build_predictor_stack(year, aoi):
             .addBands(add_neighborhood_scales(ghsl, aoi))
             .toFloat())
 
+ 
 # =============================================================================
 # 11. BATCH BUILDER
 # =============================================================================
@@ -437,7 +441,8 @@ def build_predictor_stack(year, aoi):
 def build_batches(occurrences, batch_size=25):
     print('Fetching unique years from asset...')
     years = occurrences.aggregate_array('year').distinct().sort().getInfo()
-    years = [y for y in years if y >= MIN_YEAR]
+    years = list(map(int, years))
+    years = [y for y in years if int(y) >= int(MIN_YEAR)]
     print(f'Unique years (MODIS era): {years}')
     batches = []
     for yi, year in enumerate(years):
@@ -461,6 +466,7 @@ def build_extraction_task(occurrences, batch_info):
            .filter(ee.Filter.eq('year', year))
            .filter(ee.Filter.inList('system:index', ids)))
 
+    
     def ep(point):
         aoi = point.geometry().buffer(POINT_BUFFER).bounds()
         return point.set(
@@ -505,6 +511,13 @@ if __name__ == '__main__':
     print(f'Log file:         {LOG_FILE}')
     print(f'Total points:     {occ.size().getInfo()}')
     ensure_folder()
+
+    ##  ADD
+    # Remove columns/properties not present in the prediction stak
+    #first_point = occ.first()
+    #stack0 = build_predictor_stack(first_point.get('year').getInfo(), first_point.geometry().buffer(POINT_BUFFER).bounds())
+    occ = occ.select( ['year', COLUMN_TRAIN] )
+    #print(2000)
 
     if RUN_MODE == 'single':
         print(f'\nSingle-batch: year={BATCH_YEAR}, batch={BATCH_NUM}')

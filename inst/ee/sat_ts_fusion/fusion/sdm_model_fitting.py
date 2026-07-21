@@ -22,6 +22,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.preprocessing import LabelEncoder
 from mrmr import mrmr_classif, mrmr_regression
 import warnings
+import time
 warnings.filterwarnings('ignore')
 
 # =============================================================================
@@ -184,7 +185,6 @@ def fc_to_dataframe(asset_id, max_retries=3):
             return pd.DataFrame([f['properties'] for f in info['features']])
         except Exception as e:
             if attempt < max_retries - 1:
-                import time
                 print(f'  Retry {attempt+1}/{max_retries}: {e}')
                 time.sleep(5)
             else:
