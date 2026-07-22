@@ -6924,8 +6924,7 @@ server <- function(input, output, session) {
     } else {
 
       shinyalert(html = TRUE, type = "info",
-                 title = paste0("Connecting to Earth Engine "),
-                 text = paste0(' Please close this window and wait few seconds')
+                 title = paste0("Connecting to Earth Engine \n Please close this window and wait few seconds")
       )
 
       # param1 = sys.argv[1] # project name
@@ -6980,7 +6979,7 @@ server <- function(input, output, session) {
 
           consumption <- paste0( tail(gee_usage$Month,1), ': ',
                                  round(tail(gee_usage$eecu,1)), ' seconds')
-          out$vout_eeinfo <- renderText({isolate(consumption)})
+          output$vout_eeinfo <- renderText({isolate(consumption)})
         }
 
         shinyalert(html = TRUE, type = "success",
@@ -7057,6 +7056,10 @@ server <- function(input, output, session) {
         } else { # One real valid spatial file to upload
           file2upload <- grep('.csv$|.shp$', files2upload, value = TRUE)
 
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Submitting the task"),
+                     text = paste0(' Please wait meanwhile the task is submitted.Check thr R and Google Earth Engine console.')
+          )
           # param1 = sys.argv[1] # project name
           # param2 = sys.argv[2] # shapefile path
           # param3 = sys.argv[3] # ee asset
@@ -7095,8 +7098,12 @@ server <- function(input, output, session) {
             taskid <- grep('Upload submitted', intCMD, value = TRUE)
 
             shinyalert(html = TRUE, type = "success",
-                       title = paste0("Earth engine connected"),
-                       text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid)
+                       title = paste0("Task submitted"),
+                       text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid,
+                                      'The next assets will be created: <br>',
+                                     input$ee_ptspath, '<br>',
+                                     input$ee_ptspath, '_box'
+                                     )
             )
 
           } else {
@@ -7152,7 +7159,10 @@ server <- function(input, output, session) {
           # print(4)
           lf <- newfile
           # lf <- 'C:/cola/anoa_rand_abs_101.shp'
+          # lf <- 'C:/cola/anoa/anoa_presabs_202_year.shp'
           vectt <- sf::read_sf(lf)
+          vectt <- st_cast(vectt, "POINT")
+
           vectt <<- st_transform(vectt, crs = 4326)
           extent_poly <<- st_as_sfc(st_bbox(vectt))
           if(!is.null(input$ee_buffabsloc)) {
@@ -7166,11 +7176,37 @@ server <- function(input, output, session) {
             }
           }
 
+          if( any(grepl('pres', colnames(vectt) )) ){
+            coname <- grep('pres', colnames(vectt), value = TRUE)[1]
+          } else {
+            if( any(grepl('pre', colnames(vectt))) ){
+              coname <- grep('pre', colnames(vectt), value = TRUE)[1]
+            } else {
+
+              numcol <- sapply(vectt, function(x){
+                if ('numeric' %in% class(x)){
+                  if (all(c(0, 1) %in% unique(x))){
+                    TRUE
+                  } else { FALSE }
+                } else { FALSE }
+              })
+
+              if (any(numcol)){
+                coname <- names(numcol)[numcol][1]
+              } else {
+                coname <- 'one'
+                vectt$one <- 1
+              }
+            }
+          }
+          colcol <- c('darkred', 'darkblue')[ unlist(st_drop_geometry(vectt[, c(coname)] )) + 1]
+
           output$ll_map_eeu <- leaflet::renderLeaflet({
             leaflet() %>%
               addTiles() %>%
               # addMeasure(primaryLengthUnit = "meters") %>%
-              addCircleMarkers(data = vectt, radius = 1) %>%
+              addCircleMarkers(data = vectt, radius = 1,
+                               color = colcol) %>%
               # addCircleMarkers(data = rv$pts_sp_gcs, #label = ~sortID, # group = 'Points', radius = 5)
               addPolygons(data = extent_poly, layerId = 'buf', color = 'red')
           })
@@ -7244,7 +7280,8 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        gee_assets = input$in_eeexp_eepath, # result folder
+        range_asset = input$in_eeexp_aoi, # aoi
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7295,7 +7332,8 @@ server <- function(input, output, session) {
         run_mode = 'test', # test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        range_asset = input$in_eeexp_aoi,
+        gee_assets = input$in_eeexp_eepath,
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7347,7 +7385,7 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7398,7 +7436,7 @@ server <- function(input, output, session) {
         run_mode = 'test', # test
         stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7451,7 +7489,7 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7502,7 +7540,7 @@ server <- function(input, output, session) {
         run_mode = 'test', # test
         stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_aoi, range_asset = input$in_eeexp_eepath,
+        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
@@ -7549,6 +7587,26 @@ server <- function(input, output, session) {
             text = paste0("Wait for results in your R console and Earth Engine app.",
                           " Don't close R until you see a Finish message"))
         }
+        # Sys.sleep(5)
+        #
+        # cat('1', input$ee_project, '\n2',
+        #   input$in_eeext_label,'\n3',
+        #   input$in_eeext_geepath,'\n4',
+        #   input$in_eeext_occasset,'\n5',
+        #   input$in_eeext_colname,'\n6',
+        #   input$in_eeext_modelid,'\n7',
+        #   input$in_eeext_localpath,'\n8',
+        #   tolower(input$in_eeext_mode),'\n9',
+        #   input$in_eeext_batchyear,'\n10',
+        #   input$in_eeext_batchnum,'\n11',
+        #   input$in_eeext_batchsize,'\n12',
+        #   input$in_eeext_yy[1],'\n13',
+        #   input$in_eeext_yy[2],'\n14',
+        #   input$in_eeext_maxconc,'\n15',
+        #   input$in_eeext_gap,'\n16',
+        #   input$in_eeext_scale,'\n17',
+        #   input$in_eeext_pbuffer,'\n18',
+        #   input$in_eeext_checkbox, '\n19')
 
         cmdd <- sdm_modis_extract_py(
           ee_project = input$ee_project,
@@ -7558,7 +7616,7 @@ server <- function(input, output, session) {
           column_train = input$in_eeext_colname,
           model_id = input$in_eeext_modelid,
           working_dir = input$in_eeext_localpath,
-          run_mode = input$in_eeext_mode,
+          run_mode = tolower(input$in_eeext_mode),
           batch_year = input$in_eeext_batchyear,
           batch_num = input$in_eeext_batchnum,
           batch_size = input$in_eeext_batchsize,
@@ -7626,7 +7684,7 @@ server <- function(input, output, session) {
              input$in_eetra_modelid != '' &
              input$in_eetra_modex != '' &
              input$in_eetra_label != '' &
-             input$in_eetra_label != '' & input$in_eeexp_eepath != '') ) {
+             input$in_eetra_label != '' & input$in_eetra_eepath != '') ) {
 
       if (!input$in_eetra_checkbox){
         # Full Run
@@ -7644,7 +7702,7 @@ server <- function(input, output, session) {
         ee_project = input$ee_project,
         species = input$in_eetra_label,
         model_id = input$in_eetra_modelid,
-        modex = input$in_eetra_modex,
+        modex = tolower(input$in_eetra_modex),
         target_col = input$in_eetra_colname,
         gee_assets = input$in_eetra_path,
         working_dir = input$in_eetra_localpath,
@@ -7652,12 +7710,12 @@ server <- function(input, output, session) {
         imp_thresh = input$in_eetra_impthr,
         categorical_threshold = input$in_eetra_catthr,
         cml = TRUE, show.result = TRUE,
-        dry_run = nput$in_eetra_checkbox)
+        dry_run = input$in_eetra_checkbox)
 
 
       if (input$in_eetra_checkbox){
         # only code
-        shinyalert(html = TRUE, type = "error",
+        shinyalert(html = TRUE, type = "info",
                    title = paste0("Run this code in your console:"),
                    text = paste0(cmdd$cmd))
       } else {
@@ -7730,8 +7788,8 @@ server <- function(input, output, session) {
         gee_assets = input$in_eepre_path,
         range_asset = input$in_eepre_aoi,
         tile_degrees = input$in_eepre_tiles,
-        target_year  = input$in_eepre_target,
-        run_mode = input$in_eepre_runmode,
+        target_year  = (input$in_eepre_target),
+        run_mode = tolower(input$in_eepre_runmode),
         max_concurrent = input$in_eepre_concurre,
         crs = input$in_eepre_crs,
         scale = input$in_eepre_scale,
@@ -8612,12 +8670,14 @@ if (FALSE){ # if FALSE
                          actionButton(width = "100%",
                                       label = 'Check connection',
                                       'ee_connect')),
-                  column(width = 5,
+                  column(width = 4,
                          shinydashboard::valueBoxOutput("box1", width = 12)
                   )
                   ,
-                   column(width = 3,
-                          verbatimTextOutput("vout_eeinfo")
+                   column(width = 4,
+                          h4('EE consumption:'),
+
+                          verbatimTextOutput("vout_eeinfo"),
                   #        textInput(width = "100%",
                   #                  value = '',
                   #                  placeholder = 'EE username',
@@ -8627,9 +8687,13 @@ if (FALSE){ # if FALSE
                   #        actionButton(width = "100%",
                   #                     label = 'Check quota',
                   #                     'ee_quota')
+                          checkboxInput("in_ee_showassets", label = "Show assets", value = FALSE),
                    ),
 
-                  DT::dataTableOutput(outputId = "out_ee_userfiles")
+                  conditionalPanel(
+                    condition = "input.in_ee_showassets == true",
+                    DT::dataTableOutput(outputId = "out_ee_userfiles")
+                  )
 
                 ) # end box ABC
               ), #FR
@@ -8831,7 +8895,7 @@ if (FALSE){ # if FALSE
                                selectizeInput(
                                  choices = c('Single' = 'single', 'Full' = 'full', 'Resume' = 'resume'),
                                                selected =  'Single', label = 'Execution mode:',
-                                 inputId = 'in_eetra_mode')
+                                 inputId = 'in_eeext_mode')
                         ),
                         column(6, style = "padding-left:5px; padding-right:5px;",
                                numericInput("in_eeext_batchsize", label = "Batch size:",
@@ -8955,9 +9019,9 @@ if (FALSE){ # if FALSE
                         textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
                                   label = 'GEE assets folder:', inputId = 'in_eetra_path'),
                         textInput(width = "100%", value = '', placeholder = 'Model_ID',
-                                  label = 'Model ID/label:', inputId = 'in_eetra_path'),
+                                  label = 'Model ID/label:', inputId = 'in_eetra_modelid'),
                         textInput(width = "100%", value = '', placeholder = 'column name',
-                                  label = 'Points dataset training Column name:', inputId = 'in_eetra_colname')
+                                  label = 'Points dataset training column name:', inputId = 'in_eetra_colname')
                 ),
                 column( width = 6 ,
                         selectizeInput( choices = c('Binary', 'Regression', 'Multiclass'),
@@ -9045,6 +9109,17 @@ if (FALSE){ # if FALSE
 
               ), # end box
 
+              # EE predict model  ---------
+              br(),
+              h2('Download layers'),
+
+              shinydashboard::box( # open box ABC
+                width = 12, solidHeader = T, collapsible = T,
+                title = "Download GEE assets to local  wall-to-wall",
+                status = "info", collapsed = FALSE,
+
+                column( width = 12 , h4(' Download files to local.')),
+              )
 
               # ), # tab panel
               # tabPanel( "Make params", h2(' ')  ), # tab panel

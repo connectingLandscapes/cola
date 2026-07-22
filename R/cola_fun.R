@@ -2959,19 +2959,13 @@ sdm_modis_extract_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_extraction.py'),
     ee_project, species,
-    model_id,
-    working_dir,
+    model_id, working_dir,
     run_mode = 'single',
     batch_year, batch_num, batch_size,
     max_concurrent = 3,
-    occurrence_asset,
-    column_train,
-    gee_assets,
-    min_year = 2000,
-    max_year = 2025,
-    gap_years = 2,
-    target_scale = 250,
-    point_buffer = 15000,
+    occurrence_asset, column_train, gee_assets,
+    min_year = 2000, max_year = 2025,
+    gap_years = 2, target_scale = 250, point_buffer = 15000,
     cml = TRUE, show.result = TRUE,
     dry_run = FALSE){
 
@@ -2982,7 +2976,7 @@ sdm_modis_extract_py <- function(
     stop('Script not found')
   }
 
-  if( !run_mode %in% c('single', 'full', 'resume')){
+  if( ! run_mode %in% c('single', 'full', 'resume')){
     stop('Not valid method. It must be single, resume or full')
   }
 
@@ -3157,7 +3151,7 @@ sdm_model_fitting_py <- function(
 
 sdm_modis_prediction_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
-    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_model_fitting.py'),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
     ee_project, species,
     model_id,
 

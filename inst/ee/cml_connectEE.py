@@ -34,12 +34,12 @@ def list_assets(parent_asset):
             print("No assets found.")
             return
 
-        print(f"\nAssets under: {parent_asset}\n")
+        #print(f"\nAssets under: {parent_asset}\n")
 
-        for asset in assets:
-            print(f"Name : {asset['name']}")
-            print(f"Type : {asset['type']}")
-            print("-" * 60)
+        #for asset in assets:
+        #    print(f"Name : {asset['name']}")
+        #    print(f"Type : {asset['type']}")
+        #    print("-" * 60)
 
     except Exception as e:
         print(f"Error: {e}")
@@ -72,10 +72,10 @@ def walk_assets(parent, assets_list, level=0):
                 "Parent": parent
             }
             assets_list.append(asset_info)
-            print(
-                f"{'    '*level}"
-                f"{asset['type']:<18} {asset['name']}"
-            )
+            #print(
+            #    f"{'    '*level}"
+            #    f"{asset['type']:<18} {asset['name']}"
+            #)
             # Continue walking folders and image collections
             if asset["type"] in ["FOLDER", "IMAGE_COLLECTION"]:
                 walk_assets(asset["name"], assets_list, level + 1)
@@ -106,13 +106,13 @@ def export_csv(asset_list, output_file):
 def main() -> None:
     #%%
     # Start timer
-
+    #
     # INPUTS
     # Path to file holding xy coordinates
     param1 = sys.argv[1] # project name # param1 = 'gonzalezivan'
     param2 = sys.argv[2] # tempfolder were to write # param2 = 'C:/cola/colaNAR2026030412391405/'
-    
-    # C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaNAR2026030412391405/
+    #
+    # C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe "N:/My Drive/git/cola/inst/ee/cml_connectEE.py" gonzalezivan C:/cola/colaFLF2026072014371305/
     # param1 = 'gonzalezivan'
     # param2 = 'C:/cola/cola2/id2000.txt'
     # Convert distance threshold to float or integer
@@ -186,7 +186,7 @@ def main() -> None:
         # -----------------------------------------------------------------------------
         pathh = param2+ "/gee_tasks_eecu.csv"
         df.to_csv(pathh, index=False)
-        print(f"Saved: {pathh}")
+        print(f"Tasks saved: {pathh}")
         # -----------------------------------------------------------------------------
         # Monthly EECU summary
         # -----------------------------------------------------------------------------
@@ -202,8 +202,11 @@ def main() -> None:
         ROOT_ASSET = "projects/" + param1 + "/assets"
         assets = []
         walk_assets(ROOT_ASSET, assets)
-        export_csv(assets, param2 + "/gee_assets_inventory.csv")
+        path2 = param2 + "/gee_assets_inventory.csv"
+        export_csv(assets, path2)
         print(f"\nTotal assets found: {len(assets)}")
+        print(f"Assets saved: {pathh}")
+        #
     except ValueError as e:
         print('Cola 2 ERROR: ', e)
         exit(1)

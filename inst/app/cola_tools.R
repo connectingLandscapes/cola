@@ -60,8 +60,7 @@ sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE, 
   return(sessionID)
 }
 
-
-## Clean files
+## Clean files -----
 cleanMemory <- function(logFilePath){
   dfm <- data.frame(Rtmp = tempdir(), tempFolder = tempFolder)
 
@@ -80,7 +79,7 @@ cleanMemory <- function(logFilePath){
 }
 
 
-## try deleting files
+## try deleting files -----
 delFiles <- function(...){
   invisible(suppressWarnings(
     tryCatch(file.remove(c(...), recursive = TRUE),
@@ -92,7 +91,7 @@ delFiles <- function(...){
   ))
 }
 
-## Evals if the raster is GEO or PROJ
+## Evals if the raster is GEO or PROJ -----
 isProjected <- function(rastPath, details = FALSE){
   #rastPath = 'C:/temp/cola/colaRKW2024081218272505//in_points_CHL2024081218292405.tif'
 
@@ -116,7 +115,7 @@ isProjected <- function(rastPath, details = FALSE){
 }
 
 
-## Resample raster layer
+## Resample raster layer -----
 resampIfNeeded <- function(rastPath){
   # rastPath <- '/data/temp/ZS2023111311113105file4f6823209882/in_surface_fixed_QK2023111311142905file4f687fa39935.tif'
   # rastPath <- '/data/temp/LI2024011611295205file1a5d191fa71355/in_lcc_CQ2024011611304405file1a5d19779aa294.tif'
@@ -150,6 +149,7 @@ resampIfNeeded <- function(rastPath){
   }
 }
 
+## canLeafletPlotIt -----
 canLeafletPlotIt <- function(x){
   # x is rast file path or SpatRast
   epsg4326 <- "+proj=longlat +datum=WGS84 +no_defs"
@@ -182,7 +182,8 @@ canLeafletPlotIt <- function(x){
     return(TRUE)
   }
 }
-
+#
+## draws2Features -----
 draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 4326){
 
   ## Create list of empty features types
@@ -264,7 +265,6 @@ draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 43
       # }
       pol2Add <- pol2save
     }
-
 
     if(featType == 'rectangle'){
       coordx <- feat$geometry$coordinates[[1]]  # polDraw
@@ -365,7 +365,7 @@ draws2Features <- function(polDraw, distLineBuf = NULL, rastCRS, crs2assign = 43
 
 
 
-
+## tif2rsg -----
 tif2rsg <- function(path, outdir = NULL){
   ## Convert TIF files into ASC, then modify header to match RSG format.
   ## Needs the raster path
@@ -455,6 +455,7 @@ RIP <- c('Session_label    SESSIONLABEL',
          'Save_Category_Output    SAVECATEGORYOUTPUT',
          'Save_CDmatrix_Output    SAVECDMATRIXOUTPUT')
 
+## createrip RIP UNICOR -----
 
 createrip <- function(caseName = NULL, Grid_Filename = NULL, XY_Filename = NULL,
                       Use_Direction = NULL, Type_Direction = NULL, Use_Resistance = NULL,
@@ -559,6 +560,7 @@ ripTemplate <- data.frame(RIP, row.names = gsub(' .+|\t.+', '', RIP) )
 #write.table(ripFile, file = 'caseName.rip', col.names = FALSE, row.names = FALSE, quote = FALSE)
 
 
+## fitRaster2colaOnlyPxSize -----
 
 ### Only pix size
 fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
@@ -663,6 +665,8 @@ fitRaster2colaOnlyPxSize <- function(inrasterpath, outrasterpath = NULL){
   return(outraster0)
 }
 
+## fitRaster2cola0 -----
+
 ## Orig function
 fitRaster2cola0 <- function(inrasterpath, outrasterpath = NULL){
   # setwd('N:/Mi unidad/git/connecting-landscapes/performance-tests/inputs')
@@ -759,6 +763,7 @@ loadRast <- function(inFiles, tempFolder, sessID){
 }
 
 
+## loadShp -----
 # xx <- loadShp(inFiles, tempFolder, sessID, rastTemp = NULL)
 loadShp <- function(inFiles, tempFolder, sessID, rastTemp = NULL){ # inFiles <- input$shapefile
   #inFiles: data frame with files. column 'name' with file name, and 'newFile' with full new name path
