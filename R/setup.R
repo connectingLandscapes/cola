@@ -71,9 +71,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
   ## Step 1. Install reticulate ----------------------------------------------
-  cat(sep = '', '\n  +Step 1/',nSteps, ': Installing & checking reticulate R package\n')
+  cat(sep = '', '\n  +Step 1/',nSteps, ': Installing & checking ´reticulate´ & ´processx´ R packages\n')
 
-  if (!require(reticulate)){
+  if (!require(reticulate) | !require(processx)){
 
     user_permission <- FALSE
     if (ask){
@@ -84,19 +84,22 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       cat(sep = '', '    Installing ´reticulate´\n')
       install.packages('reticulate')
     } else {
-      message("You should run ´install.packages('reticulate')´ before using this package")
+      message("You should run ´install.packages(c('reticulate', 'processx')´ before using this package")
       stop()
     }
 
   } else {
-    loadLib <- tryCatch(library(reticulate, quietly = TRUE), error = function(e) NULL)
+    loadLib <- tryCatch({library(reticulate, quietly = TRUE); library(processx, quietly = TRUE)}, error = function(e) NULL)
     if( is.null(loadLib) ) {
       diagnose_cola()
+    } else {
+      cat(sep = '', '    ´reticulate´ package installed already!\n')
     }
-    cat(sep = '', '    ´reticulate´ package installed already!\n')
   }
 
+
   library(reticulate)
+  library(processx)
 
   ## Step 2. Install miniconda ----------------------------------------------
 
@@ -927,7 +930,7 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
                                            'scikit-image')){
 
   if (cola2){
-    libs2Install <- c('geemap', 'geemap', libs2Install)
+    libs2Install <- c('geemap', libs2Install)
   }
 
   if(zarr){

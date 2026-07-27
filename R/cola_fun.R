@@ -62,7 +62,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                             pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
                             grids, template,
                             method = 'thin_plate_spline',
-                            neighbors, crs = 'None', cml = TRUE, show.result = TRUE){
+                            neighbors, crs = 'None', show_cml = TRUE, show_result = TRUE){
 
   # 1. List of CDPOP grid.csv files containing population genetic structure
   # 2. Path/filename of a template raster used for interpolation
@@ -88,7 +88,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     grids, ' ', template, ' ',
     # allele, ' ', hetero, ' ',
     method, ' ', neighbors, ' ', crs, ' 2>&1'))
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD interpol struct: \n')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n\n')
@@ -102,8 +102,8 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
                    list.files(path = dirname(grids), full.names = TRUE))
 
-  # show.result = TRUE;
-  if(show.result){
+  # show_result = TRUE;
+  if(show_result){
     print(intCMD)
   }
 
@@ -142,7 +142,7 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                              pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
                              grids, template, method = 'average', bandwidths = 'None',
-                             type = 'count', crs = 'None', cml = TRUE, show.result = TRUE){
+                             type = 'count', crs = 'None', show_cml = TRUE, show_result = TRUE){
 
   if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
     stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
@@ -162,7 +162,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     method, ' ', bandwidths, ' ', type, ' ', crs
     , ' 2>&1 ' #, logname
   ))
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD interpol density: \n ')
     cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
     cat('\n\n')
@@ -176,8 +176,8 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
                    list.files(path = dirname(grids), full.names = TRUE))
 
-  # , show.result = TRUE
-  if(show.result){
+  # , show_result = TRUE
+  if(show_result){
     print(intCMD)
   }
 
@@ -185,7 +185,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
                newFiles = newFiles,
                log = paste0("", intCMD) ) )
-  #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+  #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
 }
 
 
@@ -200,7 +200,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param xy String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script
 #' @param tempfolder String. Folder where results will be saved
 #' @param prefix String. String added to output folder
-#' @param cml String. Print the cola command line?. Default TRUE
+#' @param show_cml String. Print the cola command line?. Default TRUE
 #' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
 #' (out_dir <- tempfile())
@@ -226,7 +226,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      xy = NULL,
                      tempFolder,
                      prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
-                     cml = TRUE, show.result = TRUE){
+                     show_cml = TRUE, show_result = TRUE){
   #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
@@ -285,14 +285,14 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     quotepath(datapath), ' invars.csv ', quotepath(cdpopPath)
     , ' 2>&1 ' #, logname
   ))
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD CDPOP: \n')
     cat(cmd, '\n')
   }
 
   CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
 
-  if(show.result){
+  if(show_result){
     print(CMDcp)
   }
 
@@ -302,7 +302,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   ans2ret <- list(newFiles = newFiles, datapath = datapath,
                   cdpopPath = cdpopPath,
                   log =  CMDcp )
-  #log =  paste0(intCMD, ' -- ', read.delim(logname)) )
+  #log =  paste0(intCMD, '-- ', read.delim(logname)) )
   return(ans2ret)
 
   # (gridFiles <- grep(pattern = '/grid.+csv$', x = newFiles, value = TRUE))
@@ -594,8 +594,9 @@ adaptFilePath <- function(path){
 #' @param shape Numeric. A statistical parameters that defines the transformation pattern between the input and output. The shape value determines the relationship between suitability and resistance. For a linear relationship, use a value close to 0, such as 0.01. Positive values result in a greater increase in resistance as suitability declines. This is appropriate for animals that are more sensitive to the matrix in between habitat. Negative values result in a lesser increase in resistance as suitability declines. This is appropriate for animals that are less sensitive to the matrix between habitat. The more positive or more negative, the greater the effect on the shape of the relationship. Values generally range between +10 and -10, 0 is not allowed.
 #' @param nodata Numeric. The no data value of the input file. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Default value is ‘None’.
 #' @param prj string. Projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
-#' @param cml Logical. Print the back-end command line? Default  TRUE
-#' @param show.result Logical. Print the command line result? Default  TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
@@ -610,7 +611,7 @@ sui2res_py <- function(intif, outtif,
                        nodata = NULL, prj = 'None',
                        py = Sys.getenv("COLA_PYTHON_PATH"),
                        pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                       cml = TRUE, show.result = TRUE){
+                       show_cml = TRUE, show_result = TRUE, ){
   # minval = 0
   # maxval =  100
   # maxout = 100
@@ -639,7 +640,7 @@ sui2res_py <- function(intif, outtif,
     prj
     , ' 2>&1 ' #, logname
   ))
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD Surface : \n')
     cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
     cat('\n\n')
@@ -648,12 +649,12 @@ sui2res_py <- function(intif, outtif,
   intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
                      error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
                log = paste0("", intCMD) ) )
 }
 
@@ -703,8 +704,9 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @param npoints Integer. Number of points. Number of points to simulate.
 #' @param issuit String. Is it suitable? ‘Yes’ (default) or ‘No’. Indicates if the provided raster `intif` is suitability. If so, the script will likely sample higher value pixels. If ‘No’, will assume it is resistance and will sample more likely lower values
 #' @param upcrs String. Update CRS parameter projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with the created shapefile
 #' @examples
 #' library(cola)
@@ -721,7 +723,7 @@ points_py <- function(intif, outshp,
                       smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
                       py = Sys.getenv("COLA_PYTHON_PATH"),
                       pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
-                      cml = TRUE, show.result = TRUE){
+                      show_cml = TRUE, show_result = TRUE){
   # smin = 2
   # smax =  95
   # npoints = 50
@@ -742,19 +744,19 @@ points_py <- function(intif, outshp,
     , ' 2>&1 '# , logname
   ))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD Points: \n')
     cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
     cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outshp), outshp, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
                log = paste0("", intCMD) ) )
 
 
@@ -771,8 +773,9 @@ points_py <- function(intif, outshp,
 #' @param intif String.
 #' @param py Python executable location
 #' @param pyscript Python script location
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with the CSV matrix
 #' @examples
 #' library(cola)
@@ -792,7 +795,7 @@ cdmat_py <- function(inshp, intif, outcsv,
                      crs = 'None',
                      py = Sys.getenv("COLA_PYTHON_PATH"),
                      pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
-                     cml = TRUE, show.result = TRUE){
+                     show_cml = TRUE, show_result = TRUE){
   # maxdist = 100000
   # create_cdmat.py
   # [1] source points
@@ -821,7 +824,7 @@ cdmat_py <- function(inshp, intif, outcsv,
     , ' 2>&1 '
     # , logname
   ))
-  if (cml){
+  if (show_cml){
     cat('\n\n\tCMD cdmat: \n')
     cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
     cat('\n\n')
@@ -830,12 +833,12 @@ cdmat_py <- function(inshp, intif, outcsv,
   intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
   #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname) ) ) )
+               # log =  paste0(intCMD, '-- ', read.delim(logname) ) ) )
                log = paste0("", intCMD) ) )
 }
 
@@ -852,8 +855,9 @@ cdmat_py <- function(inshp, intif, outcsv,
 #' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -872,7 +876,7 @@ lcc_py <- function(inshp, intif, outtif,
                    ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/lcc.py'),
-                   cml = TRUE, show.result = TRUE){
+                   show_cml = TRUE, show_result = TRUE){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -900,7 +904,7 @@ lcc_py <- function(inshp, intif, outtif,
     , ' 2>&1 ' #, logname
   ))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC: \n')
     cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
     cat('\n\n')
@@ -909,12 +913,12 @@ lcc_py <- function(inshp, intif, outtif,
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
   return( ans )
 }
@@ -927,7 +931,7 @@ lcc_py <- function(inshp, intif, outtif,
 #     crs = 'None', tempFolder = NULL,
 #     py = Sys.getenv("COLA_PYTHON_PATH"),
 #     pyscript = system.file(package = 'cola', 'python/lcc_heavy.py'),
-#     cml = TRUE, show.result = TRUE){
+#     show_cml = TRUE, show_result = TRUE){
 #
 #   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
 #   # param3 = 25000
@@ -971,7 +975,7 @@ lcc_py <- function(inshp, intif, outtif,
 #
 #   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 #
-#   if (cml){
+#   if (show_cml){
 #     cat('\n\tCMD LCC:\n', cmd_lcc)
 #     cat('\n\n')
 #   }
@@ -980,12 +984,12 @@ lcc_py <- function(inshp, intif, outtif,
 #
 #   suppressWarnings( tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL) )
 #
-#   if(show.result){
+#   if(show_result){
 #     print(intCMD)
 #   }
 #
 #   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-#               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+#               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
 #               log = paste0("", intCMD) )
 #   # print('ANS LCC');print(ans)
 #   return( ans )
@@ -1007,8 +1011,9 @@ lcc_py <- function(inshp, intif, outtif,
 #' @param maxram Numeric. RAM to use in GB
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1031,7 +1036,7 @@ lccJoblib_py <- function(inshp, intif, outtif,
                          tempFolder = NULL,
                          py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
-                         cml = TRUE, show.result = TRUE){
+                         show_cml = TRUE, show_result = TRUE){
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -1075,21 +1080,21 @@ lccJoblib_py <- function(inshp, intif, outtif,
   ))
   (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC joblib:\n', cmd_lcc)
     cat('\n\n')
   }
 
   intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   suppressWarnings(tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL))
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
   #print('ANS LCC');print(ans)
   return( ans )
@@ -1124,8 +1129,9 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
 #' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1151,7 +1157,7 @@ lccZarr_py <- function(inshp, intif, outtif,
                        py = Sys.getenv("COLA_PYTHON_PATH"),
                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                       cml = TRUE, show.result = TRUE){
+                       show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -1311,30 +1317,30 @@ lccZarr_py <- function(inshp, intif, outtif,
     , '2>&1 ' #, logname
   ))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
     cat('\n\n')
   }
 
   intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMDA)
   }
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
     cat('\n\n')
   }
 
   intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMDB)
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0(" A: ", intCMDA, '\n',
                            " B: ", intCMDB, '\n') )
   #print('ANS LCC');print(ans)
@@ -1365,8 +1371,9 @@ lccZarr_py <- function(inshp, intif, outtif,
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
 #' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1391,7 +1398,7 @@ lccZarrA_py <- function(inshp, intif,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
                         pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                        cml = TRUE, show.result = TRUE){
+                        show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -1483,19 +1490,19 @@ lccZarrA_py <- function(inshp, intif,
 
   # A: inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
     cat('\n\n')
   }
 
   intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMDA)
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0(" A: ", intCMDA, '\n' ) )
   #print('ANS LCC');print(ans)
   return( ans )
@@ -1525,8 +1532,9 @@ lccZarrA_py <- function(inshp, intif,
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
 #' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1551,7 +1559,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
                         pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                        cml = TRUE, show.result = TRUE){
+                        show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -1638,23 +1646,23 @@ lccZarrB_py <- function(inshp, intif, outtif,
 
   intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMDA)
   }
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
     cat('\n\n')
   }
 
   intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMDB)
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0(" B: ", intCMDB, '\n') )
   #print('ANS LCC');print(ans)
   return( ans )
@@ -1679,8 +1687,9 @@ lccZarrB_py <- function(inshp, intif, outtif,
 #' @param maxram Numeric. RAM to use in GB
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1701,7 +1710,7 @@ crk_py <- function(inshp, intif, outtif,
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/crk.py'),
-                   cml = TRUE, show.result = TRUE){
+                   show_cml = TRUE, show_result = TRUE){
 
   # [1] source points
   # [2] resistance surface
@@ -1737,7 +1746,7 @@ crk_py <- function(inshp, intif, outtif,
   ) # [8] proj
   )
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD Kernel:\n',cmd_crk)
     cat('\n\n')
 
@@ -1746,7 +1755,7 @@ crk_py <- function(inshp, intif, outtif,
   intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
   #intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
@@ -1759,7 +1768,7 @@ crk_py <- function(inshp, intif, outtif,
   write.table(metaFile, logname )
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
   # print('ANS CRK'); print(ans)
   return( ans )
@@ -1784,8 +1793,9 @@ crk_py <- function(inshp, intif, outtif,
 #' @param maxram Numeric. RAM to use in GB
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
 #' @examples
 #' library(cola)
@@ -1811,7 +1821,7 @@ crkJoblib_py <- function(
     tempFolder = NULL,
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
-    cml = TRUE, show.result = TRUE){
+    show_cml = TRUE, show_result = TRUE){
 
   # "crk_joblib.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -1860,7 +1870,7 @@ crkJoblib_py <- function(
 
   (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD CRK joblib:\n', cmd_crk)
     cat('\n\n')
   }
@@ -1878,7 +1888,7 @@ crkJoblib_py <- function(
   #   crs, h5file, maxram), stdout = TRUE)
 
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
@@ -1895,7 +1905,7 @@ crkJoblib_py <- function(
   tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
-              # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+              # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0("", intCMD) )
   #print('ANS CRK'); print(ans)
   return( ans )
@@ -1920,8 +1930,9 @@ crkJoblib_py <- function(
 #' @param outtif String. Path to the resulting corridors raster
 #' @param threshold Decimal. Numeric value between zero and one (0 - 1) to convert continuous kernels into discrete patches.
 #' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with CDPOP results
 #' @examples
 #' library(cola)
@@ -1947,7 +1958,7 @@ prio_py <- function(intif, incrk, inlcc,
                     threshold = 0.5, tolerance = 1000,
                     py = Sys.getenv("COLA_PYTHON_PATH"),
                     pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
-                    cml = TRUE, show.result = TRUE){
+                    show_cml = TRUE, show_result = TRUE){
 
   # pri_py(py, incrk, inlcc, outshp, outtif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -2015,7 +2026,7 @@ prio_py <- function(intif, incrk, inlcc,
     , ' 2>&1 ' #, logname
   ))
 
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD prio: \n')
     cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
     cat('\n\n')
@@ -2025,7 +2036,7 @@ prio_py <- function(intif, incrk, inlcc,
   intCMD <- tryCatch(system(cmd_prio, intern = TRUE),
                      error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     cat('\n\tlog CMD prio: \n')
     print(intCMD)
   }
@@ -2033,7 +2044,7 @@ prio_py <- function(intif, incrk, inlcc,
   return(
     list(tif = ifelse(file.exists(outtif), outtif, ''),
          shp = ifelse(file.exists(outshppoint), outshppoint, ''),
-         #log =  paste0(intCMD, ' -- ', read.delim(logname)) ))
+         #log =  paste0(intCMD, '-- ', read.delim(logname)) ))
          log = paste0("", intCMD) ) )
 }
 
@@ -2054,8 +2065,9 @@ prio_py <- function(intif, incrk, inlcc,
 #' ´intif´ and ´intifs´
 #' @param inshp String. File path to the shapefile used to mask the comparisson
 #' @param shpfield String. Field to be used for regionalize the comparisson.
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List of two slots: 'file' with the 'outpngabs' folder if success,
 #' and 'log' with any resulting message.
 #' @examples
@@ -2086,7 +2098,7 @@ crk_compare_py <- function(intif, intifs,
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
-                           cml = TRUE, show.result = TRUE){
+                           show_cml = TRUE, show_result = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
@@ -2121,7 +2133,7 @@ crk_compare_py <- function(intif, intifs,
     , ' 2>&1 ' #, logname
   )
   )
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD Compare CRK: \n')
     cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
     cat('\n\n')
@@ -2130,12 +2142,12 @@ crk_compare_py <- function(intif, intifs,
   intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
                      error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
-               # log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
                log = paste0("", intCMD) ) )
 }
 
@@ -2154,8 +2166,9 @@ crk_compare_py <- function(intif, intifs,
 #' ´intif´ and ´intifs´
 #' @param inshp String. File path to the shapefile used to mask the comparisson
 #' @param shpfield String. Field to be used for regionalize the comparisson.
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List of two slots: 'file' with the 'outpngabs' folder if success,
 #' and 'log' with any resulting message.
 #' @examples
@@ -2187,7 +2200,7 @@ lcc_compare_py <- function(intif, intifs,
                            shpfield = 'None',
                            py = Sys.getenv("COLA_PYTHON_PATH"),
                            pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
-                           cml = TRUE, show.result = TRUE){
+                           show_cml = TRUE, show_result = TRUE){
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
@@ -2222,7 +2235,7 @@ lcc_compare_py <- function(intif, intifs,
     , ' 2>&1 ' #, logname
   )
   )
-  if (cml){
+  if (show_cml){
     cat('\n\tCMD Comp LCC: \n ')
     cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
     cat('\n\n')
@@ -2230,12 +2243,12 @@ lcc_compare_py <- function(intif, intifs,
 
   intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
 
-  if(show.result){
+  if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
-               #log =  paste0(intCMD, ' -- ', read.delim(logname)) ) )
+               #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
                log = paste0("", intCMD) ) )
 }
 
@@ -2248,8 +2261,9 @@ lcc_compare_py <- function(intif, intifs,
 #' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
 #' library(cola)
@@ -2369,8 +2383,8 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
-#' @param cml Logical. Print the back-end command line? Default TRUE
-#' @param show.result Logical. Print the command line result? Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
 #' library(cola)
@@ -2455,7 +2469,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   ## Rasterize polygons
   rastExtent <- as.character(as.vector(terra::ext(rtp))[c('xmin', 'ymin', 'xmax', 'ymax')])
 
-  # cat(' --- GdalRasterize: \n ++ te:', rastExtent)
+  # cat('--- GdalRasterize: \n ++ te:', rastExtent)
   # cat('\n ++ tr ', rastRes)
   # cat('\n ++ ts ', ts)
   # cat('\n ++ polPath ', polPath)
@@ -2508,7 +2522,7 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
     # rft <- rast(rasterizedPath); plot(rft)
 
     if (gdal){
-      cat(' --- Rasterizing with gdal_calc.py')
+      cat('--- Rasterizing with gdal_calc.py')
       # Use gdal calc in linux
       (cmdCalc <- paste0('gdal_calc.py --overwrite ',
                          ' -A ', rastPath, # original
@@ -2777,9 +2791,9 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 #' @param dzarr String. Full path to distance zarr file/folder.
 #' @param idcsv String. Full path to nodes ids csv file.
 #' @param ordcsv. String. Full path to pairs order csv file
-#' @param hours Integer.
-#' @param ncores Integer.
-#' @param ramGB Integer.
+#' @param hours Integer. Hours assigned to the task in the cluster
+#' @param ncores Integer. Number of cores assigned to the task in the cluster
+#' @param ramGB Integer. RAM in GB assigned to the task in the cluster
 #' @param RUN Logical. Submit the sh job? Only is submited if out tif file not exists.
 #' @return Path of the resulting raster layer. Will be same as input if no change was made
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -2794,7 +2808,7 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
                        sr,  dzarr, smt = 0, tole = 0,
                        ncores, ordcsv, idcsv, ramGB, hours){
   # (ocsv <- '/scratch/ig299/kuching/temp/asian_palm_civet_i5.csv')
-  cat(' --  This only works on linux cluster -- ')
+  cat('--  This only works on linux cluster -- ')
   if ( ! all( unlist(sapply(c(dzarr, ordcsv, idcsv), file.exists)))  ){
     stop(' Some files not existing')
   }
@@ -2848,6 +2862,9 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
 #' @param gee_assets String. EE path to
 #' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log sloth
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -2867,7 +2884,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          tile_degrees = 2,
                          gee_assets,
                          range_asset,
-                         cml = TRUE, show.result = TRUE,
+                         show_cml = TRUE, show_result = TRUE,
                          dry_run = FALSE){
 
   if( !file.exists(py)){
@@ -2887,40 +2904,54 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --target_year ', target_year,
-    ' --stage ', stage,
-    ' --run_mode ', run_mode,
-    ' --max_concurrent ', max_concurrent,
-    ' --gap_years ', gap_years,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --crs ', crs,
-    ' --scale ', scale,
-    ' --tile_degrees ', tile_degrees,
-    ' --gee_assets ', gee_assets,
-    ' --range_asset ', range_asset,
+    '--ee_project ', ee_project,
+    '--species ', species,
+    '--target_year ', target_year,
+    '--stage ', stage,
+    '--run_mode ', run_mode,
+    '--max_concurrent ', max_concurrent,
+    '--gap_years ', gap_years,
+    '--min_year ', min_year,
+    '--max_year ', max_year,
+    '--crs ', crs,
+    '--scale ', scale,
+    '--tile_degrees ', tile_degrees,
+    '--gee_assets ', gee_assets,
+    '--range_asset ', range_asset,
     #' 2>&1'
     ''
   ))
-  if (cml | dry_run){
+
+  if (show_cml | dry_run){
     cat('\n\tCMD sdm MODIS: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
   if (!dry_run){
-    intCMD <- tryCatch(system( cmd_ ,
-                               intern = TRUE),
-                       error = function(e) e$message)
-    if(show.result){
-      print(intCMD)
-    }
-  } else {
-    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
-  }
+    args <- c('-u', quotepath(pyscript),
+              quotepath(pyscript),
+              '--ee_project', ee_project,
+              '--species', species,
+              '--target_year', target_year,
+              '--stage', stage,
+              '--run_mode', run_mode,
+              '--max_concurrent', max_concurrent,
+              '--gap_years', gap_years,
+              '--min_year', min_year,
+              '--max_year', max_year,
+              '--crs', crs,
+              '--scale', scale,
+              '--tile_degrees', tile_degrees,
+              '--gee_assets', gee_assets,
+              '--range_asset', range_asset)
 
+    (intCMD <- catandcapt(quotepath(py), args, docat = show_result))
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+  }
+  ##++
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
@@ -2949,6 +2980,9 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param gap_years Integer . Default is 2.
 #' @param target_scale Integer. Export scale in metres. Default is 250
 #' @param point_buffer Integer. Buffer around each point for predictor stack (m)
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log sloth
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -2959,14 +2993,15 @@ sdm_modis_extract_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_extraction.py'),
     ee_project, species,
-    model_id, working_dir,
+    model_id,
+    working_dir,
     run_mode = 'single',
     batch_year, batch_num, batch_size,
     max_concurrent = 3,
     occurrence_asset, column_train, gee_assets,
     min_year = 2000, max_year = 2025,
     gap_years = 2, target_scale = 250, point_buffer = 15000,
-    cml = TRUE, show.result = TRUE,
+    show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
   if( !file.exists(py)){
@@ -2982,45 +3017,59 @@ sdm_modis_extract_py <- function(
 
   ## Fix working directory
   working_dir <- cola::quotepath(working_dir)
+
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --working_dir ', working_dir,
-    ' --run_mode ', run_mode,
-    ' --batch_year ', batch_year,
-    ' --batch_num ', batch_num,
-    ' --batch_size ', batch_size,
-    ' --max_concurrent ', max_concurrent,
-    ' --occurrence_asset ', occurrence_asset,
-    ' --column_train ', column_train,
-    ' --gee_assets ', gee_assets,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --gap_years ', gap_years,
-    ' --target_scale ', target_scale,
-    ' --point_buffer ', point_buffer,
+    '--ee_project ', ee_project,
+    '--species ', species,
+    '--model_id ', model_id,
+    '--working_dir ', working_dir,
+    '--run_mode ', run_mode,
+    '--batch_year ', batch_year,
+    '--batch_num ', batch_num,
+    '--batch_size ', batch_size,
+    '--max_concurrent ', max_concurrent,
+    '--occurrence_asset ', occurrence_asset,
+    '--column_train ', column_train,
+    '--gee_assets ', gee_assets,
+    '--min_year ', min_year,
+    '--max_year ', max_year,
+    '--gap_years ', gap_years,
+    '--target_scale ', target_scale,
+    '--point_buffer ', point_buffer,
     #' 2>&1'
     ''
   ))
 
-  if (cml | dry_run){
+  if (show_cml | dry_run){
     cat('\n\tCMD sdm MODIS extraction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
   if (!dry_run){
-    intCMD <- tryCatch(system( cmd_ ,
-                               intern = TRUE),
-                       error = function(e) e$message)
-    if(show.result){
-      print(intCMD)
-    }
+      args <- c('-u', quotepath(pyscript),
+               '--ee_project', ee_project,
+               '--species', species,
+               '--model_id', model_id,
+               '--working_dir', working_dir,
+               '--run_mode', run_mode,
+               '--batch_year', batch_year,
+               '--batch_num', batch_num,
+               '--batch_size', batch_size,
+               '--max_concurrent', max_concurrent,
+               '--occurrence_asset', occurrence_asset,
+               '--column_train', column_train,
+               '--gee_assets', gee_assets,
+               '--min_year', min_year,
+               '--max_year', max_year,
+               '--gap_years', gap_years,
+               '--target_scale', target_scale,
+               '--point_buffer', point_buffer)
+    (intCMD <- catandcapt(quotepath(py), args, docat = show_result))
   } else {
-    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
@@ -3046,6 +3095,9 @@ sdm_modis_extract_py <- function(
 #' Default: {working_dir}/{model_id}_training.csv'
 #' @param imp_thresh Float. Relative importance threshold for feature pruning. Default is 0.10
 #' @param categorical_threshold Integer. Max unique values to treat a variable as categorical. Default is 20
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log sloth
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -3064,7 +3116,7 @@ sdm_model_fitting_py <- function(
     local_csv,
     imp_thresh = 0.1,
     categorical_threshold = 20,
-    cml = TRUE, show.result = TRUE,
+    show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
   if( !file.exists(py)){
@@ -3078,37 +3130,46 @@ sdm_model_fitting_py <- function(
     stop("Not valid method. It must be s'binary', 'regression', or 'multiclass'")
   }
 
-  ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --mode ', modex,
-    ' --target_col ', target_col,
-    ' --gee_assets ', gee_assets,
-    ' --working_dir ', working_dir,
-    ' --local_csv ', local_csv,
-    ' --imp_thresh ', imp_thresh,
-    ' --categorical_threshold ', categorical_threshold,
+    '--ee_project ', ee_project,
+    '--species ', species,
+    '--model_id ', model_id,
+    '--mode ', modex,
+    '--target_col ', target_col,
+    '--gee_assets ', gee_assets,
+    '--working_dir ', working_dir,
+    '--local_csv ', local_csv,
+    '--imp_thresh ', imp_thresh,
+    '--categorical_threshold ', categorical_threshold,
     #' 2>&1'
     ''
   ))
-  if (cml | dry_run){
-    cat('\n\tCMD sdm model fitting: \n')
+
+  cat('\n\tCMD sdm model fitting: \n')
+  if (show_cml | dry_run){
+    ### Create CMD
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
   if (!dry_run){
-    intCMD <- tryCatch(system( cmd_ ,
-                               intern = TRUE),
-                       error = function(e) e$message)
-    if(show.result){
-      print(intCMD)
-    }
+    args <- c('-u', quotepath(pyscript),
+              '--ee_project ', ee_project,
+              '--species ', species,
+              '--model_id ', model_id,
+              '--mode ', modex,
+              '--target_col ', target_col,
+              '--gee_assets ', gee_assets,
+              '--working_dir ', working_dir,
+              '--local_csv ', local_csv,
+              '--imp_thresh ', imp_thresh,
+              '--categorical_threshold ', categorical_threshold
+    )
+    #' 2>&1'
+    (intCMD <- catandcapt( quotepath(py), args, docat = show_result) )
   } else {
-    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
@@ -3143,6 +3204,9 @@ sdm_model_fitting_py <- function(
 #' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
 #' @param gee_assets String. EE path to
 #' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log sloth
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -3154,14 +3218,14 @@ sdm_modis_prediction_py <- function(
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
     ee_project, species,
     model_id,
-
-    target_year, run_mode,
+    target_year,
+    run_mode,
     max_concurrent = 3,
     crs, scale = 250,
     min_year, max_year,
     tile_degrees,
     gee_assets, range_asset,
-    cml = TRUE, show.result = TRUE,
+    show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
   if( !file.exists(py)){
@@ -3178,38 +3242,94 @@ sdm_modis_prediction_py <- function(
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --target_year ', target_year,
-    ' --run_mode ', run_mode,
-    ' --max_concurrent ', max_concurrent,
-    ' --crs ', crs,
-    ' --scale ', scale,
-    ' --tile_degrees ', tile_degrees,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --gee_assets ', gee_assets,
-    ' --range_asset ', range_asset,
+    '--ee_project ', ee_project,
+    '--species ', species,
+    '--model_id ', model_id,
+    '--target_year ', target_year,
+    '--run_mode ', run_mode,
+    '--max_concurrent ', max_concurrent,
+    '--crs ', crs,
+    '--scale ', scale,
+    '--tile_degrees ', tile_degrees,
+    '--min_year ', min_year,
+    '--max_year ', max_year,
+    '--gee_assets ', gee_assets,
+    '--range_asset ', range_asset
     #' 2>&1'
-    ''
   ))
-  if (cml | dry_run){
+
+  if (show_cml | dry_run){
     cat('\n\tCMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
   if (!dry_run){
-    intCMD <- tryCatch(system( cmd_ ,
-                               intern = TRUE),
-                       error = function(e) e$message)
-    if(show.result){
-      print(intCMD)
-    }
+
+      args <-  c('-u', quotepath(pyscript),
+      '--ee_project', ee_project,
+      '--species', species,
+      '--model_id', model_id,
+      '--target_year', target_year,
+      '--run_mode', run_mode,
+      '--max_concurrent', max_concurrent,
+      '--crs', crs,
+      '--scale', scale,
+      '--tile_degrees', tile_degrees,
+      '--min_year', min_year,
+      '--max_year', max_year,
+      '--gee_assets', gee_assets,
+      '--range_asset', range_asset
+      #' 2>&1'
+    )
+
+    (intCMD <- catandcapt( quotepath(py), args = args, docat = show_result) )
+
   } else {
-    intCMD <- 'Dry run. Only the system command is showed. Use dry_run = FALSE for executing the function'
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
+
+
+#' @title Submit a console task printing report and saving it
+#' @description Submit a console task printing report and saving it. Requires processx library
+#' @param dots Mix. Other argument
+#' @param delay Numeric. Seconds to wait in each query
+#' @param stepp String. Separator for each line
+#' @return List with log sloth
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+catandcapt <- function(..., sepp = '\n', delay = 0.5, docat = TRUE) {
+  # Print results
+  if (docat){
+    proc <- processx::process$new(..., stdout = "|")
+    on.exit(if (isTRUE(proc$is_alive())) { message("killing"); try(proc$kill(), silent = TRUE); })
+    out <- character(0)
+
+    while (TRUE) {
+      newout <- proc$read_output()
+      if (nzchar(newout)) {
+        cat(newout)
+        out <- c(out, newout)
+      }
+      if (!proc$is_alive()){
+        break
+      }
+      Sys.sleep( delay )
+    }
+    # Do not print
+  } else {
+    out <- tryCatch(
+      system2( ... , intern = stdout),
+      error = function(e) e$message)
+  }
+  return(out)
+}
+# 'Rscript', args = c('-e',  "for(i in 1:5){Sys.sleep(2);print(i);}")
+  # proc <- processx::process$new('Rscript', args = c('-e',  "for(i in 1:5){Sys.sleep(2);print(i);}"), stdout = "|")
+  # proc <- processx::process$new(stdout = '|', python, args = c('-u', '-c' ,'"import time; [print(i) or time.sleep(1) for i in range(0, 6)]"'))

@@ -7123,10 +7123,10 @@ server <- function(input, output, session) {
 
   observeEvent(
     input$filein, {
+      shinyjs::enable('ee_fcupload')
       volumes <- getVolumes()() # this makes the directory at the base of your computer.
       shinyFileChoose(input, "filein", roots = volumes, session = session,
                       filetypes = c('shp', 'gpkg', 'csv'))
-      shinyjs::enable('ee_fcupload')
       inpf <- input$filein
       # print(0)
       # print(inpf)
@@ -7235,6 +7235,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$ee_localfile, {
+    shinyjs::enable('ee_fcupload')
   })
 
   # SRV EE export -----
@@ -7263,7 +7264,7 @@ server <- function(input, output, session) {
   # Full
   observeEvent( input$in_eeexp_gomodis, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7285,7 +7286,7 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
@@ -7296,12 +7297,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7315,7 +7316,7 @@ server <- function(input, output, session) {
   ## Test
   observeEvent( input$in_eeexp_gomodistest, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7337,23 +7338,23 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
-        shinyalert(html = TRUE, type = "error",
+        shinyalert(html = TRUE, type = "info",
                    title = paste0("Run this code in your console:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '_test.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7368,7 +7369,7 @@ server <- function(input, output, session) {
   # Full
   observeEvent( input$in_eeexp_gogaps, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7389,7 +7390,7 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
@@ -7400,12 +7401,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd ,  cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7419,7 +7420,7 @@ server <- function(input, output, session) {
   ## Test
   observeEvent( input$in_eeexp_gogaptest, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7440,7 +7441,7 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
@@ -7451,12 +7452,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd ,  cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '_test.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7472,7 +7473,7 @@ server <- function(input, output, session) {
   # Full
   observeEvent( input$in_eeexp_gometrics, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7493,7 +7494,7 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
@@ -7504,12 +7505,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7523,7 +7524,7 @@ server <- function(input, output, session) {
   ## Test
   observeEvent( input$in_eeexp_gometricstest, {
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_concurre  != '' &
+    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
@@ -7544,7 +7545,7 @@ server <- function(input, output, session) {
         target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_concurre,
+        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
         cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
@@ -7555,12 +7556,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '_test.txt'))
         shinyalert(
           html = TRUE, type = "success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7637,13 +7638,13 @@ server <- function(input, output, session) {
                      text = paste0(cmdd$cmd))
         } else {
           # Full Run
-
-          write.table( c(cmdd$cmd , , cmdd$log),
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
                        file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
           shinyalert(
             html = TRUE, type = "success",
-            title = paste0("Task finished.  Wait for results in your R console",
-                           " and Earth Engine app. Don't close R until you see a Finish message"),
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
             text = paste0(cmdd$cmd))
         }
       } else {
@@ -7721,12 +7722,12 @@ server <- function(input, output, session) {
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
         shinyalert(
-          html = TRUE, type = "Success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7782,6 +7783,7 @@ server <- function(input, output, session) {
 
 
       cmdd <- sdm_modis_prediction_py(
+        pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
         ee_project = input$ee_project,
         species = input$in_eepre_label,
         model_id = input$in_eepre_modelid,
@@ -7790,7 +7792,7 @@ server <- function(input, output, session) {
         tile_degrees = input$in_eepre_tiles,
         target_year  = (input$in_eepre_target),
         run_mode = tolower(input$in_eepre_runmode),
-        max_concurrent = input$in_eepre_concurre,
+        max_concurrent = input$in_eepre_maxconc,
         crs = input$in_eepre_crs,
         scale = input$in_eepre_scale,
         min_year = input$in_eepre_yy[1],
@@ -7800,18 +7802,18 @@ server <- function(input, output, session) {
 
       if (input$in_eepre_checkbox){
         # only code
-        shinyalert(html = TRUE, type = "error",
+        shinyalert(html = TRUE, type = "info",
                    title = paste0("Run this code in your console:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , , cmdd$log),
+        write.table( c(cmdd$cmd , cmdd$log),
                      file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
         shinyalert(
-          html = TRUE, type = "Success",
-          title = paste0("Task finished.  Wait for results in your R console",
-                         " and Earth Engine app. Don't close R until you see a Finish message"),
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
           text = paste0(cmdd$cmd))
       }
     } else {
@@ -7822,6 +7824,351 @@ server <- function(input, output, session) {
     }
   })
 
+  # SRV EE GEE to Google drive  ----
+
+  observeEvent( input$in_eedow_go, {
+
+    if ( all(input$ee_project != '' & input$in_eedow_path != '' &
+             input$in_eedow_aoi != '' &
+             input$in_eedow_drive != '' &
+             input$in_eedow_prefix != '' &
+             input$in_eedow_modelid != '' &
+             input$in_eedow_target != '' &
+             input$in_eedow_go != ''
+             ) ) {
+      # Complete parameters
+
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+      (ee_scr_path <- system.file(package = 'cola', 'ee'))
+      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+
+      cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                      ' --ee_project ', input$ee_project, ' ',
+                      ' --ee_folder ', input$in_eedow_path, ' ',
+                      ' --gd_folder ', input$in_eedow_drive, ' ',
+                      ' --prefix ', input$in_eedow_prefix, ' ',
+                      ' --scale ', input$in_eedow_scale, ' ',
+                      ' --gee_assets ', input$in_eedow_path, ' ',
+                      ' --region ', input$in_eedow_aoi)
+
+      if (!input$in_eedow_checkbox){  # Full Run
+        shinyalert(
+          html = TRUE, type = "warning",
+          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+
+        # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
+        # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
+        # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
+
+        cat(' Exporting layer from Earth Engine to Google Drive\n')
+        cat(cmdee, '\n')
+
+        intCMD <- tryCatch(
+          capture.output(
+            system( cmdee , ignore.stdout = FALSE,
+                    ignore.stderr = FALSE,
+                    intern = TRUE)),
+          error = function(e) e$message)
+
+        cat(intCMD)
+        cond <- !any(grep('ERROR', intCMD))
+
+        if(cond){ # Success
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdee , intCMD),
+                       file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
+
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Tasks submitted"),
+            text = paste0('Please check your Earth Engine console and Google Drive')
+          )
+
+        } else { # Error
+          errormessage <- paste0('Error: ', intCMD, '')
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Tasks not submitted"),
+                     text = errormessage)
+        }
+
+      } else if (input$in_eedow_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",#
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdee))
+      }
+
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+  #
+  # SRV EE Compile local ---------
+  observeEvent( input$in_eecom_go, {
+  })
+
+
+  ## SRV EE full workflow ------
+
+  ## folder train button
+  isolate({
+    observeEvent(
+      input$folderfull, {
+        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        shinyDirChoose(input, 'foldertra', roots=volumes, filetypes=c('', 'xyz'))
+        inpf <- input$folderfull
+        #
+        if ( 'character' %in% class('inpf') & !is.null( names(inpf) ) ){
+          roo <- inpf$root
+          paa <- inpf$path
+          un <- unlist(paa)
+          (roo <- gsub('.+\\(|\\)', '', roo))
+          new_wd <- file.path(roo, paste0(paa[paa != ''], collapse = '/'))
+          updateTextInput(session, inputId = 'in_eefull_localpath',
+                          value = new_wd, label = 'Local path:',
+                          placeholder = 'Local path')
+        }
+      })
+  })
+
+  observeEvent( input$in_eefull_go, {
+
+    if ( all(input$ee_project != '' &
+             input$in_eefull_aoi != '' &
+             input$in_eefull_geepath != '' &
+             input$in_eefull_label != '' &
+             input$in_eefull_yy != '' &
+             input$in_eefull_targetyear != '' &
+             input$in_eefull_gap != '' &
+             input$in_eefull_maxconc != '' &
+             input$in_eefull_tiles != '' &
+             input$in_eefull_scale != '' &
+             input$in_eefull_colname != '' &
+             input$in_eefull_modelid != '' &
+             input$in_eefull_localpath != '' &
+             input$in_eefull_gdfolder != '' &
+             input$in_eefull_occasset != '')
+         ) {
+
+
+      if (!input$in_eetra_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Full workflow submitted. Please wait and ensure battery and internet connection"),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message. This will take a while ",
+                        "depending on the number of years, points, and extent of your analysis."))
+      }
+
+
+      ### A Export ----
+      cmdA <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project, species = input$in_eefull_label,
+        gee_assets = input$in_eefull_eepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear,
+        gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles,
+        max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      ### B Gap ----
+      cmdB <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project, species = input$in_eefull_label,
+        gee_assets = input$in_eefull_eepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear,
+        gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles,
+        max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      ### C Metrics ----
+      cmdC <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project, species = input$in_eefull_label,
+        gee_assets = input$in_eefull_eepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear,
+        gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles,
+        max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      ### D Extract ----
+      cmdD <- sdm_modis_extract_py(
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        gee_assets = input$in_eefull_geepath,
+        occurrence_asset = input$in_eefull_occasset,
+        column_train = input$in_eefull_colname,
+        model_id = input$in_eefull_modelid,
+        working_dir = input$in_eefull_localpath,
+        run_mode = tolower(input$in_eefull_modeexp), # single full resume
+        batch_year = input$in_eefull_batchyear,
+        batch_num = input$in_eefull_batchnum,
+        batch_size = input$in_eefull_batchsize,
+        min_year = input$in_eefull_yy[1],
+        max_year = input$in_eefull_yy[2],
+        max_concurrent = input$in_eefull_maxconc,
+        gap_years = input$in_eefull_gap,
+        target_scale = input$in_eefull_scale,
+        point_buffer = input$in_eefull_pbuffer,
+        cml = TRUE, show.result = TRUE,
+        dry_run = input$in_eefull_checkbox)
+
+
+      ### E Fit ----
+
+      logid <- sessionIDgen(letter = FALSE)
+      logfile <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+      train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '.csv')
+
+      cmdE <-  sdm_model_fitting_py(
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        model_id = input$in_eefull_modelid,
+        modex = tolower(input$in_eefull_modex),
+        target_col = input$in_eefull_colname,
+        gee_assets = input$in_eefull_path,
+        working_dir = input$in_eefull_localpath,
+        local_csv = train_csv,
+        imp_thresh = input$in_eetra_impthr,
+        categorical_threshold = input$in_eetra_catthr,
+        cml = TRUE, show.result = TRUE,
+        dry_run = input$in_eetra_checkbox)
+
+
+      ### F Predict ----
+
+      cmdF <- sdm_modis_prediction_py(
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        model_id = input$in_eefull_modelid,
+        gee_assets = input$in_eefull_path,
+        range_asset = input$in_eefull_aoi,
+        tile_degrees = input$in_eefull_tiles,
+        target_year  = (input$in_eefull_target),
+        run_mode = tolower(input$in_eefull_modepre),
+        max_concurrent = input$in_eefull_maxconc,
+        crs = input$in_eefull_crs,
+        scale = input$in_eefull_scale,
+        min_year = input$in_eefull_yy[1],
+        max_year = input$in_eefull_yy[2],
+        cml = TRUE, show.result = TRUE,
+        dry_run =  input$in_eefull_checkbox)
+
+
+      ### G Download ----
+
+      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+      (ee_scr_path <- system.file(package = 'cola', 'ee'))
+      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+
+      cmdeG <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                      ' --ee_project ', input$ee_project, ' ',
+                      ' --ee_folder ', input$in_eefull_path, ' ',
+                      ' --gd_folder ', input$in_eefull_gdfolder, ' ',
+                      ' --prefix ', input$in_eefull_prefix, ' ',
+                      ' --scale ', input$in_eefull_scale, ' ',
+                      ' --gee_assets ', input$in_eefull_path, ' ',
+                      ' --region ', input$in_eefull_aoi)
+
+      cat(' Exporting layer from Earth Engine to Google Drive\n')
+      cat(cmdee, '\n')
+
+      if (input$in_eefull_checkbox){
+
+        intCMD <- tryCatch(
+          capture.output(
+            system( cmdee , ignore.stdout = FALSE,
+                    ignore.stderr = FALSE,
+                    intern = TRUE)),
+          error = function(e) e$message)
+
+        cat(intCMD)
+        cond <- !any(grep('ERROR', intCMD))
+
+      }
+
+      # aoi in_eefull_aoi
+      # eepath in_eefull_geepath
+      # label in_eefull_label
+      # points path in_eefull_occasset
+      # column in_eefull_colname
+      # localpath in_eefull_localpath
+      # range years in_eefull_yy
+      # target year in_eefull_targetyear
+      # gap years in_eefull_gap
+      # max concurrent in_eefull_maxconc
+      # tile degrees in_eefull_tiles
+      # scale m in_eefull_scale
+      # crs in_eefull_crs
+      # modelid in_eefull_modelid
+      # execution mode in_eefull_modeexp ; single / full / resume || export
+      # modepre in_eefull_modepre / full test || predict
+      # batchsieze in_eefull_batchsize
+      # batch year in_eefull_batchyear
+      # batch number in_eefull_batchnum
+      # points buffer in_eefull_pbuffer
+      # algorithm in_eefull_modex / bin reg mult
+      # impthresh in_eefull_impthr
+      # cat thres in_eefull_catthr
+      # only code in_eefull_checkbox
+
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
 
   # SRV EE extcovs ---------
 
@@ -7956,10 +8303,13 @@ server <- function(input, output, session) {
       )
 
     } else {
+      errormessage <- paste0('Error: ', intCMD, '\n',
+                             '\n1. Open a system terminal, and launch CoLa Python by typing in the console: ', py,
+                             '\n2. In Python, type: \n import ee\n ee.Authenticate( ) ',
+                             '\nee.Initialize(project="YOUR_PROJECT_NAME_HERE")')
       shinyalert(html = TRUE, type = "error",
-                 title = paste0("Task  not submitted"),
-                 text = paste0(intCMD)
-      )
+                 title = paste0("Earth engine not connected. Try to run this in your command line:"),
+                 text = errormessage)
     }
     #  ee.Authenticate()
     # ee.Initialize(project='gonzalezivan')
@@ -8421,7 +8771,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeexp_label', title = 'Label to use as extraction name. e.g. (Puma, or Borneo)'),
               bsTooltip(id = 'in_eeexp_targetyear', title = 'Year to predict the species distribution'),
               bsTooltip(id = 'in_eeexp_gap', title = 'Prior years used for gap-fill'),
-              bsTooltip(id = 'in_eeexp_concurre', title = 'Number of concurrent task on GEE'),
+              bsTooltip(id = 'in_eeexp_maxconc', title = 'Number of concurrent task on GEE'),
               bsTooltip(id = 'in_eeexp_tiles', title = 'Degrees used as buffer to the study area.'),
               bsTooltip(id = 'in_eeexp_scale', title = 'Pixel size of the resulting MODIS imagery'),
               bsTooltip(id = 'in_eeexp_crs', title = 'Coordinate reference system. Requires ESPG code format'),
@@ -8467,7 +8817,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eepre_path', title = 'Path to GEE folder where a MODIS datasets exists. Must be same as *Export* module'),
               bsTooltip(id = 'in_eepre_aoi', title = 'Path to GEE asset with the extraction region. Must be same as *Export* module'),
               bsTooltip(id = 'in_eepre_yy', title = 'Year to predict the species distribution. Must be inclued in the *Export*'),
-              bsTooltip(id = 'in_eepre_concurre', title = 'Number of concurrent task on GEE'),
+              bsTooltip(id = 'in_eepre_maxconc', title = 'Number of concurrent task on GEE'),
               bsTooltip(id = 'in_eepre_tiles', title = 'Degrees used as buffer to the study area. Must match to *Export* module'),
               bsTooltip(id = 'in_eepre_scale', title = 'Pixel size of the final suitability map. '),
               bsTooltip(id = 'in_eepre_crs', title = 'Coordinate reference system. Requires ESPG code format'),
@@ -8748,386 +9098,540 @@ if (FALSE){ # if FALSE
                        ) # close box
                 ), # column
 
-                column(width = 4, leaflet::leafletOutput("ll_map_eeu", height = '250px') %>% #, , height = '50%' height = "auto" (like "100%", "400px", "auto")
+                column(width = 4, leaflet::leafletOutput("ll_map_eeu", height = '250px') %>% #, height = '50%' height = "auto" (like "100%", "400px", "auto")
                          shinycssloaders::withSpinner(color="#0dc5c1") ),
               ), #FR
 
+              tabsetPanel(
+                type = "pills",
+                ## EE full workflow ------------
+                tabPanel( "Complete",
+                          h2('Complete SDM workflow '),
 
-              # EE MODIS EXPORT  ---------
-              div(style = "margin-top: -20px"),
-              h2('Create MODIS covariates stack'),
+                          shinydashboard::box( # open box ABC
+                            width = 12, solidHeader = T, collapsible = F,
+                            title = "Full suitability workflow", status = "info", collapsed = FALSE
+                            , # ), ## box
+                            column( width = 6 ,
+                                    #h5('_____ Paths  _____________ '),
 
-              shinydashboard::box( # open box ABC
-                width = 12, solidHeader = T, collapsible = T,
-                title = "Create MODIS stack with covariates", status = "info", collapsed = FALSE
-                , # ), ## box
-                column(
-                  width = 4 ,
+                                    textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
+                                              label = 'GEE assets folder:', inputId = 'in_eefull_geepath'),
+                                    textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/POINTS',
+                                              label = 'GEE points dataset file path:', inputId = 'in_eefull_occasset'),
+                                    textInput(width = "100%", value = '', placeholder = 'column name',
+                                              label = 'GEE region/area of interest dataset file path:', inputId = 'in_eefull_aoi'),
+                                    textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/AOI',
+                                              label = 'Points dataset training column name:', inputId = 'in_eefull_colname'),
+                                    textInput(width = "100%", placeholder = 'Puma or Sulawesi', value = '',
+                                              label = 'Species/Area ID/label:', inputId = 'in_eefull_label'),
+                                    textInput(width = "100%", value = '', placeholder = 'Model_ID',
+                                              label = 'Model ID:', inputId = 'in_eefull_modelid'),
+                                    column(3, style = "padding-left:10px; padding-right:10px; padding-top:20px; padding-bottom:20px;",
+                                           shinyDirButton( id = 'folderfull',
+                                             label = 'Select a folder', title = 'Please select a folder',
+                                             multiple = FALSE)),
+                                    column(9, textInput(width = "100%", value = '', placeholder = 'Local path',
+                                                        label = 'Local results path:', inputId = 'in_eefull_localpath') ),
+                                    textInput(width = "100%", value = '', placeholder = 'colaExports',
+                                              label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder')
+                            ),
+                            column( width = 6 ,
+                                    # h5('___ Parameters  _____________ '),
+                                    column(8, sliderInput(ticks = TRUE, sep = "",
+                                                "in_eefull_yy", "Extraction range:",
+                                                min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
+                                                value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0)
+                                    )),
+                                    column(4, style = "padding-left:10px; padding-right:10px;padding-top:10px;",
+                                           #class = "no-gap", offset = -1,
+                                           numericInput("in_eefull_targetyear", label = "Target year:",
+                                                        value = as.numeric(substr(Sys.Date(), 0, 4)),
+                                                        step = 1, max = as.numeric(substr(Sys.Date(), 0, 4)) ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_gap", label = "Gap years:",
+                                                        value = 2, min = 0, max = 99999 ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_tiles", label = "Tile degrees:",
+                                                        value = 1, min = 0, max = 10 )),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           selectizeInput(
+                                             choices = c('Single' = 'single', 'Full' = 'full',
+                                                         'Resume' = 'resume'),
+                                             selected =  'full', label = 'Export mode:',
+                                             inputId = 'in_eefull_modeexp') ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           selectizeInput(
+                                             choices = c('Full' = 'full', 'Test' = 'test'),
+                                             selected =  'Full', label = 'Predict mode:',
+                                             inputId = 'in_eefull_modepre')),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_batchsize", label = "Batch size:",
+                                                        value = 1000, min = 1, max = 99999 ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_batchyear", label = "Batch year:",
+                                                        value = 2, min = 0, max = 99999 ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_batchnum", label = "Batch number:",
+                                                        value = 2, min = 0, max = 99999 ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_maxconc", label = "Max. concurrence:",
+                                                        value = 10, min = 1, max = 100 ) ),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_pbuffer", label = "Point buffer (m):",
+                                                        value = 250, min = 90, max = 99999 ) ),
+                                    column(6,style = "padding-left:5px; padding-right:5px;",
+                                           selectizeInput(
+                                      choices = c('Binary', 'Regression', 'Multiclass'),
+                                      selected =  'EE', label = 'Algorithm:', inputId = 'in_eefull_modex')),
 
-                  textInput(width = "100%", placeholder = 'projects/USER/assets/REGION_ASSET', value = '',
-                            label = 'Area of interest file EE path:', inputId = 'in_eeexp_aoi'),
-                  textInput(width = "100%", value = '',
-                            placeholder = 'projects/path/folder/results',
-                            label = 'EE results folder path :', inputId = 'in_eeexp_eepath'),
-                  sliderInput(ticks = TRUE, sep = "",
-                              "in_eeexp_yy", "Extraction range:",
-                              min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
-                              value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0)
-                  )
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_impthr", label = "Importance threshold:",
+                                                        value = 0.10, min = 0, max = 1, step = 0.01 )),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_catthr", label = "Categorical threshold:",
+                                                        value = 20, min = 0, max = 1000, step = 1 )),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           numericInput("in_eefull_scale", label = "Scale, pixel size (m):",
+                                                        value = 250, min = 90, max = 99999 )),
+                                    column(6, style = "padding-left:5px; padding-right:5px;",
+                                           textInput(width = "100%", value = 'EPSG:4326',
+                                                     placeholder = '', label = 'CRS:',
+                                                     inputId = 'in_eefull_crs')),
+                                    column(5, checkboxInput("in_eefull_checkbox", label = "Only code", value = FALSE)),
+                                    column(7, actionButton(width = "100%", "in_eefull_go", "Run full workflow"))
+                            )
+                          ) # close box
+                ), # close tab panel
+                # EE modules -------
+                tabPanel(
+                  "Modules",
 
-                  # div(style = "margin-top: -5px"),
-                ),
-                #
-                column(
-                  width = 4,
-                  textInput(width = "100%", placeholder = 'Puma or Sulawesi',
-                            #value = 'projects/gonzalezivan/assets/cola/name',
-                            label = 'Species/Area ID/label:', inputId = 'in_eeexp_label'),
-                  column(6, style = "padding-left:5px; padding-right:5px;padding-bottom:0px;",
-                         #class = "no-gap", offset = -1,
-                         numericInput("in_eeexp_targetyear", label = "Target year",
-                                      value = as.numeric(substr(Sys.Date(), 0, 4)),
-                                      step = 1, max = as.numeric(substr(Sys.Date(), 0, 4)) )
-                  ),
-                  column(6, style = "padding-left:5px; padding-right:5px;",
-                         #class = "no-gap",
-                         #offset = -1,
-                         numericInput("in_eeexp_gap", label = "Gap years:",
-                                      value = 3, step = 1, max = 20, min = 1 )
-                  ),
-                  column(6, style = "padding-left:5px; padding-right:5px;",
-                         numericInput("in_eeexp_concurre", label = "Max concurrent:",
-                                      value = 3, step = 1, max = 20, min = 1 )
-                  ),
-                  column(6, style = "padding-left:5px; padding-right:5px;",
-                         numericInput("in_eeexp_tiles", label = "Tile degrees:",
-                                      value = 2, min = 0, max = 99999 )
-                  ),
+                  # EE MODIS EXPORT  -----
+                  # div(style = "margin-top: -20px"),
+                  h2('Create MODIS covariates stack'),
+
+                  shinydashboard::box( # open box ABC
+                    width = 12, solidHeader = T, collapsible = T,
+                    title = "Create MODIS stack with covariates", status = "info", collapsed = FALSE
+                    , # ), ## box
+                    column(
+                      width = 4 ,
+                      textInput(width = "100%", placeholder = 'projects/USER/assets/REGION_ASSET', value = '',
+                                label = 'Area of interest file EE path:', inputId = 'in_eeexp_aoi'),
+                      textInput(width = "100%", value = '',
+                                placeholder = 'projects/path/folder/results',
+                                label = 'EE results folder path:', inputId = 'in_eeexp_eepath'),
+                      sliderInput(ticks = TRUE, sep = "",
+                                  "in_eeexp_yy", "Extraction range:",
+                                  min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
+                                  value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0)
+                      )
+                      # div(style = "margin-top: -5px"),
+                    ),
+                    #
+                    column(
+                      width = 4,
+                      textInput(width = "100%", placeholder = 'Puma or Sulawesi',
+                                #value = 'projects/gonzalezivan/assets/cola/name',
+                                label = 'Species/Area ID/label:', inputId = 'in_eeexp_label'),
+                      column(6, style = "padding-left:5px; padding-right:5px;padding-bottom:0px;",
+                             #class = "no-gap", offset = -1,
+                             numericInput("in_eeexp_targetyear", label = "Target year:",
+                                          value = as.numeric(substr(Sys.Date(), 0, 4)),
+                                          step = 1, max = as.numeric(substr(Sys.Date(), 0, 4)) )
+                      ),
+                      column(6, style = "padding-left:5px; padding-right:5px;",
+                             #class = "no-gap",
+                             #offset = -1,
+                             numericInput("in_eeexp_gap", label = "Gap years:",
+                                          value = 3, step = 1, max = 20, min = 1 )
+                      ),
+                      column(6, style = "padding-left:5px; padding-right:5px;",
+                             numericInput("in_eeexp_maxconc", label = "Max. concurrence:",
+                                          value = 10, step = 1, max = 100, min = 1 )
+                      ),
+                      column(6, style = "padding-left:5px; padding-right:5px;",
+                             numericInput("in_eeexp_tiles", label = "Tile degrees:",
+                                          value = 1, min = 0, max = 10 )
+                      ),
+                      br(),
+                      column(6, style = "padding-left:5px; padding-right:5px;",
+                             numericInput("in_eeexp_scale", label = "Scale, pixel size (m):",
+                                          value = 250, min = 90, max = 99999 )
+                      ),
+                      column(6, style = "padding-left:5px; padding-right:5px;",
+                             textInput(width = "100%", value = 'EPSG:4326',
+                                       placeholder = '', label = 'CRS:',
+                                       inputId = 'in_eeexp_crs')
+                      ),
+                      # numericInput("in_eeexp_max", label = "Max years:",
+                      #              value = as.numeric(substr(Sys.Date(), 0, 4)),
+                      #              max = as.numeric(substr(Sys.Date(), 0, 4)),
+                      #              step = 1, min = 2000 ),
+                      # numericInput("in_eeexp_min", label = "Min years:",
+                      #              value = as.numeric(substr(Sys.Date(), 0, 4)),
+                      #              max = as.numeric(substr(Sys.Date(), 0, 4)),
+                      #              step = 1, min = 2020 ),
+                    ),
+                    #
+                    column( style = "padding-left:5px; padding-right:5px;padding-top:0px;",
+                            width = 4, offset = 0,
+                            #shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step A, Obtain MODIS',
+                            checkboxInput("in_eeexp_checkbox", label = "Only code", value = FALSE),
+                            h5('Step A: Obtain MODIS'),
+                            column(3, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", 'in_eeexp_gomodistest',  label = 'Test')
+                            ),
+                            column(9, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", 'in_eeexp_gomodis',  label = 'Create stack')
+                            ),
+                            # shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step B, fill gaps',
+                            div(style = "margin-top: 50px"),
+
+                            h5(HTML('Step B: Fill gaps')),
+                            column(3, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", 'in_eeexp_gogaptest',  label = 'Test')
+                            ),
+                            column(9, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", "in_eeexp_gogaps", "Fill gaps")
+                            ),
+                            # shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step C, calculate metrics',
+                            div(style = "margin-top: 50px"),
+                            h5('Step C: Calculate metrics'),
+                            column(3, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", 'in_eeexp_gometricstest',  label = 'Test')
+                            ),
+                            column(9, style = "padding-left:5px; padding-right:5px;",
+                                   actionButton(width = "100%", "in_eeexp_gometrics", "Create metrics")
+                            )
+
+                    )
+                  ), ## box
+
+                  # EE extcovs ---------
+                  #div(style = "margin-top: -30px"),
+                  h2('Extract covariates from points '),
+
+                  shinydashboard::box( # open box ABC
+                    width = 12, solidHeader = T, collapsible = T,
+                    title = "Extract MODIS stack values at points locations", status = "info", collapsed = FALSE
+                    , # ), ## box
+                    column( width = 6 ,
+                            textInput(width = "100%", placeholder = 'Puma or Sulawesi', value = '',
+                                      label = 'Species/Area ID/label:', inputId = 'in_eeext_label'),
+                            textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
+                                      label = 'GEE assets folder:', inputId = 'in_eeext_geepath'),
+                            textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/POINTS',
+                                      label = 'GEE points dataset file path:', inputId = 'in_eeext_occasset'),
+                            textInput(width = "100%", value = '', placeholder = 'column name',
+                                      label = 'Points dataset training column name:', inputId = 'in_eeext_colname'),
+                            textInput(width = "100%", value = '', placeholder = 'Model_ID',
+                                      label = 'Model ID:', inputId = 'in_eeext_modelid'),
+                            column(4, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
+                                   shinyDirButton(
+                                     id = 'folderext',
+                                     label = 'Select a folder', title = 'Please select a folder',
+                                     multiple = FALSE)),
+                            column(8, textInput(width = "100%", value = '', placeholder = 'Local path',
+                                                label = 'Local results path:', inputId = 'in_eeext_localpath') )
+                    ),
+                    column( width = 6 ,
+                            sliderInput(ticks = TRUE, sep = "",
+                                        "in_eeext_yy", "Extraction range:",
+                                        min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
+                                        value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0)
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+
+                                   selectizeInput(
+                                     choices = c('Single' = 'single', 'Full' = 'full', 'Resume' = 'resume'),
+                                     selected =  'Full', label = 'Execution mode:',
+                                     inputId = 'in_eeext_mode')
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_batchsize", label = "Batch size:",
+                                                value = 1000, min = 1, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_batchyear", label = "Batch year:",
+                                                value = 2, min = 0, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_batchnum", label = "Batch number:",
+                                                value = 2, min = 0, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_maxconc", label = "Max. concurrence:",
+                                                value = 10, min = 1, max = 100 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_gap", label = "Gap years:",
+                                                value = 2, min = 0, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_scale", label = "Scale, pixel size (m):",
+                                                value = 250, min = 90, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eeext_pbuffer", label = "Point buffer (m):",
+                                                value = 250, min = 90, max = 99999 )
+                            ),
+                            column(7, actionButton(width = "100%", "in_eeext_go", "Extract values")),
+                            column(5, checkboxInput("in_eeext_checkbox", label = "Only code", value = FALSE))
+                    )
+                  ), ## box
+
+                  # shinydashboard::box( # open box ABC
+                  #   width = 12, solidHeader = TRUE, collapsible = FALSE,
+                  #   title = "Create a table with covariates layers from points",
+                  #   status = "info", collapsed = FALSE
+                  #   , # ), ## box
+                  #
+                  #   column(
+                  #     width = 4 ,
+                  #     fileInput("in_eeloadcovs", "Params CSV File", accept = ".csv"),
+                  #
+                  #     div(style = "margin-top: -5px"),
+                  #
+                  #     actionButton(width = "100%", label = 'Load sample parameters', 'in_eeloadcovssample'),
+                  #     div(style = "margin-top: 10px"),
+                  #
+                  #     actionButton(width = "100%", "in_eetablecovssave", "Save edited params file"),
+                  #   ),
+                  #
+                  #   column(width = 5,
+                  #          selectizeInput(
+                  #            label =  'Covariates stack',
+                  #            inputId = 'in_eecovstack',
+                  #            multiple = FALSE,
+                  #            choices = c('1', '2', '3')),
+                  #
+                  #          selectizeInput(
+                  #            label =  'Covariates', inputId = 'in_eecovlist', multiple = TRUE,
+                  #            choices = c('BioClim','LandCover','ForestCover'),
+                  #            selected = c('BioClim', 'LandCover', 'ForestCover') ),
+                  #
+                  #          selectizeInput(
+                  #            inputId = 'in_eecovlc', multiple = TRUE,
+                  #            choices = c('True desert', 'Semi-arid',
+                  #                        'Dense short vegetation',
+                  #                        'Tree cover', 'Wetland Salt pan',
+                  #                        'Wetland Sparse vegetation',
+                  #                        'Wetland Dense short vegetation',
+                  #                        'Wetland Tree cover', 'Cropland', 'Built-up'),
+                  #            selected = c('Dense short vegetation', 'Tree cover',
+                  #                         'Wetland Sparse vegetation',
+                  #                         'Wetland Dense short vegetation',
+                  #                         'Wetland Tree cover'),
+                  #            label =  'Land cover types')
+                  #   ),
+                  #   #
+                  #   column(width = 3, offset = 0,
+                  #          tags$td(style = "width: 25%", align = "center",
+                  #
+                  #                  selectizeInput(
+                  #                    label =  'Spatial res. (m)',
+                  #                    inputId = 'in_eecovres',
+                  #                    multiple = FALSE,
+                  #                    choices = c(
+                  #                      '250', '500',
+                  #                      '1000', '10000'
+                  #                    ),
+                  #                    selected = c(
+                  #                      '500'
+                  #                    )
+                  #                  ),
+                  #
+                  #                  numericInput('in_eeabs', label = 'Absences (%):',
+                  #                               value = 0,step = 1, max = 999999 ),
+                  #
+                  #                  actionButton(width = "100%",
+                  #                               label = 'Extract covariates',
+                  #                               'in_eeruncovs')
+                  #          )
+                  #   ),
+                  #   br(),
+                  #   DT::dataTableOutput(outputId = "out_eeextcovstable")
+                  #
+                  # ), ## box
+
+                  # EE train model ---------
                   br(),
-                  column(6, style = "padding-left:5px; padding-right:5px;",
-                         numericInput("in_eeexp_scale", label = "Scale, pixel size (m):",
-                                      value = 250, min = 90, max = 99999 )
-                  ),
-                  column(6, style = "padding-left:5px; padding-right:5px;",
-                         textInput(width = "100%", value = 'EPSG:4326',
-                                   placeholder = '', label = 'CRS:',
-                                   inputId = 'in_eeexp_crs')
-                  ),
-                  # numericInput("in_eeexp_max", label = "Max years:",
-                  #              value = as.numeric(substr(Sys.Date(), 0, 4)),
-                  #              max = as.numeric(substr(Sys.Date(), 0, 4)),
-                  #              step = 1, min = 2000 ),
-                  # numericInput("in_eeexp_min", label = "Min years:",
-                  #              value = as.numeric(substr(Sys.Date(), 0, 4)),
-                  #              max = as.numeric(substr(Sys.Date(), 0, 4)),
-                  #              step = 1, min = 2020 ),
-                ),
-                #
-                column( style = "padding-left:5px; padding-right:5px;padding-top:0px;",
-                        width = 4, offset = 0,
-                        #shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step A, Obtain MODIS',
-                        checkboxInput("in_eeexp_checkbox", label = "Only code", value = FALSE),
-                        h5('Step A: Obtain MODIS'),
-                        column(3, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", 'in_eeexp_gomodistest',  label = 'Test')
-                        ),
-                        column(9, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", 'in_eeexp_gomodis',  label = 'Create stack')
-                        ),
-                        # shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step B, fill gaps',
-                        div(style = "margin-top: 50px"),
+                  h2('Train model'),
 
-                        h5(HTML('Step B: Fill gaps')),
-                        column(3, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", 'in_eeexp_gogaptest',  label = 'Test')
-                        ),
-                        column(9, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", "in_eeexp_gogaps", "Fill gaps")
-                        ),
-                        # shinydashboard::box( width = 12, solidHeader = T, collapsible = F, title = 'Step C, calculate metrics',
-                        div(style = "margin-top: 50px"),
-                        h5('Step C: Calculate metrics'),
-                        column(3, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", 'in_eeexp_gometricstest',  label = 'Test')
-                        ),
-                        column(9, style = "padding-left:5px; padding-right:5px;",
-                               actionButton(width = "100%", "in_eeexp_gometrics", "Create metrics")
-                        )
+                  shinydashboard::box( # open box ABC
+                    width = 12, solidHeader = T, collapsible = T,
+                    title = "Train model based on extracted values", status = "info", collapsed = FALSE,
 
+                    column( width = 6 ,
+                            textInput(width = "100%", placeholder = 'Puma or Sulawesi',
+                                      #value = 'projects/gonzalezivan/assets/cola/name',
+                                      label = 'Species/Area ID/label:', inputId = 'in_eetra_label'),
+                            textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
+                                      label = 'GEE assets folder:', inputId = 'in_eetra_path'),
+                            textInput(width = "100%", value = '', placeholder = 'Model_ID',
+                                      label = 'Model ID/label:', inputId = 'in_eetra_modelid'),
+                            textInput(width = "100%", value = '', placeholder = 'column name',
+                                      label = 'Points dataset training column name:', inputId = 'in_eetra_colname')
+                    ),
+                    column( width = 6 ,
+                            selectizeInput( choices = c('Binary', 'Regression', 'Multiclass'),
+                                            selected =  'EE', label = 'Algorithm:', inputId = 'in_eetra_modex'),
+                            column(4, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
+                                   shinyDirButton( id = 'foldertra',
+                                                   label = 'Select a folder', title = 'Please select a folder',
+                                                   multiple = FALSE)),
+                            column(8, textInput(width = "100%", value = '', placeholder = 'Local path',
+                                                label = 'Output local path:', inputId = 'in_eetra_localpath') ),
+
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eetra_impthr", label = "Importance threshold:",
+                                                value = 0.10, min = 0, max = 1, step = 0.01 ),
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eetra_catthr", label = "Categorical threshold:",
+                                                value = 20, min = 0, max = 1000, step = 1 )
+                            ),
+                            br(''),
+                            h2(''),
+                            column(7, actionButton(width = "100%", "in_eetra_go", "Train model")),
+                            column(5,   checkboxInput("in_eetra_checkbox", label = "Only code", value = FALSE))
+                    ),
+
+                  ), # end box
+                  # EE predict model  ---------
+                  br(),
+                  h2('Predict model'),
+
+                  shinydashboard::box( # open box ABC
+                    width = 12, solidHeader = T, collapsible = T,
+                    title = "Predict wall-to-wall", status = "info", collapsed = FALSE,
+
+                    column( width = 6 ,
+                            textInput(width = "100%", placeholder = 'Puma or Sulawesi',
+                                      #value = 'projects/gonzalezivan/assets/cola/name',
+                                      label = 'Species/Area ID/label:', inputId = 'in_eepre_label'),
+                            textInput(width = "100%", value = '',
+                                      placeholder = 'projects/USER/assets/FOLDER',
+                                      label = 'GEE assets folder:', inputId = 'in_eepre_path'),
+                            textInput(width = "100%", placeholder = 'projects/USER/assets/REGION_ASSET', value = '',
+                                      label = 'Area of interest file EE path:', inputId = 'in_eepre_aoi'),
+                            column( width = 6 ,
+                                    textInput(
+                                      width = "100%", value = '', placeholder = 'Model_ID',
+                                      label = 'Model ID/label:', inputId = 'in_eepre_modelid')
+                            ),
+                            column( width = 6 ,
+                                    selectizeInput(
+                                      choices = c( 'Full', 'Test'), selected =  'Full', label = 'Mode:',
+                                      inputId = 'in_eepre_runmode')
+                            )
+                    ),
+                    column( width = 6 ,
+                            column(3,
+                                   numericInput(
+                                     "in_eepre_target", label = "Target year:",
+                                     value = as.numeric(substr(Sys.Date(), 0, 4)),
+                                     min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)) )
+                            ),
+                            column(9, sliderInput(ticks = TRUE, sep = "",
+                                                  "in_eepre_yy", "Prediction range:",
+                                                  min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
+                                                  value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0))),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eepre_maxconc", label = "Max. concurrence:",
+                                                value = 10, step = 1, max = 100, min = 1 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eepre_tiles", label = "Tile degrees:",
+                                                value = 1, min = 0, max = 10 )
+                            ),
+                            br(),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eepre_scale", label = "Scale, pixel size (m):",
+                                                value = 250, min = 90, max = 99999 )
+                            ),
+                            column(6, style = "padding-left:5px; padding-right:5px;",
+                                   textInput(width = "100%", value = 'EPSG:4326',
+                                             placeholder = '', label = 'CRS:',
+                                             inputId = 'in_eepre_crs')),
+                            column(9, actionButton(width = "100%", "in_eepre_go", "Predict")),
+                            column(3,   checkboxInput("in_eepre_checkbox", label = "Only code", value = FALSE))
+                    )
+                  ), # end box
+
+                  # EE download layers to drive  ---------
+                  br(),
+                  h2('Download layers'),
+
+                  shinydashboard::box( # open box ABC
+                    width = 12, solidHeader = T, collapsible = T,
+                    title = "Download GEE assets to local Google Drive",
+                    status = "info", collapsed = FALSE,
+
+                    #projects/gonzalezivan/assets/cola/m6_prediction_2025/m6_suitability_2025_tile_p116_-06
+                    column(6,
+                           textInput(placeholder = 'projects/USER/assets/FOLDER', value = '',
+                                     label = 'GEE assets folder:', inputId = 'in_eedow_path'),
+                           textInput(width = "100%", placeholder = 'projects/USER/assets/REGION_ASSET', value = '',
+                                     label = 'Area of interest file EE path:', inputId = 'in_eedow_aoi')
+                    ),
+                    column( width = 6 ,
+                            column(6,  style = "padding-left:5px; padding-right:5px;",
+                                   textInput(placeholder = 'exportDriveFolder', value = 'cola2',
+                                             label = 'Google Drive folder:', inputId = 'in_eedow_drive')),
+                            column(6,  style = "padding-left:5px; padding-right:5px;",
+                                   textInput(placeholder = 'prefix', value = 'cola2',
+                                             label = 'Files prefix:', inputId = 'in_eedow_prefix')),
+                            column(8, style = "padding-left:5px; padding-right:5px;",
+                                   textInput(width = "100%", placeholder = 'ModelID',
+                                             label = 'Model ID:', inputId = 'in_eedow_modelid')),
+                            column(4, style = "padding-left:5px; padding-right:5px;",
+                                   numericInput("in_eedow_target", label = "Target year:",
+                                                value = as.numeric(substr(Sys.Date(), 0, 4)),
+                                                step = 1, max = as.numeric(substr(Sys.Date(), 0, 4)))
+                            ),
+                            div(style = "margin-top: 40px"),
+                            column(9, actionButton(width = "100%", "in_eedow_go", "Download to Drive")),
+                            column(3, checkboxInput("in_eedow_checkbox", label = "Only code", value = FALSE))
+                    ),
+                  ) # box
                 )
-              ), ## box
+              ), # close tsp
 
-              # EE extcovs ---------
-              #div(style = "margin-top: -30px"),
-              h2('Extract covariates from points '),
-
-              shinydashboard::box( # open box ABC
-                width = 12, solidHeader = T, collapsible = T,
-                title = "Extract MODIS stack values at points locations", status = "info", collapsed = FALSE
-                , # ), ## box
-                column( width = 6 ,
-                        textInput(width = "100%", placeholder = 'Puma or Sulawesi', value = '',
-                                  label = 'Species/Area ID/label:', inputId = 'in_eeext_label'),
-                        textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
-                                  label = 'GEE assets folder:', inputId = 'in_eeext_geepath'),
-                        textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/POINTS',
-                                  label = 'GEE points dataset file path:', inputId = 'in_eeext_occasset'),
-                        textInput(width = "100%", value = '', placeholder = 'column name',
-                                  label = 'Points dataset training column name:', inputId = 'in_eeext_colname'),
-                        textInput(width = "100%", value = '', placeholder = 'Model_ID',
-                                  label = 'Model ID:', inputId = 'in_eeext_modelid'),
-                        column(4, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
-                               shinyDirButton(
-                                 id = 'folderext',
-                                 label = 'Select a folder', title = 'Please select a folder',
-                                 multiple = FALSE)),
-                        column(8, textInput(width = "100%", value = '', placeholder = 'Local path',
-                                            label = 'Local results path:', inputId = 'in_eeext_localpath') )
-                ),
-                column( width = 6 ,
-                        sliderInput(ticks = TRUE, sep = "",
-                                    "in_eeext_yy", "Extraction range:",
-                                    min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
-                                    value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0)
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-
-                               selectizeInput(
-                                 choices = c('Single' = 'single', 'Full' = 'full', 'Resume' = 'resume'),
-                                               selected =  'Single', label = 'Execution mode:',
-                                 inputId = 'in_eeext_mode')
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_batchsize", label = "Batch size:",
-                                            value = 1000, min = 1, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_batchyear", label = "Batch year:",
-                                            value = 2, min = 0, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_batchnum", label = "Batch number:",
-                                            value = 2, min = 0, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_maxconc", label = "Maximum concurrence:",
-                                            value = 2, min = 0, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_gap", label = "Gap years:",
-                                            value = 2, min = 0, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_scale", label = "Scale, pixel size (m):",
-                                            value = 250, min = 90, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eeext_pbuffer", label = "Point buffer (m):",
-                                            value = 250, min = 90, max = 99999 )
-                        ),
-                        column(7, actionButton(width = "100%", "in_eeext_go", "Extract values")),
-                        column(5, checkboxInput("in_eeext_checkbox", label = "Only code", value = FALSE))
-                )
-              ), ## box
-
-              # shinydashboard::box( # open box ABC
-              #   width = 12, solidHeader = TRUE, collapsible = FALSE,
-              #   title = "Create a table with covariates layers from points",
-              #   status = "info", collapsed = FALSE
-              #   , # ), ## box
-              #
-              #   column(
-              #     width = 4 ,
-              #     fileInput("in_eeloadcovs", "Params CSV File", accept = ".csv"),
-              #
-              #     div(style = "margin-top: -5px"),
-              #
-              #     actionButton(width = "100%", label = 'Load sample parameters', 'in_eeloadcovssample'),
-              #     div(style = "margin-top: 10px"),
-              #
-              #     actionButton(width = "100%", "in_eetablecovssave", "Save edited params file"),
-              #   ),
-              #
-              #   column(width = 5,
-              #          selectizeInput(
-              #            label =  'Covariates stack',
-              #            inputId = 'in_eecovstack',
-              #            multiple = FALSE,
-              #            choices = c('1', '2', '3')),
-              #
-              #          selectizeInput(
-              #            label =  'Covariates', inputId = 'in_eecovlist', multiple = TRUE,
-              #            choices = c('BioClim','LandCover','ForestCover'),
-              #            selected = c('BioClim', 'LandCover', 'ForestCover') ),
-              #
-              #          selectizeInput(
-              #            inputId = 'in_eecovlc', multiple = TRUE,
-              #            choices = c('True desert', 'Semi-arid',
-              #                        'Dense short vegetation',
-              #                        'Tree cover', 'Wetland Salt pan',
-              #                        'Wetland Sparse vegetation',
-              #                        'Wetland Dense short vegetation',
-              #                        'Wetland Tree cover', 'Cropland', 'Built-up'),
-              #            selected = c('Dense short vegetation', 'Tree cover',
-              #                         'Wetland Sparse vegetation',
-              #                         'Wetland Dense short vegetation',
-              #                         'Wetland Tree cover'),
-              #            label =  'Land cover types')
-              #   ),
-              #   #
-              #   column(width = 3, offset = 0,
-              #          tags$td(style = "width: 25%", align = "center",
-              #
-              #                  selectizeInput(
-              #                    label =  'Spatial res. (m)',
-              #                    inputId = 'in_eecovres',
-              #                    multiple = FALSE,
-              #                    choices = c(
-              #                      '250', '500',
-              #                      '1000', '10000'
-              #                    ),
-              #                    selected = c(
-              #                      '500'
-              #                    )
-              #                  ),
-              #
-              #                  numericInput('in_eeabs', label = 'Absences (%):',
-              #                               value = 0,step = 1, max = 999999 ),
-              #
-              #                  actionButton(width = "100%",
-              #                               label = 'Extract covariates',
-              #                               'in_eeruncovs')
-              #          )
-              #   ),
-              #   br(),
-              #   DT::dataTableOutput(outputId = "out_eeextcovstable")
-              #
-              # ), ## box
-
-              # EE train model ---------
+              # EE Compile tifs  ---------
               br(),
-              h2('Train model'),
+              h2('Mosaic layers'),
 
               shinydashboard::box( # open box ABC
                 width = 12, solidHeader = T, collapsible = T,
-                title = "Train model based on extracted values", status = "info", collapsed = FALSE,
-
-                column( width = 6 ,
-                        textInput(width = "100%", placeholder = 'Puma or Sulawesi',
-                                  #value = 'projects/gonzalezivan/assets/cola/name',
-                                  label = 'Species/Area ID/label:', inputId = 'in_eetra_label'),
-                        textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER',
-                                  label = 'GEE assets folder:', inputId = 'in_eetra_path'),
-                        textInput(width = "100%", value = '', placeholder = 'Model_ID',
-                                  label = 'Model ID/label:', inputId = 'in_eetra_modelid'),
-                        textInput(width = "100%", value = '', placeholder = 'column name',
-                                  label = 'Points dataset training column name:', inputId = 'in_eetra_colname')
-                ),
-                column( width = 6 ,
-                        selectizeInput( choices = c('Binary', 'Regression', 'Multiclass'),
-                                        selected =  'EE', label = 'Algorithm:', inputId = 'in_eetra_modex'),
-                        column(4, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
-                               shinyDirButton( id = 'foldertra',
-                                               label = 'Select a folder', title = 'Please select a folder',
-                                               multiple = FALSE)),
-                        column(8, textInput(width = "100%", value = '', placeholder = 'Local path',
-                                            label = 'Output local path:', inputId = 'in_eetra_localpath') ),
-
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eetra_impthr", label = "Importance threshold:",
-                                            value = 0.10, min = 0, max = 1, step = 0.01 ),
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eetra_catthr", label = "Categorical threshold:",
-                                            value = 20, min = 0, max = 1000, step = 1 )
-                        ),
-                        br(''),
-                        h2(''),
-                        column(7, actionButton(width = "100%", "in_eetra_go", "Train model")),
-                        column(5,   checkboxInput("in_eetra_checkbox", label = "Only code", value = FALSE))
-                ),
-
-              ), # end box
-              # EE predict model  ---------
-              br(),
-              h2('Predict model'),
-
-              shinydashboard::box( # open box ABC
-                width = 12, solidHeader = T, collapsible = T,
-                title = "Predict wall-to-wall", status = "info", collapsed = FALSE,
-
-                column( width = 6 ,
-                        textInput(width = "100%", placeholder = 'Puma or Sulawesi',
-                                  #value = 'projects/gonzalezivan/assets/cola/name',
-                                  label = 'Species/Area ID/label:', inputId = 'in_eepre_label'),
-                        textInput(width = "100%", value = '',
-                                  placeholder = 'projects/USER/assets/FOLDER',
-                                  label = 'GEE assets folder:', inputId = 'in_eepre_path'),
-                        textInput(width = "100%", placeholder = 'projects/USER/assets/REGION_ASSET', value = '',
-                                  label = 'Area of interest file EE path:', inputId = 'in_eepre_aoi'),
-                        column( width = 6 ,
-                                textInput(
-                                  width = "100%", value = '', placeholder = 'Model_ID',
-                                          label = 'Model ID/label:', inputId = 'in_eepre_modelid')
-                        ),
-                        column( width = 6 ,
-                                selectizeInput(
-                                  choices = c( 'Full', 'Test'), selected =  'Full', label = 'Mode:',
-                                  inputId = 'in_eepre_runmode')
-                        )
-                ),
-                column( width = 6 ,
-
-                        column(3, numericInput("in_eepre_target", label = "Target years:",
-                                               value = 2020, min = 0, max = 99999 )),
-                        column(9, sliderInput(ticks = TRUE, sep = "",
-                                              "in_eepre_yy", "Prediction range:",
-                                              min = 2000, max = as.numeric(substr(Sys.Date(), 0, 4)),
-                                              value = as.numeric(substr(Sys.Date(), 0, 4)) - c(4, 0))),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eepre_concurre", label = "Max. concurrence:",
-                                            value = 3, step = 1, max = 20, min = 1 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eepre_tiles", label = "Tile degrees:",
-                                            value = 2, min = 0, max = 99999 )
-                        ),
-                        br(),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               numericInput("in_eepre_scale", label = "Scale, pixel size (m):",
-                                            value = 250, min = 90, max = 99999 )
-                        ),
-                        column(6, style = "padding-left:5px; padding-right:5px;",
-                               textInput(width = "100%", value = 'EPSG:4326',
-                                         placeholder = '', label = 'CRS:',
-                                         inputId = 'in_eepre_crs')),
-                        br(''),
-                        h2(' '),
-                        column(9, actionButton(width = "100%", "in_eepre_go", "Predict")),
-                        column(3,   checkboxInput("in_eepre_checkbox", label = "Only code", value = FALSE))
-                ),
-
-              ), # end box
-
-              # EE predict model  ---------
-              br(),
-              h2('Download layers'),
-
-              shinydashboard::box( # open box ABC
-                width = 12, solidHeader = T, collapsible = T,
-                title = "Download GEE assets to local  wall-to-wall",
+                title = "Compile raster layers into a single file",
                 status = "info", collapsed = FALSE,
 
-                column( width = 12 , h4(' Download files to local.')),
-              )
+                       column(2, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
+                              shinyDirButton(
+                                id = 'foldermos',
+                                label = 'Select folder:', title = 'Please select the folder with layers',
+                                multiple = FALSE)),
+                       column(10, textInput(width = "100%", value = '', placeholder = 'Local path',
+                                           label = 'Local results path:', inputId = 'in_eemos_localpath') ),
+                       column(4,  style = "padding-left:5px; padding-right:5px;",
+                              textInput(placeholder = 'prefix', value = 'cola2',
+                                        label = 'Files prefix:', inputId = 'in_eedow_prefix')),
+                       column(4,  style = "padding-left:5px; padding-right:5px;",
+                              textInput(placeholder = 'exportDriveFolder', value = 'cola2',
+                                        label = 'Final mosaic:', inputId = 'in_eedow_file')),
+                        column(4,
+                        div(style = "margin-top: 20px"),
+                               actionButton(width = "100%", "in_eemos_go", "Mosaic layers"))
+              ) # box
 
               # ), # tab panel
               # tabPanel( "Make params", h2(' ')  ), # tab panel
               # tabPanel("Select covariates", h2(' ')), # tab panel
               # tabPanel("Model params", h2(' '))
-            ) # tab panel
-
-            #  ) # Fluid page
+            ) # Fluid page
           ), # tabItem
 
           # EE END  ---------
@@ -9229,8 +9733,6 @@ if (FALSE){ # if FALSE
             #   tags$td(align = "left", ),
             #   tags$td(align = "left", )
             #   ) ) ),
-
-
 
             # fluidPage(
             #  column(2, textInput("in_sur_3", "Min-grid:", '0')),
