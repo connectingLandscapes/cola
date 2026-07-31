@@ -2874,7 +2874,8 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_export.py'),
                          ee_project, species, target_year,
-                         stage = '', run_mode = 'full',
+                         stage = '',
+                         run_mode = 'full', # test or full
                          max_concurrent = 3,
                          gap_years = 2,
                          min_year = 2000,
@@ -2904,20 +2905,20 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    '--ee_project ', ee_project,
-    '--species ', species,
-    '--target_year ', target_year,
-    '--stage ', stage,
-    '--run_mode ', run_mode,
-    '--max_concurrent ', max_concurrent,
-    '--gap_years ', gap_years,
-    '--min_year ', min_year,
-    '--max_year ', max_year,
-    '--crs ', crs,
-    '--scale ', scale,
-    '--tile_degrees ', tile_degrees,
-    '--gee_assets ', gee_assets,
-    '--range_asset ', range_asset,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --target_year ', target_year,
+    ' --stage ', stage,
+    ' --run_mode ', run_mode,
+    ' --max_concurrent ', max_concurrent,
+    ' --gap_years ', gap_years,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --crs ', crs,
+    ' --scale ', scale,
+    ' --tile_degrees ', tile_degrees,
+    ' --gee_assets ', gee_assets,
+    ' --range_asset ', range_asset,
     #' 2>&1'
     ''
   ))
@@ -2930,7 +2931,6 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   if (!dry_run){
     args <- c('-u', quotepath(pyscript),
-              quotepath(pyscript),
               '--ee_project', ee_project,
               '--species', species,
               '--target_year', target_year,
@@ -2995,7 +2995,7 @@ sdm_modis_extract_py <- function(
     ee_project, species,
     model_id,
     working_dir,
-    run_mode = 'single',
+    run_mode = 'single', # 'single', 'full', 'resume'
     batch_year, batch_num, batch_size,
     max_concurrent = 3,
     occurrence_asset, column_train, gee_assets,
@@ -3004,10 +3004,10 @@ sdm_modis_extract_py <- function(
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
-  if( !file.exists(py)){
+  if( ! file.exists(py) ){
     stop('Python not found')
   }
-  if( !file.exists(pyscript)){
+  if( ! file.exists(pyscript) ){
     stop('Script not found')
   }
 
@@ -3021,31 +3021,31 @@ sdm_modis_extract_py <- function(
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    '--ee_project ', ee_project,
-    '--species ', species,
-    '--model_id ', model_id,
-    '--working_dir ', working_dir,
-    '--run_mode ', run_mode,
-    '--batch_year ', batch_year,
-    '--batch_num ', batch_num,
-    '--batch_size ', batch_size,
-    '--max_concurrent ', max_concurrent,
-    '--occurrence_asset ', occurrence_asset,
-    '--column_train ', column_train,
-    '--gee_assets ', gee_assets,
-    '--min_year ', min_year,
-    '--max_year ', max_year,
-    '--gap_years ', gap_years,
-    '--target_scale ', target_scale,
-    '--point_buffer ', point_buffer,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --working_dir ', working_dir,
+    ' --run_mode ', run_mode,
+    ' --batch_year ', batch_year,
+    ' --batch_num ', batch_num,
+    ' --batch_size ', batch_size,
+    ' --max_concurrent ', max_concurrent,
+    ' --occurrence_asset ', occurrence_asset,
+    ' --column_train ', column_train,
+    ' --gee_assets ', gee_assets,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --gap_years ', gap_years,
+    ' --target_scale ', target_scale,
+    ' --point_buffer ', point_buffer,
     #' 2>&1'
     ''
   ))
 
   if (show_cml | dry_run){
-    cat('\n\tCMD sdm MODIS extraction: \n')
+    cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
   }
 
   if (!dry_run){
@@ -3132,25 +3132,25 @@ sdm_model_fitting_py <- function(
 
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    '--ee_project ', ee_project,
-    '--species ', species,
-    '--model_id ', model_id,
-    '--mode ', modex,
-    '--target_col ', target_col,
-    '--gee_assets ', gee_assets,
-    '--working_dir ', working_dir,
-    '--local_csv ', local_csv,
-    '--imp_thresh ', imp_thresh,
-    '--categorical_threshold ', categorical_threshold,
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --mode ', modex,
+    ' --target_col ', target_col,
+    ' --gee_assets ', gee_assets,
+    ' --working_dir ', working_dir,
+    ' --local_csv ', local_csv,
+    ' --imp_thresh ', imp_thresh,
+    ' --categorical_threshold ', categorical_threshold,
     #' 2>&1'
     ''
   ))
 
-  cat('\n\tCMD sdm model fitting: \n')
+  cat('\n\tCMD SDM model fitting: \n')
   if (show_cml | dry_run){
     ### Create CMD
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
   }
 
   if (!dry_run){
@@ -3161,7 +3161,7 @@ sdm_model_fitting_py <- function(
               '--mode ', modex,
               '--target_col ', target_col,
               '--gee_assets ', gee_assets,
-              '--working_dir ', working_dir,
+              '--working_dir ', quotepath(working_dir),
               '--local_csv ', local_csv,
               '--imp_thresh ', imp_thresh,
               '--categorical_threshold ', categorical_threshold
@@ -3219,7 +3219,7 @@ sdm_modis_prediction_py <- function(
     ee_project, species,
     model_id,
     target_year,
-    run_mode,
+    run_mode, # test full
     max_concurrent = 3,
     crs, scale = 250,
     min_year, max_year,
@@ -3242,26 +3242,26 @@ sdm_modis_prediction_py <- function(
   ### Create CMD
   (cmd_ <- paste0(
     quotepath(py), ' ', quotepath(pyscript),
-    '--ee_project ', ee_project,
-    '--species ', species,
-    '--model_id ', model_id,
-    '--target_year ', target_year,
-    '--run_mode ', run_mode,
-    '--max_concurrent ', max_concurrent,
-    '--crs ', crs,
-    '--scale ', scale,
-    '--tile_degrees ', tile_degrees,
-    '--min_year ', min_year,
-    '--max_year ', max_year,
-    '--gee_assets ', gee_assets,
-    '--range_asset ', range_asset
+    ' --ee_project ', ee_project,
+    ' --species ', species,
+    ' --model_id ', model_id,
+    ' --target_year ', target_year,
+    ' --run_mode ', run_mode,
+    ' --max_concurrent ', max_concurrent,
+    ' --crs ', crs,
+    ' --scale ', scale,
+    ' --tile_degrees ', tile_degrees,
+    ' --min_year ', min_year,
+    ' --max_year ', max_year,
+    ' --gee_assets ', gee_assets,
+    ' --range_asset ', range_asset
     #' 2>&1'
   ))
 
   if (show_cml | dry_run){
     cat('\n\tCMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
   }
 
   if (!dry_run){

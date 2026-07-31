@@ -111,7 +111,14 @@
     ifelse( COLA_EE == 1 & !is.na(COLA_EE),
             yes = 1, no = 0) ))
   base::options('COLA_EE' = COLA_EE)
-  #
+
+  ## EE
+  (COLA_DEBUG <- as.numeric(Sys.getenv('COLA_DEBUG')))
+  (COLA_DEBUG <- as.numeric(
+    ifelse( COLA_DEBUG == 1 & !is.na(COLA_DEBUG),
+            yes = 1, no = 0) ))
+
+
   #(rootPath <- find.package('cola'))
   (rootPath <- system.file(package = 'cola'))
   path_error <<- '/var/log/shiny-server/'
@@ -177,6 +184,30 @@ cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
 
 # >> SERVER ---------------------------------------------------------------------------
 server <- function(input, output, session) {
+
+  if(COLA_DEBUG == 1){
+    cat('\n\n\t Debugging CoLa. You should not seen this.\n\n')
+    updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/',
+                     session = session, label = 'Local path:', placeholder = 'Local path')
+    updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola',
+                     session = session, label = 'EE path:', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola/pts_box',
+                     session = session, label = 'AOI', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_label', value = 'label',
+                     session = session, label = 'Label:', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola/pts',
+                     session = session, label = 'Points', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_colname', value = 'preabs',
+                     session = session, label = 'Colname', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_modelid', value = 'modelid',
+                     session = session, label = 'Model ID:', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_gdfolder', value = 'cola2',
+                     session = session, label = 'Google Drive:', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_gdprefix', value = 'cola2',
+                     session = session, label = 'Files prefix:', placeholder = '')
+    updateTextInput( inputId = 'ee_project', value = 'gonzalezivan',
+                     session = session, label = 'EE project:', placeholder = '')
+    }
 
   shinyalert(html = TRUE, #type = "info",
              # imageHeight = 1000,
@@ -6898,7 +6929,7 @@ server <- function(input, output, session) {
     #print('rv$eecola == 1')
     if(rv$eecola){
       #print( ' rv$eecola == 1 ')
-      menuItem("EE", tabName = "tabee", icon = icon("map")
+      menuItem("GEE Suitability", tabName = "tabee", icon = icon("map")
       )
     }
   })
@@ -7287,7 +7318,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7339,7 +7370,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7391,7 +7422,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7442,7 +7473,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7495,7 +7526,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7546,7 +7577,7 @@ server <- function(input, output, session) {
         min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
         crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
         tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eeexp_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
       if (input$in_eeexp_checkbox){
         # only code
@@ -7628,7 +7659,7 @@ server <- function(input, output, session) {
           target_scale = input$in_eeext_scale,
           point_buffer = input$in_eeext_pbuffer,
 
-          cml = TRUE, show.result = TRUE,
+          show_cml = TRUE, show_result = TRUE,
           dry_run = input$in_eeext_checkbox)
 
         if (input$in_eeext_checkbox){
@@ -7710,7 +7741,7 @@ server <- function(input, output, session) {
         local_csv = train_csv,
         imp_thresh = input$in_eetra_impthr,
         categorical_threshold = input$in_eetra_catthr,
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eetra_checkbox)
 
 
@@ -7797,7 +7828,7 @@ server <- function(input, output, session) {
         scale = input$in_eepre_scale,
         min_year = input$in_eepre_yy[1],
         max_year = input$in_eepre_yy[2],
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run =  input$in_eepre_checkbox)
 
       if (input$in_eepre_checkbox){
@@ -7918,18 +7949,18 @@ server <- function(input, output, session) {
     }
   })
   #
-  # SRV EE Compile local ---------
+  # SRV EE Compile local files ---------
   observeEvent( input$in_eecom_go, {
   })
 
 
-  ## SRV EE full workflow ------
+  # SRV EE full workflow ------
   ## local folder
   isolate({
     observeEvent(
       input$folderfull, {
         volumes <- getVolumes()() # this makes the directory at the base of your computer.
-        shinyDirChoose(input, 'foldertra', roots=volumes, filetypes=c('', 'xyz'))
+        shinyDirChoose(input, 'folderfull', roots=volumes)
         inpf <- input$folderfull
         #
         if ( 'character' %in% class('inpf') & !is.null( names(inpf) ) ){
@@ -7944,8 +7975,6 @@ server <- function(input, output, session) {
         }
       })
   })
-
-  ### SRV EE full  ------
 
   observeEvent( input$in_eefull_go, {
 
@@ -7980,7 +8009,7 @@ server <- function(input, output, session) {
 
       ### A Export ----
       cmdA <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #'full', # test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
         gee_assets = input$in_eefull_geepath, # result folder
@@ -7991,11 +8020,11 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles,
         max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       ### B Gap ----
       cmdB <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
         gee_assets = input$in_eefull_geepath, # result folder
@@ -8006,11 +8035,11 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles,
         max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       ### C Metrics ----
       cmdC <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
         gee_assets = input$in_eefull_geepath, # result folder
@@ -8021,7 +8050,7 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles,
         max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       ### D Extract ----
       cmdD <- sdm_modis_extract_py(
@@ -8032,7 +8061,7 @@ server <- function(input, output, session) {
         column_train = input$in_eefull_colname,
         model_id = input$in_eefull_modelid,
         working_dir = input$in_eefull_localpath,
-        run_mode = tolower(input$in_eefull_modeexp), # single full resume
+        run_mode = tolower(input$in_eefull_modeext), # single full resume
         batch_year = input$in_eefull_batchyear,
         batch_num = input$in_eefull_batchnum,
         batch_size = input$in_eefull_batchsize,
@@ -8042,7 +8071,7 @@ server <- function(input, output, session) {
         gap_years = input$in_eefull_gap,
         target_scale = input$in_eefull_scale,
         point_buffer = input$in_eefull_pbuffer,
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eefull_checkbox)
 
 
@@ -8058,12 +8087,12 @@ server <- function(input, output, session) {
         model_id = input$in_eefull_modelid,
         modex = tolower(input$in_eefull_modex),
         target_col = input$in_eefull_colname,
-        gee_assets = input$in_eefull_path,
+        gee_assets = input$in_eefull_geepath,
         working_dir = input$in_eefull_localpath,
         local_csv = train_csv,
         imp_thresh = input$in_eetra_impthr,
         categorical_threshold = input$in_eetra_catthr,
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eetra_checkbox)
 
 
@@ -8073,17 +8102,17 @@ server <- function(input, output, session) {
         ee_project = input$ee_project,
         species = input$in_eefull_label,
         model_id = input$in_eefull_modelid,
-        gee_assets = input$in_eefull_path,
+        gee_assets = input$in_eefull_geepath,
         range_asset = input$in_eefull_aoi,
         tile_degrees = input$in_eefull_tiles,
         target_year  = (input$in_eefull_target),
-        run_mode = tolower(input$in_eefull_modepre),
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         max_concurrent = input$in_eefull_maxconc,
         crs = input$in_eefull_crs,
         scale = input$in_eefull_scale,
         min_year = input$in_eefull_yy[1],
         max_year = input$in_eefull_yy[2],
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run =  input$in_eefull_checkbox)
 
 
@@ -8097,11 +8126,11 @@ server <- function(input, output, session) {
 
       cmdeG <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
                       ' --ee_project ', input$ee_project, ' ',
-                      ' --ee_folder ', input$in_eefull_path, ' ',
+                      ' --ee_folder ', input$in_eefull_geepath, ' ',
                       ' --gd_folder ', input$in_eefull_gdfolder, ' ',
                       ' --prefix ', input$in_eefull_prefix, ' ',
                       ' --scale ', input$in_eefull_scale, ' ',
-                      ' --gee_assets ', input$in_eefull_path, ' ',
+                      ' --gee_assets ', input$in_eefull_geepath, ' ',
                       ' --region ', input$in_eefull_aoi)
 
       cat(' Exporting layer from Earth Engine to Google Drive\n')
@@ -8120,32 +8149,6 @@ server <- function(input, output, session) {
         cond <- !any(grep('ERROR', intCMD))
 
       }
-
-      # aoi in_eefull_aoi
-      # eepath in_eefull_geepath
-      # label in_eefull_label
-      # points path in_eefull_occasset
-      # column in_eefull_colname
-      # localpath in_eefull_localpath
-      # range years in_eefull_yy
-      # target year in_eefull_targetyear
-      # gap years in_eefull_gap
-      # max concurrent in_eefull_maxconc
-      # tile degrees in_eefull_tiles
-      # scale m in_eefull_scale
-      # crs in_eefull_crs
-      # modelid in_eefull_modelid
-      # execution mode in_eefull_modeexp ; single / full / resume || export
-      # modepre in_eefull_modepre / full test || predict
-      # batchsieze in_eefull_batchsize
-      # batch year in_eefull_batchyear
-      # batch number in_eefull_batchnum
-      # points buffer in_eefull_pbuffer
-      # algorithm in_eefull_modex / bin reg mult
-      # impthresh in_eefull_impthr
-      # cat thres in_eefull_catthr
-      # only code in_eefull_checkbox
-
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8172,14 +8175,15 @@ server <- function(input, output, session) {
   })
 
 
-  ### SRV EE full export  ------
+  # SRV EE full export A  ------
 
-  # Full
   observeEvent( input$in_eefull_goexp, {
 
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
+             input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+             input$in_eefull_aoi != '' & input$in_eefull_eepath != '')  ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
@@ -8191,7 +8195,7 @@ server <- function(input, output, session) {
       }
 
       cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project,
         species = input$in_eefull_label,
@@ -8201,12 +8205,12 @@ server <- function(input, output, session) {
         min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Export covariates:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8226,13 +8230,15 @@ server <- function(input, output, session) {
                  text = paste0(''))
     }
   })
-  ### SRV EE full gap  ------
+  ### SRV EE full gap B  ------
 
   observeEvent( input$in_eefull_gogap, {
 
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_eepath != '') ) {
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
+            input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+             input$in_eefull_aoi != '' & input$in_eefull_eepath != '') ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
@@ -8244,7 +8250,7 @@ server <- function(input, output, session) {
       }
 
       cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
         gee_assets = input$in_eefull_geepath, # result folder
@@ -8253,12 +8259,12 @@ server <- function(input, output, session) {
         min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Gap filling:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8283,9 +8289,11 @@ server <- function(input, output, session) {
 
   observeEvent( input$in_eefull_gomet, {
 
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
+             input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+             input$in_eefull_aoi != '' & input$in_eefull_eepath != '') ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
@@ -8297,7 +8305,7 @@ server <- function(input, output, session) {
       }
 
       cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
         gee_assets = input$in_eefull_geepath, # result folder
@@ -8306,12 +8314,12 @@ server <- function(input, output, session) {
         min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Metrics calculation:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8336,9 +8344,13 @@ server <- function(input, output, session) {
 
   observeEvent( input$in_eefull_goext, {
 
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_geepath != '' &
+    if ( all(input$ee_project != '' &
+             input$in_eefull_label  != '' &
+             input$in_eefull_geepath != '' &
              input$in_eefull_occasset  != '' &
-             input$in_eefull_colname  != '' & input$in_eefull_modelid != '' & input$in_eefull_localpath != '' ) ) {
+             input$in_eefull_colname  != '' &
+             input$in_eefull_modelid != '' &
+             input$in_eefull_localpath != '' ) ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
@@ -8357,7 +8369,7 @@ server <- function(input, output, session) {
         column_train = input$in_eefull_colname,
         model_id = input$in_eefull_modelid,
         working_dir = input$in_eefull_localpath,
-        run_mode = tolower(input$in_eefull_mode),
+        run_mode = tolower(input$in_eefull_modeext),
         batch_year = input$in_eefull_batchyear,
         batch_num = input$in_eefull_batchnum,
         batch_size = input$in_eefull_batchsize,
@@ -8368,13 +8380,13 @@ server <- function(input, output, session) {
         target_scale = input$in_eefull_scale,
         point_buffer = input$in_eefull_pbuffer,
 
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eefull_checkbox)
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Values extraction:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8423,19 +8435,19 @@ server <- function(input, output, session) {
         model_id = input$in_eefull_modelid,
         modex = tolower(input$in_eefull_modex),
         target_col = input$in_eefull_colname,
-        gee_assets = input$in_eefull_path,
+        gee_assets = input$in_eefull_geepath,
         working_dir = input$in_eefull_localpath,
         local_csv = train_csv,
         imp_thresh = input$in_eefull_impthr,
         categorical_threshold = input$in_eefull_catthr,
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eefull_checkbox)
 
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Model fitting:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8463,7 +8475,7 @@ server <- function(input, output, session) {
     if ( all(input$ee_project != '' & input$in_eefull_label != '' &
              input$in_eefull_modelid != '' &
              input$in_eefull_aoi != '' &
-             input$in_eefull_path != '' ) ) {
+             input$in_eefull_geepath != '' ) ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
@@ -8476,27 +8488,26 @@ server <- function(input, output, session) {
 
 
       cmdd <- sdm_modis_prediction_py(
-        pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
         ee_project = input$ee_project,
         species = input$in_eefull_label,
         model_id = input$in_eefull_modelid,
-        gee_assets = input$in_eefull_path,
+        gee_assets = input$in_eefull_geepath,
         range_asset = input$in_eefull_aoi,
         tile_degrees = input$in_eefull_tiles,
         target_year  = (input$in_eefull_target),
-        run_mode = tolower(input$in_eefull_runmode),
+        run_mode = tolower(input$in_eefull_modepre), #  full test
         max_concurrent = input$in_eefull_maxconc,
         crs = input$in_eefull_crs,
         scale = input$in_eefull_scale,
         min_year = input$in_eefull_yy[1],
         max_year = input$in_eefull_yy[2],
-        cml = TRUE, show.result = TRUE,
+        show_cml = TRUE, show_result = TRUE,
         dry_run =  input$in_eefull_checkbox)
 
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
+                   title = paste0("Run this code in your console for Model prediction:"),
                    text = paste0(cmdd$cmd))
       } else {
         # Full Run
@@ -8519,16 +8530,15 @@ server <- function(input, output, session) {
 
   ### SRV EE full download  ------
 
-
   observeEvent( input$in_eefull_godow, {
 
-    if ( all(input$ee_project != '' & input$in_eefull_path != '' &
+    if ( all(input$ee_project != '' &
+             input$in_eefull_geepath != '' &
              input$in_eefull_aoi != '' &
-             input$in_eefull_drive != '' &
-             input$in_eefull_prefix != '' &
+             input$in_eefull_gdfolder != '' &
+             input$in_eefull_gdprefix != '' &
              input$in_eefull_modelid != '' &
-             input$in_eefull_target != '' &
-             input$in_eefull_go != ''
+             input$in_eefull_target != ''
     ) ) {
       # Complete parameters
 
@@ -8542,12 +8552,14 @@ server <- function(input, output, session) {
 
       cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
                       ' --ee_project ', input$ee_project, ' ',
-                      ' --ee_folder ', input$in_eefull_path, ' ',
-                      ' --gd_folder ', input$in_eefull_drive, ' ',
-                      ' --prefix ', input$in_eefull_prefix, ' ',
+                      ' --ee_folder ', input$in_eefull_geepath, ' ',
+                      ' --gd_folder ', input$in_eefull_gdfolder, ' ',
+                      ' --prefix ', input$in_eefull_gdprefix, ' ',
                       ' --scale ', input$in_eefull_scale, ' ',
-                      ' --gee_assets ', input$in_eefull_path, ' ',
+                      ' --gee_assets ', input$in_eefull_geepath, ' ',
                       ' --region ', input$in_eefull_aoi)
+
+        cat('\n\t CMD Google download:\n', cmdee)
 
       if (!input$in_eefull_checkbox){  # Full Run
         shinyalert(
@@ -8556,13 +8568,7 @@ server <- function(input, output, session) {
           text = paste0("Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
 
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-
-        # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
+              # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
         # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
         # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
 
@@ -9097,7 +9103,7 @@ if (FALSE){ # if FALSE
             'tab_home',
             fluidPage(
 
-              # UI TOOLTIPS  |||| ----
+              # UI TOOLTIPS   ++++ ----
               bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
@@ -9188,6 +9194,7 @@ if (FALSE){ # if FALSE
 
               # trigger: hover, click, focus // options = list(container = "body") # Prevents clipping
               bsTooltip(id = 'ee_project', title = 'Username used to connect Google Earth Engine'),
+              bsTooltip(id = 'vout_eeinfo', title = 'Consumption monthly quota is usually 150h (900m, 540,000s) EECU'),
               bsTooltip(id = 'ee_connect', title = 'Check connection with Earth engine', placement = 'top'),
               bsTooltip(id = 'ee_userquota', title = 'Username'),
               bsTooltip(id = 'ee_quota', title = 'Check quota'),
@@ -9291,17 +9298,18 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eefull_modelid', title = 'Unique model ID to add as sufix to the folder, specific to the ocurrence dataset (e.g. pumacolombia, orangutan)'),
               bsTooltip(id = 'folderfull', title = 'Select / create a local folder'),
               bsTooltip(id = 'in_eefull_localpath', title = 'Local folder where log files will be saved'),
-              bsTooltip(id = 'in_eefull_modeexp', title = 'Execution mode'),
+              bsTooltip(id = 'in_eefull_modeext', title = 'Execution mode. single, full or resume'),
               bsTooltip(id = 'in_eefull_modepre', title = 'Execution mode. Type of run: test or full'),
               bsTooltip(id = 'in_eefull_batchsize', title = 'Number of points for each batch'),
               bsTooltip(id = 'in_eefull_batchyear', title = 'Batch number for single-batch test run'),
               bsTooltip(id = 'in_eefull_batchnum', title = 'Year for single-batch test run'),
               bsTooltip(id = 'in_eefull_pbuffer', title = 'Buffer around each point for predictor stack (m)'),
-              bsTooltip(id = 'in_eefull_modex', title = 'Type of algorithm. '),
+              bsTooltip(id = 'in_eefull_modex', title = 'Type of algorithm. binary, multiclass, regression'),
               bsTooltip(id = 'in_eefull_impthr', title = 'Relative importance threshold for feature pruning'),
               bsTooltip(id = 'in_eefull_catthr', title = 'Max unique values to treat a variable as categorical'),
               bsTooltip(id = 'in_eefull_go', title = 'Run model prediction. It will create the output  {GEE_ASSETS} / {MODEL_ID}_prediction_{TARGET_YEAR} / {MODEL_ID}_suitability_{TARGET_YEAR}_{tile} and will be saved in your folder My Drive/{GDFOLDER} / {PREF}_suitability_{YEAR}_...'),
               bsTooltip(id = 'in_eefull_checkbox', title = 'Only provide the code? You can run it on your console'),
+              bsTooltip(id = 'in_eefull_gdprefix', title = 'Prefix in the downloaded files'),
               #includeMarkdown("md_intro.md")
               tabsetPanel(
                 type = "pills",
@@ -9490,7 +9498,7 @@ if (FALSE){ # if FALSE
 
                   column(width = 4,
                          textInput(width = "100%",
-                                   value = 'gonzalezivan',
+                                   value = '',
                                    placeholder = 'EE project',
                                    label =  'EE project',
                                    'ee_project'),
@@ -9597,9 +9605,9 @@ if (FALSE){ # if FALSE
                                               label = 'GEE assets folder:', inputId = 'in_eefull_geepath'),
                                     textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/POINTS',
                                               label = 'GEE points dataset file path:', inputId = 'in_eefull_occasset'),
-                                    textInput(width = "100%", value = '', placeholder = 'column name',
-                                              label = 'GEE region/area of interest dataset file path:', inputId = 'in_eefull_aoi'),
                                     textInput(width = "100%", value = '', placeholder = 'projects/USER/assets/FOLDER/AOI',
+                                              label = 'GEE region/area of interest dataset file path:', inputId = 'in_eefull_aoi'),
+                                    textInput(width = "100%", value = '', placeholder = 'column_name',
                                               label = 'Points dataset training column name:', inputId = 'in_eefull_colname'),
                                     textInput(width = "100%", placeholder = 'Puma or Sulawesi', value = '',
                                               label = 'Species/Area ID/label:', inputId = 'in_eefull_label'),
@@ -9611,8 +9619,11 @@ if (FALSE){ # if FALSE
                                              multiple = FALSE)),
                                     column(9, textInput(width = "100%", value = '', placeholder = 'Local path',
                                                         label = 'Local results path:', inputId = 'in_eefull_localpath') ),
-                                    textInput(width = "100%", value = '', placeholder = 'colaExports',
-                                              label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder'),
+                                    column(9, textInput(width = "100%", value = '', placeholder = 'colaExports',
+                                                        label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder')),
+                                    column(3, textInput(width = "100%", value = '', placeholder = 'filePrefix',
+                                                        label = 'Files prefix:', inputId = 'in_eefull_gdprefix')),
+
                                     column(4, actionButton( width = "100%", "in_eefull_goexp", "Export covs")),
                                     column(4, actionButton( width = "100%", "in_eefull_gogap", "Fill Gaps")),
                                     column(4, actionButton( width = "100%", "in_eefull_gomet", "Metrics")),
@@ -9644,7 +9655,7 @@ if (FALSE){ # if FALSE
                                              choices = c('Single' = 'single', 'Full' = 'full',
                                                          'Resume' = 'resume'),
                                              selected =  'full', label = 'Export mode:',
-                                             inputId = 'in_eefull_modeexp') ),
+                                             inputId = 'in_eefull_modeext') ),
                                     column(6, style = "padding-left:5px; padding-right:5px;",
                                            selectizeInput(
                                              choices = c('Full' = 'full', 'Test' = 'test'),
