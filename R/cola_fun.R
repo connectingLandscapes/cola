@@ -611,7 +611,7 @@ sui2res_py <- function(intif, outtif,
                        nodata = NULL, prj = 'None',
                        py = Sys.getenv("COLA_PYTHON_PATH"),
                        pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                       show_cml = TRUE, show_result = TRUE, ){
+                       show_cml = TRUE, show_result = TRUE ){
   # minval = 0
   # maxval =  100
   # maxout = 100
