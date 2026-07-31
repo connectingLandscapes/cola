@@ -186,7 +186,7 @@ cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
 server <- function(input, output, session) {
 
   if(COLA_DEBUG == 1){
-    cat('\n\n\t Debugging CoLa. You should not seen this.\n\n')
+    cat('\t ¡¡ Debugging CoLa. You should not seen this !! \n\n')
     updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/',
                      session = session, label = 'Local path:', placeholder = 'Local path')
     updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola',
