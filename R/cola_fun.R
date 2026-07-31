@@ -3295,41 +3295,74 @@ sdm_modis_prediction_py <- function(
 
 #' @title Submit a console task printing report and saving it
 #' @description Submit a console task printing report and saving it. Requires processx library
-#' @param dots Mix. Other argument
+#' @param dots Mix. Other arguments to be passed to
 #' @param delay Numeric. Seconds to wait in each query
 #' @param stepp String. Separator for each line
+#' @param logfile String. Separator for each line
 #' @return List with log sloth
 #' @examples
+#' catandcapt( Sys.getenv("COLA_PYTHON_PATH"),
+#' c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
+#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-catandcapt <- function(..., sepp = '\n', delay = 0.5, docat = TRUE) {
+catandcapt <- function( ... , log_file = NULL, docat = TRUE) {
+  # sepp = '\n', delay = 0.5, docat = TRUE
+  ##### OPT A ---------
   # Print results
-  if (docat){
-    proc <- processx::process$new(..., stdout = "|")
-    on.exit(if (isTRUE(proc$is_alive())) { message("killing"); try(proc$kill(), silent = TRUE); })
-    out <- character(0)
+  # if (docat){
+  #   proc <- processx::process$new(..., stdout = "|")
+  #   on.exit(if (isTRUE(proc$is_alive())) { message("killing"); try(proc$kill(), silent = TRUE); })
+  #   out <- character(0)
+  #   while (TRUE) {
+  #     newout <- proc$read_output()
+  #     if (nzchar(newout)) {
+  #       cat(newout)
+  #       out <- c(out, newout)
+  #     }
+  #     if (!proc$is_alive()){
+  #       break
+  #     }
+  #     Sys.sleep( delay )
+  #   }
+  #   # Do not print
+  # } else {
+  #   out <- tryCatch(
+  #     system2( ... , intern = stdout),
+  #     error = function(e) e$message)
+  # }
 
-    while (TRUE) {
-      newout <- proc$read_output()
-      if (nzchar(newout)) {
-        cat(newout)
-        out <- c(out, newout)
-      }
-      if (!proc$is_alive()){
-        break
-      }
-      Sys.sleep( delay )
+  if(is.null(log_file)){
+    (log_file <- tempfile(fileext = '.txt', pattern = 'colalog_'))
+  }
+
+  log_con <- file(log_file, open = "a")
+
+  ##### OPT B ---------
+  out <- tryCatch({processx::run( ... ,
+    # command = python, args = c("-u", script),
+    stdout_line_callback = function(line, proc) {
+      # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
+      msg <- sprintf( line )
+      if (docat) cat(msg, "\n")
+      writeLines(msg, log_con)
+    },
+    stderr_line_callback = function(line, proc) {
+      #msg <- sprintf("[%s] ERR: %s", format(Sys.time(), "%H:%M:%S"), line)
+      msg <- sprintf("ERR: %s", line)
+      if (docat) cat(msg, "\n")
+      writeLines(msg, log_con)
     }
-    # Do not print
-  } else {
-    out <- tryCatch(
-      system2( ... , intern = stdout),
-      error = function(e) e$message)
+  ); close(log_con)}, error = function(e){  close(log_con); e } )
+
+  if('error' %in% class(out)){
+    try(close(log_con), silent = TRUE)
+    out <- readLines(log_file)
   }
   return(out)
 }
-# 'Rscript', args = c('-e',  "for(i in 1:5){Sys.sleep(2);print(i);}")
-  # proc <- processx::process$new('Rscript', args = c('-e',  "for(i in 1:5){Sys.sleep(2);print(i);}"), stdout = "|")
-  # proc <- processx::process$new(stdout = '|', python, args = c('-u', '-c' ,'"import time; [print(i) or time.sleep(1) for i in range(0, 6)]"'))
+# python = 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe'
+# script = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/ee/tenseconds.py'
+# ab <- catandcapt( python, c('-u', script) , log_file = 'C:/cola/try2.txt' )

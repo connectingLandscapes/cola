@@ -7924,8 +7924,7 @@ server <- function(input, output, session) {
 
 
   ## SRV EE full workflow ------
-
-  ## folder train button
+  ## local folder
   isolate({
     observeEvent(
       input$folderfull, {
@@ -7945,6 +7944,8 @@ server <- function(input, output, session) {
         }
       })
   })
+
+  ### SRV EE full  ------
 
   observeEvent( input$in_eefull_go, {
 
@@ -7982,7 +7983,7 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_eepath, # result folder
+        gee_assets = input$in_eefull_geepath, # result folder
         range_asset = input$in_eefull_aoi, # aoi
         target_year = input$in_eefull_targetyear,
         gap_years = input$in_eefull_gap,
@@ -7997,7 +7998,7 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_eepath, # result folder
+        gee_assets = input$in_eefull_geepath, # result folder
         range_asset = input$in_eefull_aoi, # aoi
         target_year = input$in_eefull_targetyear,
         gap_years = input$in_eefull_gap,
@@ -8012,7 +8013,7 @@ server <- function(input, output, session) {
         run_mode = 'full', # test
         stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
         ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_eepath, # result folder
+        gee_assets = input$in_eefull_geepath, # result folder
         range_asset = input$in_eefull_aoi, # aoi
         target_year = input$in_eefull_targetyear,
         gap_years = input$in_eefull_gap,
@@ -8170,6 +8171,446 @@ server <- function(input, output, session) {
     }
   })
 
+
+  ### SRV EE full export  ------
+
+  # Full
+  observeEvent( input$in_eefull_goexp, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+      cmdd <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        gee_assets = input$in_eefull_geepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+  ### SRV EE full gap  ------
+
+  observeEvent( input$in_eefull_gogap, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_eepath != '') ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+      cmdd <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project, species = input$in_eefull_label,
+        gee_assets = input$in_eefull_geepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd ,  cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+
+  ### SRV EE full metrics  ------
+
+  observeEvent( input$in_eefull_gomet, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_targetyear != '' & input$in_eefull_maxconc  != '' &
+             input$in_eefull_gap  != '' & input$in_eefull_yy[1] != '' & input$in_eefull_yy[2] != '' & input$in_eefull_crs != '' &
+             input$in_eefull_scale != '' & input$in_eefull_tiles != '' & input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+      cmdd <- sdm_modis_export_py(
+        run_mode = 'full', # test
+        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+        ee_project = input$ee_project, species = input$in_eefull_label,
+        gee_assets = input$in_eefull_geepath, # result folder
+        range_asset = input$in_eefull_aoi, # aoi
+        target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
+        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+        cml = TRUE, show.result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+
+  ### SRV EE full extract  ------
+
+  observeEvent( input$in_eefull_goext, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label  != '' & input$in_eefull_geepath != '' &
+             input$in_eefull_occasset  != '' &
+             input$in_eefull_colname  != '' & input$in_eefull_modelid != '' & input$in_eefull_localpath != '' ) ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+      cmdd <- sdm_modis_extract_py(
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        gee_assets = input$in_eefull_geepath,
+        occurrence_asset = input$in_eefull_occasset,
+        column_train = input$in_eefull_colname,
+        model_id = input$in_eefull_modelid,
+        working_dir = input$in_eefull_localpath,
+        run_mode = tolower(input$in_eefull_mode),
+        batch_year = input$in_eefull_batchyear,
+        batch_num = input$in_eefull_batchnum,
+        batch_size = input$in_eefull_batchsize,
+        min_year = input$in_eefull_yy[1],
+        max_year = input$in_eefull_yy[2],
+        max_concurrent = input$in_eefull_maxconc,
+        gap_years = input$in_eefull_gap,
+        target_scale = input$in_eefull_scale,
+        point_buffer = input$in_eefull_pbuffer,
+
+        cml = TRUE, show.result = TRUE,
+        dry_run = input$in_eefull_checkbox)
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+
+  ### SRV EE full fit training  ------
+
+  observeEvent( input$in_eefull_gofit, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label != '' &
+             input$in_eefull_modelid != '' &
+             input$in_eefull_modex != '' &
+             input$in_eefull_label != '' &
+             input$in_eefull_label != '' & input$in_eefull_geepath != '') ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+      logid <- sessionIDgen(letter = FALSE)
+      train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+
+      cmdd <-  sdm_model_fitting_py(
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        model_id = input$in_eefull_modelid,
+        modex = tolower(input$in_eefull_modex),
+        target_col = input$in_eefull_colname,
+        gee_assets = input$in_eefull_path,
+        working_dir = input$in_eefull_localpath,
+        local_csv = train_csv,
+        imp_thresh = input$in_eefull_impthr,
+        categorical_threshold = input$in_eefull_catthr,
+        cml = TRUE, show.result = TRUE,
+        dry_run = input$in_eefull_checkbox)
+
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+
+  ### SRV EE full predict  ------
+
+  observeEvent( input$in_eefull_gopre, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_label != '' &
+             input$in_eefull_modelid != '' &
+             input$in_eefull_aoi != '' &
+             input$in_eefull_path != '' ) ) {
+
+      if (!input$in_eefull_checkbox){
+        # Full Run
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+      }
+
+
+      cmdd <- sdm_modis_prediction_py(
+        pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
+        ee_project = input$ee_project,
+        species = input$in_eefull_label,
+        model_id = input$in_eefull_modelid,
+        gee_assets = input$in_eefull_path,
+        range_asset = input$in_eefull_aoi,
+        tile_degrees = input$in_eefull_tiles,
+        target_year  = (input$in_eefull_target),
+        run_mode = tolower(input$in_eefull_runmode),
+        max_concurrent = input$in_eefull_maxconc,
+        crs = input$in_eefull_crs,
+        scale = input$in_eefull_scale,
+        min_year = input$in_eefull_yy[1],
+        max_year = input$in_eefull_yy[2],
+        cml = TRUE, show.result = TRUE,
+        dry_run =  input$in_eefull_checkbox)
+
+      if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdd$cmd))
+      } else {
+        # Full Run
+        logid <- sessionIDgen(letter = FALSE)
+        write.table( c(cmdd$cmd , cmdd$log),
+                     file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
+        shinyalert(
+          html = TRUE, type = "success",
+          title = paste0("Task finished. Check the results in your R console",
+                         " and Earth Engine app."),
+          text = paste0(cmdd$cmd))
+      }
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
+
+  ### SRV EE full download  ------
+
+
+  observeEvent( input$in_eefull_godow, {
+
+    if ( all(input$ee_project != '' & input$in_eefull_path != '' &
+             input$in_eefull_aoi != '' &
+             input$in_eefull_drive != '' &
+             input$in_eefull_prefix != '' &
+             input$in_eefull_modelid != '' &
+             input$in_eefull_target != '' &
+             input$in_eefull_go != ''
+    ) ) {
+      # Complete parameters
+
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+      (ee_scr_path <- system.file(package = 'cola', 'ee'))
+      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+
+      cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                      ' --ee_project ', input$ee_project, ' ',
+                      ' --ee_folder ', input$in_eefull_path, ' ',
+                      ' --gd_folder ', input$in_eefull_drive, ' ',
+                      ' --prefix ', input$in_eefull_prefix, ' ',
+                      ' --scale ', input$in_eefull_scale, ' ',
+                      ' --gee_assets ', input$in_eefull_path, ' ',
+                      ' --region ', input$in_eefull_aoi)
+
+      if (!input$in_eefull_checkbox){  # Full Run
+        shinyalert(
+          html = TRUE, type = "warning",
+          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+
+        shinyalert(
+          html = TRUE, type = "info",
+          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+          text = paste0("Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message"))
+
+        # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
+        # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
+        # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
+
+        cat(' Exporting layer from Earth Engine to Google Drive\n')
+        cat(cmdee, '\n')
+
+        intCMD <- tryCatch(
+          capture.output(
+            system( cmdee , ignore.stdout = FALSE,
+                    ignore.stderr = FALSE,
+                    intern = TRUE)),
+          error = function(e) e$message)
+
+        cat(intCMD)
+        cond <- !any(grep('ERROR', intCMD))
+
+        if(cond){ # Success
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdee , intCMD),
+                       file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
+
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Tasks submitted"),
+            text = paste0('Please check your Earth Engine console and Google Drive')
+          )
+
+        } else { # Error
+          errormessage <- paste0('Error: ', intCMD, '')
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Tasks not submitted"),
+                     text = errormessage)
+        }
+
+      } else if (input$in_eefull_checkbox){
+        # only code
+        shinyalert(html = TRUE, type = "info",#
+                   title = paste0("Run this code in your console:"),
+                   text = paste0(cmdee))
+      }
+
+    } else {
+      # Incomplete params
+      shinyalert(html = TRUE, type = "error",
+                 title = paste0("Complete the parameters. Some are missing"),
+                 text = paste0(''))
+    }
+  })
   # SRV EE extcovs ---------
 
   # isolate(observeEvent(input$in_eeloadcovs, {
@@ -8656,7 +9097,7 @@ if (FALSE){ # if FALSE
             'tab_home',
             fluidPage(
 
-              # UI TOOLTIPS  ----
+              # UI TOOLTIPS  |||| ----
               bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
@@ -8824,6 +9265,43 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eepre_checkbox', title = 'Only provide the code? You can run it on your console'),
               bsTooltip(id = 'in_eepre_target', title = 'Year to predict the species distribution. Must be inclued in the *Export*'),
               bsTooltip(id = 'in_eepre_go', title = 'Run model prediction. It will create the output  {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}/{MODEL_ID}_suitability_{TARGET_YEAR}_{tile}'),
+
+              bsTooltip(id = 'in_eepre_go', title = 'Run model prediction. It will create the output  {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}/{MODEL_ID}_suitability_{TARGET_YEAR}_{tile}'),
+              bsTooltip(id = 'in_eedow_path', title = 'Path to GEE folder where a MODIS datasets exists. Must be same as *Export* module'),
+              bsTooltip(id = 'in_eedow_aoi', title = 'Path to GEE asset with the extraction region. Must be same as *Export* module'),
+              bsTooltip(id = 'in_eedow_drive', title = 'Path in your Google Drive to be created with the results'),
+              bsTooltip(id = 'in_eedow_prefix', title = 'Prefix in all exported files'),
+              bsTooltip(id = 'in_eedow_modelid', title = 'Same model ID as *Extraction*'),
+              bsTooltip(id = 'in_eedow_target', title = 'Year to predict the species distribution. Must match the *Export* module'),
+              bsTooltip(id = 'in_eedow_go', title = 'Run model prediction. It will create the output  {GEE_ASSETS} / {MODEL_ID}_prediction_{TARGET_YEAR} / {MODEL_ID}_suitability_{TARGET_YEAR}_{tile} and will be saved in your folder My Drive/{GDFOLDER} / {PREF}_suitability_{YEAR}_...'),
+              bsTooltip(id = 'in_eedow_checkbox', title = 'Only provide the code? You can run it on your console'),
+              bsTooltip(id = 'in_eefull_geepath', title = 'Path to GEE folder where a subfolder with results will be created'),
+              bsTooltip(id = 'in_eefull_gdfolder', title = 'Folder name in Google Drive to export the images'),
+              bsTooltip(id = 'in_eefull_aoi', title = 'Path to GEE asset containing the study area geometry'),
+              bsTooltip(id = 'in_eefull_label', title = 'Label to use as extraction name. e.g. (Puma, or Borneo)'),
+              bsTooltip(id = 'in_eefull_yy', title = 'Temporal range of the MODIS extraction'),
+              bsTooltip(id = 'in_eefull_targetyear', title = 'Year to predict the species distribution. Must match the *Export* module'),
+              bsTooltip(id = 'in_eefull_gap', title = 'Prior years used for gap-fill'),
+              bsTooltip(id = 'in_eefull_maxconc', title = 'Number of concurrent task on GEE'),
+              bsTooltip(id = 'in_eefull_tiles', title = 'Degrees used as buffer to the study area.'),
+              bsTooltip(id = 'in_eefull_scale', title = 'Pixel size of the resulting MODIS imagery'),
+              bsTooltip(id = 'in_eefull_crs', title = 'Coordinate reference system. Requires ESPG code format'),
+              bsTooltip(id = 'in_eefull_occasset', title = 'Path to GEE points dataset. Must include the date field in numeric format (yyyy), and a presence/absence column'),
+              bsTooltip(id = 'in_eefull_colname', title = 'Name with the presence/absence column. Needs to have 0/1 numeric format'),
+              bsTooltip(id = 'in_eefull_modelid', title = 'Unique model ID to add as sufix to the folder, specific to the ocurrence dataset (e.g. pumacolombia, orangutan)'),
+              bsTooltip(id = 'folderfull', title = 'Select / create a local folder'),
+              bsTooltip(id = 'in_eefull_localpath', title = 'Local folder where log files will be saved'),
+              bsTooltip(id = 'in_eefull_modeexp', title = 'Execution mode'),
+              bsTooltip(id = 'in_eefull_modepre', title = 'Execution mode. Type of run: test or full'),
+              bsTooltip(id = 'in_eefull_batchsize', title = 'Number of points for each batch'),
+              bsTooltip(id = 'in_eefull_batchyear', title = 'Batch number for single-batch test run'),
+              bsTooltip(id = 'in_eefull_batchnum', title = 'Year for single-batch test run'),
+              bsTooltip(id = 'in_eefull_pbuffer', title = 'Buffer around each point for predictor stack (m)'),
+              bsTooltip(id = 'in_eefull_modex', title = 'Type of algorithm. '),
+              bsTooltip(id = 'in_eefull_impthr', title = 'Relative importance threshold for feature pruning'),
+              bsTooltip(id = 'in_eefull_catthr', title = 'Max unique values to treat a variable as categorical'),
+              bsTooltip(id = 'in_eefull_go', title = 'Run model prediction. It will create the output  {GEE_ASSETS} / {MODEL_ID}_prediction_{TARGET_YEAR} / {MODEL_ID}_suitability_{TARGET_YEAR}_{tile} and will be saved in your folder My Drive/{GDFOLDER} / {PREF}_suitability_{YEAR}_...'),
+              bsTooltip(id = 'in_eefull_checkbox', title = 'Only provide the code? You can run it on your console'),
               #includeMarkdown("md_intro.md")
               tabsetPanel(
                 type = "pills",
@@ -9104,13 +9582,13 @@ if (FALSE){ # if FALSE
 
               tabsetPanel(
                 type = "pills",
-                ## EE full workflow ------------
+                # EE full workflow ------------
                 tabPanel( "Complete",
                           h2('Complete SDM workflow '),
 
                           shinydashboard::box( # open box ABC
                             width = 12, solidHeader = T, collapsible = F,
-                            title = "Full suitability workflow", status = "info", collapsed = FALSE
+                            title = "Full suitability mapping workflow", status = "info", collapsed = FALSE
                             , # ), ## box
                             column( width = 6 ,
                                     #h5('_____ Paths  _____________ '),
@@ -9134,7 +9612,14 @@ if (FALSE){ # if FALSE
                                     column(9, textInput(width = "100%", value = '', placeholder = 'Local path',
                                                         label = 'Local results path:', inputId = 'in_eefull_localpath') ),
                                     textInput(width = "100%", value = '', placeholder = 'colaExports',
-                                              label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder')
+                                              label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder'),
+                                    column(4, actionButton( width = "100%", "in_eefull_goexp", "Export covs")),
+                                    column(4, actionButton( width = "100%", "in_eefull_gogap", "Fill Gaps")),
+                                    column(4, actionButton( width = "100%", "in_eefull_gomet", "Metrics")),
+                                    column(3, actionButton( width = "100%", "in_eefull_goext", "Extract")),
+                                    column(3, actionButton( width = "100%", "in_eefull_gofit", "Fit model")),
+                                    column(3, actionButton( width = "100%", "in_eefull_gopre", "Predict")),
+                                    column(3, actionButton( width = "100%", "in_eefull_godow", "Download"))
                             ),
                             column( width = 6 ,
                                     # h5('___ Parameters  _____________ '),
@@ -9765,7 +10250,7 @@ if (FALSE){ # if FALSE
               #)
             ) # close box
           ),
-          #### UI EDIT ----
+          # UI EDIT ----
 
           shinydashboard::tabItem(
             tabName = 'tab_edit',
@@ -9863,7 +10348,7 @@ if (FALSE){ # if FALSE
             #       ) # close box
           ),
 
-          #### UI POINTS ----
+          # UI POINTS ----
           shinydashboard::tabItem(
             tabName = 'tab_points',
             fluidRow(
@@ -9905,7 +10390,7 @@ if (FALSE){ # if FALSE
           ##> vout_points; ll_map_points; points_py; in_points_3 -- 5
 
 
-          #### UI DISTANCE ----
+          # UI DISTANCE ----
           shinydashboard::tabItem(
             tabName = 'tab_distance',
             fluidRow(
@@ -9963,7 +10448,7 @@ if (FALSE){ # if FALSE
           ),
           ##> vout_dist; ll_map_dist; dist_py; in_distance_3, in_distance_shp in_dist_tif
 
-          #### UI CDPOP ----
+          # UI CDPOP ----
 
           shinydashboard::tabItem(
             'tab_cdpop',
@@ -10094,7 +10579,7 @@ if (FALSE){ # if FALSE
             )
           ),
 
-          #### UI CRK ----
+          # UI CRK ----
           shinydashboard::tabItem(
             tabName = 'tab_kernels',
             fluidRow(
@@ -10139,7 +10624,7 @@ if (FALSE){ # if FALSE
           ),
 
 
-          #### UI LCC ----
+          # UI LCC ----
           shinydashboard::tabItem(
             tabName = 'tab_corridors',
             fluidRow(
@@ -10190,7 +10675,7 @@ if (FALSE){ # if FALSE
           #     leaflet::leafletOutput("ll_map_map", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
           # ),
 
-          #### UI PRIOR ----
+          # UI PRIOR ----
           shinydashboard::tabItem(
             tabName = 'tab_priori',
             fluidRow(
@@ -10238,7 +10723,7 @@ if (FALSE){ # if FALSE
           ),
 
 
-          #### UI COMPARE ------
+          # UI COMPARE ------
           shinydashboard::tabItem(
             tabName = 'tab_compare',
 
@@ -10371,7 +10856,7 @@ if (FALSE){ # if FALSE
           ), # close tabitem
 
 
-          #### UI PDF ----
+          # UI PDF ----
           shinydashboard::tabItem(
             tabName = 'tab_pdf',
             mainPanel(
@@ -10393,7 +10878,7 @@ if (FALSE){ # if FALSE
             )
           ), # close tabitem
 
-          #### UI GENETICS ----
+          # UI GENETICS ----
 
           shinydashboard::tabItem(
             tabName = 'tab_genetics',
@@ -10401,7 +10886,7 @@ if (FALSE){ # if FALSE
             h6('  Comming soon ... stay tuned')
           ),
 
-          #### UI LOCAL --------
+          # UI LOCAL --------
           shinydashboard::tabItem(
             tabName = 'tab_local',
 
@@ -10438,7 +10923,7 @@ if (FALSE){ # if FALSE
           ),
 
 
-          #### UI COORDS ----
+          # UI COORDS ----
           shinydashboard::tabItem(
             tabName = 'tab_coords',
             h2(' Assigning projection to your points or raster'),
