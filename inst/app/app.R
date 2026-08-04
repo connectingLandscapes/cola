@@ -187,19 +187,19 @@ server <- function(input, output, session) {
 
   if(COLA_DEBUG == 1){
     cat('\t ¡¡ Debugging CoLa. You should not seen this !! \n\n')
-    updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/',
+    updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/labelA',
                      session = session, label = 'Local path:', placeholder = 'Local path')
     updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola',
                      session = session, label = 'EE path:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola/pts_box',
                      session = session, label = 'AOI', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_label', value = 'label',
+    updateTextInput( inputId = 'in_eefull_label', value = 'labelA',
                      session = session, label = 'Label:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola/pts',
                      session = session, label = 'Points', placeholder = '')
     updateTextInput( inputId = 'in_eefull_colname', value = 'preabs',
                      session = session, label = 'Colname', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_modelid', value = 'modelid',
+    updateTextInput( inputId = 'in_eefull_modelid', value = 'modelidA',
                      session = session, label = 'Model ID:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_gdfolder', value = 'cola2',
                      session = session, label = 'Google Drive:', placeholder = '')
@@ -207,6 +207,10 @@ server <- function(input, output, session) {
                      session = session, label = 'Files prefix:', placeholder = '')
     updateTextInput( inputId = 'ee_project', value = 'gonzalezivan',
                      session = session, label = 'EE project:', placeholder = '')
+    updateNumericInput( inputId = 'in_eefull_targetyear', value = 2025,
+                     session = session, label = 'Extraction range:')
+    updateNumericRangeInput(inputId = 'in_eefull_yy', value = c(2022, 2024),
+                            session = session, label = 'Extraction range:')
     }
 
   shinyalert(html = TRUE, #type = "info",
@@ -8105,7 +8109,7 @@ server <- function(input, output, session) {
         gee_assets = input$in_eefull_geepath,
         range_asset = input$in_eefull_aoi,
         tile_degrees = input$in_eefull_tiles,
-        target_year  = (input$in_eefull_target),
+        target_year  = (input$in_eefull_targetyear),
         run_mode = tolower(input$in_eefull_modepre), #  full test
         max_concurrent = input$in_eefull_maxconc,
         crs = input$in_eefull_crs,
@@ -8494,7 +8498,7 @@ server <- function(input, output, session) {
         gee_assets = input$in_eefull_geepath,
         range_asset = input$in_eefull_aoi,
         tile_degrees = input$in_eefull_tiles,
-        target_year  = (input$in_eefull_target),
+        target_year  = (input$in_eefull_targetyear),
         run_mode = tolower(input$in_eefull_modepre), #  full test
         max_concurrent = input$in_eefull_maxconc,
         crs = input$in_eefull_crs,
@@ -8538,7 +8542,7 @@ server <- function(input, output, session) {
              input$in_eefull_gdfolder != '' &
              input$in_eefull_gdprefix != '' &
              input$in_eefull_modelid != '' &
-             input$in_eefull_target != ''
+             input$in_eefull_targetyear != ''
     ) ) {
       # Complete parameters
 

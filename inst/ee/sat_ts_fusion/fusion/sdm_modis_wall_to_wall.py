@@ -335,6 +335,16 @@ def main():
     print(f'Output:   {OUTPUT_FOLDER}')
     print('=' * 60)
 
+    # Load selected features
+    print(f'Loading features from {FEATURES_ASSET}...')
+    selected_features = (ee.FeatureCollection(FEATURES_ASSET)
+                           .first().get('selected_features')
+                           .getInfo().split(','))
+   
+    ## Remove column
+    print(f'Features ({len(selected_features)}): {selected_features}')
+    
+    
     # Load classifier
     print(f'\nLoading classifier from {STRINGS_ASSET}...')
     try:
@@ -348,16 +358,7 @@ def main():
     except Exception as e:
         print(f'Warning: strings load failed ({e}), falling back to Classifier.load()')
         classifier = ee.Classifier.load(CLASSIFIER_ASSET)
-
-    # Load selected features
-    print(f'Loading features from {FEATURES_ASSET}...')
-    selected_features = (ee.FeatureCollection(FEATURES_ASSET)
-                           .first().get('selected_features')
-                           .getInfo().split(','))
-   
-    ## Remove column
-    print(f'Features ({len(selected_features)}): {selected_features}')
-
+    
     # Load range + build tiles
     if RUN_MODE == 'test':
         tiles = get_test_tiles()

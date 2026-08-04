@@ -2865,7 +2865,10 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log sloth
+#' @return List with log slot. Creates multiband aasets per tile and year in the GEE folders:
+#' BASE_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}'
+#' TEMP_FOLDER    = f'{BASE_FOLDER}/temp'
+#' METRICS_FOLDER = f'{BASE_FOLDER}/metrics'
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -2923,8 +2926,14 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     ''
   ))
 
+  cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
+  cat('\n\t Creating GEE results in: \n',
+      '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n\t',
+      gee_assets,'/', species, '_SDM_modis_', target_year, '\n\t',
+      ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '\n')
+
+
   if (show_cml | dry_run){
-    cat('\n\tCMD sdm MODIS: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
@@ -2983,7 +2992,9 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log sloth
+#' @return List with log slots. In GEE will create this folder: {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID}
+#'  The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01
+#'  The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3019,54 +3030,47 @@ sdm_modis_extract_py <- function(
   working_dir <- cola::quotepath(working_dir)
 
   ### Create CMD
-  (cmd_ <- paste0(
-    quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --working_dir ', working_dir,
-    ' --run_mode ', run_mode,
-    ' --batch_year ', batch_year,
-    ' --batch_num ', batch_num,
-    ' --batch_size ', batch_size,
-    ' --max_concurrent ', max_concurrent,
-    ' --occurrence_asset ', occurrence_asset,
-    ' --column_train ', column_train,
-    ' --gee_assets ', gee_assets,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --gap_years ', gap_years,
-    ' --target_scale ', target_scale,
-    ' --point_buffer ', point_buffer,
-    #' 2>&1'
-    ''
-  ))
+
+
+  cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
+  cat('\n\t Creating GEE results in: \n',
+      '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID} \n\t',
+      gee_assets,'/', species, '_SDM_modis_exports_', model_id, '\n\t',
+      ' The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01 \n',
+      ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt \n',
+      ' ', working_dir, '/completed_batches_',species,'_', MODEL_ID,'.txt \n',
+      sep = '\n')
+
+  aargs <- c('--ee_project', ee_project,
+    '--species', species,
+    '--model_id', model_id,
+    '--working_dir', working_dir,
+    '--run_mode', run_mode,
+    '--batch_year', batch_year,
+    '--batch_num', batch_num,
+    '--batch_size', batch_size,
+    '--max_concurrent', max_concurrent,
+    '--occurrence_asset', occurrence_asset,
+    '--column_train', column_train,
+    '--gee_assets', gee_assets,
+    '--min_year', min_year,
+    '--max_year', max_year,
+    '--gap_years', gap_years,
+    '--target_scale', target_scale,
+    '--point_buffer', point_buffer)
+
+    (cmd_ <- paste0(quotepath(py), ' ', quotepath(pyscript), ' ',
+                   paste0(aargs, collapse = '' ) ) )
 
   if (show_cml | dry_run){
-    cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
-    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
+    cat('\n', cmd_, '\n')
   }
 
   if (!dry_run){
-      args <- c('-u', quotepath(pyscript),
-               '--ee_project', ee_project,
-               '--species', species,
-               '--model_id', model_id,
-               '--working_dir', working_dir,
-               '--run_mode', run_mode,
-               '--batch_year', batch_year,
-               '--batch_num', batch_num,
-               '--batch_size', batch_size,
-               '--max_concurrent', max_concurrent,
-               '--occurrence_asset', occurrence_asset,
-               '--column_train', column_train,
-               '--gee_assets', gee_assets,
-               '--min_year', min_year,
-               '--max_year', max_year,
-               '--gap_years', gap_years,
-               '--target_scale', target_scale,
-               '--point_buffer', point_buffer)
+      args <- c('-u', quotepath(pyscript), args)
+      print('ARGS')
+      print(args)
     (intCMD <- catandcapt(quotepath(py), args, docat = show_result))
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -3098,7 +3102,17 @@ sdm_modis_extract_py <- function(
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log sloth
+#' @return List with log slot. In Google Earth Engine these assets are created:
+#' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
+#' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
+#' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
+#' These files are written locally:
+#' OUTPUT_MODEL    = {WORKING_DIR}/{MODEL_ID}_rf_final.pkl
+#' OUTPUT_FEATURES = {WORKING_DIR}/{MODEL_ID}_selected_features.csv
+#' OUTPUT_SIZING   = {WORKING_DIR}/{MODEL_ID}_rf_sizing.csv
+#' OUTPUT_SUMMARY  = {WORKING_DIR}/{MODEL_ID}_rf_summary.csv
+
+
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3146,11 +3160,20 @@ sdm_model_fitting_py <- function(
     ''
   ))
 
-  cat('\n\tCMD SDM model fitting: \n')
+  cat('\n\tCMD SDM model fitting \n')
+  cat('\n\t Creating GEE results: \n ')
+    #' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
+    #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
+    #' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
+    #' These files are written locally:
+  cat('\n\t Creating GEE results in {WORKING_DIR} - ', working_dir ,' \n ',
+    model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
+    model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
+
   if (show_cml | dry_run){
     ### Create CMD
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
   }
 
   if (!dry_run){
@@ -3189,6 +3212,10 @@ sdm_model_fitting_py <- function(
 #' Usage:
 #'   python sdm_modis_wall_to_wall.py --species puma --model_id puma_modis_m2 \
 #'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
+#'
+#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
+#' sdm_model_fitting_py( ) {Classifier} function
+#'
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String.
@@ -3207,7 +3234,7 @@ sdm_model_fitting_py <- function(
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log sloth
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3258,10 +3285,13 @@ sdm_modis_prediction_py <- function(
     #' 2>&1'
   ))
 
+
+  cat('\n\tCMD sdm model prediction: \n')
+  cat('\n\t Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
+      '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n')
   if (show_cml | dry_run){
-    cat('\n\tCMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#')
+    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
   }
 
   if (!dry_run){
@@ -3299,7 +3329,7 @@ sdm_modis_prediction_py <- function(
 #' @param delay Numeric. Seconds to wait in each query
 #' @param stepp String. Separator for each line
 #' @param logfile String. Separator for each line
-#' @return List with log sloth
+#' @return List with log slot
 #' @examples
 #' catandcapt( Sys.getenv("COLA_PYTHON_PATH"),
 #' c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
