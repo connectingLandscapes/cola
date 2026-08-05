@@ -187,19 +187,19 @@ server <- function(input, output, session) {
 
   if(COLA_DEBUG == 1){
     cat('\t ¡¡ Debugging CoLa. You should not seen this !! \n\n')
-    updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/labelA',
+    updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/anoa/labA',
                      session = session, label = 'Local path:', placeholder = 'Local path')
-    updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola',
+    updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola2',
                      session = session, label = 'EE path:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola/pts_box',
-                     session = session, label = 'AOI', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_label', value = 'labelA',
-                     session = session, label = 'Label:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola/pts',
+    updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola2/anoa72',
                      session = session, label = 'Points', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola2/anoa72_box',
+                     session = session, label = 'AOI', placeholder = '')
     updateTextInput( inputId = 'in_eefull_colname', value = 'preabs',
                      session = session, label = 'Colname', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_modelid', value = 'modelidA',
+    updateTextInput( inputId = 'in_eefull_label', value = 'labA',
+                     session = session, label = 'Label:', placeholder = '')
+    updateTextInput( inputId = 'in_eefull_modelid', value = 'modA',
                      session = session, label = 'Model ID:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_gdfolder', value = 'cola2',
                      session = session, label = 'Google Drive:', placeholder = '')
@@ -209,9 +209,13 @@ server <- function(input, output, session) {
                      session = session, label = 'EE project:', placeholder = '')
     updateNumericInput( inputId = 'in_eefull_targetyear', value = 2025,
                      session = session, label = 'Extraction range:')
-    updateNumericRangeInput(inputId = 'in_eefull_yy', value = c(2022, 2024),
+    updateNumericRangeInput(inputId = 'in_eefull_yy', value = c(2019, 2025),
                             session = session, label = 'Extraction range:')
-    }
+    updateNumericInput( inputId = 'in_eefull_gap', value = 6,
+                        session = session, label = 'Gap years:')
+
+  }
+
 
   shinyalert(html = TRUE, #type = "info",
              # imageHeight = 1000,

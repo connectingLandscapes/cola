@@ -542,7 +542,15 @@ if __name__ == '__main__':
     print(f'Working dir:     {WORKING_DIR}')
     print(f'GEE classifier:  {GEE_CLASSIFIER_ID}')
     print('=' * 60)
-
+    
+    
+    try:
+        # os.makedirs with exist_ok=True will create the folder and any missing parents
+        os.makedirs(WORKING_DIR, exist_ok=True)
+        print(f"Folder ready at: {os.path.abspath(folder_path)}")
+    except OSError as e:
+        print(f"Error creating folder '{WORKING_DIR}': {e}")
+        
     os.chdir(WORKING_DIR)
 
     # ── STEP 1: LOAD DATA ─────────────────────────────────────────────────────
@@ -563,7 +571,7 @@ if __name__ == '__main__':
 
     print(f'Features before cleaning: {len(feature_cols)}')
     if MODE == 'binary':
-        print(f'Presences: {int(y.sum())} ({y.mean():.1%}) | '
+        print(f'Presences: {int(y.sum())} ({y.mean()*100}%) | '
               f'Absences: {int((1-y).sum())}')
 
     # Drop non-numeric

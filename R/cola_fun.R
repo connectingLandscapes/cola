@@ -2929,7 +2929,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
   cat('\n\t Creating GEE results in: \n',
       '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n\t',
-      gee_assets,'/', species, '_SDM_modis_', target_year, '\n\t',
+      gee_assets,'/', species, '_SDM_modis_', target_year, '\n',
       ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '\n')
 
 
@@ -3032,14 +3032,13 @@ sdm_modis_extract_py <- function(
   ### Create CMD
 
 
-  cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
-  cat('\n\t Creating GEE results in: \n',
+  cat(' Creating GEE results in: \n',
       '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID} \n\t',
       gee_assets,'/', species, '_SDM_modis_exports_', model_id, '\n\t',
       ' The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01 \n',
       ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt \n',
-      ' ', working_dir, '/completed_batches_',species,'_', MODEL_ID,'.txt \n',
-      sep = '\n')
+      ' ', working_dir, '/completed_batches_',species,'_', model_id,'.txt \n',
+      sep = '')
 
   aargs <- c('--ee_project', ee_project,
     '--species', species,
@@ -3060,18 +3059,17 @@ sdm_modis_extract_py <- function(
     '--point_buffer', point_buffer)
 
     (cmd_ <- paste0(quotepath(py), ' ', quotepath(pyscript), ' ',
-                   paste0(aargs, collapse = '' ) ) )
+                   paste0(aargs, collapse = ' ' ), collapse = '' ) )
 
   if (show_cml | dry_run){
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
+  cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
     cat('\n', cmd_, '\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n')
   }
 
   if (!dry_run){
-      args <- c('-u', quotepath(pyscript), args)
-      print('ARGS')
-      print(args)
-    (intCMD <- catandcapt(quotepath(py), args, docat = show_result))
+      argss <- c('-u', quotepath(pyscript), aargs)
+    (intCMD <- catandcapt(quotepath(py), argss, docat = show_result))
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
@@ -3139,58 +3137,52 @@ sdm_model_fitting_py <- function(
   if( !file.exists(pyscript)){
     stop('Script not found')
   }
-
   if( !modex %in% c('binary', 'regression', 'multiclass')){
     stop("Not valid method. It must be s'binary', 'regression', or 'multiclass'")
   }
 
-  (cmd_ <- paste0(
-    quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --mode ', modex,
-    ' --target_col ', target_col,
-    ' --gee_assets ', gee_assets,
-    ' --working_dir ', working_dir,
-    ' --local_csv ', local_csv,
-    ' --imp_thresh ', imp_thresh,
-    ' --categorical_threshold ', categorical_threshold,
-    #' 2>&1'
-    ''
-  ))
+  aargs <- c('--ee_project', ee_project,
+    '--species', species,
+    '--model_id', model_id,
+    '--mode', modex,
+    '--target_col', target_col,
+    '--gee_assets', gee_assets,
+    '--working_dir', working_dir,
+    '--local_csv', local_csv,
+    '--imp_thresh', imp_thresh,
+    '--categorical_threshold', categorical_threshold
+  )
 
-  cat('\n\tCMD SDM model fitting \n')
-  cat('\n\t Creating GEE results: \n ')
+  (cmd_ <- paste0(
+    quotepath(py), ' ', quotepath(pyscript),' ',
+    paste0(aargs, collapse = ' '),
+    collapse = '' ) )
+
     #' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
     #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
     #' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
     #' These files are written locally:
-  cat('\n\t Creating GEE results in {WORKING_DIR} - ', working_dir ,' \n ',
-    model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
-    model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
+  cat('\n\ Creating local results in {WORKING_DIR} - ', working_dir ,' \n   Files are:  ',
+      model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
+      model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
+
+  cat('\n Creating GEE results in {GEE_ASSETS} - ', gee_assets ,' \n  Assets are:  ',
+      model_id, '_RF_classifier_strings, ', model_id, '_RF_classifier_strings, ',
+      model_id, '_selected_features \n\n', sep = '')
+
 
   if (show_cml | dry_run){
     ### Create CMD
+    cat('\n\t CMD SDM model fitting: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
 
-  if (!dry_run){
-    args <- c('-u', quotepath(pyscript),
-              '--ee_project ', ee_project,
-              '--species ', species,
-              '--model_id ', model_id,
-              '--mode ', modex,
-              '--target_col ', target_col,
-              '--gee_assets ', gee_assets,
-              '--working_dir ', quotepath(working_dir),
-              '--local_csv ', local_csv,
-              '--imp_thresh ', imp_thresh,
-              '--categorical_threshold ', categorical_threshold
-    )
-    #' 2>&1'
-    (intCMD <- catandcapt( quotepath(py), args, docat = show_result) )
+  if ( !dry_run ){
+    # print('ARGS')
+    # print(argss)
+    argss <- c('-u', quotepath(pyscript), aargs )
+    (intCMD <- catandcapt( quotepath(py), argss, docat = show_result, log_file = NULL) )
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
@@ -3286,12 +3278,12 @@ sdm_modis_prediction_py <- function(
   ))
 
 
-  cat('\n\tCMD sdm model prediction: \n')
   cat('\n\t Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
       '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n')
   if (show_cml | dry_run){
+    cat('\n\t CMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n\t https://code.earthengine.google.com/#\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n')
   }
 
   if (!dry_run){
@@ -3313,7 +3305,7 @@ sdm_modis_prediction_py <- function(
       #' 2>&1'
     )
 
-    (intCMD <- catandcapt( quotepath(py), args = args, docat = show_result) )
+    (intCMD <- catandcapt( quotepath(py), args = args, docat = show_result, log_file = NULL) )
 
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -3338,7 +3330,7 @@ sdm_modis_prediction_py <- function(
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-catandcapt <- function( ... , log_file = NULL, docat = TRUE) {
+catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
   # sepp = '\n', delay = 0.5, docat = TRUE
   ##### OPT A ---------
   # Print results
@@ -3368,28 +3360,37 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE) {
     (log_file <- tempfile(fileext = '.txt', pattern = 'colalog_'))
   }
 
-  log_con <- file(log_file, open = "a")
+  (log_con <- file(log_file, open = "a"))
+  ##### OPT A No Verbose ---------
+  if (!docat){
+    out <- tryCatch(system2( ... , stdout = TRUE),
+                       error = function(e) e$message)
+  } else {
 
-  ##### OPT B ---------
-  out <- tryCatch({processx::run( ... ,
-    # command = python, args = c("-u", script),
-    stdout_line_callback = function(line, proc) {
-      # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
-      msg <- sprintf( line )
-      if (docat) cat(msg, "\n")
-      writeLines(msg, log_con)
-    },
-    stderr_line_callback = function(line, proc) {
-      #msg <- sprintf("[%s] ERR: %s", format(Sys.time(), "%H:%M:%S"), line)
-      msg <- sprintf("ERR: %s", line)
-      if (docat) cat(msg, "\n")
-      writeLines(msg, log_con)
+    ##### OPT B Verbose ---------
+    out <- tryCatch({processx::run(
+      ... ,
+      # out <- tryCatch({ processx::run( quotepath(py), argss ,
+
+      # command = python, args = c("-u", script),
+      stdout_line_callback = function(line, proc) {
+        # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
+        msg <- sprintf( line )
+        if (docat) cat(msg, "\n")
+        writeLines(msg, log_con)
+      },
+      stderr_line_callback = function(line, proc) {
+        #msg <- sprintf("[%s] ERR: %s", format(Sys.time(), "%H:%M:%S"), line)
+        msg <- sprintf("ERR: %s", line)
+        if (docat) cat(msg, "\n")
+        writeLines(msg, log_con)
+      }
+    ); close(log_con)}, error = function(e){  close(log_con); e } )
+
+    if('error' %in% class(out)){
+      try(close(log_con), silent = TRUE)
+      out <- readLines(log_file)
     }
-  ); close(log_con)}, error = function(e){  close(log_con); e } )
-
-  if('error' %in% class(out)){
-    try(close(log_con), silent = TRUE)
-    out <- readLines(log_file)
   }
   return(out)
 }
