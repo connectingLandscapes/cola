@@ -325,8 +325,8 @@ def remove_low_importance(features, imp_df):
     low_imp   = imp_df[imp_df['importance_pct'] < abs_threshold]['feature'].tolist()
     remaining = [f for f in features if f not in low_imp]
     removed   = [f for f in features if f in low_imp]
-    print(f'  Importance threshold: {IMP_THRESH:.0%} of mean '
-          f'({mean_imp:.3%}) = {abs_threshold:.3%}')
+    print(f'  Importance threshold: {IMP_THRESH} of mean '
+          f'({mean_imp }) = {abs_threshold }')
     return remaining, removed
 
 
@@ -547,7 +547,7 @@ if __name__ == '__main__':
     try:
         # os.makedirs with exist_ok=True will create the folder and any missing parents
         os.makedirs(WORKING_DIR, exist_ok=True)
-        print(f"Folder ready at: {os.path.abspath(folder_path)}")
+        print(f"Folder ready at: {os.path.abspath(WORKING_DIR)}")
     except OSError as e:
         print(f"Error creating folder '{WORKING_DIR}': {e}")
         
@@ -571,7 +571,8 @@ if __name__ == '__main__':
 
     print(f'Features before cleaning: {len(feature_cols)}')
     if MODE == 'binary':
-        print(f'Presences: {int(y.sum())} ({y.mean()*100}%) | '
+        percnum = round(float(y.mean()),2)*100
+        print(f'Presences: {int(y.sum())} ({  round(float(y.mean()),2)*100 }) | '
         #print(f'Presences: {int(y.sum())} ({y.mean():.1%}) | '
               f'Absences: {int((1-y).sum())}')
 
@@ -633,7 +634,7 @@ if __name__ == '__main__':
                                    sample_weight=sample_weights)
     metric_target = metric_full * ACCURACY_THRESH
     print(f'Full {cfg["metric_name"]}: {metric_full:.4f} | '
-          f'Target (95%): {metric_target:.4f} | '
+          f'Target (95 perc): {metric_target:.4f} | '
           f'Size: {get_model_size_mb(rf_full):.1f} MB')
 
     # ── STEP 3: VARIABLE SELECTION ────────────────────────────────────────────
@@ -675,7 +676,7 @@ if __name__ == '__main__':
 
     print(f'\n{cfg["metric_name"]}: {metric_selected:.4f} | '
           f'Full: {metric_full:.4f} | '
-          f'Retention: {metric_selected/metric_full:.1%}')
+          f'Retention: {metric_selected/metric_full * 100} ')
 
     # ── STEP 4: MODEL SIZING ──────────────────────────────────────────────────
     print(f'\nSTEP 4: Model sizing')
