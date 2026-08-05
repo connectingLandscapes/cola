@@ -572,6 +572,7 @@ if __name__ == '__main__':
     print(f'Features before cleaning: {len(feature_cols)}')
     if MODE == 'binary':
         print(f'Presences: {int(y.sum())} ({y.mean()*100}%) | '
+        #print(f'Presences: {int(y.sum())} ({y.mean():.1%}) | '
               f'Absences: {int((1-y).sum())}')
 
     # Drop non-numeric
