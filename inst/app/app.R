@@ -8293,7 +8293,7 @@ server <- function(input, output, session) {
     }
   })
 
-  ### SRV EE full metrics  ------
+  ### SRV EE full metrics C  ------
 
   observeEvent( input$in_eefull_gomet, {
 

@@ -577,6 +577,7 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 #' @export
 adaptFilePath <- function(path){
   # path = "C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python/s2res.py C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/sampledata/sampleTif.tif C:\\Users\\ig299\\AppData\\Local\\Temp\\RtmpwrUyVu/VM2024041715525605file51c6028258//out_surface_JQ2024041715525705file51c260d2c4b.tif 0.06788435 0.9989325 100 1 -9999 None"
+  (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
   return ( gsub(fixed = TRUE, '\\', '/', path) )
 }
 
@@ -3259,27 +3260,29 @@ sdm_modis_prediction_py <- function(
   }
 
   ### Create CMD
+  aargs <- c(
+    adaptFilePath(pyscript),
+    '--ee_project', ee_project,
+    '--species', species,
+    '--model_id', model_id,
+    '--target_year', target_year,
+    '--run_mode', run_mode,
+    '--max_concurrent', max_concurrent,
+    '--crs', crs,
+    '--scale', scale,
+    '--tile_degrees', tile_degrees,
+    '--min_year', min_year,
+    '--max_year', max_year,
+    '--gee_assets', gee_assets,
+    '--range_asset', range_asset)
+
   (cmd_ <- paste0(
-    quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --model_id ', model_id,
-    ' --target_year ', target_year,
-    ' --run_mode ', run_mode,
-    ' --max_concurrent ', max_concurrent,
-    ' --crs ', crs,
-    ' --scale ', scale,
-    ' --tile_degrees ', tile_degrees,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --gee_assets ', gee_assets,
-    ' --range_asset ', range_asset
-    #' 2>&1'
-  ))
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
 
-  cat('\n\t Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
-      '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n')
+  cat('\n  Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
+      '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
+
   if (show_cml | dry_run){
     cat('\n\t CMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
@@ -3287,25 +3290,9 @@ sdm_modis_prediction_py <- function(
   }
 
   if (!dry_run){
-
-      args <-  c('-u', quotepath(pyscript),
-      '--ee_project', ee_project,
-      '--species', species,
-      '--model_id', model_id,
-      '--target_year', target_year,
-      '--run_mode', run_mode,
-      '--max_concurrent', max_concurrent,
-      '--crs', crs,
-      '--scale', scale,
-      '--tile_degrees', tile_degrees,
-      '--min_year', min_year,
-      '--max_year', max_year,
-      '--gee_assets', gee_assets,
-      '--range_asset', range_asset
-      #' 2>&1'
-    )
-
-    (intCMD <- catandcapt( quotepath(py), args = args, docat = show_result, log_file = NULL) )
+      argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -3332,7 +3319,6 @@ sdm_modis_prediction_py <- function(
 
 catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
   # sepp = '\n', delay = 0.5, docat = TRUE
-  ##### OPT A ---------
   # Print results
   # if (docat){
   #   proc <- processx::process$new(..., stdout = "|")
@@ -3363,13 +3349,12 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
   (log_con <- file(log_file, open = "a"))
   ##### OPT A No Verbose ---------
   if (!docat){
-    out <- tryCatch(system2( ... , stdout = TRUE),
-                       error = function(e) e$message)
+    out <- tryCatch(system2( ... , stdout = TRUE), error = function(e) e$message)
+    # out <- tryCatch( system2(  quotepath(py), args = argss , stdout = TRUE), error = function(e) e$message)
   } else {
 
     ##### OPT B Verbose ---------
-    out <- tryCatch({processx::run(
-      ... ,
+    out <- tryCatch({processx::run( ... ,
       # out <- tryCatch({ processx::run( quotepath(py), argss ,
 
       # command = python, args = c("-u", script),
@@ -3386,6 +3371,8 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
         writeLines(msg, log_con)
       }
     ); close(log_con)}, error = function(e){  close(log_con); e } )
+
+    # on.exit(  )
 
     if('error' %in% class(out)){
       try(close(log_con), silent = TRUE)

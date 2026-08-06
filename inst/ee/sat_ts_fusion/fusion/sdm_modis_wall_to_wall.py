@@ -409,7 +409,8 @@ def main():
         mean_sentinel = (sum(sentinel_frac.values()) / len(sentinel_frac)
                          if sentinel_frac else 0)
         if mean_sentinel > 0.01:
-            print(f'  WARNING {tile["name"]}: {mean_sentinel:.1%} sentinels '
+            # print(f'  WARNING {tile["name"]}: {mean_sentinel:.1%} sentinels ' 
+            print(f'  WARNING {tile["name"]}: { round(mean_sentinel * 100, 1) } perc sentinels ' 
                   f'in selected features')
         else:
             print(f'  Queued ({mean_sentinel:.2%} sentinels) — {tile["name"]}')
