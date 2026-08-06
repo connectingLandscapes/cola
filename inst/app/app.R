@@ -8559,12 +8559,13 @@ server <- function(input, output, session) {
       (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
 
       cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
-                      ' --ee_project ', input$ee_project, ' ',
-                      ' --ee_folder ', input$in_eefull_geepath, ' ',
-                      ' --gd_folder ', input$in_eefull_gdfolder, ' ',
-                      ' --prefix ', input$in_eefull_gdprefix, ' ',
-                      ' --scale ', input$in_eefull_scale, ' ',
-                      ' --gee_assets ', input$in_eefull_geepath, ' ',
+                      ' --ee_project ', input$ee_project,
+                      ' --ee_folder ', input$in_eefull_geepath, '/',
+                      input$in_eefull_modelid, '_prediction_', input$in_eefull_targetyear,
+                      ' --gd_folder ', input$in_eefull_gdfolder,
+                      ' --prefix ', input$in_eefull_gdprefix,
+                      ' --scale ', input$in_eefull_scale,
+                      ' --gee_assets ', input$in_eefull_geepath,
                       ' --region ', input$in_eefull_aoi)
 
         cat('\n\t CMD Google download:\n', cmdee)
