@@ -1229,7 +1229,7 @@ lccZarr_py <- function(inshp, intif, outtif,
   # # be running.
   # gbLim = sys.argv[10] # Default 6
 
-  # INPUTS part 2 ---------------
+  ### lccZarrB_py part 2 ---------------
   # # Path to resistance grid
   # rg = sys.argv[1]
   #
@@ -1574,7 +1574,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
   # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
 
 
-  # INPUTS part 2 ---------------
+  # lccZarrB_py part 2 ----
   # # Path to resistance grid
   # rg = sys.argv[1]
   #
@@ -1754,6 +1754,8 @@ crk_py <- function(inshp, intif, outtif,
   }
 
   intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
+  # (intCMD <- catandcapt( quotepath(py), argss, docat = show_result, log_file = NULL) )
+
   #intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
 
   if(show_result){
@@ -2926,6 +2928,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     #' 2>&1'
     ''
   ))
+  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
 
   cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
   cat('\n\t Creating GEE results in: \n',
@@ -2961,6 +2964,8 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
+
   ##++
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3032,6 +3037,7 @@ sdm_modis_extract_py <- function(
 
   ### Create CMD
 
+  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
 
   cat(' Creating GEE results in: \n',
       '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID} \n\t',
@@ -3074,6 +3080,7 @@ sdm_modis_extract_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3163,6 +3170,9 @@ sdm_model_fitting_py <- function(
     #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
     #' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
     #' These files are written locally:
+    #' cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+
   cat('\n\ Creating local results in {WORKING_DIR} - ', working_dir ,' \n   Files are:  ',
       model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
       model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
@@ -3187,6 +3197,7 @@ sdm_model_fitting_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3244,7 +3255,8 @@ sdm_modis_prediction_py <- function(
     crs, scale = 250,
     min_year, max_year,
     tile_degrees,
-    gee_assets, range_asset,
+    gee_assets,
+    range_asset,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3279,6 +3291,7 @@ sdm_modis_prediction_py <- function(
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
+  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
 
   cat('\n  Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
       '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
@@ -3297,6 +3310,8 @@ sdm_modis_prediction_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+  # cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3311,7 +3326,7 @@ sdm_modis_prediction_py <- function(
 #' @return List with log slot
 #' @examples
 #' catandcapt( Sys.getenv("COLA_PYTHON_PATH"),
-#' c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
+#'        c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
 #'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
