@@ -89,8 +89,8 @@ def main() -> None:
         except Exception as e:
             print(f' ERROR in {nname}: {e}')
     print( '\n'  * 2)
-    print( f'Finished. {len(results)} layers export tasks submmited.')
-    print( '\n'  * 2)
+    print( f' === Finished. {len(results)} layers export tasks submmited.')
+    print( '\n'  * 1)
 #
 #    
 if __name__ == "__main__":

@@ -873,3 +873,5 @@ if __name__ == '__main__':
     print(f'  {GEE_FEATURES_ID}')
     print('\nDetailed metrics:')
     print_metrics(final_metrics)
+    print('\n\n Model fitting done.')
+

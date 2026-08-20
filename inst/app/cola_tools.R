@@ -3,7 +3,8 @@
 # options(scipen = 999)
 # options(scipen = 9)
 
-## Errors -- only works for shiny server
+## Errors ---
+# only works for shiny server
 if (TRUE){
 
   dataFolder <- ifelse(exists('dataFolder'), dataFolder, '')
@@ -33,8 +34,8 @@ if (TRUE){
 }
 
 
-## time stamp -----
-## Create temporal ID
+
+## Create temporal ID -----
 sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE, only3 = FALSE){
   (tempID <- basename(tempfile()))
   (timeMark <- gsub('[[:punct:]]| ', '', format(as.POSIXct(Sys.time(), tz="CET"), tz="America/Bogota",usetz=TRUE)))
@@ -59,6 +60,8 @@ sessionIDgen <- function(letter = TRUE, sep = '', short = TRUE, folder = FALSE, 
   }
   return(sessionID)
 }
+
+# sessionIDgen(only3 = TRUE)
 
 ## Clean files -----
 cleanMemory <- function(logFilePath){

@@ -105,6 +105,16 @@
             yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
 
+
+  (COLA_VERSION <- system.file(package = 'cola', 'DESCRIPTION'))
+  if( file.exists(COLA_VERSION)){
+    COLA_VERSION <- readLines(COLA_VERSION)
+    COLA_VERSION <- gsub('Version: ', '', grep(pattern = 'Version:', COLA_VERSION, value = TRUE))
+  } else {
+    COLA_VERSION <- ''
+  }
+
+
   ## EE
   (COLA_EE <- as.numeric(Sys.getenv('COLA_EE')))
   (COLA_EE <- as.numeric(
@@ -123,7 +133,16 @@
   (rootPath <- system.file(package = 'cola'))
   path_error <<- '/var/log/shiny-server/'
   #
-  source( system.file(package = 'cola', 'app/cola_tools.R') ) # included
+
+  cola_tools <- system.file(package = 'cola', 'app/cola_tools.R')
+  if ( file.exists( cola_tools ) & !COLA_DEBUG ){
+    source( cola_tools )
+  } else {
+    if (COLA_DEBUG){
+      source('N:/My Drive/git/cola/inst/app/cola_tools.R')
+    }
+  }
+
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
   # file.exists(hs2rs_file)
@@ -161,7 +180,7 @@
 cat(paste0('\n\n
                                  =++==+++=            ---------------------
            -=-               ==+*#**==+*##+=-=
-         =++=--:::::---------=+*#///####+#%####=-       Welcome to CoLa 2.2.1
+         =++=--:::::---------=+*#///####+#%####=-       Welcome to CoLa ',COLA_VERSION,'
        ==%%%%%%%@@@@@=+@@@%%%"#////########*+++++
       +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****    ----------------------
      ++%%%%%%%%%@@@@@@@@%%%%%%#||||||+=*#######****
@@ -215,6 +234,9 @@ server <- function(input, output, session) {
                         session = session, label = 'Gap years:')
 
   }
+
+  (eeparamscov <- system.file(package = 'cola', 'ee/params_extcov.csv'))
+  (eeparamsccd <- system.file(package = 'cola', 'ee/params_ccdc.csv'))
 
   shinyalert(html = TRUE, #type = "info",
              # imageHeight = 1000,
@@ -273,12 +295,165 @@ server <- function(input, output, session) {
   shinyjs::disable("addcolumn") #
   shinyjs::disable("removecolumn") #
   shinyjs::disable("Splitcolumn") #
-
   shinyjs::disable("ee_fcupload")
   shinyjs::disable("in_eeruncovs")
 
-  (eeparamscov <- system.file(package = 'cola', 'ee/params_extcov.csv'))
-  (eeparamsccd <- system.file(package = 'cola', 'ee/params_ccdc.csv'))
+  status <- reactiveVal('ready')
+
+  # # output$out_status <- renderUI({
+  #   tags$span(" Ready! ", style = "color: gray;")
+  # })
+
+   output$out_status <- renderUI({
+    # req(status())  # don't render anything until first click
+     cat( ' status(): ', status(), '\n')
+    if (       status() == "ready") {
+      tags$span(icon("wifi", class = "fa-spin"), " Ready", style = "color: royalblue; font-weight: bold;")
+    } else if (status() == "running") {
+      tags$span(icon("spinner", class = "fa-spin"), " Running...", style = "color: orange; font-weight: bold;")
+    } else if (status() == "finished") {
+      tags$span(icon("check", class = "fa-spin"), " Finished", style = "color: green; font-weight: bold;")
+    } else {
+      tags$span(icon("warning"), " Error", style = "color: red; font-weight: bold;")
+    }
+  })
+
+  ## Enable diable buttons when running buttons
+  showStartStop <- function( start = TRUE ){
+    # TRUE if starts, or FALSE for finishing
+    if (start){
+      ## Start process
+      # # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red; font-weight: bold;")
+      # })
+      #status("running")
+
+      disable("restoreSession")
+      disable("removeUserData")
+      disable("ee_connect")
+      disable("ee_fcupload")
+      disable("in_eefull_goexp")
+      disable("in_eefull_gogap")
+      disable("in_eefull_goexp")
+      disable("in_eefull_goexp")
+      disable("in_eefull_gomet")
+      disable("in_eefull_goext")
+      disable("in_eefull_gofit")
+      disable("in_eefull_gopre")
+      disable("in_eefull_godow")
+
+      disable("in_eefull_go")
+      disable("in_eeexp_gomodistest")
+      disable("in_eeexp_gomodis")
+      disable("in_eeexp_gogaptest")
+      disable("in_eeexp_gogaps")
+      disable("in_eeexp_gometricstest")
+      disable("in_eeexp_gometrics")
+      disable("in_eeext_go")
+      disable("in_eetra_go")
+      disable("in_eepre_go")
+      disable("in_eedow_go")
+      disable("in_eemos_go")
+      disable("h2rsample")
+      disable("h2r")
+      disable("edi")
+      disable("rpl")
+      disable("points_py")
+      disable("dist_py")
+      disable("run_cdpop")
+      disable("mapcdpop")
+      disable("in_cdpop_pardef")
+      disable("in_cdpop_save")
+      disable("crk")
+      disable("crk2")
+      disable("lcc")
+      disable("lcc2")
+      disable("pri")
+      disable("com_py")
+      disable("coo_tif")
+      disable("coo_pts")
+
+      disable("tifDwn")
+      disable("editifDwn")
+      disable("ptsDwn")
+      disable("csvDwn")
+      disable("cdpDwn")
+      disable("crkDwn")
+      disable("lccDwn")
+      disable("priDwn")
+      disable("comDwn")
+      disable("crkDwn")
+      disable("newtifDwn")
+      disable("newshpDwn")
+
+
+    } else {
+      ## end process, activate all
+      # # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: green; font-weight: bold;")
+      # })
+     # status("finished")
+
+      enable("restoreSession")
+      enable("removeUserData")
+      enable("ee_connect")
+      enable("ee_fcupload")
+      enable("in_eefull_goexp")
+      enable("in_eefull_gogap")
+      enable("in_eefull_goexp")
+      enable("in_eefull_goexp")
+      enable("in_eefull_gomet")
+      enable("in_eefull_goext")
+      enable("in_eefull_gofit")
+      enable("in_eefull_gopre")
+      enable("in_eefull_godow")
+
+      enable("in_eefull_go")
+      enable("in_eeexp_gomodistest")
+      enable("in_eeexp_gomodis")
+      enable("in_eeexp_gogaptest")
+      enable("in_eeexp_gogaps")
+      enable("in_eeexp_gometricstest")
+      enable("in_eeexp_gometrics")
+      enable("in_eeext_go")
+      enable("in_eetra_go")
+      enable("in_eepre_go")
+      enable("in_eedow_go")
+      enable("in_eemos_go")
+      enable("h2rsample")
+      enable("h2r")
+      enable("edi")
+      enable("rpl")
+      enable("points_py")
+      enable("dist_py")
+      enable("run_cdpop")
+      enable("mapcdpop")
+      enable("in_cdpop_pardef")
+      enable("in_cdpop_save")
+      enable("crk")
+      enable("crk2")
+      enable("lcc")
+      enable("lcc2")
+      enable("pri")
+      enable("com_py")
+      enable("coo_tif")
+      enable("coo_pts")
+
+      enable("tifDwn")
+      enable("editifDwn")
+      enable("ptsDwn")
+      enable("csvDwn")
+      enable("cdpDwn")
+      enable("crkDwn")
+      enable("lccDwn")
+      enable("priDwn")
+      enable("comDwn")
+      enable("crkDwn")
+      enable("newtifDwn")
+      enable("newshpDwn")
+    } # close else end
+  }
+
 
   getRastVal <- function(clk, grp){
     #clk <- list(lat = 5.9999, lng = 116.89)
@@ -516,6 +691,9 @@ server <- function(input, output, session) {
   # Restore session ----
 
   isolate(observeEvent(input$restoreSession, {
+    # action starts here >>>
+    showStartStop( );  status("running")
+
     restPath <<- input$session2restore
     cat('Restoring session: ',restPath , ' ',
         file.path(dataFolder, restPath, 'colaLayers.csv'),'\n')
@@ -564,6 +742,8 @@ server <- function(input, output, session) {
                                ' exists. Also check if the file "colaLayers.csv" exists, as the layers listed there'),
                  type = "error")
     }
+
+    showStartStop( start = FALSE ); status("finished")
   }))
 
   colaUpdateSelectizeInput <- function(dfx = rv$layersList,
@@ -607,10 +787,10 @@ server <- function(input, output, session) {
         as.character(summLayers[, 1]), ': ',
         as.character(summLayers[, 2]), '\n')
       isRestored <- FALSE
-      cat('\n --- Available layers: \n', logmessage, '\n')
+      # cat('\n --- Available layers: \n', logmessage, '\n')
 
       # print(layersListx)
-      cat(' - Updating: ')
+      # cat(' - Updating: ')
 
       if (any(layersList$type %in% 'Suitability') ){
         cat(' - Suitability - ')
@@ -859,8 +1039,11 @@ server <- function(input, output, session) {
 
     nll <- rbind.data.frame(df, df2)
     write.csv(nll, file.path(tempFolder, 'colaLayers.csv'), row.names = FALSE )
-    cat(' \n  Layer List: \n')
-    print(nll[, c('id', 'inout', 'type', 'public', 'internal')])
+
+    if(COLA_DEBUG | devug){
+      cat(' \n  Layer List: \n')
+      print(nll[, c('id', 'inout', 'type', 'public', 'internal')])
+    }
     return(nll)
   }
 
@@ -1510,8 +1693,6 @@ server <- function(input, output, session) {
   rv$sessionID <- sessionID
   rv$tempFolder <- tempFolder
 
-
-
   llmap <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
     leaflet::addLayersControl(baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
                               options = leaflet::layersControlOptions(collapsed = FALSE)) %>%
@@ -1698,20 +1879,21 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$coo_pts, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if(!is.null(rv$pts_uncrs_extent) & exists(crs_selected2)){
 
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   observeEvent(input$coo_tif, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(!is.null(rv$tif_uncrs) & exists(crs_selected2)){
 
       # rv$tif_uncrs
       # rv$tif_uncrs_extent
       # st_crs(rv$tif_uncrs) <- crs_selected
-      #
-      # ##
       #
       # if(is.null(rv$inLccSessID)){
       #  (inLccSessID <- sessionIDgen())
@@ -1739,6 +1921,7 @@ server <- function(input, output, session) {
       #
       # makeLL( )
     }
+    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
@@ -2123,7 +2306,8 @@ server <- function(input, output, session) {
   })
 
 
-  isolate(observeEvent(input$run_cdpop, {
+  observeEvent(input$run_cdpop, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
     # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
@@ -2604,10 +2788,11 @@ server <- function(input, output, session) {
         }
       })
     )
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
-  )
 
-  isolate(observeEvent(input$mapcdpop, {
+  observeEvent(input$mapcdpop, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     # input$cdpop_ans_yy
     if(input$cdpop_ans_yy != ''){
 
@@ -2707,8 +2892,8 @@ server <- function(input, output, session) {
 
       })
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
-  )
 
 
   observeEvent(input$cdpop_check3, {
@@ -2828,6 +3013,7 @@ server <- function(input, output, session) {
   # > SURFACE ------------------
 
   observeEvent(input$in_sur_tif, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     output$ll_map_h2r <- leaflet::renderLeaflet({
 
@@ -2974,10 +3160,21 @@ server <- function(input, output, session) {
         makeLL(lastLL = "Habitat suitability")
       }
     })
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
   observeEvent(input$h2rsample, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
+
+    # delay(500, {
+    #   req(status("running"))
+    # })
+    # #showStartStop( );
+    # for(i in 1:100){
+    #   1+1
+    # }
+
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
     #      inSurSessID = 'V-2023082911285705_file3112303ea820')
@@ -3048,11 +3245,16 @@ server <- function(input, output, session) {
       makeLL( lastLL = 'Habitat suitability')
 
     })
+
+    showStartStop( FALSE ) ; status("finished") }); # actionhereclose
+
   })
 
 
   ## Run h2s
-  isolate(observeEvent(input$h2r, {
+  observeEvent(input$h2r, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
+
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(rv$hsready){
       # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
@@ -3060,7 +3262,7 @@ server <- function(input, output, session) {
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
 
       rv$refresh <- FALSE
-      #shinyjs::disable("h2r")
+      disable("h2r")
 
       # output$plot0 <-renderPlot({
       #  plot(1, main = input$h2r)
@@ -3166,10 +3368,12 @@ server <- function(input, output, session) {
       output$ll_map_h2r <- leaflet::renderLeaflet({
         makeLL(lastLL = lastLLx)
       })
-    }
+
+    } # close if ready
     rv$refresh <- TRUE
 
-  }))
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  })
 
   # output$plot0 <-renderPlot({
   #  if (is.numeric(rv$refresh)){
@@ -3231,6 +3435,7 @@ server <- function(input, output, session) {
 
   ## Load tif
   observeEvent(input$in_edi_tif, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     #try(file.remove(c(tifpath, newtifPath)))
     invisible(suppressWarnings(tryCatch(file.remove(c(tifpath, newtifPath, tifpathfixed)),
@@ -3334,6 +3539,7 @@ server <- function(input, output, session) {
         makeLL( lastLL = 'Surface resistance')
       }
     })
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Load shp
@@ -3404,6 +3610,7 @@ server <- function(input, output, session) {
   })
 
   isolate(observeEvent(input$in_name_sur_edi, {
+    # status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(rv$tifready){
       # print('Second print LL for SR update')
@@ -3418,10 +3625,12 @@ server <- function(input, output, session) {
 
       makeLL( lastLL = 'Surface resistance')
     }
+    # showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }))
 
   ## Run Edi sum ---
   isolate(observeEvent(input$edi, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     #polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
@@ -3596,11 +3805,13 @@ server <- function(input, output, session) {
 
       })
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
   )
 
   ## Run Edi replace ---
   isolate(observeEvent(input$rpl, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
 
     if( input$in_edi_val != 0 & input$in_edi_val != "0" &
@@ -3766,6 +3977,7 @@ server <- function(input, output, session) {
         }
       })
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
   )
 
@@ -3964,6 +4176,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$points_py, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if(! (rv$tifready | rv$hsready)){
       rv$log <- paste0(rv$log, ' \n Creating points -- No raster yet!');updateVTEXT(rv$log) # _______
       shinyalert(html = TRUE, type = "warning",
@@ -4137,12 +4350,8 @@ server <- function(input, output, session) {
       #save(temLL, file = '/data/tempR/ll.RData')
       #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
 
-
-      output$plot <-renderPlot({
-        shinyjs::disable("points_py")
-        plot(1)
-      })
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## update values
@@ -4316,9 +4525,7 @@ server <- function(input, output, session) {
       pdebug(devug=devug,sep='\n',pre='--','rv$inDistSessID') # _____________
     }
 
-
     pdebug(devug=devug,sep='\n',pre='--','is.null(rv$distrast)') # _____________
-
 
 
     if(!(rv$tifready)){
@@ -4372,6 +4579,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$dist_py, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n', pre ='\nRUN CDMat\n', 'rv$tif','rv$pts','rv$tifready','rv$ptsready') # _____________
 
@@ -4461,6 +4669,7 @@ server <- function(input, output, session) {
 
       }
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
@@ -4468,6 +4677,7 @@ server <- function(input, output, session) {
 
   # load resistance
   observeEvent(input$in_lcc_tif, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,
            sep='\n',pre='\n---- LCC - TIF\n',
@@ -4595,6 +4805,7 @@ server <- function(input, output, session) {
                                'a valid NoData value.'),
                  type = "error")
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
@@ -4678,6 +4889,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$lcc, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     shinyjs::enable("lcc")
     pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
@@ -4792,13 +5004,11 @@ server <- function(input, output, session) {
       makeLL( lastLL =  lastLLx)
     })
 
-    output$plot <-renderPlot({
-      shinyjs::disable("lcc")
-      plot(1)
-    })
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   observeEvent(input$lcc2, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
     condDist <<- 0
@@ -4915,11 +5125,11 @@ server <- function(input, output, session) {
         makeLL( lastLL = lastLLx)
       })
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
   # > CRK ------------------
-
 
   observeEvent(input$in_crk_tif, {
     #invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathcrk, rv$newtifPath_crk)), error = function(e) NULL)))
@@ -5102,6 +5312,7 @@ server <- function(input, output, session) {
 
   ## Run crk
   isolate(observeEvent(input$crk, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
     condDist <- 0
     if(rv$ptsready & rv$tifready){
@@ -5247,9 +5458,7 @@ server <- function(input, output, session) {
         # llx <- makeLL()
         # rv$ll
         lastLLx <- 'Kernels'
-
       }
-
 
       isolate( # small crk
         output$ll_map_pri_prev <- leaflet::renderLeaflet({
@@ -5308,11 +5517,13 @@ server <- function(input, output, session) {
       lastLLx <- NULL
 
     }
+    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
 
   }))
 
 
   isolate(observeEvent(input$crk2, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
     condDist <- 0
     if(rv$ptsready & rv$tifready){
@@ -5503,6 +5714,7 @@ server <- function(input, output, session) {
       lastLLx <- NULL
 
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }))
 
   # > PRIORI ------------------
@@ -5928,6 +6140,7 @@ server <- function(input, output, session) {
 
   # Run prio
   isolate(observeEvent(input$pri, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     condDist <- 0
     if(rv$crkready & rv$lccready){
       condDist <- 1
@@ -6050,6 +6263,7 @@ server <- function(input, output, session) {
       )
 
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }))
   # isolate
 
@@ -6122,6 +6336,7 @@ server <- function(input, output, session) {
 
   ## Run comparisson
   observeEvent(input$com_py, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
 
@@ -6461,10 +6676,12 @@ server <- function(input, output, session) {
         })
       }
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Update list of layers to compare
   observeEvent( input$in_com_ly, {
+
     if(input$in_com_ly != ''){
       # in_com_ly <- 'Dispersal kernels'
       # choices <- c('Surface resistance', 'Dispersal kernels', 'Least cost path corridors')
@@ -6779,6 +6996,7 @@ server <- function(input, output, session) {
       content = function(filename) {
         if(!is.null( rv$pritif ) & !is.null( rv$prishp ) ){
 
+          #status("running"); showStartStop(  ); delay(1,{ # actionhere
           zip_file <- paste0(tempfile(), '_tempPrio.zip')
           print(paste0('Making prioritization temp zip file: ', zip_file))
 
@@ -6798,6 +7016,8 @@ server <- function(input, output, session) {
 
             system(zip_command)
           }
+
+         # showStartStop( FALSE ) ; status("finished") }) # actionhereclose
           # copy the zip file to the file argument
           file.copy(zip_file, filename)
           # remove all the files created
@@ -6942,7 +7162,8 @@ server <- function(input, output, session) {
   })
 
   # SRV EE connects ---------
-  isolate(observeEvent(input$ee_connect, {
+  (observeEvent(input$ee_connect, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
 
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
@@ -7038,6 +7259,7 @@ server <- function(input, output, session) {
       }
 
     }
+    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })) # end isolate
 
   output$box1 <-  shinydashboard::renderValueBox({
@@ -7053,7 +7275,7 @@ server <- function(input, output, session) {
   # SRV EE upload  ------
 
   isolate(observeEvent(input$ee_fcupload, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
     (py <- Sys.getenv("COLA_PYTHON_PATH"))
@@ -7159,6 +7381,8 @@ server <- function(input, output, session) {
         #
       }
     }
+
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }
   ))
 
@@ -7304,6 +7528,7 @@ server <- function(input, output, session) {
 
   # Full
   observeEvent( input$in_eeexp_gomodis, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
 
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
@@ -7352,11 +7577,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gomodistest, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
@@ -7404,12 +7631,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## GAP
   # Full
   observeEvent( input$in_eeexp_gogaps, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
@@ -7456,11 +7684,12 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gogaptest, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
@@ -7507,13 +7736,14 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Metrics
 
   # Full
   observeEvent( input$in_eeexp_gometrics, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
@@ -7560,11 +7790,12 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gometricstest, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
              input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
              input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
@@ -7611,12 +7842,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   # SRV EE extract -----
 
   observeEvent( input$in_eeext_go, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eeext_label  != '' & input$in_eeext_geepath != '' &
              input$in_eeext_occasset  != '' &
              input$in_eeext_colname  != '' & input$in_eeext_modelid != '' & input$in_eeext_localpath != '' ) ) {
@@ -7694,6 +7926,7 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
@@ -7721,7 +7954,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent( input$in_eetra_go, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eetra_label != '' &
              input$in_eetra_modelid != '' &
              input$in_eetra_modex != '' &
@@ -7777,14 +8010,14 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
 
 
   # SRV EE prediction  -----
-
-  ## Prediction
+  ## Prediction folder
   isolate({
     observeEvent(
       input$folderpre, {
@@ -7807,7 +8040,7 @@ server <- function(input, output, session) {
 
 
   observeEvent( input$in_eepre_go, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eepre_label != '' &
              input$in_eepre_modelid != '' &
              input$in_eepre_aoi != '' &
@@ -7863,12 +8096,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   # SRV EE GEE to Google drive  ----
 
   observeEvent( input$in_eedow_go, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eedow_path != '' &
              input$in_eedow_aoi != '' &
              input$in_eedow_drive != '' &
@@ -7957,8 +8191,9 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
-  #
+
   # SRV EE Compile local files ---------
   observeEvent( input$in_eecom_go, {
   })
@@ -7987,6 +8222,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent( input$in_eefull_go, {
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
 
     if ( all(input$ee_project != '' &
              input$in_eefull_aoi != '' &
@@ -8133,6 +8369,9 @@ server <- function(input, output, session) {
       # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
       (ee_scr_path <- system.file(package = 'cola', 'ee'))
       (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+      # # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdeG <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
                       ' --ee_project ', input$ee_project, ' ',
@@ -8158,6 +8397,10 @@ server <- function(input, output, session) {
         cat(intCMD)
         cond <- !any(grep('ERROR', intCMD))
 
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
+
       }
 
       if (input$in_eefull_checkbox){
@@ -8182,13 +8425,14 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
   # SRV EE full export A  ------
 
   observeEvent( input$in_eefull_goexp, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
              input$in_eefull_maxconc  != '' &
              input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
@@ -8208,6 +8452,10 @@ server <- function(input, output, session) {
                         " Don't close R until you see a Finish message"))
       }
 
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
+
       cmdd <- sdm_modis_export_py(
         run_mode = tolower(input$in_eefull_modepre), #  full test
         stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
@@ -8221,6 +8469,10 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
         show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8245,11 +8497,12 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
+
   ### SRV EE full gap B  ------
-
   observeEvent( input$in_eefull_gogap, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
              input$in_eefull_maxconc  != '' &
              input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
@@ -8264,10 +8517,13 @@ server <- function(input, output, session) {
           text = paste0("Creating the results in this path:<br>",
                         "{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}<br><p>",
                         input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br><br>",
+                        "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
                         "Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
       }
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdd <- sdm_modis_export_py(
         run_mode = tolower(input$in_eefull_modepre), #  full test
@@ -8280,6 +8536,10 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
         show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8303,12 +8563,12 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full metrics C  ------
-
   observeEvent( input$in_eefull_gomet, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
              input$in_eefull_maxconc  != '' &
              input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
@@ -8321,12 +8581,15 @@ server <- function(input, output, session) {
           html = TRUE, type = "info",
           title = paste0("MODIS extraction (3/3 - metrics) task submitted. Please wait."),
           text = paste0("Creating the results in this path:<br>",
-                        "{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}<br><p>",
+                        "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}</i><br><p>",
                         input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/metrics</p><br><br>",
+                        "_SDM_modis_",input$in_eefull_targetyear,"/metrics</p><br>",
                         "Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
       }
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdd <- sdm_modis_export_py(
         run_mode = tolower(input$in_eefull_modepre), #  full test
@@ -8339,6 +8602,10 @@ server <- function(input, output, session) {
         crs = input$in_eefull_crs, scale = input$in_eefull_scale,
         tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
         show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8362,12 +8629,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full extract  ------
 
   observeEvent( input$in_eefull_goext, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' &
              input$in_eefull_label  != '' &
              input$in_eefull_geepath != '' &
@@ -8380,10 +8648,17 @@ server <- function(input, output, session) {
         # Full Run
         shinyalert(
           html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
+          title = paste0("Task submmited. Points + image extraction. Please wait."),
+          text = paste0("Creating the results in this path:<br>",
+                        "<br>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}<br>",
+                        input$in_eefull_geepath, "/", input$in_eefull_label,
+                        "_SDM_modis_exports_",input$in_eefull_modelid,"</i><br>",
+                        "Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
       }
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdd <- sdm_modis_extract_py(
         ee_project = input$ee_project,
@@ -8407,6 +8682,10 @@ server <- function(input, output, session) {
         show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eefull_checkbox)
 
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
+
       if (input$in_eefull_checkbox){
         # only code
         shinyalert(html = TRUE, type = "info",
@@ -8421,7 +8700,11 @@ server <- function(input, output, session) {
           html = TRUE, type = "success",
           title = paste0("Task finished. Check the results in your R console",
                          " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+          text = paste0("Creating the results in this path:<br>",
+                        "<br>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}<br>",
+                        input$in_eefull_geepath, "/", input$in_eefull_label,
+                        "_SDM_modis_exports_",input$in_eefull_modelid,"</i><br>")
+        )
       }
     } else {
       # Incomplete params
@@ -8429,29 +8712,40 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full fit training  ------
 
   observeEvent( input$in_eefull_gofit, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eefull_label != '' &
              input$in_eefull_modelid != '' &
              input$in_eefull_modex != '' &
-             input$in_eefull_label != '' &
              input$in_eefull_label != '' & input$in_eefull_geepath != '') ) {
 
       if (!input$in_eefull_checkbox){
         # Full Run
         shinyalert(
           html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
+          title = paste0("Model fitting task submmited. Please wait."),
+          text = paste0("Creating the results:<br>",
+                        "<i>{GEE_ASSETS}/{MODEL-ID}_... <br>:",
+                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                        "_ ... </i><br>",
+                        "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...: <br>",
+                        input$in_eefull_localpath, "/", input$in_eefull_modelid,
+                        "_... </i><br>",
+                        "Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
       }
 
       logid <- sessionIDgen(letter = FALSE)
       train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdd <-  sdm_model_fitting_py(
         ee_project = input$ee_project,
@@ -8467,6 +8761,10 @@ server <- function(input, output, session) {
         show_cml = TRUE, show_result = TRUE,
         dry_run = input$in_eefull_checkbox)
 
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
+
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8477,12 +8775,21 @@ server <- function(input, output, session) {
         # Full Run
         logid <- sessionIDgen(letter = FALSE)
         write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
+                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '.txt'))
         shinyalert(
           html = TRUE, type = "success",
           title = paste0("Task finished. Check the results in your R console",
                          " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+          text = paste0("Creating the results:<br>",
+                        "<i>{GEE_ASSETS}/{MODEL-ID}_... <br>:",
+                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                        "_ ... </i><br>",
+                        "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...: <br>",
+                        input$in_eefull_localpath, "/", input$in_eefull_modelid,
+                        "_... </i><br>",
+                        "Wait for results in your R console and Earth Engine app.",
+                        " Don't close R until you see a Finish message")
+        )
       }
     } else {
       # Incomplete params
@@ -8490,12 +8797,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full predict  ------
 
   observeEvent( input$in_eefull_gopre, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' & input$in_eefull_label != '' &
              input$in_eefull_modelid != '' &
              input$in_eefull_aoi != '' &
@@ -8505,11 +8813,17 @@ server <- function(input, output, session) {
         # Full Run
         shinyalert(
           html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
+          title = paste0("Model prediction task submmited. Please wait."),
+          text = paste0("Creating the predictions here:<br>",
+                        "<i>{GEE_ASSETS}/{MODEL-ID}_prediction_{TARGET-YEAR}:<br>",
+                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                        "_prediction_", input$in_eefull_targetyear,
+                        "<br>. Wait for results in your R console and Earth Engine app.",
                         " Don't close R until you see a Finish message"))
       }
-
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
 
       cmdd <- sdm_modis_prediction_py(
         ee_project = input$ee_project,
@@ -8527,6 +8841,10 @@ server <- function(input, output, session) {
         max_year = input$in_eefull_yy[2],
         show_cml = TRUE, show_result = TRUE,
         dry_run =  input$in_eefull_checkbox)
+
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
 
       if (input$in_eefull_checkbox){
         # only code
@@ -8550,12 +8868,13 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full download  ------
 
   observeEvent( input$in_eefull_godow, {
-
+    status("running"); showStartStop(  ); delay(1,{ # actionhere
     if ( all(input$ee_project != '' &
              input$in_eefull_geepath != '' &
              input$in_eefull_aoi != '' &
@@ -8574,6 +8893,10 @@ server <- function(input, output, session) {
       (ee_scr_path <- system.file(package = 'cola', 'ee'))
       (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
 
+      # output$out_status <- renderUI({
+      #   tags$span(" Running, wait... ", style = "color: red;")
+      # })
+
       cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
                       ' --ee_project ', input$ee_project,
                       ' --ee_folder ', input$in_eefull_geepath, '/',
@@ -8583,6 +8906,10 @@ server <- function(input, output, session) {
                       ' --scale ', input$in_eefull_scale,
                       ' --gee_assets ', input$in_eefull_geepath,
                       ' --region ', input$in_eefull_aoi)
+
+      # output$out_status <- renderUI({
+      #   tags$span("Finished", style = "color: blue;")
+      # })
 
 
       if (!input$in_eefull_checkbox){  # Full Run
@@ -8601,6 +8928,8 @@ server <- function(input, output, session) {
         intCMD <- tryCatch(
           system( cmdee , intern = TRUE),
           error = function(e) e$message)
+
+        cat('\n\t Task done. \n\n')
 
         save(intCMD, file = 'intCMD_gee2gd.Rdata')
 
@@ -8638,9 +8967,10 @@ server <- function(input, output, session) {
                  title = paste0("Complete the parameters. Some are missing"),
                  text = paste0(''))
     }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
-  # SRV EE extcovs ---------
 
+    # SRV EE extcovs ---------
   # isolate(observeEvent(input$in_eeloadcovs, {
   #   if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
   #   shinyjs::enable('in_eeruncovs')
@@ -8787,9 +9117,6 @@ server <- function(input, output, session) {
   ))
 
 
-
-
-
   session$onSessionEnded(function() {
     stopApp()
   })
@@ -8864,29 +9191,43 @@ if (FALSE){ # if FALSE
   ui <- shinydashboard::dashboardPage(
     ## Activate enable / disable buttons
     shinyjs::useShinyjs(),
-
+    #header = shinydashboard::dashboardHeader(
     header = shinydashboardPlus::dashboardHeader(
-      leftUi = tagList(
-        dropdownBlock(
-          id = "sessioninfo",
-          title = "Session info",
-          icon = icon("circle-info"),
-          h4(#sessionID
-            paste0('Session ID:', sessionID,
-                   ifelse(
-                     COLA_SERVER == 0,
-                     paste0('\nCOLA_DATA_PATH:', COLA_DATA_PATH,
-                            '\nWorking directory:', getwd(),
-                            '\nR-temp:', cola::adaptFilePath(tempdir())),
-                     ''
-                   )
-            )
-          )
-        )
+
+    #   leftUi = tagList(
+    #     dropdownBlock(
+    #       id = "sessioninfo",
+    #       title = "Session info",
+    #       icon = icon("circle-info"),
+    #       h4(#sessionID
+    #         paste0('Session ID:', sessionID,
+    #                ifelse(
+    #                  COLA_SERVER == 0,
+    #                  paste0('\nCOLA_DATA_PATH:', COLA_DATA_PATH,
+    #                         '\nWorking directory:', getwd(),
+    #                         '\nR-temp:', cola::adaptFilePath(tempdir())),
+    #                  ''
+    #                )
+    #         )
+    #       )
+    #     )
+    #   ),
+
+      dropdownMenu(
+        # https://fontawesome.com/search?q=delet&ip=classic&ic=free-collection
+        type = "message", badgeStatus = "primary",
+        messageItem('Session ID', message = sessionID, icon = icon('id-badge')),
+        messageItem('COLA_DATA_PATH', message = COLA_DATA_PATH, icon = icon('laptop-file')),
+        messageItem('Working directory', message = getwd(), icon = icon('folder')),
+        messageItem('R-temp folder', message = cola::adaptFilePath(tempdir()), icon = icon('trash-can'))
       ),
 
-      #### title ----
-      title = "ConnectingLandscapes v.1"
+      tags$li(class = "dropdown",
+              style = "position: absolute; left: 35px; top: 7px; padding: 10px;",
+              uiOutput("out_status")),
+
+      #### TITLE ----
+      title = paste0("ConnectingLandscapes ", COLA_VERSION)
       #,enable_rightsidebar = TRUE, rightSidebarIcon = "info-circle"
     ), # header
 
@@ -9145,6 +9486,12 @@ if (FALSE){ # if FALSE
             fluidPage(
 
               # UI TOOLTIPS   ++++ ----
+              bsTooltip(id = 'restoreSession', title = 'Restore session if exists in your DATA COLA PATH', placement = 'top'),
+              bsTooltip(id = 'session2restore', title = 'Write the Cola session ID here', placement = 'top'),
+              bsTooltip(id = 'removeUserData', title = 'Remove your session data. Thanks!', placement = 'top'),
+
+
+
               bsTooltip(id = 'in_sur_3', title = 'The lower value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_4', title = 'The upper value on the input raster to cut off. Pixels with values under the given number will be ignored.'),
               bsTooltip(id = 'in_sur_5', title = 'This is the maximum resistance value after transformation from suitability.'),
@@ -9937,10 +10284,10 @@ if (FALSE){ # if FALSE
                   #
                   #     div(style = "margin-top: -5px"),
                   #
-                  #     actionButton(width = "100%", label = 'Load sample parameters', 'in_eeloadcovssample'),
+                  #     (width = "100%", label = 'Load sample parameters', 'in_eeloadcovssample'),
                   #     div(style = "margin-top: 10px"),
                   #
-                  #     actionButton(width = "100%", "in_eetablecovssave", "Save edited params file"),
+                  #     (width = "100%", "in_eetablecovssave", "Save edited params file"),
                   #   ),
                   #
                   #   column(width = 5,
@@ -9989,7 +10336,7 @@ if (FALSE){ # if FALSE
                   #                  numericInput('in_eeabs', label = 'Absences (%):',
                   #                               value = 0,step = 1, max = 999999 ),
                   #
-                  #                  actionButton(width = "100%",
+                  #                  (width = "100%",
                   #                               label = 'Extract covariates',
                   #                               'in_eeruncovs')
                   #          )
@@ -10553,7 +10900,7 @@ if (FALSE){ # if FALSE
                 # tableOutput("cdpop_files"),
                 # shinydashboard::valueBoxOutput("cdpop_box2"),
                 # actionButton("cdpop_check2", "Check files"),
-                # uiOutput("out_cdpop_files"),
+                # uiOut put("out_cdpop_files"),
                 DT::dataTableOutput(outputId = "out_cdpop_filestable"),
                 column(width = 6,
                        leaflet::leafletOutput("ll_map_cdp", height = "600px") %>% shinycssloaders::withSpinner(color="#0dc5c1")
@@ -10614,7 +10961,7 @@ if (FALSE){ # if FALSE
                       fileInput("in_cdpop_par", "invars CSV File", accept = ".csv"),
                       # textInput("textbox", label="Input the value to replace:"),
                       # actionButton("replacevalues", label = 'Replace values'),
-                      # uiOutput("selectUI"),
+                      # uiOut put("selectUI"),
                       # actionButton("deleteRows", "Delete Rows"),
                       # actionButton("addcolumn", "Add Column"),
                       # actionButton("removecolumn", "Remove last column"),

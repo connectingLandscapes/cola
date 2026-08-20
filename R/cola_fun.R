@@ -2932,10 +2932,9 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
   cat('\n\t Creating GEE results in: \n',
-      '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n\t',
+      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n\t',
       gee_assets,'/', species, '_SDM_modis_', target_year, '\n',
-      ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '\n')
-
+      ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '')
 
   if (show_cml | dry_run){
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
