@@ -2833,7 +2833,7 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
     (ei <-  min(maxi,ei))
 
     # if (ei >= maxi){ cat(" - Last batch \n"); (ei <-  maxi); break }
-    outtif <- paste0(outFolder, '/', ,'_', pref, '_', i, '.tif')
+    outtif <- paste0(outFolder, '/', prefTif ,'_', pref, '_', i, '.tif')
     jb <- paste0('#!/bin/bash\n#SBATCH --job-name=',pref,'_', i, '\n#SBATCH --output=',
                  logFolder, '/', pref,'_', i, '_%A.log\n#SBATCH --time=',hours,
                  ':00:00\n#SBATCH --partition=core\n#SBATCH --cpus-per-task=',
