@@ -72,7 +72,7 @@ def main() -> None:
     result = ee.data.listAssets({"parent": EEFOLDER})
     results = result.get('assets')
     for rr in results:
-        DESC = PREFIX +'_Cola2_'+ rr.get('name').replace(EEFOLDER, '').replace('/', '')
+        DESC = PREFIX + rr.get('name').replace(EEFOLDER, '').replace('/', '')
         nname = rr.get('name') 
         try:
             task = ee.batch.Export.image.toDrive(
@@ -89,8 +89,8 @@ def main() -> None:
         except Exception as e:
             print(f' ERROR in {nname}: {e}')
     print( '\n'  * 2)
-    print( f' === Finished. {len(results)} layers export tasks submmited.')
-    print( '\n'  * 1)
+    print( f'  Finished. {len(results)} layers export tasks submmited.')
+    print( '\n'  * 2)
 #
 #    
 if __name__ == "__main__":

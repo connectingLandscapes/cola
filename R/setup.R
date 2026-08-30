@@ -11,7 +11,8 @@
 #' @param pyVer. String. Python version to install
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @param zarr Logical. Are you planning to use zarr libary? Default TRUE
-#' @param cola2 Logical. Installing cola2 python dependencies? Default is FALSE
+#' @param cola2 Logical. Installing CoLa2 python dependencies and enable DSS for it? Default is FALSE
+#' @param earthranger Logical. Installing earthranger python dependencies and enable DSS for it? Default is FALSE
 #' @param COLA_DATA_PATH String. Path were CoLa DSS results and session folders
 #' @param COLA_NCORES Integer. Number of cores to use
 #' @param COLA_RAMGB Integer. GB or RAM to use in the 'heavy' or Joblib functions. Setting a RAM will allow you to run big analysis
@@ -37,7 +38,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
                         onlyIndividual = FALSE, ask = TRUE,
                         dss = TRUE, zarr = TRUE,
-                        cola2 = FALSE, yml = FALSE,
+                        cola2 = FALSE, earthranger = FALSE,
+                        yml = FALSE,
                         spyder = FALSE, updateCola = FALSE,
 
                         pyVer = "3.12.11",
@@ -61,6 +63,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     libs2Install <- c('tabulate', 'statsmodels', 'geemap', 'earthengine-api', 'mrmr_selection'
                       , libs2Install)
   }
+
+  # if (earthranger){
+  #   libs2Install <- c('ecoscope', libs2Install)
+  # }
+
 
   if (spyder){ # for use in spyder IDE
     libs2Install <- c( libs2Install, 'spyder-kernels==3.0')
@@ -508,6 +515,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       if( (! lib2 %in% avLibs$package ) | !versOK ){ #
         cat(paste0(' \n --- Installing ´',  libs2inst[l], '´ module\n'))
+        cat(' + Try 1, conda_install and conda-forge(',lib2inst,') \n')
 
         logPkg <- tryCatch(
           reticulate::conda_install(
@@ -520,7 +528,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
         ## If there's a problem installing trought conda-forge, use PIP
         if( any(!is.null(logPkg)) ){
-          print(lib2inst)
+          cat(' + Try 2, py_install and conda-forge(',lib2inst,') \n')
+          # print(lib2inst)
+
           logPkg2 <- tryCatch(
             reticulate::py_install( envname = envName,
                                     channel = "conda-forge",
@@ -529,13 +539,18 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         }
 
         if( any(!is.null(logPkg2)) ){
-          print(lib2inst)
+          cat(' + Try 3, py_install and PIP (',lib2inst,') \n')
+          # print(lib2inst)
           logPkg3 <- tryCatch(
             reticulate::py_install( envname = envName,
                                     pip  = TRUE,
                                     packages = lib2inst),
             error = function (e) e)
         }
+
+        # if( any(!is.null(logPkg2)) ){
+        #   cat(' +  (',lib2inst,') \n')
+        # }
 
         avLibs <- reticulate::py_list_packages(envname = envName, python = pyCola) # envName = 'cola'
 
@@ -712,6 +727,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
 
+  # Success
   if ( any(grep('WELCOME ', cmdans)) ){
     #libP <- .libPaths()
     #cola_scripts_path <- file.path(libP, 'cola/python')
@@ -853,6 +869,13 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_EE=1'}
       }
 
+      if(earthranger){
+        pos <- grep('COLA_ER', Renviron)
+        # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+        if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_ER=1'}
+      }
+
+
 
       #cat(Renviron, sep = '\n')
       writeLines(text = Renviron, con = renv)
@@ -865,7 +888,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
       # on.exit(Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = old), add = TRUE)
-      cat (sep = '', '\n\t=== Ready to connect landscapes! ===\n')
+      message ('\t=== Ready to connect landscapes! CoLa installed succesfully ===\n')
 
       if(dss){
         cat (sep = '', '\n  + Extra step   Installing DSS GUI\n\n')

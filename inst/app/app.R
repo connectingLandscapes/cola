@@ -151,7 +151,7 @@
   (py <- Sys.getenv("COLA_PYTHON_PATH"))
   # Sys.getenv("COLA_SCRIPTS_PATH")
 
-  devug <<- FALSE
+  devug <<- ifelse(COLA_DEBUG, TRUE, FALSE)
 
   (showcasePath <<- base::paste0(rootPath, '/sampledata')); dir.exists(showcasePath)
 
@@ -204,27 +204,29 @@ cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
 # >> SERVER ---------------------------------------------------------------------------
 server <- function(input, output, session) {
 
+  # COLA DEBUG ----
+
   if(COLA_DEBUG == 1){
-    cat('\t ¡¡ Debugging CoLa. You should not seen this !! \n\n')
+    message('\t ¡¡ Debugging CoLa. You should not seen this !!')
     updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/anoa/labA',
                      session = session, label = 'Local path:', placeholder = 'Local path')
     updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola2',
                      session = session, label = 'EE path:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola2/anoa72',
-                     session = session, label = 'Points', placeholder = '')
+                     session = session, label = 'Points file path:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola2/anoa72_box',
-                     session = session, label = 'AOI', placeholder = '')
+                     session = session, label = 'Area of interest / region:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_colname', value = 'preabs',
-                     session = session, label = 'Colname', placeholder = '')
+                     session = session, label = 'Column name:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_label', value = 'labA',
                      session = session, label = 'Label:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_modelid', value = 'modA',
                      session = session, label = 'Model ID:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_gdfolder', value = 'cola2',
-                     session = session, label = 'Google Drive:', placeholder = '')
+                     session = session, label = 'Google Drive folder:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_gdprefix', value = 'cola2',
                      session = session, label = 'Files prefix:', placeholder = '')
-    updateTextInput( inputId = 'ee_project', value = 'gonzalezivan',
+    updateTextInput( inputId = 'in_ee_project', value = 'gonzalezivan',
                      session = session, label = 'EE project:', placeholder = '')
     updateNumericInput( inputId = 'in_eefull_targetyear', value = 2025,
                         session = session, label = 'Extraction range:')
@@ -232,6 +234,27 @@ server <- function(input, output, session) {
                             session = session, label = 'Extraction range:')
     updateNumericInput( inputId = 'in_eefull_gap', value = 6,
                         session = session, label = 'Gap years:')
+    updateTextInput( inputId = 'in_eemos_localpath', value = 'C:/cola/mosaic',
+                     session = session, label = 'Local path:', placeholder = '')
+    updateTextInput( inputId = 'in_eemos_prefix', value = 'cola.+tif$',
+                     session = session, label = 'Files pattern:', placeholder = '')
+    updateTextInput( inputId = 'in_eemos_outfile', value = 'C:/cola/mosaic/merge1.tif',
+                     session = session, label = 'Final mosaic:', placeholder = '')
+
+    updateTextInput( inputId = 'in_er_server', value = 'twiga.pamdas.org',
+                     session = session, label = 'Server:', placeholder = '')
+    updateTextInput( inputId = 'in_er_username', value = 'IGonzalez',
+                     session = session, label = 'Username:', placeholder = '')
+    updateTextInput( inputId = 'in_er_pwd', value = 'temp12345',
+                     session = session, label = 'Password:', placeholder = '')
+    updateTextInput( inputId = 'in_er_subject', value = 'NAM_test',
+                     session = session, label = 'Subject:', placeholder = '')
+
+    updateTextInput( inputId = 'in_er_localpath', value = 'C:/cola/earthranger',
+                     session = session, label = 'Local path:', placeholder = '')
+    updateNumericInput( inputId = 'in_er_resmeters', value = 1000,
+                        session = session, label = 'KDE pixel in meters:')
+    # in_er_datestart in_er_dateend
 
   }
 
@@ -304,9 +327,9 @@ server <- function(input, output, session) {
   #   tags$span(" Ready! ", style = "color: gray;")
   # })
 
-   output$out_status <- renderUI({
+  output$out_status <- output$out_status2 <- renderUI({
     # req(status())  # don't render anything until first click
-     cat( ' status(): ', status(), '\n')
+    # cat( ' status(): ', status(), '\n')
     if (       status() == "ready") {
       tags$span(icon("wifi", class = "fa-spin"), " Ready", style = "color: royalblue; font-weight: bold;")
     } else if (status() == "running") {
@@ -330,7 +353,7 @@ server <- function(input, output, session) {
 
       disable("restoreSession")
       disable("removeUserData")
-      disable("ee_connect")
+      disable("in_ee_connect")
       disable("ee_fcupload")
       disable("in_eefull_goexp")
       disable("in_eefull_gogap")
@@ -392,11 +415,11 @@ server <- function(input, output, session) {
       # # output$out_status <- renderUI({
       #   tags$span("Finished", style = "color: green; font-weight: bold;")
       # })
-     # status("finished")
+      # status("finished")
 
       enable("restoreSession")
       enable("removeUserData")
-      enable("ee_connect")
+      enable("in_ee_connect")
       enable("ee_fcupload")
       enable("in_eefull_goexp")
       enable("in_eefull_gogap")
@@ -1433,7 +1456,7 @@ server <- function(input, output, session) {
 
 
   updateLL <- function(ll){
-    output$ll_map_cdp <- output$ll_map_pri <- output$ll_map_lcc <-
+    output$ll_map_cdp <- output$ll_map_ear <- output$ll_map_pri <- output$ll_map_lcc <-
       output$ll_map_crk <- output$ll_map_map <- output$ll_map_plot <-
       output$ll_map_edi <- output$ll_map_dist <-
       output$ll_map_points <- output$ll_map_h2r <- leaflet::renderLeaflet({
@@ -1756,10 +1779,11 @@ server <- function(input, output, session) {
                        choices = c("", crs_df$label),
                        selected = NA, server = TRUE)
 
-  updateSelectizeInput(session, inputId = 'sel_crs2',
+  updateSelectizeInput(session, inputId = 'sel_crsvect',
                        choices = c("", crs_df$label),
                        selected = NA, server = TRUE)
 
+  ## Load points layer
   observeEvent(input$in_uncrs_pts, {
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
@@ -1785,6 +1809,7 @@ server <- function(input, output, session) {
     #plot(pts_uncrs_extent, add = TRUE)
   })
 
+  ## Load raster layer
   observeEvent(input$in_uncrs_tif, {
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     invisible(suppressWarnings(
@@ -1792,8 +1817,8 @@ server <- function(input, output, session) {
                error = function(e) NULL)))
     tempID <- sessionIDgen()
     rv$crs_tif_orig <- input$in_uncrs_tif$datapath
-    rv$crs_tif <- file.path(tempFolder, paste0('/in_uncrs_',
-                                               tempID, '_', basename(rv$crs_tif_orig)))
+    rv$crs_tif <- file.path(tempFolder,
+                            paste0('/in_uncrs_', tempID, '_', basename(rv$crs_tif_orig)))
     pdebug(devug=devug,sep='\n\t Load uncrs TIF', pre='','rv$crs_tif_orig', 'rv$crs_tif')
     file.copy(rv$crs_tif_orig, rv$crs_tif);
 
@@ -1803,16 +1828,11 @@ server <- function(input, output, session) {
     #plot(rv$pts_uncrs)
   })
 
-  # rv <- list(crs_pts = '/data/temp/TN2023090900452605file23e6f76efff8b///in_uncrs_IP2023090900454205file23e6f70719c16_0.xy',
-  #      crs_tif = '/data/temp/TN2023090900452605file23e6f76efff8b///in_uncrs_OG2023090900453505file23e6f47071d2d_0.rsg')
-
-  # # crs_tif_temp = "", # # crs_tif = "", # input$sel_crs # "" # input$in_uncrs_pts # input$in_uncrs_tif
-
-  ## FIX THIS
-  observeEvent(input$in_uncrs_tif, {
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+  # ## FIX THIS ----
+  # # upload uncrs tif
+  observeEvent(input$coo_tif, {
     ## Create an ID
-    if(input$sel_crs != '' | input$sel_crs2 != '') {
+    if(input$sel_crs != '' | input$sel_crsvect != '') {
       if(is.null(rv$inProjSessID)){
         rv$inProjSessID <- sessionIDgen()
       }
@@ -1821,8 +1841,8 @@ server <- function(input, output, session) {
       if(input$sel_crs != '') {
         crs_selected <<- crs_df$crs_code[crs_df$label %in% input$sel_crs]
       }
-      if(input$sel_crs2 != '') {
-        crs_selected2 <<- crs_df$crs_code[crs_df$label %in% input$sel_crs2]
+      if(input$sel_crsvect != '') {
+        crs_selected2 <<- crs_df$crs_code[crs_df$label %in% input$sel_crsvect]
       }
       # (crs_selected <- crs_df$crs_code[grep('Asia_South_Albers_Equal_Area_Conic', crs_df$label)])
       # Asia_South_Albers_Equal_Area_Conic
@@ -1847,7 +1867,7 @@ server <- function(input, output, session) {
         }
 
 
-        if(!is.null(rv$pts_uncrs_extent) & exists(crs_selected2)){
+        if(!is.null(rv$pts_uncrs_extent) & exists('crs_selected2')){
           pts_uncrs_extent_p <- sf::st_as_sf(rv$pts_uncrs_extent)
           st_crs(pts_uncrs_extent_p) <- (crs_selected2)
           pts_uncrs_extent_p <- sf::st_transform(pts_uncrs_extent_p,
@@ -1878,52 +1898,124 @@ server <- function(input, output, session) {
     }
   })
 
+  ## Run the CRS assign button to a vect layer. Crate a projected raster
   observeEvent(input$coo_pts, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if(!is.null(rv$pts_uncrs_extent) & exists(crs_selected2)){
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if(!is.null(rv$pts_uncrs_extent) & exists('crs_selected2')){
 
-    }
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  observeEvent(input$coo_tif, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    if(!is.null(rv$tif_uncrs) & exists(crs_selected2)){
+  observeEvent(input$sel_crs, {
+    # rv$crs_tif
+    if(!is.null(rv$tif_uncrs_extent) & input$sel_crs != '' &
+       (input$sel_crs %in% crs_df$label)) {
 
-      # rv$tif_uncrs
-      # rv$tif_uncrs_extent
-      # st_crs(rv$tif_uncrs) <- crs_selected
-      #
-      # if(is.null(rv$inLccSessID)){
-      #  (inLccSessID <- sessionIDgen())
-      #  rv$inLccSessID <- inLccSessID
-      # }
-      #
-      # rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
-      # file.copy(input$in_lcc_tif$datapath, rv$tiforig);
-      #
-      # newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
-      #                  outrasterpath = tifFixed)
-      #
-      # rv$tif <- ifelse(is.na(newtifPath_lcc),
-      #         yes = rv$tiforig,
-      #         no = newtifPath_lcc)
-      #
-      #
-      # rv$tif_sp <- terra::rast(rv$tif)
-      # params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
-      #
-      # rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-      # #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
-      # rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-      #                   domain = rng_newtif+0.0, na.color = "transparent")
-      #
-      # makeLL( )
+      output$ll_coord <- leaflet::renderLeaflet({
+
+        message(input$sel_crs)
+        # ESRI:102012
+
+        # rv <- list(crs_tif = 'C:/cola/colaNHZ2026082508445005///in_uncrs_YVD2026082508462505_0.tif')
+        # input <- list(sel_crs = "ESRI:102012  --  Asia_Lambert_Conformal_Conic  --  projected_crs")
+        # tif_uncrs_extent_p <- SpatialPolygonsDataFrame(
+        #  rv$tif_uncrs_extent, data.frame(ID = 1))
+
+        # rv$tif_uncrs <- terra::rast(rv$crs_tif)
+        # rv$tif_uncrs_extent <- as.polygons(terra::ext(rv$tif_uncrs))
+        #plot(rv$pts_uncrs)
+        # is.na( st_crs(rv$tif_uncrs) )
+        # is.na( st_crs(rast('N:/My Drive/git/cola/inst/UNICOR/unicor/lake.rsg')) )
+
+        tif_uncrs_extent_p <- sf::st_as_sf(rv$tif_uncrs_extent)
+        crs_selected <<- crs_df$crs_code[crs_df$label %in% input$sel_crs]
+
+        if( is.na( st_crs(rv$tif_uncrs) ) ){
+          ## Assigning
+          # tif_uncrs_extent_p@proj4string <- CRS(crs_selected)
+          st_crs(tif_uncrs_extent_p) <- crs_selected
+        } else {
+          ## Convert to the selected one
+          st_crs(tif_uncrs_extent_p) <- st_crs(rv$tif_uncrs)
+          # st_crs(rv$tif_uncrs_extent) <- st_crs(rv$tif_uncrs) # Error
+          tif_uncrs_extent_p <- sf::st_transform(tif_uncrs_extent_p,
+                                                 crs = sf::st_crs(crs_selected))
+        }
+
+        tif_uncrs_extent_p <- sf::st_transform(tif_uncrs_extent_p,
+                                               crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+        llcrs <- llmap %>% leaflet::addPolygons(data = tif_uncrs_extent_p) %>%
+          addLegend("bottomright", colors = c("blue"), labels = c("Raster"), opacity = 1)
+
+
+        ## add points if uplodaded and crs2 not empty
+        if(!is.null(rv$pts_uncrs_extent) & input$sel_crsvect != ''){
+          message('  Add points to map')
+
+          # exists(crs_selected2)
+          pts_uncrs_extent_p <- sf::st_as_sf(rv$pts_uncrs_extent)
+          st_crs(pts_uncrs_extent_p) <- (input$sel_crsvect)
+          pts_uncrs_extent_p <- sf::st_transform(pts_uncrs_extent_p,
+                                                 crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+
+          pts_uncrs_p <- rv$pts_uncrs
+          #pts_uncrs_p@proj4string <- CRS(crs_selected)
+          st_crs(pts_uncrs_p) <- (input$sel_crsvect)
+          pts_uncrs_p <- sf::st_transform(pts_uncrs_p, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+          #pts_uncrs_p@data[, c('x0', 'y0')] <- st_coordinates(pts_uncrs_p)
+          pts_uncrs_p$x0<- st_coordinates(pts_uncrs_p)[, 1]
+          pts_uncrs_p$y0<- st_coordinates(pts_uncrs_p)[, 2]
+
+          llcrs <- llcrs %>% addCircleMarkers(data = pts_uncrs_p,
+                                              lng = ~x0, lat = ~y0, color = 'red') %>%
+            addPolygons(data = pts_uncrs_extent_p,color = 'red', fillColor = 'red') %>%
+            addLegend("bottomright", colors = c("red"), labels = c("Points"), opacity = 1)
+        }
+
+        llcrs
+      })
     }
-    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
+
+  # ## Run the CRS assign button to a raster layer. Crate a projected raster
+  # observeEvent(input$coo_tif, {
+  #   status("running"); showStartStop(  ); delay(1,{ # actionherestart
+  #   if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+  #   if(!is.null(rv$tif_uncrs)){
+  #
+  #     rv$tif_uncrs
+  #     rv$tif_uncrs_extent
+  #     st_crs(rv$tif_uncrs) <- crs_selected
+  #
+  #     if(is.null(rv$inLccSessID)){
+  #      (inLccSessID <- sessionIDgen())
+  #      rv$inLccSessID <- inLccSessID
+  #     }
+  #
+  #     rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+  #     file.copy(input$in_lcc_tif$datapath, rv$tiforig);
+  #
+  #     newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
+  #                      outrasterpath = tifFixed)
+  #
+  #     rv$tif <- ifelse(is.na(newtifPath_lcc),
+  #             yes = rv$tiforig, no = newtifPath_lcc)
+  #
+  #     rv$tif_sp <- terra::rast(rv$tif)
+  #     params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+  #
+  #     rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+  #     #rv$tif_rng <- rng_newtif <- range(minmax(rv$tif_sp)[1:2], na.rm = TRUE)
+  #     rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+  #                       domain = rng_newtif+0.0, na.color = "transparent")
+  #
+  #     makeLL( )
+  #   }
+  #   showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  # })
+  #
 
 
   ####### SRV PERFORMANCE ------------------
@@ -2307,452 +2399,557 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$run_cdpop, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
-    # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      # tempFolder = '/tmp/RtmpYiPPnn/colaGBF2024072213145005'; setwd(tempFolder)
+      # rv <- list(pts = 'out_simpts_MFU2024072213183205.shp')
 
-    # tempFolder = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305'; setwd(tempFolder)
-    # rv <- list(pts = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_simpts_ZFE2024080118415505.shp',
-    #      cdm = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_cdmatrix_XUV2024080118421705.csv')
-    # pref <- 'SLW'
+      # tempFolder = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305'; setwd(tempFolder)
+      # rv <- list(pts = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_simpts_ZFE2024080118415505.shp',
+      #      cdm = '/mnt/c/tempRLinux/RtmpaEKrMb/colaKZF2024080118414305/out_cdmatrix_XUV2024080118421705.csv')
+      # pref <- 'SLW'
 
-    ## no params provided
-    if (is.null(rv$data)){
-      cat('   // No existing CDPOP invars, using sample file\n')
-      cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
-    } else {
-      cat('   // Existing CDPOP invars\n')
-      cdpop_invars <- as.data.frame(t(rv$data))
-      colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
-    }
-    # print(cdpop_invars)
-    #print(read.csv(cdpop_invars))
-
-    if (is.numeric(as.numeric(input$in_dist_3))){
-      cdpop_invars$matemovethresh <- as.numeric(input$in_dist_3)
-      cdpop_invars$Matemovethresh <- as.numeric(input$in_dist_3)
-      cdpop_invars$Fdispmovethresh <- as.numeric(input$in_dist_3)
-      cdpop_invars$Mdispmovethresh <- as.numeric(input$in_dist_3)
-    }
-
-    # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
-    invars_file_path <<- file.path(tempFolder, 'invars_edited.csv')
-    cat('   // Using CDPOP Invarsfile: ', invars_file_path, '\n')
-    write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
-
-    newxy <- gsub('.shp', '.csv', x = rv$pts)
-    prefMort <- ''
-
-    perc_emp <- 0
-    in_cdp_pr <- as.numeric(input$in_cdp_pr)
-    if(is.numeric(in_cdp_pr)){
-      if(in_cdp_pr > 0 & in_cdp_pr < 100){
-        perc_emp <- in_cdp_pr
+      ## no params provided
+      if (is.null(rv$data)){
+        cat('   // No existing CDPOP invars, using sample file\n')
+        cdpop_invars <- read.csv(system.file(package = 'cola', 'sampledata/invars.csv'))
+      } else {
+        cat('   // Existing CDPOP invars\n')
+        cdpop_invars <- as.data.frame(t(rv$data))
+        colnames(cdpop_invars) <- colnames(read.csv(system.file(package = 'cola', 'sampledata/invars.csv')))
       }
-    }
+      # print(cdpop_invars)
+      #print(read.csv(cdpop_invars))
 
-    if( input$cdpop_mort){
-      cat('  CDPOP: Extracing raster values for mortality\n')
+      if (is.numeric(as.numeric(input$in_dist_3))){
+        cdpop_invars$matemovethresh <- as.numeric(input$in_dist_3)
+        cdpop_invars$Matemovethresh <- as.numeric(input$in_dist_3)
+        cdpop_invars$Fdispmovethresh <- as.numeric(input$in_dist_3)
+        cdpop_invars$Mdispmovethresh <- as.numeric(input$in_dist_3)
+      }
 
-      # print("rv$pts")
-      # print(rv$pts)
-      # print("newxy")
-      # print(newxy)
-      # print('tempFolder')
-      # print(tempFolder)
-      # print('rv$tif')
-      # print(rv$tif)
-      # print('perc_emp')
-      # print(perc_emp)
+      # file.copy(inputvars, paste0(datapath, '/invars.csv'), overwrite = TRUE)
+      invars_file_path <<- file.path(tempFolder, 'invars_edited.csv')
+      cat('   // Using CDPOP Invarsfile: ', invars_file_path, '\n')
+      write.csv(cdpop_invars, file = invars_file_path, row.names = FALSE, quote = FALSE)
 
-      xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder,
-                       mortrast = rv$tif, porcEmpty = perc_emp)
-      prefMort <- 'mort'
-    } else {
-      xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
-    }
+      newxy <- gsub('.shp', '.csv', x = rv$pts)
+      prefMort <- ''
 
-    ##
-    # setwd('C:/temp/cola//colaDFO2024111923445505/'); list.files()
-    # rv <- list(tif_sp = terra::rast('out_surface_LTL2024111923450805.tif'))
-    # newxy <- 'xy.csv'
-    # rv$cdp_sp <- sf::st_as_sf(read.csv('xy.csv'), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp))
+      perc_emp <- 0
+      in_cdp_pr <- as.numeric(input$in_cdp_pr)
+      if(is.numeric(in_cdp_pr)){
+        if(in_cdp_pr > 0 & in_cdp_pr < 100){
+          perc_emp <- in_cdp_pr
+        }
+      }
 
-    # pdebug(devug, pre = '\n --- ', sep = '\n', 'read.csv(newxy)', 'terra::crs(rv$tif_sp)')
+      if( input$cdpop_mort){
+        cat('  CDPOP: Extracing raster values for mortality\n')
 
-    rv$cdp_sp <- st_transform(
-      sf::st_as_sf(read.csv(newxy), coords = c('X', 'Y'),
-                   crs = terra::crs(rv$tif_sp)),
-      crs = '+proj=longlat +datum=WGS84')
+        # print("rv$pts")
+        # print(rv$pts)
+        # print("newxy")
+        # print(newxy)
+        # print('tempFolder')
+        # print(tempFolder)
+        # print('rv$tif')
+        # print(rv$tif)
+        # print('perc_emp')
+        # print(perc_emp)
 
-    rv$ptsxy <- newxy
-    # rv$cdm <- 'cdmat.csv'
-    (pref <- paste0(prefMort, sessionIDgen(only3 = TRUE)))
+        xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder,
+                         mortrast = rv$tif, porcEmpty = perc_emp)
+        prefMort <- 'mort'
+      } else {
+        xy_out <- shp2xy(shapefile = rv$pts, outxy = newxy, tempDir = tempFolder)
+      }
 
-    output$vout_cdp <- isolate(renderText({
+      ##
+      # setwd('C:/temp/cola//colaDFO2024111923445505/'); list.files()
+      # rv <- list(tif_sp = terra::rast('out_surface_LTL2024111923450805.tif'))
+      # newxy <- 'xy.csv'
+      # rv$cdp_sp <- sf::st_as_sf(read.csv('xy.csv'), coords = c('X', 'Y'), crs = terra::crs(rv$tif_sp))
 
-      tStartCDP <- Sys.time()
-      cdpop_ans <<- tryCatch(
-        cdpop_py(inputvars = invars_file_path,
-                 agevars = NULL,
-                 cdmat = rv$cdm, xy = rv$ptsxy,
-                 tempFolder = tempFolder, prefix = pref),
-        error = function(e) NA)
-      #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
-      rv$cdpop_ans <<- cdpop_ans
-      cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
+      # pdebug(devug, pre = '\n --- ', sep = '\n', 'read.csv(newxy)', 'terra::crs(rv$tif_sp)')
 
-      tStopCDP <- Sys.time() - tStartCDP
-      textElapCDP <- paste(round(as.numeric(tStopCDP), 2), attr(tStopCDP, 'units'))
-      mssg2Display <- paste0(' CDPOP simulation finished on ', textElapCDP, '. Generated ', length(cdpop_grids), ' generations.')
-    }))
-    # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
+      rv$cdp_sp <- st_transform(
+        sf::st_as_sf(read.csv(newxy), coords = c('X', 'Y'),
+                     crs = terra::crs(rv$tif_sp)),
+        crs = '+proj=longlat +datum=WGS84')
 
-    isolate(
-      output$ll_map_cdp <- leaflet::renderLeaflet({
+      rv$ptsxy <- newxy
+      # rv$cdm <- 'cdmat.csv'
+      (pref <- paste0(prefMort, sessionIDgen(only3 = TRUE)))
 
-        # rv <- list()
-        #cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
-        #cdpop_ans <- /data/tempR//colaHEB2025051214375205
+      output$vout_cdp <- isolate(renderText({
 
-        # datapath <- '/data/tempR//colaHEB2025051214375205'
-        # cdpopPath <- 'HGQ__1747079235'
-        # newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
-        # (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
-        # ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath)
-        # cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = newFiles, value = TRUE)
+        tStartCDP <- Sys.time()
+        cdpop_ans <<- tryCatch(
+          cdpop_py(inputvars = invars_file_path,
+                   agevars = NULL,
+                   cdmat = rv$cdm, xy = rv$ptsxy,
+                   tempFolder = tempFolder, prefix = pref),
+          error = function(e) NA)
+        #save(cdpop_out, file = 'cdpop_out.RData'); load('cdpop_out.RData')
+        rv$cdpop_ans <<- cdpop_ans
+        cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = cdpop_ans$newFiles, value = TRUE)
 
-        cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
+        tStopCDP <- Sys.time() - tStartCDP
+        textElapCDP <- paste(round(as.numeric(tStopCDP), 2), attr(tStopCDP, 'units'))
+        mssg2Display <- paste0(' CDPOP simulation finished on ', textElapCDP, '. Generated ', length(cdpop_grids), ' generations.')
+      }))
+      # inputvars = NULL; agevars = NULL; cdmat = rv$cdm; xy = rv$ptsxy; tempFolder = tempFolder; prefix = pref
 
-        if(length(cdpop_out) != 0){
+      isolate(
+        output$ll_map_cdp <- leaflet::renderLeaflet({
 
-          shinyjs::enable("cdpop_ans_yy") #
-          shinyjs::enable("mapcdpop") #
+          # rv <- list()
+          #cdpop_out <- '/mnt/c/tempRLinux/colaZYT2024080514114105/GJL__1722885170/batchrun0mcrun0/output.csv'
+          #cdpop_ans <- /data/tempR//colaHEB2025051214375205
 
-          ##
-          ## Single MCRUN
-          ##
-          if(length(cdpop_out) == 1){
-            print('   --- single run CDPOP')
-            rv$cdpop_out <- read.csv(cdpop_out[1])
-            rv$cdpFolder <- dirname( dirname(cdpop_out[1]) )
+          # datapath <- '/data/tempR//colaHEB2025051214375205'
+          # cdpopPath <- 'HGQ__1747079235'
+          # newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
+          # (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
+          # ans2ret <- list(newFiles = newFiles, cdpopPath = cdpopPath)
+          # cdpop_grids <<- grep(pattern = 'grid.+.csv$', x = newFiles, value = TRUE)
 
-            cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
-                                 function(x){
-                                   #x = rv$cdpop_out$Population_Age1.
-                                   as.numeric(gsub('\\|.+|\\|', '', x))
-                                 })
+          cdpop_out <- grep(pattern = 'output.csv$', x = cdpop_ans$newFiles, value = TRUE)
 
-            cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-            cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
-            cdpop_grids_Num <<- sort(cdpop_grids_Num)
-
-            output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
-                              type = "line", dashStyle = "DashDot", name = 'Population'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Population')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-
-            })
-
-            output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
-                              type = "line", dashStyle = "DashDot", name = 'Alleles'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Alleles')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-            })
-
-            output$hccdpop3 <- highcharter::renderHighchart({ # cpu
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
-                              type = "line", dashStyle = "DashDot", name = 'He'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
-                                    type = "line", dashStyle = "DashDot", name = 'Ho'
-                                    #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Heterozygosity')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-            }) #
+          if(length(cdpop_out) != 0){
 
             shinyjs::enable("cdpop_ans_yy") #
-            updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                                 choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
-                                 selected = head(cdpop_grids_Num, 1), server = TRUE)
+            shinyjs::enable("mapcdpop") #
 
             ##
-            ## Multiple MCRUN
+            ## Single MCRUN
             ##
-          } else if(length(cdpop_out) > 1) {
-            print('   --- Multiple run CDPOP')
+            if(length(cdpop_out) == 1){
+              print('   --- single run CDPOP')
+              rv$cdpop_out <- read.csv(cdpop_out[1])
+              rv$cdpFolder <- dirname( dirname(cdpop_out[1]) )
 
-            # cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
-            # cdpop_grids_Num <<- sort(cdpop_grids_Num)
-
-            cdpops <- lapply(cdpop_out, function(x){
-              # x <- cdpop_out[1]
-              xx <- read.csv(x)
-              xx$filename <- x
-              (xx$simulation <- gsub('.+batchrun0mcrun', '', dirname(x)))
-              xx
-            })
-
-            vecs <- lapply(cdpops, function(x) x[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho', 'simulation')])
-            vecs2 <- lapply(vecs, function(x) sapply(x, function(y) as.numeric(gsub('\\|.+|\\|', '', y))))
-
-            # vecs2 <- lapply(vecs2, function(y) as.numeric(sapply((strsplit(y, "\\|")), function(x) x[1])))
-            nyears <- max(unlist(lapply(vecs2, nrow)))
-            tempnum <- rep(NA, nyears)
-            (cdyy <- 0:(nyears-1))
-
-            cdpop2Plot <- sapply(c('Population_Age1.', 'Alleles', 'He', 'Ho'),
-                                 function(x){
-                                   # x <- 'Population_Age1.'
-                                   vecs3 <- lapply(vecs2, function(y){
-                                     z <- tempnum
-                                     z[1:nrow(y)] <- y[, c(x)]
-                                     cbind(id = y[1, c('simulation')], z)
-                                     #return(z)
+              cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+                                   function(x){
+                                     #x = rv$cdpop_out$Population_Age1.
+                                     as.numeric(gsub('\\|.+|\\|', '', x))
                                    })
-                                   list(
-                                     data.frame(simumation = 0, Variable = x, Generation = cdyy,
-                                                mean=apply(do.call(cbind, lapply(vecs3, function(x) x[, 2])), 1, mean, na.rm = TRUE),
-                                                sd=apply(do.call(cbind , lapply(vecs3, function(x) x[, 2])), 1, sd, na.rm = TRUE))
-                                   )
-                                 })
 
-            # cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
-            #                      function(x){#x = rv$cdpop_out$Population_Age1.
-            #                        as.numeric(gsub('\\|.+|\\|', '', x))})
+              cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+              cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
+              cdpop_grids_Num <<- sort(cdpop_grids_Num)
 
-            ## Population
-            ##
-            output$hccdpop1 <- highcharter::renderHighchart({ # cpu
-              yyA <- cdpop2Plot[['Population_Age1.']]
-              if (any(is.na(yyA$sd))){
-                # yyA <- rbind
-                ya <- yyA$Generation
-                yb <- yyA$sd
-                posNA <- which(is.na(yyA$sd))[1]
-                newrow <- yyA[posNA-1,]
-                newrow$sd <- 0
-                yyA <- rbind.data.frame(
-                  yyA[1:(posNA-1), ], #head
-                  newrow,
-                  yyA[(posNA:nrow(yyA)), ]
-                  # tail
-                )
-                yyA$sd[is.na(yyA$sd)] <- 0
-              }
-              pol <- cbind.data.frame(x = as.numeric(c(yyA$Generation, rev(yyA$Generation))),
-                                      y = c(yyA$mean +yyA$sd, rev(yyA$mean -yyA$sd)), z = 'S.D.')
-              multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+              output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(data = cdpop2Plot[, c('Year', 'Population_Age1.')],
+                                type = "line", dashStyle = "DashDot", name = 'Population'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Population')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
 
-              multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
-              pol <- pol[1:(nrow(pol)-1), ]
+              })
 
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
-                hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
-                              hcaes(Year, Population_Age1., group=id)) %>%
-                hc_add_series(data = cdpop2Plot[['Population_Age1.']], # [, c('Generation', 'mean')]
-                              hcaes(Generation, mean),
-                              type = "line", name = 'Av. Population'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Population')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-            })
+              output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(data = cdpop2Plot[, c('Year', 'Alleles')],
+                                type = "line", dashStyle = "DashDot", name = 'Alleles'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Alleles')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              })
 
-            ## Alleles
-            ##
+              output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(data = cdpop2Plot[, c('Year', 'He')],
+                                type = "line", dashStyle = "DashDot", name = 'He'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>% hc_add_series(data = cdpop2Plot[, c('Year', 'Ho')],
+                                      type = "line", dashStyle = "DashDot", name = 'Ho'
+                                      #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Heterozygosity')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              }) #
 
-            output$hccdpop2 <- highcharter::renderHighchart({ # cpu
-              yyB <- cdpop2Plot[['Alleles']]
-              if (any(is.na(yyB$sd))){
-                # yyA <- rbind
-                ya <- yyB$Generation
-                yb <- yyB$sd
-                posNA <- which(is.na(yyB$sd))[1]
-                newrow <- yyB[posNA-1,]
-                newrow$sd <- 0
-                yyB <- rbind.data.frame(
-                  yyB[1:(posNA-1), ], #head
-                  newrow,
-                  yyB[(posNA:nrow(yyB)), ]
-                  # tail
-                )
-                yyB$sd[is.na(yyB$sd)] <- 0
-              }
+              shinyjs::enable("cdpop_ans_yy") #
+              updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                                   choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
+                                   selected = head(cdpop_grids_Num, 1), server = TRUE)
 
-              pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
-                                      y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
-              multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
-              multiline$id <- as.numeric((as.character((multiline$id))))
+              ##
+              ## Multiple MCRUN
+              ##
+            } else if(length(cdpop_out) > 1) {
+              print('   --- Multiple run CDPOP')
 
-              multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
-              pol <- pol[1:(nrow(pol)-1), ]
+              # cdpop_grids <<- cdpop_grids[order( cdpop_grids_Num )]
+              # cdpop_grids_Num <<- sort(cdpop_grids_Num)
 
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
-                hc_add_series(data = multiline, type = "line", dashStyle = "DashDot",
-                              hcaes(Year, Alleles, group=id)) %>%
-                hc_add_series(data = cdpop2Plot[['Alleles']], # [, c('Generation', 'mean')]
-                              hcaes(Generation ,mean),
-                              type = "line", name = 'Av. Alleles'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Alleles')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-            })
+              cdpops <- lapply(cdpop_out, function(x){
+                # x <- cdpop_out[1]
+                xx <- read.csv(x)
+                xx$filename <- x
+                (xx$simulation <- gsub('.+batchrun0mcrun', '', dirname(x)))
+                xx
+              })
 
-            ## Ho
-            ##
+              vecs <- lapply(cdpops, function(x) x[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho', 'simulation')])
+              vecs2 <- lapply(vecs, function(x) sapply(x, function(y) as.numeric(gsub('\\|.+|\\|', '', y))))
 
-            output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+              # vecs2 <- lapply(vecs2, function(y) as.numeric(sapply((strsplit(y, "\\|")), function(x) x[1])))
+              nyears <- max(unlist(lapply(vecs2, nrow)))
+              tempnum <- rep(NA, nyears)
+              (cdyy <- 0:(nyears-1))
 
-              yyB <- cdpop2Plot[['Ho']]
-              if (any(is.na(yyB$sd))){
-                # yyA <- rbind
-                ya <- yyB$Generation
-                yb <- yyB$sd
-                posNA <- which(is.na(yyB$sd))[1]
-                newrow <- yyB[posNA-1,]
-                newrow$sd <- 0
-                yyB <- rbind.data.frame(
-                  yyB[1:(posNA-1), ], #head
-                  newrow,
-                  yyB[(posNA:nrow(yyB)), ]
-                  # tail
-                )
-                yyB$sd[is.na(yyB$sd)] <- 0
-              }
-              pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
-                                      y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
-              multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
-              multiline$id <- as.numeric(as.factor(as.character((multiline$id))))
-              multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
-              pol <- pol[1:(nrow(pol)-1), ]
+              cdpop2Plot <- sapply(c('Population_Age1.', 'Alleles', 'He', 'Ho'),
+                                   function(x){
+                                     # x <- 'Population_Age1.'
+                                     vecs3 <- lapply(vecs2, function(y){
+                                       z <- tempnum
+                                       z[1:nrow(y)] <- y[, c(x)]
+                                       cbind(id = y[1, c('simulation')], z)
+                                       #return(z)
+                                     })
+                                     list(
+                                       data.frame(simumation = 0, Variable = x, Generation = cdyy,
+                                                  mean=apply(do.call(cbind, lapply(vecs3, function(x) x[, 2])), 1, mean, na.rm = TRUE),
+                                                  sd=apply(do.call(cbind , lapply(vecs3, function(x) x[, 2])), 1, sd, na.rm = TRUE))
+                                     )
+                                   })
 
-              highchart() %>% hc_exporting(enabled = TRUE) %>%
-                hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
-                hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
-                              hcaes(Year, Ho, group=id)) %>%
-                hc_add_series(data = cdpop2Plot[['Ho']], # [, c('Generation', 'mean')]
-                              hcaes(Generation ,mean),
-                              type = "line",  name = 'Av. Ho'
-                              #, hcaes(x = 'Year', y = 'Population')
-                ) %>%
-                hc_yAxis(title = list(text = 'Ho')) %>%
-                hc_xAxis(title = list(text = 'Generation')) %>%
-                hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
-            }) #
+              # cdpop2Plot <- sapply(rv$cdpop_out[, c('Year', 'Population_Age1.', 'Alleles', 'He', 'Ho')],
+              #                      function(x){#x = rv$cdpop_out$Population_Age1.
+              #                        as.numeric(gsub('\\|.+|\\|', '', x))})
+
+              ## Population
+              ##
+              output$hccdpop1 <- highcharter::renderHighchart({ # cpu
+                yyA <- cdpop2Plot[['Population_Age1.']]
+                if (any(is.na(yyA$sd))){
+                  # yyA <- rbind
+                  ya <- yyA$Generation
+                  yb <- yyA$sd
+                  posNA <- which(is.na(yyA$sd))[1]
+                  newrow <- yyA[posNA-1,]
+                  newrow$sd <- 0
+                  yyA <- rbind.data.frame(
+                    yyA[1:(posNA-1), ], #head
+                    newrow,
+                    yyA[(posNA:nrow(yyA)), ]
+                    # tail
+                  )
+                  yyA$sd[is.na(yyA$sd)] <- 0
+                }
+                pol <- cbind.data.frame(x = as.numeric(c(yyA$Generation, rev(yyA$Generation))),
+                                        y = c(yyA$mean +yyA$sd, rev(yyA$mean -yyA$sd)), z = 'S.D.')
+                multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+
+                multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+                pol <- pol[1:(nrow(pol)-1), ]
+
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                  hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
+                                hcaes(Year, Population_Age1., group=id)) %>%
+                  hc_add_series(data = cdpop2Plot[['Population_Age1.']], # [, c('Generation', 'mean')]
+                                hcaes(Generation, mean),
+                                type = "line", name = 'Av. Population'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Population')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              })
+
+              ## Alleles
+              ##
+
+              output$hccdpop2 <- highcharter::renderHighchart({ # cpu
+                yyB <- cdpop2Plot[['Alleles']]
+                if (any(is.na(yyB$sd))){
+                  # yyA <- rbind
+                  ya <- yyB$Generation
+                  yb <- yyB$sd
+                  posNA <- which(is.na(yyB$sd))[1]
+                  newrow <- yyB[posNA-1,]
+                  newrow$sd <- 0
+                  yyB <- rbind.data.frame(
+                    yyB[1:(posNA-1), ], #head
+                    newrow,
+                    yyB[(posNA:nrow(yyB)), ]
+                    # tail
+                  )
+                  yyB$sd[is.na(yyB$sd)] <- 0
+                }
+
+                pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
+                                        y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
+                multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+                multiline$id <- as.numeric((as.character((multiline$id))))
+
+                multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+                pol <- pol[1:(nrow(pol)-1), ]
+
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                  hc_add_series(data = multiline, type = "line", dashStyle = "DashDot",
+                                hcaes(Year, Alleles, group=id)) %>%
+                  hc_add_series(data = cdpop2Plot[['Alleles']], # [, c('Generation', 'mean')]
+                                hcaes(Generation ,mean),
+                                type = "line", name = 'Av. Alleles'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Alleles')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              })
+
+              ## Ho
+              ##
+
+              output$hccdpop3 <- highcharter::renderHighchart({ # cpu
+
+                yyB <- cdpop2Plot[['Ho']]
+                if (any(is.na(yyB$sd))){
+                  # yyA <- rbind
+                  ya <- yyB$Generation
+                  yb <- yyB$sd
+                  posNA <- which(is.na(yyB$sd))[1]
+                  newrow <- yyB[posNA-1,]
+                  newrow$sd <- 0
+                  yyB <- rbind.data.frame(
+                    yyB[1:(posNA-1), ], #head
+                    newrow,
+                    yyB[(posNA:nrow(yyB)), ]
+                    # tail
+                  )
+                  yyB$sd[is.na(yyB$sd)] <- 0
+                }
+                pol <- cbind.data.frame(x = as.numeric(c(yyB$Generation, rev(yyB$Generation))),
+                                        y = c(yyB$mean +yyB$sd, rev(yyB$mean -yyB$sd)), z = 'S.D.')
+                multiline <- do.call(rbind.data.frame, lapply(vecs2, function(x) cbind(id = sample(999, 1), x)))
+                multiline$id <- as.numeric(as.factor(as.character((multiline$id))))
+                multiline$id <- paste0('Sim',(as.character((multiline$simulation))))
+                pol <- pol[1:(nrow(pol)-1), ]
+
+                highchart() %>% hc_exporting(enabled = TRUE) %>%
+                  hc_add_series(name = "S.D.", data = pol, type = "polygon", hcaes(x,y, group='z')) %>%
+                  hc_add_series(data = multiline, dashStyle = "DashDot", type = "line",
+                                hcaes(Year, Ho, group=id)) %>%
+                  hc_add_series(data = cdpop2Plot[['Ho']], # [, c('Generation', 'mean')]
+                                hcaes(Generation ,mean),
+                                type = "line",  name = 'Av. Ho'
+                                #, hcaes(x = 'Year', y = 'Population')
+                  ) %>%
+                  hc_yAxis(title = list(text = 'Ho')) %>%
+                  hc_xAxis(title = list(text = 'Generation')) %>%
+                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white')))
+              }) #
 
 
-            cdpop_grids <<- grep(pattern = 'grid.+csv$', x = cdpop_ans$newFiles, value = TRUE)
+              cdpop_grids <<- grep(pattern = 'grid.+csv$', x = cdpop_ans$newFiles, value = TRUE)
 
-            cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
-            cdpop_grids_Num <- paste0(
-              gsub('batchrun0mcrun', 'sim', basename(dirname(cdpop_grids))), '_gen',
-              cdpop_grids_Num)
+              cdpop_grids_Num <- as.numeric(gsub('grid|\\.csv', '', basename(cdpop_grids) ) )
+              cdpop_grids_Num <- paste0(
+                gsub('batchrun0mcrun', 'sim', basename(dirname(cdpop_grids))), '_gen',
+                cdpop_grids_Num)
 
-            shinyjs::enable("cdpop_ans_yy") #
-            orderVectGrids <- as.numeric(gsub('.+run', '' ,basename(dirname(cdpop_grids)) ) ) +
-              (as.numeric(gsub('grid|.csv', '' , basename(cdpop_grids)) ) /1000)
-            updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
-                                 #choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
-                                 choices = cdpop_grids_Num[order(orderVectGrids)],
-                                 selected = cdpop_grids_Num[1], server = TRUE)
+              shinyjs::enable("cdpop_ans_yy") #
+              orderVectGrids <- as.numeric(gsub('.+run', '' ,basename(dirname(cdpop_grids)) ) ) +
+                (as.numeric(gsub('grid|.csv', '' , basename(cdpop_grids)) ) /1000)
+              updateSelectizeInput(session, inputId = 'cdpop_ans_yy',
+                                   #choices = cdpop_grids_Num[order(as.numeric(cdpop_grids_Num))],
+                                   choices = cdpop_grids_Num[order(orderVectGrids)],
+                                   selected = cdpop_grids_Num[1], server = TRUE)
 
-            cdpop_grids_Num <<- cdpop_grids_Num
-            print(cdpop_grids_Num[order(orderVectGrids)])
+              cdpop_grids_Num <<- cdpop_grids_Num
+              print(cdpop_grids_Num[order(orderVectGrids)])
 
-            # df1 <- data.frame(Generation = 1:length(tempnum),
-            #                   mean=apply(do.call(cbind, vecs3), 1, mean, na.rm = TRUE),
-            #                   sd=apply(do.call(cbind, vecs3), 1, sd, na.rm = TRUE))
-            # scenarios <- na.omit(reshape2::melt(do.call(cbind, vecs3)))
+              # df1 <- data.frame(Generation = 1:length(tempnum),
+              #                   mean=apply(do.call(cbind, vecs3), 1, mean, na.rm = TRUE),
+              #                   sd=apply(do.call(cbind, vecs3), 1, sd, na.rm = TRUE))
+              # scenarios <- na.omit(reshape2::melt(do.call(cbind, vecs3)))
+              #
+              # ggplot(data = df1, aes(x = Generation)) +
+              #   geom_line(aes(y = mean), linewidth = 1.5) +
+              #   geom_line(data = scenarios, linetype = 'dashed',
+              #             aes(x = Var1 , y = value, color = as.factor(Var2),
+              #                 group = as.factor(Var2)), linewidth = 1.5) +
+              #   geom_ribbon(aes(y = mean, ymin = mean - sd, ymax = mean + sd), alpha = .2) +
+              #   labs(x = "Generation", y = 'Alleles', color = 'Scenario') +
+              #   theme(text = element_text(size = 20), legend.position = 'bottom')
+            }
+
+            xcdpDensMeth <- 'average'
+            xcdpDensBand <- 'None'
+            xcdpDensType <- 'count'
+
+            xcdpStruMeth <- 'average'
+            xcdpDensBand <- 'None'
+            xcdpDensType <- 'count'
+
+            preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
+            # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
+            densMap <- cdpop_mapdensity(
+              grids = cdpop_grids[1], template = rv$tif,
+              method = xcdpDensMeth,
+              bandwidths = xcdpDensBand,
+              type = xcdpDensType, crs = 'None')
+            # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+            struMap <- cdpop_mapstruct(
+              grids = cdpop_grids[1], template = rv$tif,
+              method = 'thin_plate_spline',
+              neighbors = 'all', crs = 'None')
+            # 'heterozygosity_tps_None_grid0.tif'
+            # 'alleles_tps_None_grid0.tif'
+            # 'count_tps_None_grid0.tif'
+
+            # print(' --- densMap ')
+            # print(densMap)
             #
-            # ggplot(data = df1, aes(x = Generation)) +
-            #   geom_line(aes(y = mean), linewidth = 1.5) +
-            #   geom_line(data = scenarios, linetype = 'dashed',
-            #             aes(x = Var1 , y = value, color = as.factor(Var2),
-            #                 group = as.factor(Var2)), linewidth = 1.5) +
-            #   geom_ribbon(aes(y = mean, ymin = mean - sd, ymax = mean + sd), alpha = .2) +
-            #   labs(x = "Generation", y = 'Alleles', color = 'Scenario') +
-            #   theme(text = element_text(size = 20), legend.position = 'bottom')
+            # print(' --- struMap ')
+            # print(struMap)
+
+            rv$struRA <- struRA <- rast(struMap$newFiles[1])
+            rv$struRB <- struRB <- rast(struMap$newFiles[2])
+            rv$densR <- densR <- rast(densMap$file)
+
+            rng_strA <- getMnMx(struRA);
+            palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                          domain = rng_strA*c(1, 1.1),
+                                          na.color = "transparent")
+            rng_strB <- getMnMx(struRB);
+            palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                          domain = rng_strB*c(1, 1.1), na.color = "transparent")
+            rng_dens <- getMnMx(densR);
+            print('rng_dens:')
+            print(rng_dens)
+            palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                          domain = rng_dens*c(1, 1.1),
+                                          na.color = "transparent")
+
+            # rv <- list(cdp_sp = sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
+            # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
+            # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
+            # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
+            # # newxyshp <- sf::read_sf(rv$pts)
+            #
+            # # llvect <- rv$cdp_sp
+            # llvect <- sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
+            # leaflet() %>% addCircleMarkers(data = llvect)
+            # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+
+            cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
+            cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
+            cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
+            cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
+            cdpxy$id <- 'Points'
+
+            llcdp <<- leaflet() %>% addTiles() %>%
+              addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
+                               #, layerId = cdpxy$id
+              ) %>%
+              addLegend("bottomright", group = 'Points',
+                        colors = c("blue", "red", "grey"),
+                        labels = c("Male", "Female", "Empty"),
+                        title = "Individuals",
+                        opacity = 1) %>%
+
+              addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
+              addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
+              addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
+              addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
+              addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
+              addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
+
+              addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
+              addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
+              leaflet::addLayersControl(
+                baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
+                options = leaflet::layersControlOptions(collapsed = FALSE)) %>%
+              leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
+
           }
+        })
+      )
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  })
 
-          xcdpDensMeth <- 'average'
-          xcdpDensBand <- 'None'
-          xcdpDensType <- 'count'
+  observeEvent(input$mapcdpop, {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      # input$cdpop_ans_yy
+      if(input$cdpop_ans_yy != ''){
 
-          xcdpStruMeth <- 'average'
-          xcdpDensBand <- 'None'
-          xcdpDensType <- 'count'
+        # input <- list(cdpop_ans_yy = 'sim0_gen4')
+        pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
 
-          preintname <- paste0(c('alleles_tps_None_',cdpop_grids[1],'tif'))
+        (baserastname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/'))
+
+        (newname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/',
+                           'count_average_grid', cdpop_grids[pos2plot],'.tif'))
+
+        print(paste(' ||| Plotting pos2plot ', pos2plot))
+        # if (file.exists(paste0()))
+        output$ll_map_cdp <- leaflet::renderLeaflet({
+
+          cat(' -- Printing: ' , cdpop_grids[pos2plot], '\n')
+
+          (preintnameA <- paste0(baserastname, '/count_average_',
+                                 gsub('.csv', '', basename(cdpop_grids[pos2plot])), '.tif'))
+          (preintnameB <- paste0(baserastname, '/alleles_tps_None_',
+                                 gsub('.csv', '', basename(cdpop_grids[pos2plot])),
+                                 '.tif'))
+
           # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-          densMap <- cdpop_mapdensity(
-            grids = cdpop_grids[1], template = rv$tif,
-            method = xcdpDensMeth,
-            bandwidths = xcdpDensBand,
-            type = xcdpDensType, crs = 'None')
-          # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+          #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/grid0.csv'
+          #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/alleles_tps_None_grid0.tif'
 
-          struMap <- cdpop_mapstruct(
-            grids = cdpop_grids[1], template = rv$tif,
-            method = 'thin_plate_spline',
-            neighbors = 'all', crs = 'None')
           # 'heterozygosity_tps_None_grid0.tif'
           # 'alleles_tps_None_grid0.tif'
           # 'count_tps_None_grid0.tif'
 
-          # print(' --- densMap ')
-          # print(densMap)
-          #
-          # print(' --- struMap ')
-          # print(struMap)
+          if ( !file.exists(preintnameA)){
+            densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
+                                        method = 'average',
+                                        bandwidths = 'None',
+                                        type = 'count', crs = 'None')
+            # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
+
+          } else {
+            densMap$file <- preintnameA
+          }
+
+          if ( !file.exists(preintnameB)){
+            struMap <- cdpop_mapstruct(grids = cdpop_grids[pos2plot], template = rv$tif,
+                                       method = 'thin_plate_spline',
+                                       neighbors = 'all', crs = 'None')
+          } else {
+            struMap <- list(newFiles = c( preintnameB,## Alleles
+                                          gsub('alleles', 'heterozygosity', preintnameB)
+                                          # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
+            ))
+          }
+
 
           rv$struRA <- struRA <- rast(struMap$newFiles[1])
           rv$struRB <- struRB <- rast(struMap$newFiles[2])
           rv$densR <- densR <- rast(densMap$file)
 
-          rng_strA <- getMnMx(struRA);
-          palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                        domain = rng_strA*c(1, 1.1),
-                                        na.color = "transparent")
-          rng_strB <- getMnMx(struRB);
-          palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                        domain = rng_strB*c(1, 1.1), na.color = "transparent")
+          rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
+          rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
           rng_dens <- getMnMx(densR);
-          print('rng_dens:')
-          print(rng_dens)
-          palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                        domain = rng_dens*c(1, 1.1),
-                                        na.color = "transparent")
 
-          # rv <- list(cdp_sp = sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp'))
-          # rv$cdp_sp$ID <- 1:nrow(rv$cdp_sp)
-          # rv$cdp_sp$sex <- sample(0:1, size = nrow(rv$cdp_sp), replace = TRUE)
-          # rv$cdp_sp$mort <- rnorm(nrow(rv$cdp_sp), 50, 40)
-          # # newxyshp <- sf::read_sf(rv$pts)
-          #
-          # # llvect <- rv$cdp_sp
-          # llvect <- sf::read_sf('C:/temp/cola/colaHXP2024111823532905/out_simpts_AYC2024111823533505.shp')
-          # leaflet() %>% addCircleMarkers(data = llvect)
-          # rv$tif <- "/mnt/c/tempRLinux/RtmpNGsi0b/colaADC2024073113022305/out_surface_ZRY2024073113024005.tif"
+          palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                        domain = rng_dens*c(1.0,1.1 ), na.color = "transparent")
+
 
           cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
           cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
@@ -2778,120 +2975,15 @@ server <- function(input, output, session) {
             addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
 
             addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
-            addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Resistance") %>%
+            addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
             leaflet::addLayersControl(
               baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
               overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
               options = leaflet::layersControlOptions(collapsed = FALSE)) %>%
             leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
 
-        }
-      })
-    )
-      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
-  })
-
-  observeEvent(input$mapcdpop, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    # input$cdpop_ans_yy
-    if(input$cdpop_ans_yy != ''){
-
-      # input <- list(cdpop_ans_yy = 'sim0_gen4')
-      pos2plot <- which(cdpop_grids_Num %in% input$cdpop_ans_yy)
-
-      (baserastname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/'))
-
-      (newname <- paste0(gsub('/batchrun.+', '', dirname(cdpop_grids)[1]), '/',
-                         'count_average_grid', cdpop_grids[pos2plot],'.tif'))
-
-      print(paste(' ||| Plotting pos2plot ', pos2plot))
-      # if (file.exists(paste0()))
-      output$ll_map_cdp <- leaflet::renderLeaflet({
-
-        cat(' -- Printing: ' , cdpop_grids[pos2plot], '\n')
-
-        (preintnameA <- paste0(baserastname, '/count_average_',
-                               gsub('.csv', '', basename(cdpop_grids[pos2plot])), '.tif'))
-        (preintnameB <- paste0(baserastname, '/alleles_tps_None_',
-                               gsub('.csv', '', basename(cdpop_grids[pos2plot])),
-                               '.tif'))
-
-        # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-        #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/grid0.csv'
-        #'C:/temp/cola//colaUWU2024111923032505//mortBNG__1732075532/batchrun0mcrun0/alleles_tps_None_grid0.tif'
-
-        # 'heterozygosity_tps_None_grid0.tif'
-        # 'alleles_tps_None_grid0.tif'
-        # 'count_tps_None_grid0.tif'
-
-        if ( !file.exists(preintnameA)){
-          densMap <- cdpop_mapdensity(grids = cdpop_grids[pos2plot], template = rv$tif,
-                                      method = 'average',
-                                      bandwidths = 'None',
-                                      type = 'count', crs = 'None')
-          # grids = cdpop_grids[1]; template = rv$tif; method = 'thin_plate_spline'; neighbors = 'all'; crs = 'None'
-
-        } else {
-          densMap$file <- preintnameA
-        }
-
-        if ( !file.exists(preintnameB)){
-          struMap <- cdpop_mapstruct(grids = cdpop_grids[pos2plot], template = rv$tif,
-                                     method = 'thin_plate_spline',
-                                     neighbors = 'all', crs = 'None')
-        } else {
-          struMap <- list(newFiles = c( preintnameB,## Alleles
-                                        gsub('alleles', 'heterozygosity', preintnameB)
-                                        # alleles_tps_None_grid0.tif # count_average_grid0.tif # heterozygosity_tps_None_grid0.tif
-          ))
-        }
-
-
-        rv$struRA <- struRA <- rast(struMap$newFiles[1])
-        rv$struRB <- struRB <- rast(struMap$newFiles[2])
-        rv$densR <- densR <- rast(densMap$file)
-
-        rng_strA <- getMnMx(struRA); palA <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strA+0.0, na.color = "transparent")
-        rng_strB <- getMnMx(struRB); palB <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE, domain = rng_strB+0.0, na.color = "transparent")
-        rng_dens <- getMnMx(densR);
-
-        palC <- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                      domain = rng_dens*c(1.0,1.1 ), na.color = "transparent")
-
-
-        cdpxy <- data.frame(st_coordinates(rv$cdp_sp))
-        cdpxy$sex2 <- 'blue'#as.numeric(rv$cdp_sp$sex)
-        cdpxy$sex2[rv$cdp_sp$sex == 1] <- 'red'
-        cdpxy$sex2[is.na(rv$cdp_sp$sex)] <- 'grey'
-        cdpxy$id <- 'Points'
-
-        llcdp <<- leaflet() %>% addTiles() %>%
-          addCircleMarkers(data = cdpxy, lng = ~X, lat = ~Y, color = ~sex2, radius = 2.0, group = 'Points'
-                           #, layerId = cdpxy$id
-          ) %>%
-          addLegend("bottomright", group = 'Points',
-                    colors = c("blue", "red", "grey"),
-                    labels = c("Male", "Female", "Empty"),
-                    title = "Individuals",
-                    opacity = 1) %>%
-
-          addRasterImage(struRA, colors = palA, opacity = .7, group = "Alleles", layerId = 'Alleles') %>%
-          addLegend(pal=palA, values=rng_strA, group = 'Alleles', position = 'topleft', title="Alleles") %>%
-          addRasterImage(struRB, colors = palB, opacity = .7, group = "Heterozygosity", layerId = 'Heterozygosity') %>%
-          addLegend(pal=palB, values=rng_strB, group = 'Heterozygosity', position = 'topleft', title="Heterozygosity") %>%
-          addRasterImage(densR, colors= palC, opacity = .7, group = "Density", layerId = 'Density') %>%
-          addLegend(pal=palC, values=rng_dens, group = 'Density', position = 'topleft', title="Density") %>%
-
-          addRasterImage(rv$tif_sp, colors= rv$tif_pal, opacity = .7, group = "Resistance", layerId = 'Resistance') %>%
-          addLegend(pal=rv$tif_pal, values=rv$tif_rng, group = 'Resistance', position = 'topleft', title="Density") %>%
-          leaflet::addLayersControl(
-            baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-            overlayGroups = c('Alleles', "Heterozygosity", "Density", 'Points', 'Resistance'),
-            options = leaflet::layersControlOptions(collapsed = FALSE)) %>%
-          leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery")
-
-      })
-    }
+        })
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -3013,324 +3105,196 @@ server <- function(input, output, session) {
   # > SURFACE ------------------
 
   observeEvent(input$in_sur_tif, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    output$ll_map_h2r <- leaflet::renderLeaflet({
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      output$ll_map_h2r <- leaflet::renderLeaflet({
 
-      # if(is.na(newtifPath)){
-      #  rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
-      #  updateVTEXT(rv$log)
-      # } else {
-      #  rv$newtifPath <- newtifPath
-      #  rv$edi <- newtifPath
-      #  rv$tif <- newtifPath
-      #  rv$ediready <- TRUE
-      #  rv$tifready <- TRUE
-      #
-      #  rv$tif_sp <- terra::rast(rv$tif)
-      #  rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-      #  rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-      #                domain = rng_newtif+0.0, na.color = "transparent")
-      #
-      #  rv$edi_sp <- terra::rast(rv$edi)
-      #  rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
-      #  rv$edi_pal <- ediPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-      #                     domain = rng_newtif, na.color = "transparent")
-      #  rv$log <- paste0(rv$log, '--- DONE'); updateVTEXT(rv$log)
-      #  makeLL()
+        # if(is.na(newtifPath)){
+        #  rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
+        #  updateVTEXT(rv$log)
+        # } else {
+        #  rv$newtifPath <- newtifPath
+        #  rv$edi <- newtifPath
+        #  rv$tif <- newtifPath
+        #  rv$ediready <- TRUE
+        #  rv$tifready <- TRUE
+        #
+        #  rv$tif_sp <- terra::rast(rv$tif)
+        #  rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+        #  rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+        #                domain = rng_newtif+0.0, na.color = "transparent")
+        #
+        #  rv$edi_sp <- terra::rast(rv$edi)
+        #  rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
+        #  rv$edi_pal <- ediPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+        #                     domain = rng_newtif, na.color = "transparent")
+        #  rv$log <- paste0(rv$log, '--- DONE'); updateVTEXT(rv$log)
+        #  makeLL()
 
-      # (inEdiSessID <<- sessionIDgen())
-      # rv$inEdiSessID <<- inEdiSessID
-      # tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
-      # tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
-      #
-      #
-      # file.copy(input$in_edi_tif$datapath, tifpath);
-      # rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
-      # updateVTEXT(rv$log)
-      #
-      # newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
-      # newtifPath <- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
-
-
-      (inSurSessID <<- sessionIDgen())
-      rv$inSurSessID <<- inSurSessID
-      rv$orighs <- tifpath <- paste0(tempFolder, '/in_surface_', rv$inSurSessID, '.tif')
-      tifpathfixed <- paste0(tempFolder, '/in_surface_fixed_', rv$inSurSessID, '.tif')
+        # (inEdiSessID <<- sessionIDgen())
+        # rv$inEdiSessID <<- inEdiSessID
+        # tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
+        # tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
+        #
+        #
+        # file.copy(input$in_edi_tif$datapath, tifpath);
+        # rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
+        # updateVTEXT(rv$log)
+        #
+        # newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
+        # newtifPath <- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
 
 
-      file.copy(input$in_sur_tif$datapath, tifpath);
-      if(file.exists(tifpath)){file.remove(input$in_sur_tif$datapath)}
-
-      # try(file.remove(input$in_sur_tif$datapath))
-
-      pdebug(devug=F,sep='\n',pre='- A',"tempFolder","inSurSessID",
-             "rv$inSurSessID", "input$in_sur_tif$datapath",
-             "rv$hsready", "tifPath", "tifpathfixed",
-             "paste0(tempFolder, '/in_surface_', inSurSessID, '.tif')"
-      )
-
-      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
-      updateVTEXT(rv$log)
-
-      newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
-      newtifPath <<- ifelse(is.na(newtifPath), yes = NA, no = newtifPath)
+        (inSurSessID <<- sessionIDgen())
+        rv$inSurSessID <<- inSurSessID
+        rv$orighs <- tifpath <- paste0(tempFolder, '/in_surface_', rv$inSurSessID, '.tif')
+        tifpathfixed <- paste0(tempFolder, '/in_surface_fixed_', rv$inSurSessID, '.tif')
 
 
-      if(is.na(newtifPath)){
-        rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
-        shinyalert(title = "Surface resistance wasn't loaded",
-                   text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
-                                 'be a valid GeoTiff file, ',
-                                 'have a projected coordinate system, and\t',
-                                 'a valid NoData value.'),
-                   type = "error")
-        updateVTEXT(rv$log)
-      } else {
+        file.copy(input$in_sur_tif$datapath, tifpath);
+        if(file.exists(tifpath)){file.remove(input$in_sur_tif$datapath)}
 
-        # text = tagList(
-        #   textInput("in_sui_name",
-        #             HTML( paste0(
-        #               ifelse(newtifPath != tifpath,
-        #                      'Your raster was fixed',
-        #                      "Your raster wasn't fixed"),
-        #               "<br>Name for this suitability layer?")),
-        #             suggestedName ) )
+        # try(file.remove(input$in_sur_tif$datapath))
 
-        suggestedNewName <- suggestName(rv$layersList, type = 'Suitability')
-
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Surface resistance loaded succesfully<br>",
-                                  'Layer name: ', suggestedNewName)
+        pdebug(devug=F,sep='\n',pre='- A',"tempFolder","inSurSessID",
+               "rv$inSurSessID", "input$in_sur_tif$datapath",
+               "rv$hsready", "tifPath", "tifpathfixed",
+               "paste0(tempFolder, '/in_surface_', inSurSessID, '.tif')"
         )
 
-        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                       inout = 'in', type =  'Suitability',
-                                       internal = newtifPath, public = suggestedNewName)
-
-        updateSelectizeInput( # inputs
-          session, "in_name_hs",
-          choices = unlist(subset(rv$layersList, type == 'Suitability')[,'public']),
-          selected = getLast(rv$layersList, 'Suitability', 'public')
-          #, server = TRUE
-        )
-
-        updateSelectizeInput( # inputs points
-          session, "in_points_ly",
-          choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-          selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-          , server = TRUE
-        )
-
-        newOutput <- suggestName(
-          rv$layersList, type = 'Resistance')
-
-        updateTextInput(
-          session, "out_name_sur",
-          value = newOutput
-          #, server = TRUE
-        )
-
-        updateColaLayersLists(layersList = rv$layersList)
-
-        params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
-        rv$newtifPath <- newtifPath
-        rv$hs <- newtifPath
-        rv$hsready <- TRUE
-
-        pdebug(devug=devug,sep='\n',pre='-',"tempFolder","inSurSessID",
-               "rv$inSurSessID", "newtifPath")
-
-        rv$log <- paste0(rv$log, '--- DONE')
+        rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
         updateVTEXT(rv$log)
 
+        newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
+        newtifPath <<- ifelse(is.na(newtifPath), yes = NA, no = newtifPath)
 
-        rv$hs_sp <- terra::rast(rv$hs)
-        #rng_newtif <- c(newtif@data@min, newtif@data@max)
-        #rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
-        rv$hs_rng <- rng_newtif <- getMnMx(rv$hs)
 
-        updateTextInput(session, inputId = "in_sur_3",
-                        value = max(rv$hs_rng[1], 0, na.rm = TRUE))
-        updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
+        if(is.na(newtifPath)){
+          rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
+          shinyalert(title = "Surface resistance wasn't loaded",
+                     text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
+                                   'be a valid GeoTiff file, ',
+                                   'have a projected coordinate system, and\t',
+                                   'a valid NoData value.'),
+                     type = "error")
+          updateVTEXT(rv$log)
+        } else {
 
-        rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                                     domain = rng_newtif, na.color = "transparent")
+          # text = tagList(
+          #   textInput("in_sui_name",
+          #             HTML( paste0(
+          #               ifelse(newtifPath != tifpath,
+          #                      'Your raster was fixed',
+          #                      "Your raster wasn't fixed"),
+          #               "<br>Name for this suitability layer?")),
+          #             suggestedName ) )
 
-        makeLL(lastLL = "Habitat suitability")
-      }
-    })
+          suggestedNewName <- suggestName(rv$layersList, type = 'Suitability')
+
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Surface resistance loaded succesfully<br>",
+                                    'Layer name: ', suggestedNewName)
+          )
+
+          rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                         inout = 'in', type =  'Suitability',
+                                         internal = newtifPath, public = suggestedNewName)
+
+          updateSelectizeInput( # inputs
+            session, "in_name_hs",
+            choices = unlist(subset(rv$layersList, type == 'Suitability')[,'public']),
+            selected = getLast(rv$layersList, 'Suitability', 'public')
+            #, server = TRUE
+          )
+
+          updateSelectizeInput( # inputs points
+            session, "in_points_ly",
+            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+            , server = TRUE
+          )
+
+          newOutput <- suggestName(
+            rv$layersList, type = 'Resistance')
+
+          updateTextInput(
+            session, "out_name_sur",
+            value = newOutput
+            #, server = TRUE
+          )
+
+          updateColaLayersLists(layersList = rv$layersList)
+
+          params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
+          rv$newtifPath <- newtifPath
+          rv$hs <- newtifPath
+          rv$hsready <- TRUE
+
+          pdebug(devug=devug,sep='\n',pre='-',"tempFolder","inSurSessID",
+                 "rv$inSurSessID", "newtifPath")
+
+          rv$log <- paste0(rv$log, '--- DONE')
+          updateVTEXT(rv$log)
+
+
+          rv$hs_sp <- terra::rast(rv$hs)
+          #rng_newtif <- c(newtif@data@min, newtif@data@max)
+          #rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
+          rv$hs_rng <- rng_newtif <- getMnMx(rv$hs)
+
+          updateTextInput(session, inputId = "in_sur_3",
+                          value = max(rv$hs_rng[1], 0, na.rm = TRUE))
+          updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
+
+          rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                                       domain = rng_newtif, na.color = "transparent")
+
+          makeLL(lastLL = "Habitat suitability")
+        }
+      })
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
 
   observeEvent(input$h2rsample, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-    # delay(500, {
-    #   req(status("running"))
-    # })
-    # #showStartStop( );
-    # for(i in 1:100){
-    #   1+1
-    # }
+      # delay(500, {
+      #   req(status("running"))
+      # })
+      # #showStartStop( );
+      # for(i in 1:100){
+      #   1+1
+      # }
 
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
-    #      inSurSessID = 'V-2023082911285705_file3112303ea820')
-    # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
-    # (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
-    # rv <<- list(hs = hs2rs_samp_file)
-    output$ll_map_h2r <- leaflet::renderLeaflet({
-
-      (inSurSessID <<- sessionIDgen())
-      rv$inSurSessID <- inSurSessID
-
-      suggestedName <- suggestName(rv$layersList, type = 'Suitability')
-      shinyalert(html = TRUE, type = "success",
-                 title = paste0("Surface resistance loaded succesfully<br>",
-                                'Layer name: ', suggestedName)
-      )
-
-      rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                     inout = 'in', type =  'Suitability',
-                                     internal = hs2rs_samp_file,
-                                     public = suggestedName)
-
-      updateSelectizeInput(
-        session, "in_name_hs",
-        choices = unlist(subset(rv$layersList, type == 'Suitability')[,'public']),
-        selected = getLast(rv$layersList, 'Suitability', 'public')
-        #, server = TRUE
-      )
-
-      updateSelectizeInput( # inputsPoints
-        session, "in_points_ly",
-        choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-        selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-        , server = TRUE
-      )
-
-      updateTextInput(
-        session, "out_name_sur",
-        value = suggestName(rv$layersList, type = 'Resistance')
-        #, server = TRUE
-      )
-
-      updateColaLayersLists(layersList = rv$layersList)
-
-
-      params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
-
-      rv$hsready <- TRUE
-      rv$hs <- hs2rs_samp_file
-
-      rv$hs_sp <- terra::rast(hs2rs_samp_file)
-      #rv$hs_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-      rv$hs_rng <- rng_rstif <- getMnMx(rv$hs_sp)[1:2]
-
-      updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
-      updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
-
-      rv$hs_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                                   domain = rng_rstif, na.color = "transparent")
-      # print('XXXX')
-      # print(hs2rs_samp_file)
-      # save(rv, file = 'rv.RData')
-      # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
-      # rv$llmap <<- rv$llmap %>%
-      # leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
-
-      # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
-      makeLL( lastLL = 'Habitat suitability')
-
-    })
-
-    showStartStop( FALSE ) ; status("finished") }); # actionhereclose
-
-  })
-
-
-  ## Run h2s
-  observeEvent(input$h2r, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    if(rv$hsready){
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
       # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
       #      inSurSessID = 'V-2023082911285705_file3112303ea820')
       # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
+      # (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
+      # rv <<- list(hs = hs2rs_samp_file)
+      output$ll_map_h2r <- leaflet::renderLeaflet({
 
-      rv$refresh <- FALSE
-      disable("h2r")
+        (inSurSessID <<- sessionIDgen())
+        rv$inSurSessID <- inSurSessID
 
-      # output$plot0 <-renderPlot({
-      #  plot(1, main = input$h2r)
-      # })
-
-
-      (inSurSessID <- sessionIDgen())
-      #(inSurSessID2 <<- sessionIDgen())
-      outs2r <- paste0(tempFolder, '/out_surface_', inSurSessID, '.tif')
-      #pdebug(devug=devug,sep='\n',pre='---H2S\n',"inSurSessID", 'inSurSessID2', 'outs2r') # = = = = = = = = = = = = = = = = = = =
-
-      rv$log <- paste0(rv$log, # _______
-                       '\nCreating resistance surface');updateVTEXT(rv$log) # _______
-
-      in_sur_7 <- ifelse(input$in_sur_7 == '', yes = guessNoData(rv$hs),
-                         no = as.numeric(input$in_sur_7))
-      in_sur_7 <- ifelse(is.na(in_sur_7), yes = guessNoData(rv$hs),
-                         no = in_sur_7)
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
-
-
-      hs2rs_file <- tryCatch(
-        sui2res_py(py = py,
-                   #intif = rv$hs,
-                   intif = subset(rv$layersList, public == input$in_name_hs)$internal,
-                   outtif = outs2r,
-                   minval = as.numeric(input$in_sur_3),
-                   maxval = as.numeric(input$in_sur_4),
-                   maxout = as.numeric(input$in_sur_5),
-                   shape = as.numeric(input$in_sur_6),
-                   nodata = in_sur_7,
-                   prj = 'None'), error = function(e) list(log = e, file = ''))
-      cat("\n --- Surf. resistance out:\n")
-      print(hs2rs_file)
-
-
-      if(file.exists(hs2rs_file$file)){
-
-        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
-
-        rv$log <- paste0(rv$log, # _______
-                         ' ... DONE');updateVTEXT(rv$log) #
-        rv$tifready <- TRUE
-        rv$tif <- hs2rs_file$file
-        rv$tiforig <- hs2rs_file$file
-
-        suggestedName <- suggestName(rv$layersList, type = 'Resistance')
-        #cat('suggestedName:',  suggestedName, '\n')
+        suggestedName <- suggestName(rv$layersList, type = 'Suitability')
         shinyalert(html = TRUE, type = "success",
-                   title = paste0("Surface resistance created succesfully<br>",
+                   title = paste0("Surface resistance loaded succesfully<br>",
                                   'Layer name: ', suggestedName)
         )
 
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Resistance',
-          internal = rv$tif, public = suggestedName)
+        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                       inout = 'in', type =  'Suitability',
+                                       internal = hs2rs_samp_file,
+                                       public = suggestedName)
 
-
-        newOutput <- suggestName(rv$layersList, type = 'Resistance')
-
-        ## Inputs boxes
-        colaUpdateSelectizeInput(
-          ids = c('in_name_sur_edi',
-                  'in_name_sur_dis', 'in_name_sur_cdp',
-                  'in_name_sur_crk', 'in_name_sur_lcc'),
-          typex = 'Resistance', field = 'public', val = newOutput)
+        updateSelectizeInput(
+          session, "in_name_hs",
+          choices = unlist(subset(rv$layersList, type == 'Suitability')[,'public']),
+          selected = getLast(rv$layersList, 'Suitability', 'public')
+          #, server = TRUE
+        )
 
         updateSelectizeInput( # inputsPoints
           session, "in_points_ly",
@@ -3339,38 +3303,166 @@ server <- function(input, output, session) {
           , server = TRUE
         )
 
+        updateTextInput(
+          session, "out_name_sur",
+          value = suggestName(rv$layersList, type = 'Resistance')
+          #, server = TRUE
+        )
+
         updateColaLayersLists(layersList = rv$layersList)
 
-        #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
 
-        rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
-        #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-        rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
-        rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
-          palette = "viridis", reverse = TRUE,
-          domain = rng_rstif, na.color = "transparent")
+        params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
 
+        rv$hsready <- TRUE
+        rv$hs <- hs2rs_samp_file
+
+        rv$hs_sp <- terra::rast(hs2rs_samp_file)
+        #rv$hs_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+        rv$hs_rng <- rng_rstif <- getMnMx(rv$hs_sp)[1:2]
+
+        updateTextInput(session, inputId = "in_sur_3", value = rv$hs_rng[1])
+        updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
+
+        rv$hs_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                                     domain = rng_rstif, na.color = "transparent")
+        # print('XXXX')
+        # print(hs2rs_samp_file)
+        # save(rv, file = 'rv.RData')
         # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
-        #rv$llmap <<- rv$llmap %>%
-        #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
+        # rv$llmap <<- rv$llmap %>%
+        # leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
 
         # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
-        lastLLx <- "Surface resistance"
-      } else {
-        rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
-        updateVTEXT(rv$log)
-        lastLLx <- NULL
-        shinyalert(html = TRUE, type = "error",
-                   title = paste0("Surface resistance not created succesfully"),
-                   text = hs2rs_file$log)
-      }
+        makeLL( lastLL = 'Habitat suitability')
 
-      output$ll_map_h2r <- leaflet::renderLeaflet({
-        makeLL(lastLL = lastLLx)
       })
 
-    } # close if ready
-    rv$refresh <- TRUE
+      showStartStop( FALSE ) ; status("finished") }); # actionhereclose
+
+  })
+
+
+  ## Run h2s
+  observeEvent(input$h2r, {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      if(rv$hsready){
+        # rv <- list(newtifPath = '/data/temp//E-2023082911285005_file3112135d2b4c//in_surface_V-2023082911285705_file3112303ea820.tif',
+        #      inSurSessID = 'V-2023082911285705_file3112303ea820')
+        # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
+
+        rv$refresh <- FALSE
+        disable("h2r")
+
+        # output$plot0 <-renderPlot({
+        #  plot(1, main = input$h2r)
+        # })
+
+
+        (inSurSessID <- sessionIDgen())
+        #(inSurSessID2 <<- sessionIDgen())
+        outs2r <- paste0(tempFolder, '/out_surface_', inSurSessID, '.tif')
+        #pdebug(devug=devug,sep='\n',pre='---H2S\n',"inSurSessID", 'inSurSessID2', 'outs2r') # = = = = = = = = = = = = = = = = = = =
+
+        rv$log <- paste0(rv$log, # _______
+                         '\nCreating resistance surface');updateVTEXT(rv$log) # _______
+
+        in_sur_7 <- ifelse(input$in_sur_7 == '', yes = guessNoData(rv$hs),
+                           no = as.numeric(input$in_sur_7))
+        in_sur_7 <- ifelse(is.na(in_sur_7), yes = guessNoData(rv$hs),
+                           no = in_sur_7)
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
+
+
+        hs2rs_file <- tryCatch(
+          sui2res_py(py = py,
+                     #intif = rv$hs,
+                     intif = subset(rv$layersList, public == input$in_name_hs)$internal,
+                     outtif = outs2r,
+                     minval = as.numeric(input$in_sur_3),
+                     maxval = as.numeric(input$in_sur_4),
+                     maxout = as.numeric(input$in_sur_5),
+                     shape = as.numeric(input$in_sur_6),
+                     nodata = in_sur_7,
+                     prj = 'None'), error = function(e) list(log = e, file = ''))
+        cat("\n --- Surf. resistance out:\n")
+        print(hs2rs_file)
+
+
+        if(file.exists(hs2rs_file$file)){
+
+          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+          rv$log <- paste0(rv$log, # _______
+                           ' ... DONE');updateVTEXT(rv$log) #
+          rv$tifready <- TRUE
+          rv$tif <- hs2rs_file$file
+          rv$tiforig <- hs2rs_file$file
+
+          suggestedName <- suggestName(rv$layersList, type = 'Resistance')
+          #cat('suggestedName:',  suggestedName, '\n')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Surface resistance created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Resistance',
+            internal = rv$tif, public = suggestedName)
+
+
+          newOutput <- suggestName(rv$layersList, type = 'Resistance')
+
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_sur_edi',
+                    'in_name_sur_dis', 'in_name_sur_cdp',
+                    'in_name_sur_crk', 'in_name_sur_lcc'),
+            typex = 'Resistance', field = 'public', val = newOutput)
+
+          updateSelectizeInput( # inputsPoints
+            session, "in_points_ly",
+            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+            , server = TRUE
+          )
+
+          updateColaLayersLists(layersList = rv$layersList)
+
+          #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
+
+          rv$tif_sp <- hs2rs_tif <- terra::rast(hs2rs_file$file)
+          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+          rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
+          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
+            palette = "viridis", reverse = TRUE,
+            domain = rng_rstif, na.color = "transparent")
+
+          # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
+          #rv$llmap <<- rv$llmap %>%
+          #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
+
+          # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
+          lastLLx <- "Surface resistance"
+        } else {
+          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
+          updateVTEXT(rv$log)
+          lastLLx <- NULL
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Surface resistance not created succesfully"),
+                     text = hs2rs_file$log)
+        }
+
+        output$ll_map_h2r <- leaflet::renderLeaflet({
+          makeLL(lastLL = lastLLx)
+        })
+
+      } # close if ready
+      rv$refresh <- TRUE
 
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
@@ -3435,110 +3527,110 @@ server <- function(input, output, session) {
 
   ## Load tif
   observeEvent(input$in_edi_tif, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    #try(file.remove(c(tifpath, newtifPath)))
-    invisible(suppressWarnings(tryCatch(file.remove(c(tifpath, newtifPath, tifpathfixed)),
-                                        error = function(e) NULL)))
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      #try(file.remove(c(tifpath, newtifPath)))
+      invisible(suppressWarnings(tryCatch(file.remove(c(tifpath, newtifPath, tifpathfixed)),
+                                          error = function(e) NULL)))
 
-    output$ll_map_edi <- leaflet::renderLeaflet({
-      # tempFolder <- '/data/temp//T2023082911164705_file3112795957d7/'
-      #tifpath <- '/data/temp//T2023082911164705_file3112795957d7//in_surface_C2023082911165605_file31126374e76.tif'
-      #inSurSessID <- 'C2023082911165605_file31126374e76'
-      (inEdiSessID <<- sessionIDgen())
-      rv$inEdiSessID <<- inEdiSessID
-      rv$tiforig <- tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
-      tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
+      output$ll_map_edi <- leaflet::renderLeaflet({
+        # tempFolder <- '/data/temp//T2023082911164705_file3112795957d7/'
+        #tifpath <- '/data/temp//T2023082911164705_file3112795957d7//in_surface_C2023082911165605_file31126374e76.tif'
+        #inSurSessID <- 'C2023082911165605_file31126374e76'
+        (inEdiSessID <<- sessionIDgen())
+        rv$inEdiSessID <<- inEdiSessID
+        rv$tiforig <- tifpath <<- paste0(tempFolder, '/in_edit_', inEdiSessID, '.tif')
+        tifpathfixed <- paste0(tempFolder, '/in_edit_fixed_', inEdiSessID, '.tif')
 
-      file.copy(input$in_edi_tif$datapath, tifpath);
-      if (file.exists(tifpath)){ file.remove(input$in_edi_tif$datapath)}
-      #try(file.remove(input$in_sur_tif$datapath))
-      #if(devug){ print(' ----- input$in_sur_tif'); print(input$in_sur_tif); print(tifpath); file.exists(tifpath)}
+        file.copy(input$in_edi_tif$datapath, tifpath);
+        if (file.exists(tifpath)){ file.remove(input$in_edi_tif$datapath)}
+        #try(file.remove(input$in_sur_tif$datapath))
+        #if(devug){ print(' ----- input$in_sur_tif'); print(input$in_sur_tif); print(tifpath); file.exists(tifpath)}
 
-      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
-      updateVTEXT(rv$log)
-
-      newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
-      newtifPath <- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
-
-      if(is.na(newtifPath)){
-        rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
-        shinyalert(title = "Surface resistance wasn't loaded",
-                   text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
-                                 'be a valid GeoTiff file, ',
-                                 'have a projected coordinate system, and\t',
-                                 'a valid NoData value.'),
-                   type = "error")
+        rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems')
         updateVTEXT(rv$log)
 
-      } else {
+        newtifPath <- fitRaster2cola(inrasterpath = tifpath, outrasterpath = tifpathfixed)
+        newtifPath <- ifelse(is.na(newtifPath), yes = tifpath, no = newtifPath)
 
-        suggestedName <- suggestName(
-          rv$layersList, type = 'Resistance')
+        if(is.na(newtifPath)){
+          rv$log <- paste0(rv$log, '\n -- Error uploading the "Habitat suitability" TIF file')
+          shinyalert(title = "Surface resistance wasn't loaded",
+                     text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB,'MB\n',
+                                   'be a valid GeoTiff file, ',
+                                   'have a projected coordinate system, and\t',
+                                   'a valid NoData value.'),
+                     type = "error")
+          updateVTEXT(rv$log)
 
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Surface resistance loaded succesfully<br>",
-                                  'Layer name: ', suggestedName)
-        )
+        } else {
 
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'in', type =  'Resistance',
-          internal = newtifPath, public = suggestedName)
+          suggestedName <- suggestName(
+            rv$layersList, type = 'Resistance')
 
-        updateSelectizeInput( # Existing layers
-          session, "in_name_sur_edi",
-          choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
-          selected = getLast(rv$layersList, 'Resistance', 'public')
-          #, server = TRUE
-        )
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Surface resistance loaded succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
 
-        updateSelectizeInput( # inputsPoints
-          session, "in_points_ly",
-          choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-          selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-          , server = TRUE
-        )
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'in', type =  'Resistance',
+            internal = newtifPath, public = suggestedName)
 
-        updateTextInput( # New layer name
-          session, "out_name_sur_edi",
-          value = suggestName(rv$layersList, type = 'Resistance')
-          #, server = TRUE
-        )
+          updateSelectizeInput( # Existing layers
+            session, "in_name_sur_edi",
+            choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
+            selected = getLast(rv$layersList, 'Resistance', 'public')
+            #, server = TRUE
+          )
 
+          updateSelectizeInput( # inputsPoints
+            session, "in_points_ly",
+            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+            , server = TRUE
+          )
 
-        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
-
-        rv$newtifPath <- newtifPath
-        rv$edi <- newtifPath
-        rv$tif <- newtifPath
-        rv$ediready <- TRUE
-        rv$tifready <- TRUE
-
-
-        rv$tif_sp <- terra::rast(rv$tif)
-        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
+          updateTextInput( # New layer name
+            session, "out_name_sur_edi",
+            value = suggestName(rv$layersList, type = 'Resistance')
+            #, server = TRUE
+          )
 
 
-        rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                             domain = rng_newtif+0.0, na.color = "transparent")
+          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
 
-        rv$edi_sp <- terra::rast(rv$edi)
-        #rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$edi_sp)[1:2]
+          rv$newtifPath <- newtifPath
+          rv$edi <- newtifPath
+          rv$tif <- newtifPath
+          rv$ediready <- TRUE
+          rv$tifready <- TRUE
 
-        rv$edi_pal <- ediPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
-                                                       domain = rng_newtif+0.0, na.color = "transparent")
 
-        rv$log <- paste0(rv$log, '--- DONE'); updateVTEXT(rv$log)
+          rv$tif_sp <- terra::rast(rv$tif)
+          #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+          rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
 
-        # newtifPath <- "/data/temp/GA2023090812182205file1266634e12b//in_surface_MN2023090812183705file12666abd01f1.tif"
-        #pdebug(devug=devug,sep='\n',pre='-',"tifpath", "newtifPath", "rv$newtifPath", "rv$hs", "rv$hsready")
 
-        makeLL( lastLL = 'Surface resistance')
-      }
-    })
+          rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                               domain = rng_newtif+0.0, na.color = "transparent")
+
+          rv$edi_sp <- terra::rast(rv$edi)
+          #rv$edi_rng <- rng_newtif <- range(rv$edi_sp[], na.rm = TRUE)
+          rv$tif_rng <- rng_newtif <- getMnMx(rv$edi_sp)[1:2]
+
+          rv$edi_pal <- ediPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                                         domain = rng_newtif+0.0, na.color = "transparent")
+
+          rv$log <- paste0(rv$log, '--- DONE'); updateVTEXT(rv$log)
+
+          # newtifPath <- "/data/temp/GA2023090812182205file1266634e12b//in_surface_MN2023090812183705file12666abd01f1.tif"
+          #pdebug(devug=devug,sep='\n',pre='-',"tifpath", "newtifPath", "rv$newtifPath", "rv$hs", "rv$hsready")
+
+          makeLL( lastLL = 'Surface resistance')
+        }
+      })
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -3610,7 +3702,7 @@ server <- function(input, output, session) {
   })
 
   isolate(observeEvent(input$in_name_sur_edi, {
-    # status("running"); showStartStop(  ); delay(1,{ # actionhere
+    # status("running"); showStartStop(  ); delay(1,{ # actionherestart
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     if(rv$tifready){
       # print('Second print LL for SR update')
@@ -3630,303 +3722,129 @@ server <- function(input, output, session) {
 
   ## Run Edi sum ---
   isolate(observeEvent(input$edi, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    #polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
-    polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
-    save(polDraw, file = paste0(tempFolder, '/draw.RData'))
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      #polDraw <- input$ll_map_edi_draw_new_feature # LEAFLETWIDGET_draw_new_feature
+      polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
+      save(polDraw, file = paste0(tempFolder, '/draw.RData'))
 
-    if(input$in_edi_val != 0 & input$in_edi_val != "0" & rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
-      # rv <- list(tif = '/data/temp/XS2023100319220605file859285936e77a/in_edit_TG2023100319221605file8592817dc90f8.tif')
-      # rv$tif_sp <- terra::rast(rv$tif)
-      # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
+      if(input$in_edi_val != 0 & input$in_edi_val != "0" & rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
+        # rv <- list(tif = '/data/temp/XS2023100319220605file859285936e77a/in_edit_TG2023100319221605file8592817dc90f8.tif')
+        # rv$tif_sp <- terra::rast(rv$tif)
+        # input <- list(in_sur_3 = 0, in_sur_4 =100, in_sur_5 = 100, in_sur_6 = 1, in_sur_7 = -9999)
 
-      # print(input$in_edi_val)
-      # print(polDraw)
-      # print(num2Burn)
-      # (load('/data/tempR/draw4pol.RData'))
-      # (load('/home/shiny/cola/inst/app/sce_debug_edi_shp.RData')); print (sce)
+        # print(input$in_edi_val)
+        # print(polDraw)
+        # print(num2Burn)
+        # (load('/data/tempR/draw4pol.RData'))
+        # (load('/home/shiny/cola/inst/app/sce_debug_edi_shp.RData')); print (sce)
 
-      ## Not required as string or numeric is passed to the
-      # if (in_edi_val %in% colnames(sce)){
-      #   num2Burn <- in_edi_val
-      #  }
+        ## Not required as string or numeric is passed to the
+        # if (in_edi_val %in% colnames(sce)){
+        #   num2Burn <- in_edi_val
+        #  }
 
-      output$ll_map_edi <- leaflet::renderLeaflet({
-        (inEdiSessID2 <<- sessionIDgen())
-        rv$inEdiSessID2 <<- inEdiSessID2
-        editRastpath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.tif')
-        editShppath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.shp')
+        output$ll_map_edi <- leaflet::renderLeaflet({
+          (inEdiSessID2 <<- sessionIDgen())
+          rv$inEdiSessID2 <<- inEdiSessID2
+          editRastpath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.tif')
+          editShppath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.shp')
 
-        rv$log <- paste0(rv$log, # _______
-                         '\n -- Creating scenario');updateVTEXT(rv$log) #
-
-        #### .................
-
-        #input <- list(in_edi_val = '8')
-        num2Burn <<- input$in_edi_val
-        val2Burn <<- input$in_edi_val
-        isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
-        lineBuffW <<- input$in_edi_wid
-        useColumn <<- FALSE
-
-
-        # num2Burn <- 'try'
-        # in_edi_val <- input$in_edi_val
-        # #in_edi_val <- 'ID'
-        pdebug(devug=devug,sep='\n',
-               pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
-
-        ## Define if use shape or draw
-        if( isTRUE(rv$sceready) ){
-
-          ## Uses shapefile
-          pol2Rastx <- rv$sce_sp # polPath
-          # pol2use <- sce # polPath
-
-          ## Assign column
-          if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
-            isValidVal <- TRUE
-            useColumn <<- TRUE
-            #  pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
-            # } else {
-            #  validVal <- FALSE
-            #  pol2Rastx$val2burn <- num2Burn
-
-          }
-          polPath <<- rv$sce
-          # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
-
-
-        } else if( !is.null(polDraw) ) {
-
-          cat(' Replace -- draw \n')
-          ## Uses draw polygon
-          rt <- terra::rast(rv$tif)
-          rastRes <- res(rt)
-          (rastCRS <- st_crs(rt))
-
-          pol2Rast <- tryCatch(draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW ), error = function(e) NULL)
-          # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-
-          pol2Rastx <- st_as_sf( pol2Rast)
-          pol2Rastx$val2burn <- num2Burn
-
-          polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
-
-          ## Write polygon
-          sf::st_write( obj = pol2Rastx,
-                        dsn = dirname(polPath),
-                        layer = tools::file_path_sans_ext(basename(polPath)),
-                        driver = 'ESRI Shapefile',
-                        append = FALSE,
-                        overwrite_layer = TRUE)
-        }
-
-
-        if( isValidVal ){
-          ## Burn the value of the polygon into the rast
-          ## if the value to burn is either a number or a column
-          pdebug(devug=devug,sep='\n',pre='-- Sum pixel',
-                 "polPath", 'val2burn')
-
-
-          ## Burn the value of the polygon into the rast
-          burned <<- tryCatch(burnShp(polPath = polPath,
-                                      burnval = input$in_edi_val, #val2burn,
-                                      rastPath = subset(rv$layersList, public == input$in_name_sur_edi)$internal,#rv$tif,
-                                      lineBuffW = as.numeric(input$in_edi_wid),
-                                      att = input$in_edi_che,
-                                      colu = useColumn,
-                                      rastCRS = NA), error = function(e) NA)
-
-        }
-        # pdebug(devug=devug,sep='\n',pre='-',"burned")
-
-
-        if(!is.na(burned)){
           rv$log <- paste0(rv$log, # _______
-                           ' ... DONE');updateVTEXT(rv$log) #
+                           '\n -- Creating scenario');updateVTEXT(rv$log) #
 
-          rv$tifready <- TRUE
-          rv$tif <- burned
-          rv$tiforig <- burned
-          rv$tif_sp <- terra::rast(rv$tif)
-          rv$tif_rng <- getMnMx(rv$tif_sp)
+          #### .................
 
-          #### ......
-          suggestedName <- suggestName(rv$layersList, type = 'Resistance')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Surface resistance created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
-
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Resistance',
-            internal = rv$tif, public = suggestedName)
-
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
-                    'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = suggestedName)
-
-          #### ......
-          updateSelectizeInput( # inputsPoints
-            session, "in_points_ly",
-            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-            , server = TRUE
-          )
+          #input <- list(in_edi_val = '8')
+          num2Burn <<- input$in_edi_val
+          val2Burn <<- input$in_edi_val
+          isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
+          lineBuffW <<- input$in_edi_wid
+          useColumn <<- FALSE
 
 
-          # rv$tif2s <- resampIfNeeded(burned)
-          # rv$tif0 <- burned
-          # rv$tif_sp <- terra::rast(burned)
-          # rv$tif2s_sp <- terra::rast(rv$tif2s)
+          # num2Burn <- 'try'
+          # in_edi_val <- input$in_edi_val
+          # #in_edi_val <- 'ID'
+          pdebug(devug=devug,sep='\n',
+                 pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
 
-          #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
-          rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
+          ## Define if use shape or draw
+          if( isTRUE(rv$sceready) ){
 
-          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                                        domain = rng_rstif, na.color = "transparent")
+            ## Uses shapefile
+            pol2Rastx <- rv$sce_sp # polPath
+            # pol2use <- sce # polPath
 
-          makeLL( lastLL = 'Surface resistance')
+            ## Assign column
+            if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
+              isValidVal <- TRUE
+              useColumn <<- TRUE
+              #  pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+              # } else {
+              #  validVal <- FALSE
+              #  pol2Rastx$val2burn <- num2Burn
 
-        } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
-          updateVTEXT(rv$log)
-          shinyalert(title = "Surface resistance wasn't created",
-                     type = "error")
-        }
-
-        #### .................
-
-      })
-    }
-      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
-  })
-  )
-
-  ## Run Edi replace ---
-  isolate(observeEvent(input$rpl, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
-
-    if( input$in_edi_val != 0 & input$in_edi_val != "0" &
-        rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
-
-      output$ll_map_edi <- leaflet::renderLeaflet({
-
-        (inEdiSessID2 <<- sessionIDgen())
-        rv$inEdiSessID2 <<- inEdiSessID2
-        editRastpath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.tif')
-        editShppath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.shp')
-
-        rv$log <- paste0(rv$log, # _______
-                         '\n -- Creating scenario');updateVTEXT(rv$log) #
-
-        #input <- list(in_edi_val = '8')
-        num2Burn <<- input$in_edi_val
-        val2Burn <<- input$in_edi_val
-        isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
-        lineBuffW <<- input$in_edi_wid
-        useColumn <<- FALSE
+            }
+            polPath <<- rv$sce
+            # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
 
 
-        # num2Burn <- 'try'
-        # in_edi_val <- input$in_edi_val
-        # #in_edi_val <- 'ID'
-        pdebug(devug=devug,sep='\n',
-               pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
+          } else if( !is.null(polDraw) ) {
 
-        ## Define if use shape or draw
-        if( isTRUE(rv$sceready) ){
+            cat(' Replace -- draw \n')
+            ## Uses draw polygon
+            rt <- terra::rast(rv$tif)
+            rastRes <- res(rt)
+            (rastCRS <- st_crs(rt))
 
-          print(' Replace -- shapefile')
+            pol2Rast <- tryCatch(draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW ), error = function(e) NULL)
+            # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
 
-          ## Uses shapefile
-          pol2Rastx <- rv$sce_sp # polPath
-          # pol2use <- sce # polPath
+            pol2Rastx <- st_as_sf( pol2Rast)
+            pol2Rastx$val2burn <- num2Burn
 
-          ## Assign column
-          if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
-            isValidVal <- TRUE
-            useColumn <<- TRUE
-            #  pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
-            # } else {
-            #  validVal <- FALSE
-            #  pol2Rastx$val2burn <- num2Burn
+            polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
+
+            ## Write polygon
+            sf::st_write( obj = pol2Rastx,
+                          dsn = dirname(polPath),
+                          layer = tools::file_path_sans_ext(basename(polPath)),
+                          driver = 'ESRI Shapefile',
+                          append = FALSE,
+                          overwrite_layer = TRUE)
+          }
+
+
+          if( isValidVal ){
+            ## Burn the value of the polygon into the rast
+            ## if the value to burn is either a number or a column
+            pdebug(devug=devug,sep='\n',pre='-- Sum pixel',
+                   "polPath", 'val2burn')
+
+
+            ## Burn the value of the polygon into the rast
+            burned <<- tryCatch(burnShp(polPath = polPath,
+                                        burnval = input$in_edi_val, #val2burn,
+                                        rastPath = subset(rv$layersList, public == input$in_name_sur_edi)$internal,#rv$tif,
+                                        lineBuffW = as.numeric(input$in_edi_wid),
+                                        att = input$in_edi_che,
+                                        colu = useColumn,
+                                        rastCRS = NA), error = function(e) NA)
 
           }
-          polPath <<- rv$sce
+          # pdebug(devug=devug,sep='\n',pre='-',"burned")
 
-          # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
-
-          print(' Replace -- shapefile2')
-
-        } else if( !is.null(polDraw) ) {
-
-          print(' Replace -- draw')
-          ## Uses draw polygon
-          rt <- terra::rast(rv$tif)
-          rastRes <- res(rt)
-          (rastCRS <- st_crs(rt))
-
-          pol2Rast <- draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW )
-          # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
-          pol2Rastx <- st_as_sf( pol2Rast)
-          pol2Rastx$val2burn <- num2Burn
-
-          polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
-
-          ## Write polygon
-          sf::st_write( obj = pol2Rastx,
-                        dsn = dirname(polPath),
-                        layer = tools::file_path_sans_ext(basename(polPath)),
-                        driver = 'ESRI Shapefile',
-                        append = FALSE,
-                        overwrite_layer = TRUE)
-        }
-
-
-        if( isValidVal ){
-          ## Burn the value of the polygon into the rast
-          ## if the value to burn is either a number or a column
-          pdebug(devug=devug,sep='\n',pre='-- Replace pixel',
-                 "polPath", polPath)
-
-          if( os %in% c('Darwin', 'Windows')){
-            burned <<- tryCatch(replacePixels(polPath = polPath,
-                                              # lineBuffW = as.numeric(input$in_edi_wid),
-                                              att = input$in_edi_che,
-                                              burnval = val2Burn,
-                                              colu = useColumn,
-                                              rastPath = rv$tif,
-                                              rastCRS = NA,
-                                              gdal = FALSE), error = function(e) NA)
-
-          } else{  # if (os %in% 'Linux'){
-            burned <<- tryCatch(replacePixels(polPath = polPath,
-                                              # lineBuffW = as.numeric(input$in_edi_wid),
-                                              att = input$in_edi_che,
-                                              colu = useColumn,
-                                              burnval = val2Burn,
-                                              rastPath = rv$tif,
-                                              rastCRS = NA,
-                                              gdal = TRUE), error = function(e) NA)
-          }
-          pdebug(devug=devug,sep='\n',pre='-',"burned")
 
           if(!is.na(burned)){
             rv$log <- paste0(rv$log, # _______
                              ' ... DONE');updateVTEXT(rv$log) #
 
             rv$tifready <- TRUE
-            rv$tif <<- burned
-            rv$tiforig <<- burned
-            rv$tif_sp <<- terra::rast(burned)
+            rv$tif <- burned
+            rv$tiforig <- burned
+            rv$tif_sp <- terra::rast(rv$tif)
+            rv$tif_rng <- getMnMx(rv$tif_sp)
 
             #### ......
             suggestedName <- suggestName(rv$layersList, type = 'Resistance')
@@ -3954,6 +3872,12 @@ server <- function(input, output, session) {
               , server = TRUE
             )
 
+
+            # rv$tif2s <- resampIfNeeded(burned)
+            # rv$tif0 <- burned
+            # rv$tif_sp <- terra::rast(burned)
+            # rv$tif2s_sp <- terra::rast(rv$tif2s)
+
             #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
             rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
 
@@ -3968,15 +3892,183 @@ server <- function(input, output, session) {
             shinyalert(title = "Surface resistance wasn't created",
                        type = "error")
           }
-        } else {
+
+          #### .................
+
+        })
+      }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  })
+  )
+
+  ## Run Edi replace ---
+  isolate(observeEvent(input$rpl, {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      polDraw <- input$ll_map_edi_draw_all_features # LEAFLETWIDGET_draw_new_feature
+
+      if( input$in_edi_val != 0 & input$in_edi_val != "0" &
+          rv$tifready & (!is.null(polDraw) | isTRUE(rv$sceready)) ){
+
+        output$ll_map_edi <- leaflet::renderLeaflet({
+
+          (inEdiSessID2 <<- sessionIDgen())
+          rv$inEdiSessID2 <<- inEdiSessID2
+          editRastpath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.tif')
+          editShppath <<- paste0(tempFolder, '/in_editrast_', inEdiSessID2, '.shp')
+
           rv$log <- paste0(rv$log, # _______
-                           '\n Editing scenario: "', val2Burn , '" not a column or valid value');updateVTEXT(rv$log) #
-          shinyalert(title = "Surface resistance wasn't created",
-                     text = paste0('\n Editing scenario: "', val2Burn , '" not a column or valid value'),
-                     type = "error")
-        }
-      })
-    }
+                           '\n -- Creating scenario');updateVTEXT(rv$log) #
+
+          #input <- list(in_edi_val = '8')
+          num2Burn <<- input$in_edi_val
+          val2Burn <<- input$in_edi_val
+          isValidVal <- ifelse(is.numeric(as.numeric(val2Burn)), yes = TRUE, no = FALSE)
+          lineBuffW <<- input$in_edi_wid
+          useColumn <<- FALSE
+
+
+          # num2Burn <- 'try'
+          # in_edi_val <- input$in_edi_val
+          # #in_edi_val <- 'ID'
+          pdebug(devug=devug,sep='\n',
+                 pre='-',"num2Burn", "input$in_edi_val", "rv$tif", 'rv$sceready')
+
+          ## Define if use shape or draw
+          if( isTRUE(rv$sceready) ){
+
+            print(' Replace -- shapefile')
+
+            ## Uses shapefile
+            pol2Rastx <- rv$sce_sp # polPath
+            # pol2use <- sce # polPath
+
+            ## Assign column
+            if(!isValidVal & (num2Burn %in% colnames(pol2Rastx))){ # num2Burn <- 'ID'
+              isValidVal <- TRUE
+              useColumn <<- TRUE
+              #  pol2Rastx$val2burn <- as.data.frame(pol2Rastx)[, num2Burn] # polPath
+              # } else {
+              #  validVal <- FALSE
+              #  pol2Rastx$val2burn <- num2Burn
+
+            }
+            polPath <<- rv$sce
+
+            # pdebug(devug=devug,sep='\n',pre='-', "'Sce shape'", "polPath", polPath)
+
+            print(' Replace -- shapefile2')
+
+          } else if( !is.null(polDraw) ) {
+
+            print(' Replace -- draw')
+            ## Uses draw polygon
+            rt <- terra::rast(rv$tif)
+            rastRes <- res(rt)
+            (rastCRS <- st_crs(rt))
+
+            pol2Rast <- draws2Features(polDraw, rastCRS = rastCRS, distLineBuf = min(rastRes) * lineBuffW )
+            # pol2Rastx <- st_sf(data.frame(a = 1:length(pol2Rast), pol2Rast))
+            pol2Rastx <- st_as_sf( pol2Rast)
+            pol2Rastx$val2burn <- num2Burn
+
+            polPath <<- gsub('.tif$', '_scepol.shp', rv$tif)
+
+            ## Write polygon
+            sf::st_write( obj = pol2Rastx,
+                          dsn = dirname(polPath),
+                          layer = tools::file_path_sans_ext(basename(polPath)),
+                          driver = 'ESRI Shapefile',
+                          append = FALSE,
+                          overwrite_layer = TRUE)
+          }
+
+
+          if( isValidVal ){
+            ## Burn the value of the polygon into the rast
+            ## if the value to burn is either a number or a column
+            pdebug(devug=devug,sep='\n',pre='-- Replace pixel',
+                   "polPath", polPath)
+
+            if( os %in% c('Darwin', 'Windows')){
+              burned <<- tryCatch(replacePixels(polPath = polPath,
+                                                # lineBuffW = as.numeric(input$in_edi_wid),
+                                                att = input$in_edi_che,
+                                                burnval = val2Burn,
+                                                colu = useColumn,
+                                                rastPath = rv$tif,
+                                                rastCRS = NA,
+                                                gdal = FALSE), error = function(e) NA)
+
+            } else{  # if (os %in% 'Linux'){
+              burned <<- tryCatch(replacePixels(polPath = polPath,
+                                                # lineBuffW = as.numeric(input$in_edi_wid),
+                                                att = input$in_edi_che,
+                                                colu = useColumn,
+                                                burnval = val2Burn,
+                                                rastPath = rv$tif,
+                                                rastCRS = NA,
+                                                gdal = TRUE), error = function(e) NA)
+            }
+            pdebug(devug=devug,sep='\n',pre='-',"burned")
+
+            if(!is.na(burned)){
+              rv$log <- paste0(rv$log, # _______
+                               ' ... DONE');updateVTEXT(rv$log) #
+
+              rv$tifready <- TRUE
+              rv$tif <<- burned
+              rv$tiforig <<- burned
+              rv$tif_sp <<- terra::rast(burned)
+
+              #### ......
+              suggestedName <- suggestName(rv$layersList, type = 'Resistance')
+              shinyalert(html = TRUE, type = "success",
+                         title = paste0("Surface resistance created succesfully<br>",
+                                        'Layer name: ', suggestedName)
+              )
+
+              rv$layersList <- funLayersList(
+                df = rv$layersList, tempFolder,
+                inout = 'out', type =  'Resistance',
+                internal = rv$tif, public = suggestedName)
+
+              ## Inputs boxes
+              colaUpdateSelectizeInput(
+                ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
+                        'in_name_sur_crk', 'in_name_sur_lcc'),
+                typex = 'Resistance', field = 'public', val = suggestedName)
+
+              #### ......
+              updateSelectizeInput( # inputsPoints
+                session, "in_points_ly",
+                choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+                selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+                , server = TRUE
+              )
+
+              #rv$tif_rng <- rng_rstif <- range(rv$tif_sp[], na.rm = TRUE)
+              rv$tif_rng <- rng_rstif <- getMnMx(rv$tif_sp)[1:2]
+
+              rv$tif_pal <- rsPal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                                            domain = rng_rstif, na.color = "transparent")
+
+              makeLL( lastLL = 'Surface resistance')
+
+            } else {
+              rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
+              updateVTEXT(rv$log)
+              shinyalert(title = "Surface resistance wasn't created",
+                         type = "error")
+            }
+          } else {
+            rv$log <- paste0(rv$log, # _______
+                             '\n Editing scenario: "', val2Burn , '" not a column or valid value');updateVTEXT(rv$log) #
+            shinyalert(title = "Surface resistance wasn't created",
+                       text = paste0('\n Editing scenario: "', val2Burn , '" not a column or valid value'),
+                       type = "error")
+          }
+        })
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
   )
@@ -4176,181 +4268,181 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$points_py, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if(! (rv$tifready | rv$hsready)){
-      rv$log <- paste0(rv$log, ' \n Creating points -- No raster yet!');updateVTEXT(rv$log) # _______
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Resistance or Suitability not ready"),
-                 text = 'Upload or generate resistance or suitability layer before uploading the points'
-      )
-    } else {
-
-      output$plot0 <-renderPlot({
-        shinyjs::disable("points_py")
-        plot(1, main = input$points_py)
-      })
-
-      rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
-
-      if(is.null(rv$inSurSessID)){
-        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
-        (inSurSessID <- sessionIDgen())
-        rv$inSurSessID <- inSurSessID
-        pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
-      }
-
-      if(is.null(rv$inPointsSessID)){
-        (inPointsSessID <- sessionIDgen())
-        rv$inPointsSessID <- inPointsSessID
-      }
-
-      out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
-
-      in_points_ly <<- ifelse(any(grep(pattern = 'resistance',
-                                       tolower(input$in_points_ly))),
-                              'Suitability', 'Resistance')
-
-      in_points_ly <<- (input$in_points_ly)
-
-      #ifelse(any(grep(pattern = 'resistance',
-      #                                  tolower(input$in_points_ly))),
-      #                         'Suitability', 'Resistance')
-      #
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',
-             "inPts", 'input$in_points_ly','in_points_ly',
-             'rv$hs', 'rv$tif') # = = = = = = = = = = = = = = = = = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
-
-      inPts <<- rv$hs
-      intif4pts <<- subset(rv$layersList, public == in_points_ly)
-      pdebug(devug=devug,sep='\n',pre='---PTS\n',
-             "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
-             'rv$hs', 'rv$tif')
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
-
-      points_file <- tryCatch(
-        points_py(py = py,
-                  #intif = as.character(rv$tif),
-                  intif = intif4pts$internal,
-                  outshp = out_pts,
-                  smin = max(0, as.numeric(input$in_points_3)),
-                  smax = as.numeric(input$in_points_4),
-                  npoints = as.numeric(input$in_points_5),
-                  issuit = ifelse(grepl('Suit',in_points_ly), 'Yes', 'No')),
-        error = function(e) list(log = e, file = ''))
-      cat("\n --- Points out: \n")
-      print(points_file)
-
-      # if(in_points_ly == 'Resistance'){
-      # }
-      #
-      # if(in_points_ly == 'Suitability'){
-      #   inPts <<- rv$tif
-      #   pdebug(devug=devug,sep='\n',pre='---PTS\n',
-      #          "'HS'", 'rv$in_points_ly','in_points_ly',
-      #          'rv$hs', 'rv$tif')
-      #   points_file <- tryCatch(points_py(py = py,
-      #                                     #intif = as.character(rv$hs),
-      #                                     intif = subset(rv$layersList, public == in_points_ly)$internal,
-      #                                     outshp = out_pts,
-      #                                     smin = as.numeric(input$in_points_3),
-      #                                     smax = as.numeric(input$in_points_4),
-      #                                     npoints = as.numeric(input$in_points_5),
-      #                                     issuit = 'Yes'
-      #   ), error = function(e) list(log = e, file = ''))
-      #   cat("\n --- Points out: \n")
-      #   print(points_file)
-      #
-      # }
-
-      # inPts <<- switch (in_points_ly,
-      #         SurfaceResistance = rv$hs,
-      #         HabitatSuitability = rv$tif)
-      # print(points_file)
-
-      # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
-
-      if (file.exists(points_file$file)){
-        params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
-
-        rv$pts <- points_file$file
-        rv$ptsready <- TRUE
-
-        suggestedNewName <- suggestName(rv$layersList, type = 'Points')
-
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Points created succesfully<br>",
-                                  'Layer name: ', suggestedNewName)
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if(! (rv$tifready | rv$hsready)){
+        rv$log <- paste0(rv$log, ' \n Creating points -- No raster yet!');updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Resistance or Suitability not ready"),
+                   text = 'Upload or generate resistance or suitability layer before uploading the points'
         )
-
-        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                       inout = 'out', type =  'Points',
-                                       internal =  points_file$file,
-                                       public = suggestedNewName)
-
-
-        #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
-        # points_shpO <- sf::read_sf("C:/cola/colaLOK2025080203311905/out_simpts_XHW2025080203313005.shp")
-        points_shp <- sf::read_sf(points_file$file)
-        points_shp$sortID <- 1:nrow(points_shp)
-        rv$pts_sp <<- points_shp
-        # print('points_shpO')
-        # print(points_shpO)
-        rv$pts_sp_gcs <- sf::st_transform(points_shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
-        # print('rv$pts_sp on LL')
-        # print(rv$pts_sp)
-        # print('rv$pts_sp_gcs on LL')
-        # print(rv$pts_sp_gcs)
-        #
-        #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
-
-        updateColaLayersLists(rv$layersList)
-
-        rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-
-        if(grepl('Suitability', in_points_ly )){
-          lastLLx <-  'Habitat suitability'
-        } else if(grepl('Resistance', in_points_ly )){
-          lastLLx <- 'Surface resistance'
-        }
       } else {
-        rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
-        shinyalert(html = TRUE, type = "error",
-                   title = paste0("Points no generated"),
-                   text = points_file$log)
-        lastLLx <- NULL
+
+        output$plot0 <-renderPlot({
+          shinyjs::disable("points_py")
+          plot(1, main = input$points_py)
+        })
+
+        rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+
+        if(is.null(rv$inSurSessID)){
+          pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
+          (inSurSessID <- sessionIDgen())
+          rv$inSurSessID <- inSurSessID
+          pdebug(devug=devug,sep='\n',pre='-','rv$inSurSessID')
+        }
+
+        if(is.null(rv$inPointsSessID)){
+          (inPointsSessID <- sessionIDgen())
+          rv$inPointsSessID <- inPointsSessID
+        }
+
+        out_pts <- paste0(tempFolder, '/out_simpts_', rv$inSurSessID, '.shp')
+
+        in_points_ly <<- ifelse(any(grep(pattern = 'resistance',
+                                         tolower(input$in_points_ly))),
+                                'Suitability', 'Resistance')
+
+        in_points_ly <<- (input$in_points_ly)
+
+        #ifelse(any(grep(pattern = 'resistance',
+        #                                  tolower(input$in_points_ly))),
+        #                         'Suitability', 'Resistance')
+        #
+        pdebug(devug=devug,sep='\n',pre='---PTS\n',
+               "inPts", 'input$in_points_ly','in_points_ly',
+               'rv$hs', 'rv$tif') # = = = = = = = = = = = = = = = = = = = http://18.190.026.82:8787/p/f2dab63b/#shiny-tab-tab_surface
+
+        inPts <<- rv$hs
+        intif4pts <<- subset(rv$layersList, public == in_points_ly)
+        pdebug(devug=devug,sep='\n',pre='---PTS\n',
+               "'SR'", 'intif4pts','rv$in_points_ly','in_points_ly',
+               'rv$hs', 'rv$tif')
+
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
+
+        points_file <- tryCatch(
+          points_py(py = py,
+                    #intif = as.character(rv$tif),
+                    intif = intif4pts$internal,
+                    outshp = out_pts,
+                    smin = max(0, as.numeric(input$in_points_3)),
+                    smax = as.numeric(input$in_points_4),
+                    npoints = as.numeric(input$in_points_5),
+                    issuit = ifelse(grepl('Suit',in_points_ly), 'Yes', 'No')),
+          error = function(e) list(log = e, file = ''))
+        cat("\n --- Points out: \n")
+        print(points_file)
+
+        # if(in_points_ly == 'Resistance'){
+        # }
+        #
+        # if(in_points_ly == 'Suitability'){
+        #   inPts <<- rv$tif
+        #   pdebug(devug=devug,sep='\n',pre='---PTS\n',
+        #          "'HS'", 'rv$in_points_ly','in_points_ly',
+        #          'rv$hs', 'rv$tif')
+        #   points_file <- tryCatch(points_py(py = py,
+        #                                     #intif = as.character(rv$hs),
+        #                                     intif = subset(rv$layersList, public == in_points_ly)$internal,
+        #                                     outshp = out_pts,
+        #                                     smin = as.numeric(input$in_points_3),
+        #                                     smax = as.numeric(input$in_points_4),
+        #                                     npoints = as.numeric(input$in_points_5),
+        #                                     issuit = 'Yes'
+        #   ), error = function(e) list(log = e, file = ''))
+        #   cat("\n --- Points out: \n")
+        #   print(points_file)
+        #
+        # }
+
+        # inPts <<- switch (in_points_ly,
+        #         SurfaceResistance = rv$hs,
+        #         HabitatSuitability = rv$tif)
+        # print(points_file)
+
+        # rv$log <- paste0(rv$log, ' \nCreating points');updateVTEXT(rv$log) # _______
+
+        if (file.exists(points_file$file)){
+          params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+
+          rv$pts <- points_file$file
+          rv$ptsready <- TRUE
+
+          suggestedNewName <- suggestName(rv$layersList, type = 'Points')
+
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Points created succesfully<br>",
+                                    'Layer name: ', suggestedNewName)
+          )
+
+          rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                         inout = 'out', type =  'Points',
+                                         internal =  points_file$file,
+                                         public = suggestedNewName)
+
+
+          #points_file <- "/data/temp/L2023090100204905file18e703e3d6298/out_simpts_J2023090100210305file18e7061e66c55.shp"
+          # points_shpO <- sf::read_sf("C:/cola/colaLOK2025080203311905/out_simpts_XHW2025080203313005.shp")
+          points_shp <- sf::read_sf(points_file$file)
+          points_shp$sortID <- 1:nrow(points_shp)
+          rv$pts_sp <<- points_shp
+          # print('points_shpO')
+          # print(points_shpO)
+          rv$pts_sp_gcs <- sf::st_transform(points_shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+          # print('rv$pts_sp on LL')
+          # print(rv$pts_sp)
+          # print('rv$pts_sp_gcs on LL')
+          # print(rv$pts_sp_gcs)
+          #
+          #points_shp@data[, c('lng', 'lat')] <- points_shp@coords
+
+          updateColaLayersLists(rv$layersList)
+
+          rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+
+          if(grepl('Suitability', in_points_ly )){
+            lastLLx <-  'Habitat suitability'
+          } else if(grepl('Resistance', in_points_ly )){
+            lastLLx <- 'Surface resistance'
+          }
+        } else {
+          rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Points no generated"),
+                     text = points_file$log)
+          lastLLx <- NULL
+        }
+
+
+        output$ll_map_points <- leaflet::renderLeaflet({
+          makeLL( lastLL = lastLLx)
+        })
+        # if (in_points_ly == 'Resistance'){
+        #   ## Inputs boxes
+        #   colaUpdateSelectizeInput(
+        #     ids = c('in_name_sur_edi',  'in_name_sur_dis', 'in_name_sur_cdp',
+        #             'in_name_sur_crk', 'in_name_sur_lcc', 'in_name_crk_pri', 'in_name_lcc_pri'),
+        #     typex = 'Resistance', field = 'public', val = newOutput)
+        # } else if ( in_points_ly == 'Suitability'){
+        #   colaUpdateSelectizeInput(
+        #     ids = c('in_points_ly', 'in_name_hs'),
+        #     typex = 'Suitability', field = 'public', val = newOutput)
+        # }
+        #
+        # updateSelectizeInput( # inputsPoints
+        #   session, "in_points_ly",
+        #   choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+        #   selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+        #   , server = TRUE
+        # )
+        #### ......
+
+        #temLL <- rv$llmap
+        #save(temLL, file = '/data/tempR/ll.RData')
+        #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
+
       }
-
-
-      output$ll_map_points <- leaflet::renderLeaflet({
-        makeLL( lastLL = lastLLx)
-      })
-      # if (in_points_ly == 'Resistance'){
-      #   ## Inputs boxes
-      #   colaUpdateSelectizeInput(
-      #     ids = c('in_name_sur_edi',  'in_name_sur_dis', 'in_name_sur_cdp',
-      #             'in_name_sur_crk', 'in_name_sur_lcc', 'in_name_crk_pri', 'in_name_lcc_pri'),
-      #     typex = 'Resistance', field = 'public', val = newOutput)
-      # } else if ( in_points_ly == 'Suitability'){
-      #   colaUpdateSelectizeInput(
-      #     ids = c('in_points_ly', 'in_name_hs'),
-      #     typex = 'Suitability', field = 'public', val = newOutput)
-      # }
-      #
-      # updateSelectizeInput( # inputsPoints
-      #   session, "in_points_ly",
-      #   choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-      #   selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-      #   , server = TRUE
-      # )
-      #### ......
-
-      #temLL <- rv$llmap
-      #save(temLL, file = '/data/tempR/ll.RData')
-      #load('/data/tempR/ll.RData') # rv <- list(llmap = temLL); llmap = temLL
-
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -4579,96 +4671,96 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$dist_py, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    pdebug(devug=devug,sep='\n', pre ='\nRUN CDMat\n', 'rv$tif','rv$pts','rv$tifready','rv$ptsready') # _____________
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      pdebug(devug=devug,sep='\n', pre ='\nRUN CDMat\n', 'rv$tif','rv$pts','rv$tifready','rv$ptsready') # _____________
 
-    if( ! all(rv$ptsready, rv$tifready)){ # not ready
-      pdebug(devug=devug,sep='\n', pre ='\n|||', 'rv$distPy_sessID', 'outcdmat') # _____________
+      if( ! all(rv$ptsready, rv$tifready)){ # not ready
+        pdebug(devug=devug,sep='\n', pre ='\n|||', 'rv$distPy_sessID', 'outcdmat') # _____________
 
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance and points layers first'
-      )
-    } else{ # Working
-      rv$distPy_sessID <- distPy_sessID <- sessionIDgen()
-
-      outcdmat <<- paste0(tempFolder, '/out_cdmatrix_', rv$distPy_sessID, '.csv')
-      # outcdmat <- '/data/temp/G2023083001195205file35162c836424/out_cdmatrix_L2023083001200105file3516441548c2.csv'
-
-      pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$distPy_sessID', 'outcdmat') # _____________
-
-      rv$log <- paste0(rv$log, '\nGenerating matrix - ');updateVTEXT(rv$log) # _______
-      #Sys.sleep(1)
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the red label is updated."))
-
-      tStartMat <- Sys.time()
-
-      pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
-      intif4 <<- subset(rv$layersList, public == input$in_name_sur_dis)$internal
-
-      cdmat_file <- cdmat_py(py = py, inshp = rv$pts,
-                             intif = intif4,
-                             outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
-      cat("\n --- CDM Matrix out:")
-      print(cdmat_file)
-
-      tElapMat <- Sys.time() - tStartMat
-      textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
-
-
-      if(file.exists(outcdmat)){
-        if(devug) {cat(' CDMatrix done \n')}
-        #outcdmat <- 'C:/cola//colaWHJ2024121817582505//out_cdmatrix_UCJ2024121818093405.csv'
-
-        rv$cdm <- cdmat_file$file
-        rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
-        rv$cdm_nvalid <- validCels <- sum(headMat != 0 & headMat != 99887766543211, na.rm = T)/2
-        #grepl(pattern = "99887766554433", as.matrix(headMat) )
-        #rv$cdm_nvalid <- validCels <- sum(!headMat %in% c(0,99887766543211), na.rm = T)/2
-
-        params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
-
-        rv$log <- paste0(rv$log,
-                         paste0(' --- DONE\nMatrix generated, dim:',
-                                ncol(headMat), ' cols, ', nrow(headMat), ' rows.',
-                                ' Time elapsed: ', textElapMat));updateVTEXT(rv$log) # _______
-        rv$log <- paste0(rv$log,
-                         paste0('\n Pairs of points connected: ', validCels,
-                                '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
-
-        suggestedName <- suggestName(rv$layersList, type = 'Distance')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Cost-distance matrix created succesfully<br>",
-                                  'File name: ', suggestedName),
-                   text = paste0('Pairs of points connected: ', validCels))
-
-        ####
-
-
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Distance',
-          internal = rv$cdm, public = suggestedName)
-
-        updateColaLayersLists(layersList = rv$layersList)
-        ####
-
-
-        output$dist_box1 <- shinydashboard::renderValueBox({
-          valueBox("YES", "Matrix: Done",
-                   #, icon = icon("thumbs-up", lib = "glyphicon"),
-                   color = "green" )
-        })
-      } else {
         shinyalert(html = TRUE, type = "warning",
-                   title = paste0("Cost-distance matrix no generated"),
-                   text = ''
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance and points layers first'
         )
+      } else{ # Working
+        rv$distPy_sessID <- distPy_sessID <- sessionIDgen()
 
+        outcdmat <<- paste0(tempFolder, '/out_cdmatrix_', rv$distPy_sessID, '.csv')
+        # outcdmat <- '/data/temp/G2023083001195205file35162c836424/out_cdmatrix_L2023083001200105file3516441548c2.csv'
+
+        pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$distPy_sessID', 'outcdmat') # _____________
+
+        rv$log <- paste0(rv$log, '\nGenerating matrix - ');updateVTEXT(rv$log) # _______
+        #Sys.sleep(1)
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the red label is updated."))
+
+        tStartMat <- Sys.time()
+
+        pdebug(devug=devug,sep='\n ', pre ='\n', 'rv$pts', 'rv$tif', 'outcdmat') # _____________
+        intif4 <<- subset(rv$layersList, public == input$in_name_sur_dis)$internal
+
+        cdmat_file <- cdmat_py(py = py, inshp = rv$pts,
+                               intif = intif4,
+                               outcsv = outcdmat, maxdist = as.numeric(input$in_dist_3))
+        cat("\n --- CDM Matrix out:")
+        print(cdmat_file)
+
+        tElapMat <- Sys.time() - tStartMat
+        textElapMat <- paste(round(as.numeric(tElapMat), 2), attr(tElapMat, 'units'))
+
+
+        if(file.exists(outcdmat)){
+          if(devug) {cat(' CDMatrix done \n')}
+          #outcdmat <- 'C:/cola//colaWHJ2024121817582505//out_cdmatrix_UCJ2024121818093405.csv'
+
+          rv$cdm <- cdmat_file$file
+          rv$cdm_sp <- headMat <- data.table::fread(outcdmat, header = F)
+          rv$cdm_nvalid <- validCels <- sum(headMat != 0 & headMat != 99887766543211, na.rm = T)/2
+          #grepl(pattern = "99887766554433", as.matrix(headMat) )
+          #rv$cdm_nvalid <- validCels <- sum(!headMat %in% c(0,99887766543211), na.rm = T)/2
+
+          params_txt <- updateParamsTEXT(params_txt = params_txt, dst = TRUE)
+
+          rv$log <- paste0(rv$log,
+                           paste0(' --- DONE\nMatrix generated, dim:',
+                                  ncol(headMat), ' cols, ', nrow(headMat), ' rows.',
+                                  ' Time elapsed: ', textElapMat));updateVTEXT(rv$log) # _______
+          rv$log <- paste0(rv$log,
+                           paste0('\n Pairs of points connected: ', validCels,
+                                  '\n Check before sunning CDPOP. If number is low, increase the distance'));updateVTEXT(rv$log) # _______
+
+          suggestedName <- suggestName(rv$layersList, type = 'Distance')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Cost-distance matrix created succesfully<br>",
+                                    'File name: ', suggestedName),
+                     text = paste0('Pairs of points connected: ', validCels))
+
+          ####
+
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Distance',
+            internal = rv$cdm, public = suggestedName)
+
+          updateColaLayersLists(layersList = rv$layersList)
+          ####
+
+
+          output$dist_box1 <- shinydashboard::renderValueBox({
+            valueBox("YES", "Matrix: Done",
+                     #, icon = icon("thumbs-up", lib = "glyphicon"),
+                     color = "green" )
+          })
+        } else {
+          shinyalert(html = TRUE, type = "warning",
+                     title = paste0("Cost-distance matrix no generated"),
+                     text = ''
+          )
+
+        }
       }
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -4677,134 +4769,134 @@ server <- function(input, output, session) {
 
   # load resistance
   observeEvent(input$in_lcc_tif, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    pdebug(devug=devug,
-           sep='\n',pre='\n---- LCC - TIF\n',
-           'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      pdebug(devug=devug,
+             sep='\n',pre='\n---- LCC - TIF\n',
+             'rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
 
-    # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
+      # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathdist, rv$newtifPath_dist)), error = function(e) NULL)))
 
-    if(is.null(rv$inLccSessID)){
-      (inLccSessID <- sessionIDgen())
-      rv$inLccSessID <- inLccSessID
-    }
+      if(is.null(rv$inLccSessID)){
+        (inLccSessID <- sessionIDgen())
+        rv$inLccSessID <- inLccSessID
+      }
 
-    rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
-    file.copy(input$in_lcc_tif$datapath, rv$tiforig);
+      rv$tiforig <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
+      file.copy(input$in_lcc_tif$datapath, rv$tiforig);
 
-    # try(file.remove(input$in_lcc_tif$datapath))
+      # try(file.remove(input$in_lcc_tif$datapath))
 
-    rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
-    tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
-    pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
+      rv$log <- paste0(rv$log, '\nUpdating raster: making pixels squared,-9999 as no data and checking coordinates systems');updateVTEXT(rv$log) # _______
+      tifFixed <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+      pdebug(devug=devug,sep='\n',pre='\n','input$in_lcc_tif$datapath', 'rv$tiforig', 'tifFixed') # _____________
 
-    # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
-    #      tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
-    # tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
+      # rv <- list(tempFolder = '/data/temp/VK2024011517312305file1a4cf91dbd4cbd',
+      #      tiforig = '/data/tempR/Rtmp4uis8l/ZAG2024051319133705//in_lcc_SQP2024051319134805.tif')
+      # tifFixed <- '/data/tempR/Rtmp4uis8l/IQY2024051319031005//in_lcc_PWZ2024051319032405_fixed.tif'
 
-    newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
-                                      outrasterpath = tifFixed)
+      newtifPath_lcc <<- fitRaster2cola(inrasterpath = rv$tiforig,
+                                        outrasterpath = tifFixed)
 
-    rv$tif <- ifelse(is.na(newtifPath_lcc),
-                     yes = rv$tiforig,
-                     no = newtifPath_lcc)
+      rv$tif <- ifelse(is.na(newtifPath_lcc),
+                       yes = rv$tiforig,
+                       no = newtifPath_lcc)
 
-    #rv$tif <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
-    #rv$tif <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
-
-
-    pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
+      #rv$tif <- paste0(tempFolder, '/in_lcc_fixed', rv$inLccSessID, '.tif')
+      #rv$tif <- paste0(tempFolder, '/in_lcc_', rv$inLccSessID, '.tif')
 
 
-    if (file.exists( rv$tif)){
-      rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
-      rv$tifready <- TRUE
-
-      pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
-
-      output$ll_map_lcc <- leaflet::renderLeaflet({
-
-        suggestedNewName <- suggestName(rv$layersList, type = 'Resistance')
-
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Surface resistance loaded succesfully<br>",
-                                  'Layer name: ', suggestedNewName)
-        )
-
-        rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
-                                       inout = 'in', type =  'Resistance',
-                                       internal = rv$tif,
-                                       public = suggestedNewName)
-
-        updateSelectizeInput( # inputs
-          session, "in_name_hs",
-          choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
-          selected = getLast(rv$layersList, 'Resistance', 'public')
-          #, server = TRUE
-        )
-
-        newOutput <- suggestName(rv$layersList, type = 'Corridors')
-        updateTextInput( # suggest output
-          session, "out_name_lcc",
-          value = newOutput
-          #, server = TRUE
-        )
-
-        colaUpdateSelectizeInput(
-          ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
-                  'in_name_sur_crk', 'in_name_sur_lcc'),
-          typex = 'Resistance', field = 'public', val = newOutput)
+      pdebug(devug=devug,sep='\n',pre='\n','newtifPath_lcc', 'rv$tif') # _____________
 
 
-        updateSelectizeInput( # inputsPoints
-          session, "in_points_ly",
-          choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-          selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-          , server = TRUE
-        )
-        #
-        updateColaLayersLists(layersList = rv$layersList)
+      if (file.exists( rv$tif)){
+        rv$log <- paste0(rv$log, ' --- DONE');updateVTEXT(rv$log) # _______
+        rv$tifready <- TRUE
+
+        pdebug(devug=devug,sep='\n',pre='---- LOAD TIF LCC\n','rv$tifready', 'rv$tif', 'rv$inLccSessID') # _____________
+
+        output$ll_map_lcc <- leaflet::renderLeaflet({
+
+          suggestedNewName <- suggestName(rv$layersList, type = 'Resistance')
+
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Surface resistance loaded succesfully<br>",
+                                    'Layer name: ', suggestedNewName)
+          )
+
+          rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                         inout = 'in', type =  'Resistance',
+                                         internal = rv$tif,
+                                         public = suggestedNewName)
+
+          updateSelectizeInput( # inputs
+            session, "in_name_hs",
+            choices = unlist(subset(rv$layersList, type == 'Resistance')[,'public']),
+            selected = getLast(rv$layersList, 'Resistance', 'public')
+            #, server = TRUE
+          )
+
+          newOutput <- suggestName(rv$layersList, type = 'Corridors')
+          updateTextInput( # suggest output
+            session, "out_name_lcc",
+            value = newOutput
+            #, server = TRUE
+          )
+
+          colaUpdateSelectizeInput(
+            ids = c('in_name_sur_edi', 'in_points_ly', 'in_name_sur_dis', 'in_name_sur_cdp',
+                    'in_name_sur_crk', 'in_name_sur_lcc'),
+            typex = 'Resistance', field = 'public', val = newOutput)
 
 
-        rv$tif_sp <- terra::rast(rv$tif)
-        params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+          updateSelectizeInput( # inputsPoints
+            session, "in_points_ly",
+            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+            , server = TRUE
+          )
+          #
+          updateColaLayersLists(layersList = rv$layersList)
 
-        #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
-        rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
-        rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
-                                             domain = rng_newtif+0.0, na.color = "transparent")
 
-        makeLL(lastLL = "Surface resistance" )
-        # llmap <<- rv$llmap %>% removeImage('SurfaceResistance') %>% removeControl('legendSurface') %>%
-        #  addRasterImage(rv$tif_sp, colors = rv$tif_pal, opacity = .7,
-        #         group = "Surface resistance", layerId = 'SurfaceResistance') %>%
-        #  addLegend(pal = rv$tif_pal, values = rv$tif_sp[], layerId = "legendSurface",
-        #       position = 'topleft',
-        #       title= "Resistance"#, opacity = .3
-        #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-        #  ) %>% leaflet::addLayersControl(
-        #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-        #   overlayGroups = c("Habitat suitability", "Surface resistance"),
-        #   options = leaflet::layersControlOptions(collapsed = FALSE)
-        #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-        #
-        #
-        # rv$llmap <<- llmap
-        # updateLL(llmap)
-        # # leafsurface
-        # #llmap
-        # rv$llmap
-      })
-    } else {
-      rv$log <- paste0(rv$log, '\n -- Error uploading the "Surface resistance" TIF file')
-      shinyalert(title = "Surface resistance wasn't loaded",
-                 text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB, 'MB\n',
-                               'be a valid GeoTiff file, ',
-                               'have a projected coordinate system, and\t',
-                               'a valid NoData value.'),
-                 type = "error")
-    }
+          rv$tif_sp <- terra::rast(rv$tif)
+          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+          #rv$tif_rng <- rng_newtif <- range(rv$tif_sp[], na.rm = TRUE)
+          rv$tif_rng <- rng_newtif <- getMnMx(rv$tif_sp)[1:2]
+          rv$tif_pal <<- leaflet::colorNumeric(palette = "viridis", reverse = TRUE,
+                                               domain = rng_newtif+0.0, na.color = "transparent")
+
+          makeLL(lastLL = "Surface resistance" )
+          # llmap <<- rv$llmap %>% removeImage('SurfaceResistance') %>% removeControl('legendSurface') %>%
+          #  addRasterImage(rv$tif_sp, colors = rv$tif_pal, opacity = .7,
+          #         group = "Surface resistance", layerId = 'SurfaceResistance') %>%
+          #  addLegend(pal = rv$tif_pal, values = rv$tif_sp[], layerId = "legendSurface",
+          #       position = 'topleft',
+          #       title= "Resistance"#, opacity = .3
+          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+          #  ) %>% leaflet::addLayersControl(
+          #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+          #   overlayGroups = c("Habitat suitability", "Surface resistance"),
+          #   options = leaflet::layersControlOptions(collapsed = FALSE)
+          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+          #
+          #
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # # leafsurface
+          # #llmap
+          # rv$llmap
+        })
+      } else {
+        rv$log <- paste0(rv$log, '\n -- Error uploading the "Surface resistance" TIF file')
+        shinyalert(title = "Surface resistance wasn't loaded",
+                   text = paste0("Your raster must be less than ", COLA_DSS_UPL_MB, 'MB\n',
+                                 'be a valid GeoTiff file, ',
+                                 'have a projected coordinate system, and\t',
+                                 'a valid NoData value.'),
+                   type = "error")
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -4889,242 +4981,242 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$lcc, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    shinyjs::enable("lcc")
-    pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
-    condDist <<- 0
-    #pdebug(devug=devug, ... = 'condDist') # _____________
-    if(rv$ptsready & rv$tifready){
-      condDist <<- 1
-    }
-    #pdebug(devug=devug, ... = 'condDist') # _____________
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      shinyjs::enable("lcc")
+      pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+      condDist <<- 0
+      #pdebug(devug=devug, ... = 'condDist') # _____________
+      if(rv$ptsready & rv$tifready){
+        condDist <<- 1
+      }
+      #pdebug(devug=devug, ... = 'condDist') # _____________
 
-    #if(is.null(rv$inLccSessID)){
-    (inLccSessID <<- sessionIDgen())
-    rv$inLccSessID <- inLccSessID
-    #}
-
-
-    if( condDist == 1){
-      #input <- c(in_dist_3 = 25000)
-      rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
+      #if(is.null(rv$inLccSessID)){
+      (inLccSessID <<- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+      #}
 
 
-      cat('\n\n -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
-      out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
-      intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
+      if( condDist == 1){
+        #input <- c(in_dist_3 = 25000)
+        rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
 
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
 
-      tStartLcc <- Sys.time()
-      #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-      out_lcc <- tryCatch(lcc_py(
-        py = py, inshp = rv$pts,
-        # intif = rv$tif,
-        intif = intif4,
-        outtif = out_lcc,
-        maxdist = as.numeric(input$in_lcc_4),
-        smooth = as.numeric(input$in_lcc_5),
-        tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(log = e, file = ''))
+        cat('\n\n -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+        out_lcc <- paste0(tempFolder, '/out_lcc_', inLccSessID, '.tif')
+        intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
 
-      cat("\n --- LCC out:\n")
-      print(out_lcc)
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
 
-      # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
+        tStartLcc <- Sys.time()
+        #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
+        out_lcc <- tryCatch(lcc_py(
+          py = py, inshp = rv$pts,
+          # intif = rv$tif,
+          intif = intif4,
+          outtif = out_lcc,
+          maxdist = as.numeric(input$in_lcc_4),
+          smooth = as.numeric(input$in_lcc_5),
+          tolerance = as.numeric(input$in_lcc_6)), error = function(e) list(log = e, file = ''))
 
-      tElapLcc <- Sys.time() - tStartLcc
-      textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
+        cat("\n --- LCC out:\n")
+        print(out_lcc)
 
-      #rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+        # out_lcc <- '/data/temp/QU2024011518271005file1a4cf934de5d47/out_lcc_MQ2024011518271905file1a4cf965d2605a.tif'
 
-      # pdebug(devug=devug,sep='\n',pre='\n \t LCC ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+        tElapLcc <- Sys.time() - tStartLcc
+        textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
 
-      if(!file.exists(out_lcc$file)){
-        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-        shinyalert(html = TRUE, type = "error",
-                   title = paste0("Corridors not generated"),
-                   text = out_lcc$log
+        #rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+
+        # pdebug(devug=devug,sep='\n',pre='\n \t LCC ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+
+        if(!file.exists(out_lcc$file)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Corridors not generated"),
+                     text = out_lcc$log
+          )
+          lastLLx <-  NULL
+
+
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
+          params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
+
+          #### ......
+          suggestedName <- suggestName(rv$layersList, type = 'Corridors')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Corridors created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Corridors',
+            internal = out_lcc$file, public = suggestedName)
+
+          newOutput <- suggestName(rv$layersList, type = 'Corridors')
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_lcc_pri'),
+            typex = 'Corridors', field = 'public', val = newOutput)
+
+          updateColaLayersLists(layersList = rv$layersList)
+
+
+          #### ......
+
+          rv$lcc <- out_lcc$file
+          rv$lccready <- TRUE
+          rv$lcc_sp <- terra::rast(out_lcc$file)
+
+          #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc_sp)[1:2]
+
+          rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(
+            c("red3", "gold", "navyblue"),
+            reverse = TRUE,
+            domain = rv$lcc_rng+0.0,
+            na.color = "transparent")
+
+          lastLLx = 'Corridors'
+        }
+      } else {
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance and points layers first'
         )
         lastLLx <-  NULL
-
-
-      } else {
-        rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
-        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
-
-        #### ......
-        suggestedName <- suggestName(rv$layersList, type = 'Corridors')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Corridors created succesfully<br>",
-                                  'Layer name: ', suggestedName)
-        )
-
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Corridors',
-          internal = out_lcc$file, public = suggestedName)
-
-        newOutput <- suggestName(rv$layersList, type = 'Corridors')
-        ## Inputs boxes
-        colaUpdateSelectizeInput(
-          ids = c('in_name_lcc_pri'),
-          typex = 'Corridors', field = 'public', val = newOutput)
-
-        updateColaLayersLists(layersList = rv$layersList)
-
-
-        #### ......
-
-        rv$lcc <- out_lcc$file
-        rv$lccready <- TRUE
-        rv$lcc_sp <- terra::rast(out_lcc$file)
-
-        #rv$lcc_rng <- rng_newtif <- range(rv$lcc_sp[], na.rm = TRUE)
-        rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc_sp)[1:2]
-
-        rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(
-          c("red3", "gold", "navyblue"),
-          reverse = TRUE,
-          domain = rv$lcc_rng+0.0,
-          na.color = "transparent")
-
-        lastLLx = 'Corridors'
       }
-    } else {
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance and points layers first'
-      )
-      lastLLx <-  NULL
-    }
 
-    output$ll_map_lcc <- leaflet::renderLeaflet({
-      makeLL( lastLL =  lastLLx)
-    })
+      output$ll_map_lcc <- leaflet::renderLeaflet({
+        makeLL( lastLL =  lastLLx)
+      })
 
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   observeEvent(input$lcc2, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
-    condDist <<- 0
-    #pdebug(devug=devug, ... = 'condDist') # _____________
-    if(rv$ptsready & rv$tifready){
-      condDist <<- 1
-    }
-    #pdebug(devug=devug, ... = 'condDist') # _____________
-
-    (inLccSessID <<- sessionIDgen())
-    rv$inLccSessID <- inLccSessID
-
-
-    if( condDist == 1){
-      #input <- c(in_dist_3 = 25000)
-      rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
-
-
-      cat('\n\n  -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
-
-      out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
-      intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
-
-      tStartLcc <- Sys.time()
-      #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
-      out_lcc <- tryCatch(lccJoblib_py(
-        py = py, tempFolder = tempFolder,
-        inshp = rv$pts,
-        #intif = rv$tif,
-        intif = intif4,
-        outtif = out_lcc,
-        maxdist = as.numeric(input$in_lcc_4),
-        smooth = as.numeric(input$in_lcc_5),
-        tolerance = as.numeric(input$in_lcc_6)),
-        error = function(e) list(log = e, file = ''))
-      cat("\n --- LCC out:\n")
-      print(out_lcc)
-
-
-      tElapLcc <- Sys.time() - tStartLcc
-      textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
-
-      rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
-
-      pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
-
-      if(!file.exists(out_lcc$file)){
-        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-        shinyalert(html = TRUE, type = "warning",
-                   title = paste0("Corridors not generated"),
-                   text = out_lcc$log
-        )
-        if (any(grep('negative dimensions are not allowed', log))){
-          cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0("RAM not enough"),
-                     text = 'Your system tun out of RAM. Consider using the "Heavy" button')
-        }
-        lastLLx <- NULL
-      } else {
-        rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
-
-        rv$lcc <- out_lcc$file
-        rv$lccready <- TRUE
-        rv$lcc_sp <- terra::rast(out_lcc$file)
-        params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
-
-        #### ......
-        suggestedName <- suggestName(rv$layersList, type = 'Corridors')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Corridors created succesfully<br>",
-                                  'Layer name: ', suggestedName)
-        )
-
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Corridors',
-          internal = out_lcc$file, public = suggestedName)
-
-        newOutput <- suggestName(rv$layersList, type = 'Corridors')
-        ## Inputs boxes
-        colaUpdateSelectizeInput(
-          ids = c('in_name_lcc_pri'),
-          typex = 'Corridors', field = 'public', val = newOutput)
-
-        updateColaLayersLists(layersList = rv$layersList)
-
-
-        #### ......
-
-
-        #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
-        #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
-        rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc)
-
-
-        rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
-                                                       reverse = TRUE,
-                                                       domain = rng_newtif+0.0,
-                                                       na.color = "transparent")
-        lastLL <- 'Corridors'
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      pdebug(devug=devug,sep='\n',pre='\n---- RUN LCC\n','rv$ptsready', 'rv$pts', 'rv$ptsready', 'rv$pts','rv$inLccSessID') # _____________
+      condDist <<- 0
+      #pdebug(devug=devug, ... = 'condDist') # _____________
+      if(rv$ptsready & rv$tifready){
+        condDist <<- 1
       }
-    } else {
-      lastLLx <- NULL
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance and points layers first'
-      )
+      #pdebug(devug=devug, ... = 'condDist') # _____________
 
-      output$ll_map_lcc <- leaflet::renderLeaflet({
-        makeLL( lastLL = lastLLx)
-      })
-    }
+      (inLccSessID <<- sessionIDgen())
+      rv$inLccSessID <- inLccSessID
+
+
+      if( condDist == 1){
+        #input <- c(in_dist_3 = 25000)
+        rv$log <- paste0(rv$log, '\n Generating corridors');updateVTEXT(rv$log) # _______
+
+
+        cat('\n\n  -- Using ', input$in_name_lcc, subset(rv$layersList, public == input$in_name_lcc)$internal, '\n')
+
+        out_lcc <- paste0(tempFolder, '/out_lcc_', rv$inLccSessID, '.tif')
+        intif4 <<- subset(rv$layersList, public == input$in_name_sur_lcc)$internal
+
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
+
+        tStartLcc <- Sys.time()
+        #pdebug(devug=devug,sep='\n',pre='\n \t lcc.py\n', 'rv$pts', 'rv$tif', 'out_lcc', 'condDist') # _____________
+        out_lcc <- tryCatch(lccJoblib_py(
+          py = py, tempFolder = tempFolder,
+          inshp = rv$pts,
+          #intif = rv$tif,
+          intif = intif4,
+          outtif = out_lcc,
+          maxdist = as.numeric(input$in_lcc_4),
+          smooth = as.numeric(input$in_lcc_5),
+          tolerance = as.numeric(input$in_lcc_6)),
+          error = function(e) list(log = e, file = ''))
+        cat("\n --- LCC out:\n")
+        print(out_lcc)
+
+
+        tElapLcc <- Sys.time() - tStartLcc
+        textElapLcc <- paste(round(as.numeric(tElapLcc), 2), attr(tElapLcc, 'units'))
+
+        rv$log <- paste0(rv$log, ' - Time elapsed: ', tElapLcc);updateVTEXT(rv$log) # _______
+
+        pdebug(devug=devug,sep='\n',pre='\n \t |||| ','rv$out_lcc','file.exists(rv$out_lcc)', 'out_lcc') # _____________
+
+        if(!file.exists(out_lcc$file)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          shinyalert(html = TRUE, type = "warning",
+                     title = paste0("Corridors not generated"),
+                     text = out_lcc$log
+          )
+          if (any(grep('negative dimensions are not allowed', log))){
+            cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0("RAM not enough"),
+                       text = 'Your system tun out of RAM. Consider using the "Heavy" button')
+          }
+          lastLLx <- NULL
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapLcc);updateVTEXT(rv$log) # _______
+
+          rv$lcc <- out_lcc$file
+          rv$lccready <- TRUE
+          rv$lcc_sp <- terra::rast(out_lcc$file)
+          params_txt <- updateParamsTEXT(params_txt = params_txt, lcc = TRUE)
+
+          #### ......
+          suggestedName <- suggestName(rv$layersList, type = 'Corridors')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Corridors created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Corridors',
+            internal = out_lcc$file, public = suggestedName)
+
+          newOutput <- suggestName(rv$layersList, type = 'Corridors')
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_lcc_pri'),
+            typex = 'Corridors', field = 'public', val = newOutput)
+
+          updateColaLayersLists(layersList = rv$layersList)
+
+
+          #### ......
+
+
+          #rv$lcc_rng <- rng_newtif <- range(out_lcc[], na.rm = TRUE)
+          #rv$lcc_rng <- rng_newtif <- range(minmax(rv$lcc_sp)[1:2], na.rm = TRUE)
+          rv$lcc_rng <- rng_newtif <- getMnMx(rv$lcc)
+
+
+          rv$lcc_pal <- tifPal <<- leaflet::colorNumeric(c("red3", "gold", "navyblue"),
+                                                         reverse = TRUE,
+                                                         domain = rng_newtif+0.0,
+                                                         na.color = "transparent")
+          lastLL <- 'Corridors'
+        }
+      } else {
+        lastLLx <- NULL
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance and points layers first'
+        )
+
+        output$ll_map_lcc <- leaflet::renderLeaflet({
+          makeLL( lastLL = lastLLx)
+        })
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -5312,408 +5404,408 @@ server <- function(input, output, session) {
 
   ## Run crk
   isolate(observeEvent(input$crk, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
-    condDist <- 0
-    if(rv$ptsready & rv$tifready){
-      condDist <- 1
-    }
-
-    #if(is.null(rv$incrkSessID)){
-    (incrkSessID <<- sessionIDgen()) # rv <- list()
-    rv$incrkSessID <- incrkSessID
-    #}
-
-    if( condDist == 1){
-      #input <- c(in_dist_3 = 25000)
-      rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
-      out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
-
-
-      intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
-      cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
-
-      tStartCrk <- Sys.time()
-      out_crk <<- tryCatch(
-        crk_py(py = py, inshp = rv$pts,
-               #intif = rv$tif,
-               intif = intif4py,
-               outtif = out_crk,
-               maxdist = as.numeric(input$in_crk_4),
-               transf = (input$in_crk_t),
-               shape = (input$in_crk_5),
-               volume = as.numeric(input$in_crk_6)),
-        error = function(e) {print('Error'); print(e);
-          list(log = e$message, file = '')})
-      #out_crk_no_data <- gdal_nodata
-
-      cat("\n --- CRK out:\n")
-      print(out_crk)
-
-      tElapCrk <- Sys.time() - tStartCrk
-      textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
-
-      if(length(out_crk) == 1){
-        print('  Fixing single slot CRK answer')
-        out_crk <- list(file = out_crk[1], log = 'No log found')
-        print(out_crk)
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
+      condDist <- 0
+      if(rv$ptsready & rv$tifready){
+        condDist <- 1
       }
 
-      rv$crk <- out_crk$file
+      #if(is.null(rv$incrkSessID)){
+      (incrkSessID <<- sessionIDgen()) # rv <- list()
+      rv$incrkSessID <- incrkSessID
+      #}
 
-      ## Error
-      if(!file.exists(out_crk$file)){
-        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-        shinyalert(html = TRUE, type = "warning",
-                   title = paste0("Kernels no generated"),
-                   text = out_crk$log)
+      if( condDist == 1){
+        #input <- c(in_dist_3 = 25000)
+        rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
+        out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
 
-        if (any(grep('negative dimensions are not allowed', log))){
-          cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
 
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0("RAM not enough"),
-                     text = 'Your system tun out of RAM. Consider using the "Heavy" button')
+        intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
+        cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, ' Out: ',out_crk ,'\n')
+
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
+
+        tStartCrk <- Sys.time()
+        out_crk <<- tryCatch(
+          crk_py(py = py, inshp = rv$pts,
+                 #intif = rv$tif,
+                 intif = intif4py,
+                 outtif = out_crk,
+                 maxdist = as.numeric(input$in_crk_4),
+                 transf = (input$in_crk_t),
+                 shape = (input$in_crk_5),
+                 volume = as.numeric(input$in_crk_6)),
+          error = function(e) {print('Error'); print(e);
+            list(log = e$message, file = '')})
+        #out_crk_no_data <- gdal_nodata
+
+        cat("\n --- CRK out:\n")
+        print(out_crk)
+
+        tElapCrk <- Sys.time() - tStartCrk
+        textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+        if(length(out_crk) == 1){
+          print('  Fixing single slot CRK answer')
+          out_crk <- list(file = out_crk[1], log = 'No log found')
+          print(out_crk)
         }
 
+        rv$crk <- out_crk$file
+
+        ## Error
+        if(!file.exists(out_crk$file)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          shinyalert(html = TRUE, type = "warning",
+                     title = paste0("Kernels no generated"),
+                     text = out_crk$log)
+
+          if (any(grep('negative dimensions are not allowed', log))){
+            cat('\n\n  -- ERROR: Not enough RAM. Use the heavy/joblib approach \n\n')
+
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0("RAM not enough"),
+                       text = 'Your system tun out of RAM. Consider using the "Heavy" button')
+          }
+
+          lastLLx <- NULL
+
+          ## Generated
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+          # rv$lcc <- out_lcc
+          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+          params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+          rv$crk_quan <- crk_quan
+
+          rv$crkready <- TRUE
+          rv$crk <- out_crk$file
+          rv$crk_sp <- terra::rast(out_crk$file);
+          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+
+
+          #### ......
+          suggestedName <- suggestName(rv$layersList, type = 'Kernels')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Resistant kernels created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Kernels',
+            internal = rv$crk, public = suggestedName)
+
+
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_crk_pri'),
+            typex = 'Kernels', field = 'public', val = suggestedName)
+
+          updateColaLayersLists(layersList = rv$layersList)
+          #### ......
+
+          # newtif[newtif[] == 0] <-
+
+          # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
+          # # plot(newtif)
+
+          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+          #                                               domain = rng_newtif+0.01, na.color = "transparent")
+
+          # "viridis", "magma", "inferno", or "plasma".
+          ## Update all visor
+
+          # makeLL(lastLL = 'Kernels')
+
+          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
+          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
+          #         group = "Surface resistance", layerId = 'Kernel') %>%
+          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
+          #       position = 'topleft',
+          #       title= "Dispersal Kernel"#, opacity = .3
+          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+          #  ) %>% leaflet::addLayersControl(
+          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+          #   options = leaflet::layersControlOptions(collapsed = FALSE)
+          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+          #
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # rv$llmap
+          #
+          # # ## try
+          # llx <- makeLL()
+          # rv$ll
+          lastLLx <- 'Kernels'
+        }
+
+        isolate( # small crk
+          output$ll_map_pri_prev <- leaflet::renderLeaflet({
+
+            if((rv$crkready)){
+              ## Refresh prio tab
+              rv$crk2s <- resampIfNeeded(rv$crk)
+              rv$crk2s_sp <- terra::rast(rv$crk2s)
+              # cat('adding CRK for prio:', rv$crk2s, '\n')
+
+              bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+
+              rv$crk_pal2 <- leaflet::colorNumeric(
+                palette = "plasma", reverse = TRUE,
+                domain = rv$crk_rng + 0.01 , na.color = "transparent")
+
+              if(is.null(rv$crk_quan) | !exists('crk_quan')){
+                cat(' Calculating quantiles')
+
+                # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
+
+                qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
+                brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
+                rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
+
+
+                # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+                #stp <<- diff(range(brks)) / 10 # length(brks)
+
+                # crk_quan <<- rev(rv$crk_quan)
+                #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+                # updateSliderInput(inputId = 'pri_slider', value = median(brks),
+                #          min = min(brks),max = max(brks), step = stp)
+              }
+
+
+              # leafletProxy("ll_map_pri_prev") %>%
+              llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
+                addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                               colors = rv$crk_pal2, opacity = .7)
+
+              #llcrk2 %>% clearImages()
+            }
+          })
+        ) # small crk
+
+        output$ll_map_crk <- leaflet::renderLeaflet({
+          makeLL(lastLL = lastLLx)
+        })
+
+      } else {
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance and points layers first'
+        )
         lastLLx <- NULL
 
-        ## Generated
-      } else {
-        rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
-
-        # rv$lcc <- out_lcc
-        # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
-        # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-        #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
-        # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
-
-        crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
-        # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
-        crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
-        rv$crk_quan <- crk_quan
-
-        rv$crkready <- TRUE
-        rv$crk <- out_crk$file
-        rv$crk_sp <- terra::rast(out_crk$file);
-        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-        rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
-
-
-        #### ......
-        suggestedName <- suggestName(rv$layersList, type = 'Kernels')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Resistant kernels created succesfully<br>",
-                                  'Layer name: ', suggestedName)
-        )
-
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Kernels',
-          internal = rv$crk, public = suggestedName)
-
-
-        ## Inputs boxes
-        colaUpdateSelectizeInput(
-          ids = c('in_name_crk_pri'),
-          typex = 'Kernels', field = 'public', val = suggestedName)
-
-        updateColaLayersLists(layersList = rv$layersList)
-        #### ......
-
-        # newtif[newtif[] == 0] <-
-
-        # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
-        # # plot(newtif)
-
-        #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-        #                                               domain = rng_newtif+0.01, na.color = "transparent")
-
-        # "viridis", "magma", "inferno", or "plasma".
-        ## Update all visor
-
-        # makeLL(lastLL = 'Kernels')
-
-        # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
-        #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
-        #         group = "Surface resistance", layerId = 'Kernel') %>%
-        #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
-        #       position = 'topleft',
-        #       title= "Dispersal Kernel"#, opacity = .3
-        #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-        #  ) %>% leaflet::addLayersControl(
-        #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-        #   options = leaflet::layersControlOptions(collapsed = FALSE)
-        #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-        #
-        # rv$llmap <<- llmap
-        # updateLL(llmap)
-        # rv$llmap
-        #
-        # # ## try
-        # llx <- makeLL()
-        # rv$ll
-        lastLLx <- 'Kernels'
       }
-
-      isolate( # small crk
-        output$ll_map_pri_prev <- leaflet::renderLeaflet({
-
-          if((rv$crkready)){
-            ## Refresh prio tab
-            rv$crk2s <- resampIfNeeded(rv$crk)
-            rv$crk2s_sp <- terra::rast(rv$crk2s)
-            # cat('adding CRK for prio:', rv$crk2s, '\n')
-
-            bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
-
-            rv$crk_pal2 <- leaflet::colorNumeric(
-              palette = "plasma", reverse = TRUE,
-              domain = rv$crk_rng + 0.01 , na.color = "transparent")
-
-            if(is.null(rv$crk_quan) | !exists('crk_quan')){
-              cat(' Calculating quantiles')
-
-              # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
-
-              qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
-              brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
-              rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
-
-
-              # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
-              #stp <<- diff(range(brks)) / 10 # length(brks)
-
-              # crk_quan <<- rev(rv$crk_quan)
-              #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
-              # updateSliderInput(inputId = 'pri_slider', value = median(brks),
-              #          min = min(brks),max = max(brks), step = stp)
-            }
-
-
-            # leafletProxy("ll_map_pri_prev") %>%
-            llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
-              addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                             colors = rv$crk_pal2, opacity = .7)
-
-            #llcrk2 %>% clearImages()
-          }
-        })
-      ) # small crk
-
-      output$ll_map_crk <- leaflet::renderLeaflet({
-        makeLL(lastLL = lastLLx)
-      })
-
-    } else {
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance and points layers first'
-      )
-      lastLLx <- NULL
-
-    }
-    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
 
   }))
 
 
   isolate(observeEvent(input$crk2, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
-    condDist <- 0
-    if(rv$ptsready & rv$tifready){
-      condDist <- 1
-    }
-
-    #if(is.null(rv$incrkSessID)){
-    (incrkSessID <<- sessionIDgen()) # rv <- list()
-    rv$incrkSessID <- incrkSessID
-    #}
-
-    if( condDist == 1){
-      #input <- c(in_dist_3 = 25000)
-      rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
-      out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
-
-      intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
-      cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, '\n')
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
-
-      tStartCrk <- Sys.time()
-      out_crk <<- tryCatch(crkJoblib_py(
-        py = py, inshp = rv$pts,
-        # intif = rv$tif,
-        intif = intif4py,
-        outtif = out_crk,
-        maxdist = as.numeric(input$in_crk_4),
-        transf = (input$in_crk_t),
-        shape = (input$in_crk_5),
-        volume = as.numeric(input$in_crk_6)),
-        error = function(e) {
-          print('Error'); print(e);
-          list(log = e$message, file = '')})
-      #out_crk_no_data <- gdal_nodata
-
-      cat("\n --- CRK out:\n")
-      print(out_crk)
-
-      tElapCrk <- Sys.time() - tStartCrk
-      textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
-
-      if(length(out_crk) == 1){
-        print('  Fixing single slot CRK answer')
-        out_crk <- list(file = out_crk[1], log = 'No log found')
-        print(out_crk)
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      pdebug(devug=devug,' rv$distshp','rv$distshp', 'rv$distrast', 'inShp$files') # _____________
+      condDist <- 0
+      if(rv$ptsready & rv$tifready){
+        condDist <- 1
       }
 
-      rv$crk <- out_crk$file
+      #if(is.null(rv$incrkSessID)){
+      (incrkSessID <<- sessionIDgen()) # rv <- list()
+      rv$incrkSessID <- incrkSessID
+      #}
 
-      rv$crk <- out_crk$file
+      if( condDist == 1){
+        #input <- c(in_dist_3 = 25000)
+        rv$log <- paste0(rv$log, '\n Generating kernels');updateVTEXT(rv$log) # _______
+        out_crk <- paste0(tempFolder, '/out_crk_', incrkSessID, '.tif')
 
-      if(!file.exists(out_crk$file)){
-        rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
-        rv$llmap
+        intif4py <<- subset(rv$layersList, public == input$in_name_sur_crk)$internal
+        cat('\n\n  -- Using ', input$in_name_sur_crk, intif4py, '\n')
 
-      } else {
-        rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
 
-        #### ......
-        suggestedName <- suggestName(rv$layersList, type = 'Kernels')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Resistant kernels created succesfully<br>",
-                                  'Layer name: ', suggestedName)
+        tStartCrk <- Sys.time()
+        out_crk <<- tryCatch(crkJoblib_py(
+          py = py, inshp = rv$pts,
+          # intif = rv$tif,
+          intif = intif4py,
+          outtif = out_crk,
+          maxdist = as.numeric(input$in_crk_4),
+          transf = (input$in_crk_t),
+          shape = (input$in_crk_5),
+          volume = as.numeric(input$in_crk_6)),
+          error = function(e) {
+            print('Error'); print(e);
+            list(log = e$message, file = '')})
+        #out_crk_no_data <- gdal_nodata
+
+        cat("\n --- CRK out:\n")
+        print(out_crk)
+
+        tElapCrk <- Sys.time() - tStartCrk
+        textElapCrk <- paste(round(as.numeric(tElapCrk), 2), attr(tElapCrk, 'units'))
+
+        if(length(out_crk) == 1){
+          print('  Fixing single slot CRK answer')
+          out_crk <- list(file = out_crk[1], log = 'No log found')
+          print(out_crk)
+        }
+
+        rv$crk <- out_crk$file
+
+        rv$crk <- out_crk$file
+
+        if(!file.exists(out_crk$file)){
+          rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
+          rv$llmap
+
+        } else {
+          rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+          #### ......
+          suggestedName <- suggestName(rv$layersList, type = 'Kernels')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Resistant kernels created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Kernels',
+            internal = rv$crk, public = suggestedName)
+
+
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_crk_pri'),
+            typex = 'Kernels', field = 'public', val = suggestedName)
+
+          updateColaLayersLists(layersList = rv$layersList)
+          #### ......
+          # rv$lcc <- out_lcc
+          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+          params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+          #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
+          # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
+
+          crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+          # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+          crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+          rv$crk_quan <- crk_quan
+
+          rv$crkready <- TRUE
+          rv$crk <- out_crk$file
+          rv$crk_sp <- terra::rast(out_crk$file);
+          #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+
+          # newtif[newtif[] == 0] <-
+
+          # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
+          # # plot(newtif)
+
+          #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+          #                                               domain = rng_newtif+0.01, na.color = "transparent")
+
+          # "viridis", "magma", "inferno", or "plasma".
+          ## Update all visor
+
+          #makeLL(lastLL = 'Kernels')
+          lastLLx <- 'Kernels'
+
+          # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
+          #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
+          #         group = "Surface resistance", layerId = 'Kernel') %>%
+          #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
+          #       position = 'topleft',
+          #       title= "Dispersal Kernel"#, opacity = .3
+          #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+          #  ) %>% leaflet::addLayersControl(
+          #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
+          #   options = leaflet::layersControlOptions(collapsed = FALSE)
+          #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
+          #
+          # rv$llmap <<- llmap
+          # updateLL(llmap)
+          # rv$llmap
+          #
+          # # ## try
+          # llx <- makeLL()
+          # rv$ll
+        }
+
+        isolate(
+          output$ll_map_pri_prev <- leaflet::renderLeaflet({
+
+            if((rv$crkready)){
+              ## Refresh prio tab
+              rv$crk2s <- resampIfNeeded(rv$crk)
+              rv$crk2s_sp <- terra::rast(rv$crk2s)
+              # cat('adding CRK for prio:', rv$crk2s, '\n')
+
+              bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
+
+              rv$crk_pal2 <- leaflet::colorNumeric(
+                palette = "plasma", reverse = TRUE,
+                domain = rv$crk_rng + 0.01 , na.color = "transparent")
+
+              if(is.null(rv$crk_quan) | !exists('crk_quan')){
+                cat(' Calculating quantiles')
+
+                # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
+
+                qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
+                brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
+                rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
+
+                # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
+                #stp <<- diff(range(brks)) / 10 # length(brks)
+
+                # crk_quan <<- rev(rv$crk_quan)
+                #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
+                # updateSliderInput(inputId = 'pri_slider', value = median(brks),
+                #          min = min(brks),max = max(brks), step = stp)
+              }
+
+
+              # leafletProxy("ll_map_pri_prev") %>%
+              llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
+                addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
+                               colors = rv$crk_pal2, opacity = .7)
+
+              #llcrk2 %>% clearImages()
+            }
+          })
         )
 
-        rv$layersList <- funLayersList(
-          df = rv$layersList, tempFolder,
-          inout = 'out', type =  'Kernels',
-          internal = rv$crk, public = suggestedName)
+        output$ll_map_crk <- leaflet::renderLeaflet({
+          makeLL( lastLL = lastLLx)
 
-
-        ## Inputs boxes
-        colaUpdateSelectizeInput(
-          ids = c('in_name_crk_pri'),
-          typex = 'Kernels', field = 'public', val = suggestedName)
-
-        updateColaLayersLists(layersList = rv$layersList)
-        #### ......
-        # rv$lcc <- out_lcc
-        # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
-        # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-        params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-        #C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif
-        # out_crk <- list(file = 'C:/temp/cola//colaOTN2024111902171305//out_crk_MOK2024111902192505.tif')
-
-        crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
-        # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
-        crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
-        rv$crk_quan <- crk_quan
-
-        rv$crkready <- TRUE
-        rv$crk <- out_crk$file
-        rv$crk_sp <- terra::rast(out_crk$file);
-        #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-        rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
-
-        # newtif[newtif[] == 0] <-
-
-        # newtif <- (newtif- min(rng_newtif))/(max(rng_newtif)- min(rng_newtif))
-        # # plot(newtif)
-
-        #rv$crk_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-        #                                               domain = rng_newtif+0.01, na.color = "transparent")
-
-        # "viridis", "magma", "inferno", or "plasma".
-        ## Update all visor
-
-        #makeLL(lastLL = 'Kernels')
-        lastLLx <- 'Kernels'
-
-        # llmap <<- rv$llmap %>% removeImage('Kernel') %>% removeControl('legendKernel') %>%
-        #  addRasterImage(out_crk, colors = tifPal, opacity = .7,
-        #         group = "Surface resistance", layerId = 'Kernel') %>%
-        #  addLegend(pal = tifPal, values = out_crk[], layerId = "legendKernel",
-        #       position = 'topleft',
-        #       title= "Dispersal Kernel"#, opacity = .3
-        #       #, labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
-        #  ) %>% leaflet::addLayersControl(
-        #   overlayGroups = c('Points', "Habitat suitability", "Surface resistance", 'Corridor'),
-        #   options = leaflet::layersControlOptions(collapsed = FALSE)
-        #  ) %>% clearBounds() %>% leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" )
-        #
-        # rv$llmap <<- llmap
-        # updateLL(llmap)
-        # rv$llmap
-        #
-        # # ## try
-        # llx <- makeLL()
-        # rv$ll
-      }
-
-      isolate(
-        output$ll_map_pri_prev <- leaflet::renderLeaflet({
-
-          if((rv$crkready)){
-            ## Refresh prio tab
-            rv$crk2s <- resampIfNeeded(rv$crk)
-            rv$crk2s_sp <- terra::rast(rv$crk2s)
-            # cat('adding CRK for prio:', rv$crk2s, '\n')
-
-            bounds <- rv$crk2s_sp %>% st_bbox() %>% as.character() %>% as.numeric()
-
-            rv$crk_pal2 <- leaflet::colorNumeric(
-              palette = "plasma", reverse = TRUE,
-              domain = rv$crk_rng + 0.01 , na.color = "transparent")
-
-            if(is.null(rv$crk_quan) | !exists('crk_quan')){
-              cat(' Calculating quantiles')
-
-              # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
-
-              qq0 <- global(rv$crk2s_sp, fun=quantile, probs = seq(0.01, 1, 0.01))
-              brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
-              rv$crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
-
-              # rv$crk_quan <- rv$crk_quan0[rv$crk_quan0[,1] != 0, ]
-              #stp <<- diff(range(brks)) / 10 # length(brks)
-
-              # crk_quan <<- rev(rv$crk_quan)
-              #names(rv$crk_quan) <<- seq(0.1, 1, 0.1)
-              # updateSliderInput(inputId = 'pri_slider', value = median(brks),
-              #          min = min(brks),max = max(brks), step = stp)
-            }
-
-
-            # leafletProxy("ll_map_pri_prev") %>%
-            llcrk2 <- leaflet::leaflet() %>% addTiles() %>%
-              addRasterImage(x = rv$crk2s_sp, layerId = 'kernel', group = 'kernel',
-                             colors = rv$crk_pal2, opacity = .7)
-
-            #llcrk2 %>% clearImages()
-          }
         })
-      )
 
-      output$ll_map_crk <- leaflet::renderLeaflet({
-        makeLL( lastLL = lastLLx)
+      } else {
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance and points layers first'
+        )
+        lastLLx <- NULL
 
-      })
-
-    } else {
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance and points layers first'
-      )
-      lastLLx <- NULL
-
-    }
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }))
 
@@ -6140,129 +6232,129 @@ server <- function(input, output, session) {
 
   # Run prio
   isolate(observeEvent(input$pri, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    condDist <- 0
-    if(rv$crkready & rv$lccready){
-      condDist <- 1
-    }
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      condDist <- 0
+      if(rv$crkready & rv$lccready){
+        condDist <- 1
+      }
 
-    #if(is.null(rv$inpriSessID)){
-    (inpriSessID <<- sessionIDgen()) # rv <- list()
-    rv$inpriSessID <- inpriSessID
-    #}
+      #if(is.null(rv$inpriSessID)){
+      (inpriSessID <<- sessionIDgen()) # rv <- list()
+      rv$inpriSessID <- inpriSessID
+      #}
 
-    if( condDist == 1){
-      #input <- c(in_dist_3 = 25000)
-      rv$log <- paste0(rv$log, '\n Generating prioritization');updateVTEXT(rv$log) # _______
-      out_pri_tif <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.tif')
-      out_pri_tif_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.tif')
-      out_pri_shp <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.shp')
-      out_pri_shp_pol <- paste0(tempFolder, '/out_pri_pol_', rv$inpriSessID, '.shp')
-      out_pri_shp_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.shp')
-
-
-      # tempFolder <- '/data/tempR/colaZGI2024051609530805//'; list.files(path = tempFolder)
-      # rv <- list(crk = '/data/tempR/colaZGI2024051609530805/out_crk_CFR2024051610192005.tif',
-      #      tif = '/data/tempR/colaZGI2024051609530805/in_crk_IIF2024051609552305.tif',
-      #      lcc = '/data/tempR/colaZGI2024051609530805/out_lcc_FRE2024051610211205.tif')
-      #rv$inpriSessID <- 'sessA'
-
-      #
-      # out_pri_tif <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.tif'
-      # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
-      # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
-      cat("\n --- Prio start\n")
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Task submitted. Please wait until the map is updated."))
+      if( condDist == 1){
+        #input <- c(in_dist_3 = 25000)
+        rv$log <- paste0(rv$log, '\n Generating prioritization');updateVTEXT(rv$log) # _______
+        out_pri_tif <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.tif')
+        out_pri_tif_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.tif')
+        out_pri_shp <- paste0(tempFolder, '/out_pri_', rv$inpriSessID, '.shp')
+        out_pri_shp_pol <- paste0(tempFolder, '/out_pri_pol_', rv$inpriSessID, '.shp')
+        out_pri_shp_patch <- paste0(tempFolder, '/out_pri_patch_', rv$inpriSessID, '.shp')
 
 
-      rv2 <<- rv$layersList
-      isolate(output$ll_map_pri <- leaflet::renderLeaflet({
+        # tempFolder <- '/data/tempR/colaZGI2024051609530805//'; list.files(path = tempFolder)
+        # rv <- list(crk = '/data/tempR/colaZGI2024051609530805/out_crk_CFR2024051610192005.tif',
+        #      tif = '/data/tempR/colaZGI2024051609530805/in_crk_IIF2024051609552305.tif',
+        #      lcc = '/data/tempR/colaZGI2024051609530805/out_lcc_FRE2024051610211205.tif')
+        #rv$inpriSessID <- 'sessA'
 
-        tStartPri <- Sys.time()
-        out_pri <- tryCatch(prio_py(
-          # tif = rv$tif,
-          intif = subset(rv2, public == input$in_name_sur_pri)$internal,
-          incrk = subset(rv2, public == input$in_name_crk_pri)$internal,
-          inlcc = subset(rv2, public == input$in_name_lcc_pri)$internal,
+        #
+        # out_pri_tif <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.tif'
+        # out_pri_shp <- '/data/tempR/colaZGI2024051609530805/out_pri_IF2024011520212105file176c0d2f0a3994.shp'
+        # input <- list(in_pri_5 = 0.5, in_lcc_6 = 50000)
+        cat("\n --- Prio start\n")
 
-          maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
-          outshppoint = out_pri_shp,
-          outshppol = out_pri_shp_pol,
-          outshppatch = out_pri_shp_patch,
-          outtif = out_pri_tif,
-          outtifpatch = out_pri_tif_patch,
-          threshold = as.numeric(input$in_pri_5), # 0.5
-          tolerance = as.numeric(input$in_lcc_6)),
-          error = function(e) list(log = as.character(e), file = '', shp = NA))
-        ## missing threshold and 8 by user
-        cat("\n --- Prio out:\n")
-        print(out_pri)
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Task submitted. Please wait until the map is updated."))
 
-        #out_crk_no_data <- gdal_nodata
 
-        tElapPri <- Sys.time() - tStartPri
-        textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
+        rv2 <<- rv$layersList
+        isolate(output$ll_map_pri <- leaflet::renderLeaflet({
 
-        rv$pritif <- out_pri$tif
-        rv$prishp <- out_pri$shp
+          tStartPri <- Sys.time()
+          out_pri <- tryCatch(prio_py(
+            # tif = rv$tif,
+            intif = subset(rv2, public == input$in_name_sur_pri)$internal,
+            incrk = subset(rv2, public == input$in_name_crk_pri)$internal,
+            inlcc = subset(rv2, public == input$in_name_lcc_pri)$internal,
 
-        if(!is.na(out_pri$shp)){
-          rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
+            maskedcsname = paste0(tempFolder, '/out_pri_temp_', rv$inpriSessID, '.tif'),
+            outshppoint = out_pri_shp,
+            outshppol = out_pri_shp_pol,
+            outshppatch = out_pri_shp_patch,
+            outtif = out_pri_tif,
+            outtifpatch = out_pri_tif_patch,
+            threshold = as.numeric(input$in_pri_5), # 0.5
+            tolerance = as.numeric(input$in_lcc_6)),
+            error = function(e) list(log = as.character(e), file = '', shp = NA))
+          ## missing threshold and 8 by user
+          cat("\n --- Prio out:\n")
+          print(out_pri)
 
-          # rv$lcc <- out_lcc
-          # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
+          #out_crk_no_data <- gdal_nodata
 
-          # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
-          rv$priready <- TRUE
-          rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
-          rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
+          tElapPri <- Sys.time() - tStartPri
+          textElapPri <- paste(round(as.numeric(tElapPri), 2), attr(tElapPri, 'units'))
 
-          #rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-          rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)[1:2]
-          rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
-                                                         domain = rng_newtif+0.01, na.color = "transparent")
-          # "viridis", "magma", "inferno", or "plasma".
-          suggestedName <- suggestName(rv$layersList, type = 'Prioritization')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Prioritization created succesfully<br>",
-                                    'Layer name: ', suggestedName)
-          )
+          rv$pritif <- out_pri$tif
+          rv$prishp <- out_pri$shp
 
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Prioritization',
-            internal = out_pri_tif, public = suggestedName)
+          if(!is.na(out_pri$shp)){
+            rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
-          makeLL(lastLL = 'Prioritization')
+            # rv$lcc <- out_lcc
+            # rv$lcc_sp <- out_lcc <- terra::rast(out_lcc)
 
-        } else {
-          rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
-          cat(' \ == Error: \n')
-          cat(out_pri$log, '\n')
-          shinyalert(html = TRUE, type = "warning",
-                     title = paste0("Prioritization not finished"),
-                     text = out_pri$log
-          )
+            # out_crk <- '/data/temp//Z2023090113392605file84467aef57c/out_crk_W2023090113393905file8444afbe785.tif'
+            rv$priready <- TRUE
+            rv$pritif_sp <- terra::rast(rv$pritif); #plot(newtif)
+            rv$prishp_sp <- sf::read_sf(rv$prishp); #plot(newtif)
 
-          #outLL <- leafletProxy("ll_map_pri")
-          #print(class(outLL))
+            #rv$pri_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+            rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)[1:2]
+            rv$pri_pal <- tifPal <<- leaflet::colorNumeric(palette = "plasma", reverse = TRUE,
+                                                           domain = rng_newtif+0.01, na.color = "transparent")
+            # "viridis", "magma", "inferno", or "plasma".
+            suggestedName <- suggestName(rv$layersList, type = 'Prioritization')
+            shinyalert(html = TRUE, type = "success",
+                       title = paste0("Prioritization created succesfully<br>",
+                                      'Layer name: ', suggestedName)
+            )
 
-          #cat(' \ == if out\n')
-          makeLL(lastLL = 'Corridors')
-        }
-      })
-      ) #isolate
-      #cat("\n ==== Prio ends\n")
-    } else {
+            rv$layersList <- funLayersList(
+              df = rv$layersList, tempFolder,
+              inout = 'out', type =  'Prioritization',
+              internal = out_pri_tif, public = suggestedName)
 
-      shinyalert(html = TRUE, type = "warning",
-                 title = paste0("Inputs not ready"),
-                 text = 'Be sure to upload or generate resistance, kernels and corridors before running this tool.'
-      )
+            makeLL(lastLL = 'Prioritization')
 
-    }
+          } else {
+            rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
+            cat(' \ == Error: \n')
+            cat(out_pri$log, '\n')
+            shinyalert(html = TRUE, type = "warning",
+                       title = paste0("Prioritization not finished"),
+                       text = out_pri$log
+            )
+
+            #outLL <- leafletProxy("ll_map_pri")
+            #print(class(outLL))
+
+            #cat(' \ == if out\n')
+            makeLL(lastLL = 'Corridors')
+          }
+        })
+        ) #isolate
+        #cat("\n ==== Prio ends\n")
+      } else {
+
+        shinyalert(html = TRUE, type = "warning",
+                   title = paste0("Inputs not ready"),
+                   text = 'Be sure to upload or generate resistance, kernels and corridors before running this tool.'
+        )
+
+      }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }))
   # isolate
@@ -6336,346 +6428,346 @@ server <- function(input, output, session) {
 
   ## Run comparisson
   observeEvent(input$com_py, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
-    rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      rv$log <- paste0(rv$log, ' \n Comparing scenarios --- ');updateVTEXT(rv$log) # _______
 
-    in_com_ly <- input$in_com_ly
-    if(!in_com_ly %in% c('Corridors', 'Dispersal kernels')){
-      rv$log <- paste0(rv$log, ' \n Select a data type first --- ');updateVTEXT(rv$log) # _______
-    } else {
+      in_com_ly <- input$in_com_ly
+      if(!in_com_ly %in% c('Corridors', 'Dispersal kernels')){
+        rv$log <- paste0(rv$log, ' \n Select a data type first --- ');updateVTEXT(rv$log) # _______
+      } else {
 
-      (compID <- sessionIDgen(short = TRUE))
+        (compID <- sessionIDgen(short = TRUE))
 
-      # in_com_ly <- 'Dispersal kernels'
-      # in_com_ly <- 'Corridors'
-      # tempFolder <- '/data/temp/scenario_folder'
-      #' layer_type_compare <- switch(in_com_ly,
-      #'                              #'Surface resistance' = 'out_surface_.+.tif$',
-      #'                              'Dispersal kernels' = 'out_crk_.+.tif$',
-      #'                              'Corridors' = 'out_lcc_.+.tif$')
-      #' # layer_type_compare <- 'out_lcc_.+.tif$'
-      #' (avail_layers <- list.files(path = tempFolder,
-      #'                             pattern = layer_type_compare,
-      #'                             full.names = TRUE))
-      #'
-      #' (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
-      #'
-      #' if(any( length(grep('resam.tif$', avail_layers, invert = FALSE))) ) {
-      #'   #pri nt(1)
-      #'   (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
-      #' }
-      #' # avail_layers <- rev(avail_layers)
-      #' (avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
-      #'                                            basename(avail_layers)) )])
-      #' (avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
-      #'                                           basename(avail_layers)) )])
-      ## ///
-      layer_type_compare2 <- switch(in_com_ly,
-                                    #'Surface resistance' = 'out_surface_.+.tif$',
-                                    'Dispersal kernels' = 'Kernels',
-                                    'Corridors' = 'Corridors')
+        # in_com_ly <- 'Dispersal kernels'
+        # in_com_ly <- 'Corridors'
+        # tempFolder <- '/data/temp/scenario_folder'
+        #' layer_type_compare <- switch(in_com_ly,
+        #'                              #'Surface resistance' = 'out_surface_.+.tif$',
+        #'                              'Dispersal kernels' = 'out_crk_.+.tif$',
+        #'                              'Corridors' = 'out_lcc_.+.tif$')
+        #' # layer_type_compare <- 'out_lcc_.+.tif$'
+        #' (avail_layers <- list.files(path = tempFolder,
+        #'                             pattern = layer_type_compare,
+        #'                             full.names = TRUE))
+        #'
+        #' (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+        #'
+        #' if(any( length(grep('resam.tif$', avail_layers, invert = FALSE))) ) {
+        #'   #pri nt(1)
+        #'   (avail_layers <- grep('resam.tif$', avail_layers, value = TRUE, invert = TRUE))
+        #' }
+        #' # avail_layers <- rev(avail_layers)
+        #' (avail_layers <<- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
+        #'                                            basename(avail_layers)) )])
+        #' (avail_layers <- avail_layers[order( gsub('[[:punct:]]|[a-zA-Z]', '',
+        #'                                           basename(avail_layers)) )])
+        ## ///
+        layer_type_compare2 <- switch(in_com_ly,
+                                      #'Surface resistance' = 'out_surface_.+.tif$',
+                                      'Dispersal kernels' = 'Kernels',
+                                      'Corridors' = 'Corridors')
 
-      # tempFolder <- '/data/temp/scenario_folder'
-      laylist <- rv$layersList
-      avail_layers  <<- laylist$internal[laylist$public %in% input$in_com_sX]
-      sce0 <- laylist$internal[laylist$public == input$in_com_s0]
-      sceX <- laylist$internal[laylist$public %in% input$in_com_sX]
-      ## ///
+        # tempFolder <- '/data/temp/scenario_folder'
+        laylist <- rv$layersList
+        avail_layers  <<- laylist$internal[laylist$public %in% input$in_com_sX]
+        sce0 <- laylist$internal[laylist$public == input$in_com_s0]
+        sceX <- laylist$internal[laylist$public %in% input$in_com_sX]
+        ## ///
 
-      # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
-      cat(' Compare: ', in_com_ly, '\n')
-      (compID <- sessionIDgen(short = TRUE))
-      if(in_com_ly == 'Corridors'){
-        prefcomp <- '_lcc_'
-      } else if(in_com_ly == 'Dispersal kernels'){
-        prefcomp <- '_crk_'
-      }
+        # mssg2Display <- paste0(length(avail_layers), ' layer found for ', in_com_ly, ': ', paste0(basename(avail_layers), collapse = ' '))
+        cat(' Compare: ', in_com_ly, '\n')
+        (compID <- sessionIDgen(short = TRUE))
+        if(in_com_ly == 'Corridors'){
+          prefcomp <- '_lcc_'
+        } else if(in_com_ly == 'Dispersal kernels'){
+          prefcomp <- '_crk_'
+        }
 
-      (outComFolder <- paste0(tempFolder, '/comp', prefcomp, compID))
-      # outComFolder <- 'C:/tempR/RtmpqMdjZ4/colaFYJ2024122012523105/comp_lcc_RIJ2024122012555405'
+        (outComFolder <- paste0(tempFolder, '/comp', prefcomp, compID))
+        # outComFolder <- 'C:/tempR/RtmpqMdjZ4/colaFYJ2024122012523105/comp_lcc_RIJ2024122012555405'
 
-      rv$comFolder <- outComFolder
-      (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
-      (outComPngRel <- paste0(outComFolder, '/compRel.png'))
+        rv$comFolder <- outComFolder
+        (outComPngAbs <- paste0(outComFolder, '/compAbs.png'))
+        (outComPngRel <- paste0(outComFolder, '/compRel.png'))
 
-      (outComCsvAbs <- paste0(outComFolder, '/compAbs.csv'))
-      (outComCsvRel <- paste0(outComFolder, '/compRel.csv'))
+        (outComCsvAbs <- paste0(outComFolder, '/compAbs.csv'))
+        (outComCsvRel <- paste0(outComFolder, '/compRel.csv'))
 
-      dir.create(outComFolder, recursive = TRUE)
+        dir.create(outComFolder, recursive = TRUE)
 
-      pdebug(devug=devug,sep='\n',pre='---COMP\n', "rv$comready", 'rv$com','in_com_ly') # = = = = = = = = = = = = = = = = = = =
-      inCompShp <- 'None'
-      inCompShpField <- 'None'
-      if (isTRUE(rv$comready) & is.null(rv$com)){
-        if (file.exists(rv$com)){
-          inCompShp <- rv$com
+        pdebug(devug=devug,sep='\n',pre='---COMP\n', "rv$comready", 'rv$com','in_com_ly') # = = = = = = = = = = = = = = = = = = =
+        inCompShp <- 'None'
+        inCompShpField <- 'None'
+        if (isTRUE(rv$comready) & is.null(rv$com)){
+          if (file.exists(rv$com)){
+            inCompShp <- rv$com
+          }
+        }
+
+        (
+          cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2 )
+        )
+
+        if (cond ){
+
+          output$ll_map_com <- leaflet::renderLeaflet({
+            if(in_com_ly == 'Corridors'){
+
+              comp_out <- tryCatch(
+                lcc_compare_py(intif = sce0,
+                               intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
+                               outcsvabs = outComCsvAbs,
+                               outcsvrel = outComCsvRel,
+                               outpngabs = outComPngAbs,
+                               outpngrel = outComPngRel,
+                               outfolder = outComFolder,
+                               inshp = inCompShp,
+                               shpfield = inCompShpField), error = function(e) NULL)
+              cat("\n --- LCC Compare out:\n")
+              cat(comp_out, '\n')
+
+
+            } else if(in_com_ly == 'Dispersal kernels'){
+
+              comp_out <- tryCatch(
+                crk_compare_py(intif = sce0,
+                               intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
+                               outcsvabs = outComCsvAbs,
+                               outcsvrel = outComCsvRel,
+                               outpngabs = outComPngAbs,
+                               outpngrel = outComPngRel,
+                               outfolder = outComFolder,
+                               inshp = inCompShp,
+                               shpfield = inCompShpField), error = function(e) NULL)
+              cat("\n --- CRK Comp out:\n")
+              print(comp_out)
+
+            }
+            com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
+
+            # cat("\n --- Comp out:\n")
+            # print(comp_out)
+
+            if (is.null(comp_out)){
+
+              rv$log <- paste0(rv$log, ' -- Comparisson failed');
+
+            } else if (!is.null(comp_out) ){
+              if(file.exists(comp_out$file)){
+
+
+                # outComCsvAbs <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compAbs.csv'
+                # outComCsvRel <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compRel.csv'
+
+                #mypal <- c("#BC3C29FF", "#0072B5FF", "#E18727FF","#20854EFF", "#7876B1FF", "#6F99ADFF","#FFDC91FF","#EE4C97FF")
+
+                csvAbs <- read.csv(outComCsvAbs)
+                csvAbs$val <- csvAbs[, 2]
+                csvAbs$col <- "#0072B5FF"
+                #csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
+                csvAbs$col[1] <- '#482173FF'
+
+                csvRel <- read.csv(outComCsvRel)
+                csvRel$val <- csvRel[, 2]
+                csvRel$col <- '#0072B5FF'
+                csvRel$col <- ifelse(csvRel$val >= 0, "#0072B5FF", "#BC3C29FF")
+
+
+                output$png1 <- renderImage({
+                  ## Following three lines CREATE a NEW image. You do not need them
+                  #outfile <- tempfile(fileext = '.png')
+                  #png(outfile, width = 400, height = 300) # Generate the PNG
+                  #dev.off()
+                  list(src = outComPngAbs, contentType = 'image/png', width = 400, height = 300,
+                       alt = "Absolute values")
+                }, deleteFile = TRUE)
+
+                output$png2 <- renderImage({
+                  list(src = outComPngRel, contentType = 'image/png', width = 400, height = 300,
+                       alt = "Relative values")
+                }, deleteFile = TRUE)
+
+
+                output$hccomp1 <- highcharter::renderHighchart({
+                  hcchart1 <<- hchart(csvAbs, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
+                    hc_exporting(enabled = TRUE) %>%
+                    # hc_add_series(data = csvAbs, name = 'Absolute values',
+                    #        type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+                    # hc_xAxis(categories = csvAbs$Scenario) %>%
+                    hc_title( text = "Corridor Movement Comparison") %>%
+                    hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
+                    hc_yAxis(title = list(text = paste(in_com_ly, " Sum")))
+                })
+
+
+
+                output$hccomp2 <- highcharter::renderHighchart({
+                  hcchart2 <<- hchart(csvRel, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
+                    hc_exporting(enabled = TRUE) %>%
+                    hc_title( text = "Relative Corridor Movement Comparison") %>%
+                    # hc_xAxis(categories = csvRel$Scenario) %>%
+                    # hc_add_series(data = csvRel, name = 'Relative difference', type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
+                    hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
+                    hc_yAxis(title = list(text = "% Change Relative to Baseline"))
+
+                })
+
+
+                #outComFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/compJJV2024073022250605'
+                # outComFolder <- 'C:/temp/cola/colaWYC2024111905173905/comp_crk_PLN2024111905332505'
+                # outComFolder <- 'C:/tempR/Rtmp8aHJhD/colaZQL2024122013391005/comp_lcc_ZJE2024122013440405'
+                com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
+                com_rast <- lapply(as.list(com_tifs), terra::rast)
+                com_stack <- do.call(c, com_rast)
+                #terra::NAflag(com_stack) <- 0
+                com_rng <- terra::global(com_stack, fun="range", na.rm = TRUE)
+                com_rng2 <- range(com_rng, na.rm = TRUE)
+
+                papalette <- 'RdBu'
+                #com_rng2 <- c(-1, -5)
+                #print(com_rng2)
+                com_rng2[is.infinite(com_rng2)] <- 0
+                rrev <- FALSE
+
+                if( any ( com_rng2 < 0) & any(com_rng2 > 0 ) ) {
+                  com_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
+                  papalette <- 'RdBu'
+                  rrev <- FALSE
+
+                } else if ( all(com_rng2 < 0) ) {
+                  com_rng2 <- min(range(com_rng2)) * c(0, 1)
+                  papalette <- 'Reds'
+                  rrev <- TRUE
+                } else if( all(com_rng2 > 0)){
+                  com_rng2 <- max(range(com_rng2)) * c(1, 0)
+                  papalette <- 'Blues'
+                  rrev <- FALSE
+
+                };
+
+                #cat (' ori_rng for comp: ', com_rng2[1], ' ', com_rng2[2], ' | Palette: ', papalette, '\n')
+
+
+                com_pal <- leaflet::colorNumeric(palette = papalette, reverse = rrev,
+                                                 domain = com_rng2, na.color = "transparent")
+                # "viridis", "magma", "inferno", or "plasma".
+
+                ori_rast <- lapply(as.list(avail_layers), terra::rast)
+                ori_stack <- do.call(c, ori_rast)
+                names(ori_stack) <- paste0('L', seq_along(names(ori_stack))-1)
+                ori_rng <- terra::global(ori_stack, fun="range")
+                #ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
+                ori_rng2 <- range(ori_rng, na.rm = TRUE)
+
+                ori_pal <- leaflet::colorNumeric(palette = "viridis",
+                                                 domain = ori_rng2+ c(0.001,0),
+                                                 reverse = TRUE,
+                                                 na.color = "transparent")
+
+                {
+                  # ## OPT1: sync 3 layers
+                  # lls <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
+                  #
+                  #  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+                  #  leaflet::addMeasure( position = "topright",
+                  #            primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                  #            activeColor = "#3D535D",completedColor = "#7D4479")
+                  #
+                  # llsA <- lls %>%
+                  #  addRasterImage(x = ori_stack[[1]], colors = ori_pal,
+                  #         opacity = .7,
+                  #         group = names(ori_stack)[1],
+                  #         layerId = names(ori_stack)[1]) %>%
+                  #  addLegend(pal = ori_pal, values = ori_rng2,
+                  #       position = 'bottomleft', title = names(ori_stack)[1]) %>%
+                  #  leaflet::addLayersControl(
+                  #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                  #   overlayGroups = c(names(ori_stack)[1]),
+                  #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                  #
+                  # llsB <- lls %>%
+                  #  addRasterImage(x = ori_stack[[2]], colors = ori_pal,
+                  #         opacity = .7,
+                  #         group = names(ori_stack)[2],
+                  #         layerId = names(ori_stack)[2]) %>%
+                  #  addLegend(pal = ori_pal, values = ori_rng2,
+                  #       position = 'bottomleft', title = names(ori_stack)[2]) %>%
+                  #  leaflet::addLayersControl(
+                  #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                  #   overlayGroups = c(names(ori_stack)[2]),
+                  #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                  #
+                  # llsC <- lls %>%
+                  #  addRasterImage(x = com_stack[[1]], colors = com_pal,
+                  #         opacity = .7,
+                  #         group = names(com_stack)[1],
+                  #         layerId = names(com_stack)[1]) %>%
+                  #  addLegend(pal = com_pal, values = com_rng2,
+                  #       position = 'bottomleft', title = names(com_stack)[1]) %>%
+                  #  leaflet::addLayersControl(
+                  #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                  #   overlayGroups = c(names(com_stack)[1]),
+                  #   options = leaflet::layersControlOptions(collapsed = FALSE))
+                  #
+                  #
+                  # leafsync::sync(llsA, llsB, llsC, no.initial.sync = TRUE)
+                }
+
+                # OPT2: all layers
+                #if (FALSE) {
+                llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
+
+                  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
+                  leaflet::addMeasure( position = "topright",
+                                       primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
+                                       activeColor = "#3D535D",completedColor = "#7D4479") %>%
+                  leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
+
+
+                ## Orig layers
+                for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
+                  suppressWarnings(
+                    llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
+                                                  opacity = .7,
+                                                  group = names(ori_stack)[x1],
+                                                  layerId = names(ori_stack)[x1])
+                  )
+                }
+
+                ## Compare layers
+                # terra::NAflag(com_stack) <- 0
+
+                for (x2 in 1:length(names(com_stack)) ){ # x2 <- 1
+                  #xr2 <- com_stack[[x2]]
+                  # terra::NAflag(xr2) <- 0
+                  llc <- llc %>% addRasterImage(x = com_stack[[x2]], colors = com_pal,
+                                                opacity = .7,
+                                                group = names(com_stack)[x2],
+                                                layerId = names(com_stack)[x2])
+                }
+
+                # in_com_ly <- 'kernels'
+                llc <- llc %>%
+                  addLegend(pal = ori_pal, values = ori_rng2,
+                            group = in_com_ly, layerId = in_com_ly,
+                            position = 'bottomleft', title = in_com_ly) %>%
+
+                  addLegend(pal = com_pal, values = com_rng2,
+                            group = in_com_ly, layerId = 'Comparison',
+                            position = 'bottomleft', title = 'Difference') %>%
+                  leaflet::addLayersControl(
+                    baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
+                    overlayGroups = c(names(com_stack), names(ori_stack)),
+                    options = leaflet::layersControlOptions(collapsed = FALSE))
+                # }
+              }
+            }
+
+            llc
+          })
         }
       }
-
-      (
-        cond <- all(file.exists(avail_layers)) & (length(avail_layers) >=2 )
-      )
-
-      if (cond ){
-
-        output$ll_map_com <- leaflet::renderLeaflet({
-          if(in_com_ly == 'Corridors'){
-
-            comp_out <- tryCatch(
-              lcc_compare_py(intif = sce0,
-                             intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
-                             outcsvabs = outComCsvAbs,
-                             outcsvrel = outComCsvRel,
-                             outpngabs = outComPngAbs,
-                             outpngrel = outComPngRel,
-                             outfolder = outComFolder,
-                             inshp = inCompShp,
-                             shpfield = inCompShpField), error = function(e) NULL)
-            cat("\n --- LCC Compare out:\n")
-            cat(comp_out, '\n')
-
-
-          } else if(in_com_ly == 'Dispersal kernels'){
-
-            comp_out <- tryCatch(
-              crk_compare_py(intif = sce0,
-                             intifs = paste0('"', paste0(c(sce0, sceX), collapse = ','), '"'),
-                             outcsvabs = outComCsvAbs,
-                             outcsvrel = outComCsvRel,
-                             outpngabs = outComPngAbs,
-                             outpngrel = outComPngRel,
-                             outfolder = outComFolder,
-                             inshp = inCompShp,
-                             shpfield = inCompShpField), error = function(e) NULL)
-            cat("\n --- CRK Comp out:\n")
-            print(comp_out)
-
-          }
-          com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
-
-          # cat("\n --- Comp out:\n")
-          # print(comp_out)
-
-          if (is.null(comp_out)){
-
-            rv$log <- paste0(rv$log, ' -- Comparisson failed');
-
-          } else if (!is.null(comp_out) ){
-            if(file.exists(comp_out$file)){
-
-
-              # outComCsvAbs <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compAbs.csv'
-              # outComCsvRel <- 'C:/cola//colaUBR2024121811410805//comp_crk_DCT2024121811441405/compRel.csv'
-
-              #mypal <- c("#BC3C29FF", "#0072B5FF", "#E18727FF","#20854EFF", "#7876B1FF", "#6F99ADFF","#FFDC91FF","#EE4C97FF")
-
-              csvAbs <- read.csv(outComCsvAbs)
-              csvAbs$val <- csvAbs[, 2]
-              csvAbs$col <- "#0072B5FF"
-              #csvAbs$col <- ifelse(csvAbs$val >= csvAbs$val[1], "#0072B5FF", "#BC3C29FF")
-              csvAbs$col[1] <- '#482173FF'
-
-              csvRel <- read.csv(outComCsvRel)
-              csvRel$val <- csvRel[, 2]
-              csvRel$col <- '#0072B5FF'
-              csvRel$col <- ifelse(csvRel$val >= 0, "#0072B5FF", "#BC3C29FF")
-
-
-              output$png1 <- renderImage({
-                ## Following three lines CREATE a NEW image. You do not need them
-                #outfile <- tempfile(fileext = '.png')
-                #png(outfile, width = 400, height = 300) # Generate the PNG
-                #dev.off()
-                list(src = outComPngAbs, contentType = 'image/png', width = 400, height = 300,
-                     alt = "Absolute values")
-              }, deleteFile = TRUE)
-
-              output$png2 <- renderImage({
-                list(src = outComPngRel, contentType = 'image/png', width = 400, height = 300,
-                     alt = "Relative values")
-              }, deleteFile = TRUE)
-
-
-              output$hccomp1 <- highcharter::renderHighchart({
-                hcchart1 <<- hchart(csvAbs, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
-                  hc_exporting(enabled = TRUE) %>%
-                  # hc_add_series(data = csvAbs, name = 'Absolute values',
-                  #        type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
-                  # hc_xAxis(categories = csvAbs$Scenario) %>%
-                  hc_title( text = "Corridor Movement Comparison") %>%
-                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
-                  hc_yAxis(title = list(text = paste(in_com_ly, " Sum")))
-              })
-
-
-
-              output$hccomp2 <- highcharter::renderHighchart({
-                hcchart2 <<- hchart(csvRel, type = 'column', hcaes(x = Scenario, y = val, color = col)) %>%
-                  hc_exporting(enabled = TRUE) %>%
-                  hc_title( text = "Relative Corridor Movement Comparison") %>%
-                  # hc_xAxis(categories = csvRel$Scenario) %>%
-                  # hc_add_series(data = csvRel, name = 'Relative difference', type = "column", hcaes(x = 'Scenario', y = 'val')) %>%
-                  hc_add_theme(hc_theme(chart = list(backgroundColor = 'white'))) %>%
-                  hc_yAxis(title = list(text = "% Change Relative to Baseline"))
-
-              })
-
-
-              #outComFolder <- '/tmp/RtmplWdZFP/colaBJM2024073022213505/compJJV2024073022250605'
-              # outComFolder <- 'C:/temp/cola/colaWYC2024111905173905/comp_crk_PLN2024111905332505'
-              # outComFolder <- 'C:/tempR/Rtmp8aHJhD/colaZQL2024122013391005/comp_lcc_ZJE2024122013440405'
-              com_tifs <- list.files(outComFolder, pattern = '.tif$', full.names = TRUE)
-              com_rast <- lapply(as.list(com_tifs), terra::rast)
-              com_stack <- do.call(c, com_rast)
-              #terra::NAflag(com_stack) <- 0
-              com_rng <- terra::global(com_stack, fun="range", na.rm = TRUE)
-              com_rng2 <- range(com_rng, na.rm = TRUE)
-
-              papalette <- 'RdBu'
-              #com_rng2 <- c(-1, -5)
-              #print(com_rng2)
-              com_rng2[is.infinite(com_rng2)] <- 0
-              rrev <- FALSE
-
-              if( any ( com_rng2 < 0) & any(com_rng2 > 0 ) ) {
-                com_rng2 <- max(abs(range(com_rng2))) * c(-1, 1)
-                papalette <- 'RdBu'
-                rrev <- FALSE
-
-              } else if ( all(com_rng2 < 0) ) {
-                com_rng2 <- min(range(com_rng2)) * c(0, 1)
-                papalette <- 'Reds'
-                rrev <- TRUE
-              } else if( all(com_rng2 > 0)){
-                com_rng2 <- max(range(com_rng2)) * c(1, 0)
-                papalette <- 'Blues'
-                rrev <- FALSE
-
-              };
-
-              #cat (' ori_rng for comp: ', com_rng2[1], ' ', com_rng2[2], ' | Palette: ', papalette, '\n')
-
-
-              com_pal <- leaflet::colorNumeric(palette = papalette, reverse = rrev,
-                                               domain = com_rng2, na.color = "transparent")
-              # "viridis", "magma", "inferno", or "plasma".
-
-              ori_rast <- lapply(as.list(avail_layers), terra::rast)
-              ori_stack <- do.call(c, ori_rast)
-              names(ori_stack) <- paste0('L', seq_along(names(ori_stack))-1)
-              ori_rng <- terra::global(ori_stack, fun="range")
-              #ori_rng2 <- max(abs(range(ori_rng))) * c(-1, 1)
-              ori_rng2 <- range(ori_rng, na.rm = TRUE)
-
-              ori_pal <- leaflet::colorNumeric(palette = "viridis",
-                                               domain = ori_rng2+ c(0.001,0),
-                                               reverse = TRUE,
-                                               na.color = "transparent")
-
-              {
-                # ## OPT1: sync 3 layers
-                # lls <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
-                #
-                #  leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-                #  leaflet::addMeasure( position = "topright",
-                #            primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                #            activeColor = "#3D535D",completedColor = "#7D4479")
-                #
-                # llsA <- lls %>%
-                #  addRasterImage(x = ori_stack[[1]], colors = ori_pal,
-                #         opacity = .7,
-                #         group = names(ori_stack)[1],
-                #         layerId = names(ori_stack)[1]) %>%
-                #  addLegend(pal = ori_pal, values = ori_rng2,
-                #       position = 'bottomleft', title = names(ori_stack)[1]) %>%
-                #  leaflet::addLayersControl(
-                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-                #   overlayGroups = c(names(ori_stack)[1]),
-                #   options = leaflet::layersControlOptions(collapsed = FALSE))
-                #
-                # llsB <- lls %>%
-                #  addRasterImage(x = ori_stack[[2]], colors = ori_pal,
-                #         opacity = .7,
-                #         group = names(ori_stack)[2],
-                #         layerId = names(ori_stack)[2]) %>%
-                #  addLegend(pal = ori_pal, values = ori_rng2,
-                #       position = 'bottomleft', title = names(ori_stack)[2]) %>%
-                #  leaflet::addLayersControl(
-                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-                #   overlayGroups = c(names(ori_stack)[2]),
-                #   options = leaflet::layersControlOptions(collapsed = FALSE))
-                #
-                # llsC <- lls %>%
-                #  addRasterImage(x = com_stack[[1]], colors = com_pal,
-                #         opacity = .7,
-                #         group = names(com_stack)[1],
-                #         layerId = names(com_stack)[1]) %>%
-                #  addLegend(pal = com_pal, values = com_rng2,
-                #       position = 'bottomleft', title = names(com_stack)[1]) %>%
-                #  leaflet::addLayersControl(
-                #   baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-                #   overlayGroups = c(names(com_stack)[1]),
-                #   options = leaflet::layersControlOptions(collapsed = FALSE))
-                #
-                #
-                # leafsync::sync(llsA, llsB, llsC, no.initial.sync = TRUE)
-              }
-
-              # OPT2: all layers
-              #if (FALSE) {
-              llc <- leaflet::leaflet() %>% leaflet::addTiles() %>% #clearBounds() %>%
-
-                leaflet::addProviderTiles( "Esri.WorldImagery", group = "Esri.WorldImagery" ) %>%
-                leaflet::addMeasure( position = "topright",
-                                     primaryLengthUnit = "kilometers", primaryAreaUnit = "sqkilometers",
-                                     activeColor = "#3D535D",completedColor = "#7D4479") %>%
-                leaflet::addMiniMap( tiles = leaflet::providers$Esri.WorldStreetMap, toggleDisplay = TRUE)
-
-
-              ## Orig layers
-              for (x1 in 1:length(names(ori_stack)) ){ # x1 <- 1
-                suppressWarnings(
-                  llc <- llc %>% addRasterImage(x = ori_stack[[x1]], colors = ori_pal,
-                                                opacity = .7,
-                                                group = names(ori_stack)[x1],
-                                                layerId = names(ori_stack)[x1])
-                )
-              }
-
-              ## Compare layers
-              # terra::NAflag(com_stack) <- 0
-
-              for (x2 in 1:length(names(com_stack)) ){ # x2 <- 1
-                #xr2 <- com_stack[[x2]]
-                # terra::NAflag(xr2) <- 0
-                llc <- llc %>% addRasterImage(x = com_stack[[x2]], colors = com_pal,
-                                              opacity = .7,
-                                              group = names(com_stack)[x2],
-                                              layerId = names(com_stack)[x2])
-              }
-
-              # in_com_ly <- 'kernels'
-              llc <- llc %>%
-                addLegend(pal = ori_pal, values = ori_rng2,
-                          group = in_com_ly, layerId = in_com_ly,
-                          position = 'bottomleft', title = in_com_ly) %>%
-
-                addLegend(pal = com_pal, values = com_rng2,
-                          group = in_com_ly, layerId = 'Comparison',
-                          position = 'bottomleft', title = 'Difference') %>%
-                leaflet::addLayersControl(
-                  baseGroups = c("OpenStreetMap", "Esri.WorldImagery"),
-                  overlayGroups = c(names(com_stack), names(ori_stack)),
-                  options = leaflet::layersControlOptions(collapsed = FALSE))
-              # }
-            }
-          }
-
-          llc
-        })
-      }
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -6996,7 +7088,7 @@ server <- function(input, output, session) {
       content = function(filename) {
         if(!is.null( rv$pritif ) & !is.null( rv$prishp ) ){
 
-          #status("running"); showStartStop(  ); delay(1,{ # actionhere
+          #status("running"); showStartStop(  ); delay(1,{ # actionherestart
           zip_file <- paste0(tempfile(), '_tempPrio.zip')
           print(paste0('Making prioritization temp zip file: ', zip_file))
 
@@ -7017,7 +7109,7 @@ server <- function(input, output, session) {
             system(zip_command)
           }
 
-         # showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+          # showStartStop( FALSE ) ; status("finished") }) # actionhereclose
           # copy the zip file to the file argument
           file.copy(zip_file, filename)
           # remove all the files created
@@ -7148,8 +7240,35 @@ server <- function(input, output, session) {
       })
   }
 
-  # EE server ------
+  # Earth Ranger ------
+  isolate({
+    observeEvent(
+      input$folderer, {
+        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        shinyDirChoose(input, 'folderer', roots=volumes, filetypes=c('', 'tif'))
+        inpf <- input$folderer
+        #
+        if ( 'character' %in% class('inpf') & !is.null( names(inpf) ) ){
+          roo <- inpf$root
+          paa <- inpf$path
+          un <- unlist(paa)
+          (roo <- gsub('.+\\(|\\)', '', roo))
+          new_wd <- file.path(roo, paste0(paa[paa != ''], collapse = '/'))
+          updateTextInput(session, inputId = 'in_er_localpath',
+                          value = new_wd, label = 'Local path:',
+                          placeholder = 'Local path')
+        }
+      })
+  })
 
+  observeEvent(
+    input$in_er_cola, {
+
+    })
+
+
+
+  # EE server ------
   # Enables EE tab
   output$tabee <- renderMenu({
     #print(rv$eecola)
@@ -7161,105 +7280,117 @@ server <- function(input, output, session) {
     }
   })
 
+
+  # Enables EE tab
+  output$taber <- renderMenu({
+    #print(rv$eecola)
+    #print('rv$eecola == 1')
+    if(rv$eecola){
+      #print( ' rv$eecola == 1 ')
+      menuItem("Earth Ranger points", tabName = "taber", icon = icon("paw")
+      )
+    }
+  })
+
   # SRV EE connects ---------
-  (observeEvent(input$ee_connect, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
+  (observeEvent(input$in_ee_connect, {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
-    (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
-    # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
-    # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
-    (ee_scr_path <- system.file(package = 'cola', 'ee'))
-    (ee_scr <- system.file(package = 'cola', 'ee/cml_connectEE.py'))
+      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+      (ee_scr_path <- system.file(package = 'cola', 'ee'))
+      (ee_scr <- system.file(package = 'cola', 'ee/cml_connectEE.py'))
 
 
-    if (!file.exists(ee_scr)){
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Script not found"),
-                 text = paste0(' Files for this task not found<br>')
-      )
-
-    } else {
-
-      shinyalert(html = TRUE, type = "info",
-                 title = paste0("Connecting to Earth Engine \n Please close this window and wait few seconds")
-      )
-
-      # param1 = sys.argv[1] # project name
-      # param2 = sys.argv[2] # shapefile path
-      # param3 = sys.argv[3] # ee asset
-      # input <- list(ee_project = 'gonzalezivan')
-
-      cmdee <- paste0(py, ' ', ee_scr_path,'/cml_connectEE.py ',
-                      input$ee_project, ' ', tempFolder, ' ')
-      #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan /data/cola/colaXGY2026030209460105 2>&1'
-      # cmdee <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaIJD2026030509435605/ 2>&1'
-
-      cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
-      cat(' Cola2: Connecting to EE\n')
-      cat(cmdee, '\n')
-
-      intCMD <- tryCatch(
-        #capture.output(
-        system( cmdee , ignore.stdout = FALSE,
-                ignore.stderr = FALSE,
-                intern = TRUE)
-        #)
-        ,
-        error = function(e) e$message)
-
-      cat('\n',intCMD[intCMD != ''], sep = '\n')
-
-      cond <- !any(grep('ERROR', intCMD))
-
-      if(cond){
-        output$box1 <- shinydashboard::renderValueBox({
-          valueBox(width = 12, "Connected", "EE ready", icon = icon("thumbs-up", lib = "glyphicon"),
-                   color = "green"
-          )
-        })
-
-        #tempFolder <- 'C:/cola/colaFLF2026072014371305/'
-        eecsvOK <- FALSE
-        eecsvOK <- tryCatch({
-          gee_assets <- read.csv(file.path(tempFolder, 'gee_assets_inventory.csv'));
-          gee_tasks <- read.csv(file.path(tempFolder, 'gee_tasks_eecu.csv'));
-          gee_usage <- read.csv(file.path(tempFolder, 'gee_eecu_monthly_summary.csv'));
-          eecsvOK <- TRUE
-        }, error = function(e)  FALSE)
-
-        if( eecsvOK ) {
-          gee_assets$ID <- 1:nrow(gee_assets)
-          output$out_ee_userfiles <- DT::renderDataTable(
-            dat <- datatable(gee_assets[, c('ID', 'Type', 'Name')], editable = T,
-                             options = list(
-                               paging =TRUE ,
-                               pageLength = 50 # nrow(rv$data)
-                             ) ) )
-
-          consumption <- paste0( tail(gee_usage$Month,1), ': ',
-                                 round(tail(gee_usage$eecu,1)), ' seconds')
-          output$vout_eeinfo <- renderText({isolate(consumption)})
-        }
-
-        cat(' ==== END ', paste(rep('=',40), collapse = ''), '\n')
-        shinyalert(html = TRUE, type = "success",
-                   title = paste0("Earth engine connected!"),
-                   text = paste0(input$ee_project, ' project found.',
-                                 ' Check EE available assets, tasks and EECU summary CSV files in ',
-                                 ' the session folder \n', tempFolder)
+      if (!file.exists(ee_scr)){
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Script not found"),
+                   text = paste0(' Files for this task not found<br>')
         )
 
       } else {
-        shinyalert(html = TRUE, type = "error",
-                   title = paste0("Earth engine not connected"),
-                   text = paste0(intCMD)
-        )
-      }
 
-    }
-    showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Connecting to Earth Engine \n Please close this window and wait few seconds")
+        )
+
+        # param1 = sys.argv[1] # project name
+        # param2 = sys.argv[2] # shapefile path
+        # param3 = sys.argv[3] # ee asset
+        # input <- list(in_ee_project = 'gonzalezivan')
+
+        cmdee <- paste0(py, ' ', ee_scr_path,'/cml_connectEE.py ',
+                        input$in_ee_project, ' ', tempFolder, ' ')
+        #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan /data/cola/colaXGY2026030209460105 2>&1'
+        # cmdee <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaIJD2026030509435605/ 2>&1'
+
+        cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+        cat(' Cola2: Connecting to EE\n')
+        cat(cmdee, '\n')
+
+        intCMD <- tryCatch(
+          #capture.output(
+          system( cmdee , ignore.stdout = FALSE,
+                  ignore.stderr = FALSE,
+                  intern = TRUE)
+          #)
+          ,
+          error = function(e) e$message)
+
+        cat('\n',intCMD[intCMD != ''], sep = '\n')
+
+        cond <- !any(grep('ERROR', intCMD))
+
+        if(cond){
+          output$box1 <- shinydashboard::renderValueBox({
+            valueBox(width = 12, "Connected", "EE ready", icon = icon("thumbs-up", lib = "glyphicon"),
+                     color = "green"
+            )
+          })
+
+          #tempFolder <- 'C:/cola/colaFLF2026072014371305/'
+          eecsvOK <- FALSE
+          eecsvOK <- tryCatch({
+            gee_assets <- read.csv(file.path(tempFolder, 'gee_assets_inventory.csv'));
+            gee_tasks <- read.csv(file.path(tempFolder, 'gee_tasks_eecu.csv'));
+            gee_usage <- read.csv(file.path(tempFolder, 'gee_eecu_monthly_summary.csv'));
+            eecsvOK <- TRUE
+          }, error = function(e)  FALSE)
+
+          if( eecsvOK ) {
+            gee_assets$ID <- 1:nrow(gee_assets)
+            output$out_ee_userfiles <- DT::renderDataTable(
+              dat <- datatable(gee_assets[, c('ID', 'Type', 'Name')], editable = T,
+                               options = list(
+                                 paging =TRUE ,
+                                 pageLength = 50 # nrow(rv$data)
+                               ) ) )
+
+            consumption <- paste0( tail(gee_usage$Month,1), ': ',
+                                   round(tail(gee_usage$eecu,1)), ' seconds')
+            output$vout_eeinfo <- renderText({isolate(consumption)})
+          }
+
+          cat(' ==== END ', paste(rep('=',40), collapse = ''), '\n')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Earth engine connected!"),
+                     text = paste0(input$in_ee_project, ' project found.',
+                                   ' Check EE available assets, tasks and EECU summary CSV files in ',
+                                   ' the session folder \n', tempFolder)
+          )
+
+        } else {
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Earth engine not connected"),
+                     text = paste0(intCMD)
+          )
+        }
+
+      }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })) # end isolate
 
   output$box1 <-  shinydashboard::renderValueBox({
@@ -7275,112 +7406,112 @@ server <- function(input, output, session) {
   # SRV EE upload  ------
 
   isolate(observeEvent(input$ee_fcupload, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
-    (py <- Sys.getenv("COLA_PYTHON_PATH"))
-    (ee_scr_path <- system.file(package = 'cola', 'ee'))
-    if(ee_scr_path == ''){
-      (ee_scr_path <- ('C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sat_ts_fusion'))
-    }
-
-    if (input$ee_ptspath == ''){
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("No EE path provided"),
-                 text = paste0(' Write your the feature EE path to be saved. Something like "projects/USERHERE/assets/MYFOLDER/MYLAYER')
-      )
-    } else{ # No empty username
-
-      if (!file.exists(ee_scr_path) ){
-        shinyalert(html = TRUE, type = "error",
-                   title = paste0("No EE scripts found in CoLa installation"),
-                   text = paste0(' Try reinstalling CoLa to ensure the proper availability of EE scripts')
-        )
-      } else { ## scirpts founded
-
-        ## Check local files
-        files2upload <- input$ee_localfile
-        cat(' ee_localfile : \n')
-        print(input$ee_localfile)
-        #
-        # cat(' files2upload : \n')
-        # print(files2upload)
-
-        if(sum(grepl('.csv$|.shp$', files2upload)) >= 2){
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0("Multiple spatial files detected. Use either SHP or CSV, but no both"),
-                     text = paste0(' You provided: ', paste(files2upload, collapse = ','))
-          )
-        } else if (!any(grep('.csv$|.shp$', files2upload))) {
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0(" You provided no valid spatial files. Upload either SHP or CSV, but no both"),
-                     text = paste0(' You provided: ', paste(files2upload, collapse = ','))
-          )
-        } else { # One real valid spatial file to upload
-          file2upload <- grep('.csv$|.shp$', files2upload, value = TRUE)
-
-          shinyalert(html = TRUE, type = "info",
-                     title = paste0("Submitting the task"),
-                     text = paste0(' Please wait meanwhile the task is submitted.Check thr R and Google Earth Engine console.')
-          )
-          # param1 = sys.argv[1] # project name
-          # param2 = sys.argv[2] # shapefile path
-          # param3 = sys.argv[3] # ee asset
-
-          # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
-
-          #          name size      type                                                                          datapath
-          # 1 amazon1.dbf   77      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/0.dbf
-          # 2 amazon1.prj  411      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/1.prj
-          # 3 amazon1.shp  128      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/2.shp
-          # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
-
-          # eeproject shp eeasset %abs
-          cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_uploadFeature.py ',
-                          input$ee_project, ' ',
-                          cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
-                          input$ee_absloc,
-                          '' #'  2>&1'
-          )
-          #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
-          # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
-          cat(' Uploading points EE:\n')
-          cat(cmdee, '\n')
-
-          intCMD <- tryCatch(
-            capture.output(
-              system( cmdee , ignore.stdout = FALSE,
-                      ignore.stderr = FALSE, intern = TRUE)),
-            error = function(e) e$message)
-
-          cat(intCMD)
-
-          cond <- !any(grep('ERROR', intCMD))
-
-          if(cond){
-            taskid <- grep('Upload submitted', intCMD, value = TRUE)
-
-            shinyalert(html = TRUE, type = "success",
-                       title = paste0("Task submitted"),
-                       text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid,
-                                     'The next assets will be created: <br>',
-                                     input$ee_ptspath, '<br>',
-                                     input$ee_ptspath, '_box'
-                       )
-            )
-
-          } else {
-            shinyalert(html = TRUE, type = "error",
-                       title = paste0("Task  not submitted"),
-                       text = paste0(intCMD)
-            )
-          }
-        }
-        #  ee.Authenticate()
-        # ee.Initialize(project='gonzalezivan')
-        #
+      (py <- Sys.getenv("COLA_PYTHON_PATH"))
+      (ee_scr_path <- system.file(package = 'cola', 'ee'))
+      if(ee_scr_path == ''){
+        (ee_scr_path <- ('C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/sat_ts_fusion'))
       }
-    }
+
+      if (input$ee_ptspath == ''){
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("No EE path provided"),
+                   text = paste0(' Write your the feature EE path to be saved. Something like "projects/USERHERE/assets/MYFOLDER/MYLAYER')
+        )
+      } else{ # No empty username
+
+        if (!file.exists(ee_scr_path) ){
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("No EE scripts found in CoLa installation"),
+                     text = paste0(' Try reinstalling CoLa to ensure the proper availability of EE scripts')
+          )
+        } else { ## scirpts founded
+
+          ## Check local files
+          files2upload <- input$ee_localfile
+          cat(' ee_localfile : \n')
+          print(input$ee_localfile)
+          #
+          # cat(' files2upload : \n')
+          # print(files2upload)
+
+          if(sum(grepl('.csv$|.shp$', files2upload)) >= 2){
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0("Multiple spatial files detected. Use either SHP or CSV, but no both"),
+                       text = paste0(' You provided: ', paste(files2upload, collapse = ','))
+            )
+          } else if (!any(grep('.csv$|.shp$', files2upload))) {
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0(" You provided no valid spatial files. Upload either SHP or CSV, but no both"),
+                       text = paste0(' You provided: ', paste(files2upload, collapse = ','))
+            )
+          } else { # One real valid spatial file to upload
+            file2upload <- grep('.csv$|.shp$', files2upload, value = TRUE)
+
+            shinyalert(html = TRUE, type = "info",
+                       title = paste0("Submitting the task"),
+                       text = paste0(' Please wait meanwhile the task is submitted.Check thr R and Google Earth Engine console.')
+            )
+            # param1 = sys.argv[1] # project name
+            # param2 = sys.argv[2] # shapefile path
+            # param3 = sys.argv[3] # ee asset
+
+            # input <- list(in_ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
+
+            #          name size      type                                                                          datapath
+            # 1 amazon1.dbf   77      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/0.dbf
+            # 2 amazon1.prj  411      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/1.prj
+            # 3 amazon1.shp  128      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/2.shp
+            # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
+
+            # eeproject shp eeasset %abs
+            cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_uploadFeature.py ',
+                            input$in_ee_project, ' ',
+                            cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
+                            input$ee_absloc,
+                            '' #'  2>&1'
+            )
+            #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
+            # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
+            cat(' Uploading points EE:\n')
+            cat(cmdee, '\n')
+
+            intCMD <- tryCatch(
+              capture.output(
+                system( cmdee , ignore.stdout = FALSE,
+                        ignore.stderr = FALSE, intern = TRUE)),
+              error = function(e) e$message)
+
+            cat(intCMD)
+
+            cond <- !any(grep('ERROR', intCMD))
+
+            if(cond){
+              taskid <- grep('Upload submitted', intCMD, value = TRUE)
+
+              shinyalert(html = TRUE, type = "success",
+                         title = paste0("Task submitted"),
+                         text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid,
+                                       'The next assets will be created: <br>',
+                                       input$ee_ptspath, '<br>',
+                                       input$ee_ptspath, '_box'
+                         )
+              )
+
+            } else {
+              shinyalert(html = TRUE, type = "error",
+                         title = paste0("Task  not submitted"),
+                         text = paste0(intCMD)
+              )
+            }
+          }
+          #  ee.Authenticate()
+          # ee.Initialize(project='gonzalezivan')
+          #
+        }
+      }
 
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   }
@@ -7405,10 +7536,10 @@ server <- function(input, output, session) {
       if ( ! 'root' %in%  names(inpf) ) {
 
         # if (  'character' %in% class('inpf') & !is.null( names(inpf) )) {
-        print("No file selected")
+        # print("No file selected")
       } else {
         #input$file
-        print("File selected")
+        # print("File selected")
         #print(inpf)
         newfile <- as.character(unname(parseFilePaths(volumes, inpf)$datapath))
         updateTextInput(
@@ -7528,214 +7659,214 @@ server <- function(input, output, session) {
 
   # Full
   observeEvent( input$in_eeexp_gomodis, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
-        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_eepath, # result folder
-        range_asset = input$in_eeexp_aoi, # aoi
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'full', # test
+          stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          gee_assets = input$in_eeexp_eepath, # result folder
+          range_asset = input$in_eeexp_aoi, # aoi
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
 
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gomodistest, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'test', # test
-        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        range_asset = input$in_eeexp_aoi,
-        gee_assets = input$in_eeexp_eepath,
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'test', # test
+          stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          range_asset = input$in_eeexp_aoi,
+          gee_assets = input$in_eeexp_eepath,
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## GAP
   # Full
   observeEvent( input$in_eeexp_gogaps, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
-        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'full', # test
+          stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd ,  cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd ,  cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gogaptest, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'test', # test
-        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'test', # test
+          stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd ,  cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd ,  cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -7743,189 +7874,189 @@ server <- function(input, output, session) {
 
   # Full
   observeEvent( input$in_eeexp_gometrics, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'full', # test
-        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'full', # test
+          stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ## Test
   observeEvent( input$in_eeexp_gometricstest, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
-             input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
-             input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeexp_label  != '' & input$in_eeexp_targetyear != '' & input$in_eeexp_maxconc  != '' &
+               input$in_eeexp_gap  != '' & input$in_eeexp_yy[1] != '' & input$in_eeexp_yy[2] != '' & input$in_eeexp_crs != '' &
+               input$in_eeexp_scale != '' & input$in_eeexp_tiles != '' & input$in_eeexp_aoi != '' & input$in_eeexp_eepath != '') ) {
 
-      if (!input$in_eeexp_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eeexp_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = 'test', # test
-        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eeexp_label,
-        gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
-        target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
-        min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
-        crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
-        tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = 'test', # test
+          stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eeexp_label,
+          gee_assets = input$in_eeexp_eepath, range_asset = input$in_eeexp_aoi,
+          target_year = input$in_eeexp_targetyear, gap_years = input$in_eeexp_gap,
+          min_year = input$in_eeexp_yy[1], max_year = input$in_eeexp_yy[2],
+          crs = input$in_eeexp_crs, scale = input$in_eeexp_scale,
+          tile_degrees = input$in_eeexp_tiles, max_concurrent = input$in_eeexp_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eeexp_checkbox)
 
-      if (input$in_eeexp_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeexp_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_C-MODISmet_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   # SRV EE extract -----
 
   observeEvent( input$in_eeext_go, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eeext_label  != '' & input$in_eeext_geepath != '' &
-             input$in_eeext_occasset  != '' &
-             input$in_eeext_colname  != '' & input$in_eeext_modelid != '' & input$in_eeext_localpath != '' ) ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eeext_label  != '' & input$in_eeext_geepath != '' &
+               input$in_eeext_occasset  != '' &
+               input$in_eeext_colname  != '' & input$in_eeext_modelid != '' & input$in_eeext_localpath != '' ) ) {
 
-      if (!input$in_eeext_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
-      # Sys.sleep(5)
-      #
-      # cat('1', input$ee_project, '\n2',
-      #   input$in_eeext_label,'\n3',
-      #   input$in_eeext_geepath,'\n4',
-      #   input$in_eeext_occasset,'\n5',
-      #   input$in_eeext_colname,'\n6',
-      #   input$in_eeext_modelid,'\n7',
-      #   input$in_eeext_localpath,'\n8',
-      #   tolower(input$in_eeext_mode),'\n9',
-      #   input$in_eeext_batchyear,'\n10',
-      #   input$in_eeext_batchnum,'\n11',
-      #   input$in_eeext_batchsize,'\n12',
-      #   input$in_eeext_yy[1],'\n13',
-      #   input$in_eeext_yy[2],'\n14',
-      #   input$in_eeext_maxconc,'\n15',
-      #   input$in_eeext_gap,'\n16',
-      #   input$in_eeext_scale,'\n17',
-      #   input$in_eeext_pbuffer,'\n18',
-      #   input$in_eeext_checkbox, '\n19')
+        if (!input$in_eeext_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
+        # Sys.sleep(5)
+        #
+        # cat('1', input$in_ee_project, '\n2',
+        #   input$in_eeext_label,'\n3',
+        #   input$in_eeext_geepath,'\n4',
+        #   input$in_eeext_occasset,'\n5',
+        #   input$in_eeext_colname,'\n6',
+        #   input$in_eeext_modelid,'\n7',
+        #   input$in_eeext_localpath,'\n8',
+        #   tolower(input$in_eeext_mode),'\n9',
+        #   input$in_eeext_batchyear,'\n10',
+        #   input$in_eeext_batchnum,'\n11',
+        #   input$in_eeext_batchsize,'\n12',
+        #   input$in_eeext_yy[1],'\n13',
+        #   input$in_eeext_yy[2],'\n14',
+        #   input$in_eeext_maxconc,'\n15',
+        #   input$in_eeext_gap,'\n16',
+        #   input$in_eeext_scale,'\n17',
+        #   input$in_eeext_pbuffer,'\n18',
+        #   input$in_eeext_checkbox, '\n19')
 
-      cmdd <- sdm_modis_extract_py(
-        ee_project = input$ee_project,
-        species = input$in_eeext_label,
-        gee_assets = input$in_eeext_geepath,
-        occurrence_asset = input$in_eeext_occasset,
-        column_train = input$in_eeext_colname,
-        model_id = input$in_eeext_modelid,
-        working_dir = input$in_eeext_localpath,
-        run_mode = tolower(input$in_eeext_mode),
-        batch_year = input$in_eeext_batchyear,
-        batch_num = input$in_eeext_batchnum,
-        batch_size = input$in_eeext_batchsize,
-        min_year = input$in_eeext_yy[1],
-        max_year = input$in_eeext_yy[2],
-        max_concurrent = input$in_eeext_maxconc,
-        gap_years = input$in_eeext_gap,
-        target_scale = input$in_eeext_scale,
-        point_buffer = input$in_eeext_pbuffer,
+        cmdd <- sdm_modis_extract_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eeext_label,
+          gee_assets = input$in_eeext_geepath,
+          occurrence_asset = input$in_eeext_occasset,
+          column_train = input$in_eeext_colname,
+          model_id = input$in_eeext_modelid,
+          working_dir = input$in_eeext_localpath,
+          run_mode = tolower(input$in_eeext_mode),
+          batch_year = input$in_eeext_batchyear,
+          batch_num = input$in_eeext_batchnum,
+          batch_size = input$in_eeext_batchsize,
+          min_year = input$in_eeext_yy[1],
+          max_year = input$in_eeext_yy[2],
+          max_concurrent = input$in_eeext_maxconc,
+          gap_years = input$in_eeext_gap,
+          target_scale = input$in_eeext_scale,
+          point_buffer = input$in_eeext_pbuffer,
 
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eeext_checkbox)
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eeext_checkbox)
 
-      if (input$in_eeext_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eeext_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -7954,62 +8085,62 @@ server <- function(input, output, session) {
   })
 
   observeEvent( input$in_eetra_go, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eetra_label != '' &
-             input$in_eetra_modelid != '' &
-             input$in_eetra_modex != '' &
-             input$in_eetra_label != '' &
-             input$in_eetra_label != '' & input$in_eetra_eepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eetra_label != '' &
+               input$in_eetra_modelid != '' &
+               input$in_eetra_modex != '' &
+               input$in_eetra_label != '' &
+               input$in_eetra_label != '' & input$in_eetra_eepath != '') ) {
 
-      if (!input$in_eetra_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eetra_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      logid <- sessionIDgen(letter = FALSE)
-      train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
-
-      cmdd <-  sdm_model_fitting_py(
-        ee_project = input$ee_project,
-        species = input$in_eetra_label,
-        model_id = input$in_eetra_modelid,
-        modex = tolower(input$in_eetra_modex),
-        target_col = input$in_eetra_colname,
-        gee_assets = input$in_eetra_path,
-        working_dir = input$in_eetra_localpath,
-        local_csv = train_csv,
-        imp_thresh = input$in_eetra_impthr,
-        categorical_threshold = input$in_eetra_catthr,
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eetra_checkbox)
-
-
-      if (input$in_eetra_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
-      } else {
-        # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+
+        cmdd <-  sdm_model_fitting_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eetra_label,
+          model_id = input$in_eetra_modelid,
+          modex = tolower(input$in_eetra_modex),
+          target_col = input$in_eetra_colname,
+          gee_assets = input$in_eetra_path,
+          working_dir = input$in_eetra_localpath,
+          local_csv = train_csv,
+          imp_thresh = input$in_eetra_impthr,
+          categorical_threshold = input$in_eetra_catthr,
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eetra_checkbox)
+
+
+        if (input$in_eetra_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
+      } else {
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -8040,157 +8171,157 @@ server <- function(input, output, session) {
 
 
   observeEvent( input$in_eepre_go, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eepre_label != '' &
-             input$in_eepre_modelid != '' &
-             input$in_eepre_aoi != '' &
-             input$in_eepre_path != '' ) ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eepre_label != '' &
+               input$in_eepre_modelid != '' &
+               input$in_eepre_aoi != '' &
+               input$in_eepre_path != '' ) ) {
 
-      if (!input$in_eepre_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Full MODIS extraction. Please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eepre_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Full MODIS extraction. Please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
 
-      cmdd <- sdm_modis_prediction_py(
-        pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
-        ee_project = input$ee_project,
-        species = input$in_eepre_label,
-        model_id = input$in_eepre_modelid,
-        gee_assets = input$in_eepre_path,
-        range_asset = input$in_eepre_aoi,
-        tile_degrees = input$in_eepre_tiles,
-        target_year  = (input$in_eepre_target),
-        run_mode = tolower(input$in_eepre_runmode),
-        max_concurrent = input$in_eepre_maxconc,
-        crs = input$in_eepre_crs,
-        scale = input$in_eepre_scale,
-        min_year = input$in_eepre_yy[1],
-        max_year = input$in_eepre_yy[2],
-        show_cml = TRUE, show_result = TRUE,
-        dry_run =  input$in_eepre_checkbox)
+        cmdd <- sdm_modis_prediction_py(
+          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
+          ee_project = input$in_ee_project,
+          species = input$in_eepre_label,
+          model_id = input$in_eepre_modelid,
+          gee_assets = input$in_eepre_path,
+          range_asset = input$in_eepre_aoi,
+          tile_degrees = input$in_eepre_tiles,
+          target_year  = (input$in_eepre_target),
+          run_mode = tolower(input$in_eepre_runmode),
+          max_concurrent = input$in_eepre_maxconc,
+          crs = input$in_eepre_crs,
+          scale = input$in_eepre_scale,
+          min_year = input$in_eepre_yy[1],
+          max_year = input$in_eepre_yy[2],
+          show_cml = TRUE, show_result = TRUE,
+          dry_run =  input$in_eepre_checkbox)
 
-      if (input$in_eepre_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eepre_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   # SRV EE GEE to Google drive  ----
 
   observeEvent( input$in_eedow_go, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eedow_path != '' &
-             input$in_eedow_aoi != '' &
-             input$in_eedow_drive != '' &
-             input$in_eedow_prefix != '' &
-             input$in_eedow_modelid != '' &
-             input$in_eedow_target != '' &
-             input$in_eedow_go != ''
-    ) ) {
-      # Complete parameters
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eedow_path != '' &
+               input$in_eedow_aoi != '' &
+               input$in_eedow_drive != '' &
+               input$in_eedow_prefix != '' &
+               input$in_eedow_modelid != '' &
+               input$in_eedow_target != '' &
+               input$in_eedow_go != ''
+      ) ) {
+        # Complete parameters
 
-      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+        if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
-      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
-      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
-      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
-      (ee_scr_path <- system.file(package = 'cola', 'ee'))
-      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+        (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+        # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+        # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+        (ee_scr_path <- system.file(package = 'cola', 'ee'))
+        (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
 
-      cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
-                      ' --ee_project ', input$ee_project, ' ',
-                      ' --ee_folder ', input$in_eedow_path, ' ',
-                      ' --gd_folder ', input$in_eedow_drive, ' ',
-                      ' --prefix ', input$in_eedow_prefix, ' ',
-                      ' --scale ', input$in_eedow_scale, ' ',
-                      ' --gee_assets ', input$in_eedow_path, ' ',
-                      ' --region ', input$in_eedow_aoi)
+        cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                        ' --in_ee_project ', input$in_ee_project, ' ',
+                        ' --ee_folder ', input$in_eedow_path, ' ',
+                        ' --gd_folder ', input$in_eedow_drive, ' ',
+                        ' --prefix ', input$in_eedow_prefix, ' ',
+                        ' --scale ', input$in_eedow_scale, ' ',
+                        ' --gee_assets ', input$in_eedow_path, ' ',
+                        ' --region ', input$in_eedow_aoi)
 
-      if (!input$in_eedow_checkbox){  # Full Run
-        shinyalert(
-          html = TRUE, type = "warning",
-          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-
-        # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
-        # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
-        # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
-
-        cat(' Exporting layer from Earth Engine to Google Drive\n')
-        cat(cmdee, '\n')
-
-        intCMD <- tryCatch(
-          capture.output(
-            system( cmdee , ignore.stdout = FALSE,
-                    ignore.stderr = FALSE,
-                    intern = TRUE)),
-          error = function(e) e$message)
-
-        cat(intCMD)
-        cond <- !any(grep('ERROR', intCMD))
-
-        if(cond){ # Success
-          logid <- sessionIDgen(letter = FALSE)
-          write.table( c(cmdee , intCMD),
-                       file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
+        if (!input$in_eedow_checkbox){  # Full Run
+          shinyalert(
+            html = TRUE, type = "warning",
+            title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
 
           shinyalert(
-            html = TRUE, type = "success",
-            title = paste0("Tasks submitted"),
-            text = paste0('Please check your Earth Engine console and Google Drive')
-          )
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
 
-        } else { # Error
-          errormessage <- paste0('Error: ', intCMD, '')
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0("Tasks not submitted"),
-                     text = errormessage)
+          # python gee_to_gd.py --in_ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
+          # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
+          # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
+
+          cat(' Exporting layer from Earth Engine to Google Drive\n')
+          cat(cmdee, '\n')
+
+          intCMD <- tryCatch(
+            capture.output(
+              system( cmdee , ignore.stdout = FALSE,
+                      ignore.stderr = FALSE,
+                      intern = TRUE)),
+            error = function(e) e$message)
+
+          cat(intCMD)
+          cond <- !any(grep('ERROR', intCMD))
+
+          if(cond){ # Success
+            logid <- sessionIDgen(letter = FALSE)
+            write.table( c(cmdee , intCMD),
+                         file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
+
+            shinyalert(
+              html = TRUE, type = "success",
+              title = paste0("Tasks submitted"),
+              text = paste0('Please check your Earth Engine console and Google Drive')
+            )
+
+          } else { # Error
+            errormessage <- paste0('Error: ', intCMD, '')
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0("Tasks not submitted"),
+                       text = errormessage)
+          }
+
+        } else if (input$in_eedow_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",#
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdee))
         }
 
-      } else if (input$in_eedow_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",#
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdee))
+      } else {
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -8222,209 +8353,209 @@ server <- function(input, output, session) {
   })
 
   observeEvent( input$in_eefull_go, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-    if ( all(input$ee_project != '' &
-             input$in_eefull_aoi != '' &
-             input$in_eefull_geepath != '' &
-             input$in_eefull_label != '' &
-             input$in_eefull_yy != '' &
-             input$in_eefull_targetyear != '' &
-             input$in_eefull_gap != '' &
-             input$in_eefull_maxconc != '' &
-             input$in_eefull_tiles != '' &
-             input$in_eefull_scale != '' &
-             input$in_eefull_colname != '' &
-             input$in_eefull_modelid != '' &
-             input$in_eefull_localpath != '' &
-             input$in_eefull_gdfolder != '' &
-             input$in_eefull_occasset != '')
-    ) {
-
-
-      if (!input$in_eetra_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Full workflow submitted. Please wait and ensure battery and internet connection"),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message. This will take a while ",
-                        "depending on the number of years, points, and extent of your analysis."))
-      }
+      if ( all(input$in_ee_project != '' &
+               input$in_eefull_aoi != '' &
+               input$in_eefull_geepath != '' &
+               input$in_eefull_label != '' &
+               input$in_eefull_yy != '' &
+               input$in_eefull_targetyear != '' &
+               input$in_eefull_gap != '' &
+               input$in_eefull_maxconc != '' &
+               input$in_eefull_tiles != '' &
+               input$in_eefull_scale != '' &
+               input$in_eefull_colname != '' &
+               input$in_eefull_modelid != '' &
+               input$in_eefull_localpath != '' &
+               input$in_eefull_gdfolder != '' &
+               input$in_eefull_occasset != '')
+      ) {
 
 
-      ### A Export ----
-      cmdA <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #'full', # test
-        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear,
-        gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles,
-        max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
-
-      ### B Gap ----
-      cmdB <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear,
-        gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles,
-        max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
-
-      ### C Metrics ----
-      cmdC <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear,
-        gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles,
-        max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
-
-      ### D Extract ----
-      cmdD <- sdm_modis_extract_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath,
-        occurrence_asset = input$in_eefull_occasset,
-        column_train = input$in_eefull_colname,
-        model_id = input$in_eefull_modelid,
-        working_dir = input$in_eefull_localpath,
-        run_mode = tolower(input$in_eefull_modeext), # single full resume
-        batch_year = input$in_eefull_batchyear,
-        batch_num = input$in_eefull_batchnum,
-        batch_size = input$in_eefull_batchsize,
-        min_year = input$in_eefull_yy[1],
-        max_year = input$in_eefull_yy[2],
-        max_concurrent = input$in_eefull_maxconc,
-        gap_years = input$in_eefull_gap,
-        target_scale = input$in_eefull_scale,
-        point_buffer = input$in_eefull_pbuffer,
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eefull_checkbox)
+        if (!input$in_eetra_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Full workflow submitted. Please wait and ensure battery and internet connection"),
+            text = paste0("Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message. This will take a while ",
+                          "depending on the number of years, points, and extent of your analysis."))
+        }
 
 
-      ### E Fit ----
+        ### A Export ----
+        cmdA <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #'full', # test
+          stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear,
+          gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles,
+          max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
-      logid <- sessionIDgen(letter = FALSE)
-      logfile <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
-      train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '.csv')
+        ### B Gap ----
+        cmdB <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear,
+          gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles,
+          max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
-      cmdE <-  sdm_model_fitting_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        model_id = input$in_eefull_modelid,
-        modex = tolower(input$in_eefull_modex),
-        target_col = input$in_eefull_colname,
-        gee_assets = input$in_eefull_geepath,
-        working_dir = input$in_eefull_localpath,
-        local_csv = train_csv,
-        imp_thresh = input$in_eetra_impthr,
-        categorical_threshold = input$in_eetra_catthr,
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eetra_checkbox)
+        ### C Metrics ----
+        cmdC <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear,
+          gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles,
+          max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+
+        ### D Extract ----
+        cmdD <- sdm_modis_extract_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath,
+          occurrence_asset = input$in_eefull_occasset,
+          column_train = input$in_eefull_colname,
+          model_id = input$in_eefull_modelid,
+          working_dir = input$in_eefull_localpath,
+          run_mode = tolower(input$in_eefull_modeext), # single full resume
+          batch_year = input$in_eefull_batchyear,
+          batch_num = input$in_eefull_batchnum,
+          batch_size = input$in_eefull_batchsize,
+          min_year = input$in_eefull_yy[1],
+          max_year = input$in_eefull_yy[2],
+          max_concurrent = input$in_eefull_maxconc,
+          gap_years = input$in_eefull_gap,
+          target_scale = input$in_eefull_scale,
+          point_buffer = input$in_eefull_pbuffer,
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eefull_checkbox)
 
 
-      ### F Predict ----
+        ### E Fit ----
 
-      cmdF <- sdm_modis_prediction_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        model_id = input$in_eefull_modelid,
-        gee_assets = input$in_eefull_geepath,
-        range_asset = input$in_eefull_aoi,
-        tile_degrees = input$in_eefull_tiles,
-        target_year  = (input$in_eefull_targetyear),
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        max_concurrent = input$in_eefull_maxconc,
-        crs = input$in_eefull_crs,
-        scale = input$in_eefull_scale,
-        min_year = input$in_eefull_yy[1],
-        max_year = input$in_eefull_yy[2],
-        show_cml = TRUE, show_result = TRUE,
-        dry_run =  input$in_eefull_checkbox)
-
-
-      ### G Download ----
-
-      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
-      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
-      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
-      (ee_scr_path <- system.file(package = 'cola', 'ee'))
-      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
-      # # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
-
-      cmdeG <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
-                      ' --ee_project ', input$ee_project, ' ',
-                      ' --ee_folder ', input$in_eefull_geepath, ' ',
-                      ' --gd_folder ', input$in_eefull_gdfolder, ' ',
-                      ' --prefix ', input$in_eefull_prefix, ' ',
-                      ' --scale ', input$in_eefull_scale, ' ',
-                      ' --gee_assets ', input$in_eefull_geepath, ' ',
-                      ' --region ', input$in_eefull_aoi)
-
-      cat(' Exporting layer from Earth Engine to Google Drive\n')
-      cat(cmdee, '\n')
-
-      if (input$in_eefull_checkbox){
-
-        intCMD <- tryCatch(
-          capture.output(
-            system( cmdee , ignore.stdout = FALSE,
-                    ignore.stderr = FALSE,
-                    intern = TRUE)),
-          error = function(e) e$message)
-
-        cat(intCMD)
-        cond <- !any(grep('ERROR', intCMD))
-
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
-
-      }
-
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdd$cmd))
-      } else {
-        # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        logfile <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+        train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '.csv')
+
+        cmdE <-  sdm_model_fitting_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          model_id = input$in_eefull_modelid,
+          modex = tolower(input$in_eefull_modex),
+          target_col = input$in_eefull_colname,
+          gee_assets = input$in_eefull_geepath,
+          working_dir = input$in_eefull_localpath,
+          local_csv = train_csv,
+          imp_thresh = input$in_eetra_impthr,
+          categorical_threshold = input$in_eetra_catthr,
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eetra_checkbox)
+
+
+        ### F Predict ----
+
+        cmdF <- sdm_modis_prediction_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          model_id = input$in_eefull_modelid,
+          gee_assets = input$in_eefull_geepath,
+          range_asset = input$in_eefull_aoi,
+          tile_degrees = input$in_eefull_tiles,
+          target_year  = (input$in_eefull_targetyear),
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          max_concurrent = input$in_eefull_maxconc,
+          crs = input$in_eefull_crs,
+          scale = input$in_eefull_scale,
+          min_year = input$in_eefull_yy[1],
+          max_year = input$in_eefull_yy[2],
+          show_cml = TRUE, show_result = TRUE,
+          dry_run =  input$in_eefull_checkbox)
+
+
+        ### G Download ----
+
+        (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+        # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+        # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+        (ee_scr_path <- system.file(package = 'cola', 'ee'))
+        (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+        # # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
+
+        cmdeG <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                        ' --in_ee_project ', input$in_ee_project, ' ',
+                        ' --ee_folder ', input$in_eefull_geepath, ' ',
+                        ' --gd_folder ', input$in_eefull_gdfolder, ' ',
+                        ' --prefix ', input$in_eefull_prefix, ' ',
+                        ' --scale ', input$in_eefull_scale, ' ',
+                        ' --gee_assets ', input$in_eefull_geepath, ' ',
+                        ' --region ', input$in_eefull_aoi)
+
+        cat(' Exporting layer from Earth Engine to Google Drive\n')
+        cat(cmdee, '\n')
+
+        if (input$in_eefull_checkbox){
+
+          intCMD <- tryCatch(
+            capture.output(
+              system( cmdee , ignore.stdout = FALSE,
+                      ignore.stderr = FALSE,
+                      intern = TRUE)),
+            error = function(e) e$message)
+
+          cat(intCMD)
+          cond <- !any(grep('ERROR', intCMD))
+
+          # output$out_status <- renderUI({
+          #   tags$span("Finished", style = "color: blue;")
+          # })
+
+        }
+
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0(cmdd$cmd))
+        }
+      } else {
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
@@ -8432,545 +8563,775 @@ server <- function(input, output, session) {
   # SRV EE full export A  ------
 
   observeEvent( input$in_eefull_goexp, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
-             input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
-             input$in_eefull_aoi != '' & input$in_eefull_geepath != '')  ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eefull_label  != '' &
+               input$in_eefull_maxconc  != '' &
+               input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+               input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+               input$in_eefull_aoi != '' & input$in_eefull_geepath != '')  ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("MODIS extraction (1/3) task submitted. Please wait."),
-          text = paste0("Creating the results in this path:<br>",
-                        "{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}:<br><p>",
-                        input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("MODIS extraction (1/3) task submitted. Please wait."),
+            text = paste0("Creating the results in this path:<br>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/temp:</i><br><p>",
+                          input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear,
-        gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          stage = 'export_annual', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear,
+          gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Export covariates:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Export covariates:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/temp"))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_A-MODISexp_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/temp"))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full gap B  ------
   observeEvent( input$in_eefull_gogap, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
-             input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
-             input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eefull_label  != '' &
+               input$in_eefull_maxconc  != '' &
+               input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+               input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+               input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("MODIS extraction (2/3 - gap filling) task submitted. Please wait."),
-          text = paste0("Creating the results in this path:<br>",
-                        "{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}<br><p>",
-                        input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("MODIS extraction (2/3 - gap filling) task submitted. Please wait."),
+            text = paste0("Creating the results in this path:<br>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/temp</i><br><p>",
+                          input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          stage = 'gap_fill', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Gap filling:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Gap filling:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd ,  cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/temp"))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd ,  cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_B-MODISgap_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full metrics C  ------
   observeEvent( input$in_eefull_gomet, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eefull_label  != '' &
-             input$in_eefull_maxconc  != '' &
-             input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
-             input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
-             input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eefull_label  != '' &
+               input$in_eefull_maxconc  != '' &
+               input$in_eefull_gap  != '' & input$in_eefull_crs != '' &
+               input$in_eefull_scale != '' & input$in_eefull_tiles != '' &
+               input$in_eefull_aoi != '' & input$in_eefull_geepath != '') ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("MODIS extraction (3/3 - metrics) task submitted. Please wait."),
-          text = paste0("Creating the results in this path:<br>",
-                        "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}</i><br><p>",
-                        input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_",input$in_eefull_targetyear,"/metrics</p><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("MODIS extraction (3/3 - metrics) task submitted. Please wait."),
+            text = paste0("Creating the results in this path:<br>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/metrics</i><br><p>",
+                          input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/metrics</p><br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdd <- sdm_modis_export_py(
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
-        ee_project = input$ee_project, species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath, # result folder
-        range_asset = input$in_eefull_aoi, # aoi
-        target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
-        min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
-        crs = input$in_eefull_crs, scale = input$in_eefull_scale,
-        tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
-        show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
+        cmdd <- sdm_modis_export_py(
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          stage = 'reduce_to_metrics', # 'export_annual', 'gap_fill', 'reduce_to_metrics'
+          ee_project = input$in_ee_project, species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath, # result folder
+          range_asset = input$in_eefull_aoi, # aoi
+          target_year = input$in_eefull_targetyear, gap_years = input$in_eefull_gap,
+          min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
+          crs = input$in_eefull_crs, scale = input$in_eefull_scale,
+          tile_degrees = input$in_eefull_tiles, max_concurrent = input$in_eefull_maxconc,
+          show_cml = TRUE, show_result = TRUE, dry_run = input$in_eefull_checkbox)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Metrics calculation:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Metrics calculation:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_C-MODISmetrics_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_",input$in_eefull_targetyear,"/metrics"))      }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_C-MODISmetrics_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full extract  ------
 
   observeEvent( input$in_eefull_goext, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' &
-             input$in_eefull_label  != '' &
-             input$in_eefull_geepath != '' &
-             input$in_eefull_occasset  != '' &
-             input$in_eefull_colname  != '' &
-             input$in_eefull_modelid != '' &
-             input$in_eefull_localpath != '' ) ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' &
+               input$in_eefull_label  != '' &
+               input$in_eefull_geepath != '' &
+               input$in_eefull_occasset  != '' &
+               input$in_eefull_colname  != '' &
+               input$in_eefull_modelid != '' &
+               input$in_eefull_localpath != '' ) ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Task submmited. Points + image extraction. Please wait."),
-          text = paste0("Creating the results in this path:<br>",
-                        "<br>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}<br>",
-                        input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_exports_",input$in_eefull_modelid,"</i><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Task submmited. Points + image extraction. Please wait."),
+            text = paste0("Creating the results in this path:<br>",
+                          "<br><i>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}</i><br>",
+                          input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_exports_",input$in_eefull_modelid,"<br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdd <- sdm_modis_extract_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        gee_assets = input$in_eefull_geepath,
-        occurrence_asset = input$in_eefull_occasset,
-        column_train = input$in_eefull_colname,
-        model_id = input$in_eefull_modelid,
-        working_dir = input$in_eefull_localpath,
-        run_mode = tolower(input$in_eefull_modeext),
-        batch_year = input$in_eefull_batchyear,
-        batch_num = input$in_eefull_batchnum,
-        batch_size = input$in_eefull_batchsize,
-        min_year = input$in_eefull_yy[1],
-        max_year = input$in_eefull_yy[2],
-        max_concurrent = input$in_eefull_maxconc,
-        gap_years = input$in_eefull_gap,
-        target_scale = input$in_eefull_scale,
-        point_buffer = input$in_eefull_pbuffer,
+        cmdd <- sdm_modis_extract_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          gee_assets = input$in_eefull_geepath,
+          occurrence_asset = input$in_eefull_occasset,
+          column_train = input$in_eefull_colname,
+          model_id = input$in_eefull_modelid,
+          working_dir = input$in_eefull_localpath,
+          run_mode = tolower(input$in_eefull_modeext),
+          batch_year = input$in_eefull_batchyear,
+          batch_num = input$in_eefull_batchnum,
+          batch_size = input$in_eefull_batchsize,
+          min_year = input$in_eefull_yy[1],
+          max_year = input$in_eefull_yy[2],
+          max_concurrent = input$in_eefull_maxconc,
+          gap_years = input$in_eefull_gap,
+          target_scale = input$in_eefull_scale,
+          point_buffer = input$in_eefull_pbuffer,
 
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eefull_checkbox)
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eefull_checkbox)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Values extraction:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Values extraction:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0("Creating the results in this path:<br>",
+                          input$in_eefull_geepath, "/", input$in_eefull_label,
+                          "_SDM_modis_exports_",input$in_eefull_modelid,"<br>")
+          )
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_D-MODISext_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0("Creating the results in this path:<br>",
-                        "<br>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}<br>",
-                        input$in_eefull_geepath, "/", input$in_eefull_label,
-                        "_SDM_modis_exports_",input$in_eefull_modelid,"</i><br>")
-        )
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full fit training  ------
 
   observeEvent( input$in_eefull_gofit, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eefull_label != '' &
-             input$in_eefull_modelid != '' &
-             input$in_eefull_modex != '' &
-             input$in_eefull_label != '' & input$in_eefull_geepath != '') ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eefull_label != '' &
+               input$in_eefull_modelid != '' &
+               input$in_eefull_modex != '' &
+               input$in_eefull_label != '' & input$in_eefull_geepath != '') ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Model fitting task submmited. Please wait."),
-          text = paste0("Creating the results:<br>",
-                        "<i>{GEE_ASSETS}/{MODEL-ID}_... <br>:",
-                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
-                        "_ ... </i><br>",
-                        "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...: <br>",
-                        input$in_eefull_localpath, "/", input$in_eefull_modelid,
-                        "_... </i><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Model fitting task submmited. Please wait."),
+            text = paste0("Creating the results:<br>",
+                          "<i>{GEE_ASSETS}/{MODEL-ID}_...: </i><br>",
+                          input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                          "_ ... <br>",
+                          "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...:</i> <br>",
+                          input$in_eefull_localpath, "/", input$in_eefull_modelid,
+                          "_...<br><br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
 
-      logid <- sessionIDgen(letter = FALSE)
-      train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
-
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
-
-      cmdd <-  sdm_model_fitting_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        model_id = input$in_eefull_modelid,
-        modex = tolower(input$in_eefull_modex),
-        target_col = input$in_eefull_colname,
-        gee_assets = input$in_eefull_geepath,
-        working_dir = input$in_eefull_localpath,
-        local_csv = train_csv,
-        imp_thresh = input$in_eefull_impthr,
-        categorical_threshold = input$in_eefull_catthr,
-        show_cml = TRUE, show_result = TRUE,
-        dry_run = input$in_eefull_checkbox)
-
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
-
-
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Model fitting:"),
-                   text = paste0(cmdd$cmd))
-      } else {
-        # Full Run
         logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0("Creating the results:<br>",
-                        "<i>{GEE_ASSETS}/{MODEL-ID}_... <br>:",
-                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
-                        "_ ... </i><br>",
-                        "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...: <br>",
-                        input$in_eefull_localpath, "/", input$in_eefull_modelid,
-                        "_... </i><br>",
-                        "Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message")
-        )
+        train_csv <- paste0(tempFolder, '/cola2EE_E-MODIStra_', logid, '_log.txt')
+
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
+
+        cmdd <-  sdm_model_fitting_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          model_id = input$in_eefull_modelid,
+          modex = tolower(input$in_eefull_modex),
+          target_col = input$in_eefull_colname,
+          gee_assets = input$in_eefull_geepath,
+          working_dir = input$in_eefull_localpath,
+          local_csv = train_csv,
+          imp_thresh = input$in_eefull_impthr,
+          categorical_threshold = input$in_eefull_catthr,
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = input$in_eefull_checkbox)
+
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
+
+
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Model fitting:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_E-MODIStrain_', logid, '.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0("Creating the results:<br>",
+                          "<i>{GEE_ASSETS}/{MODEL-ID}_... <br>:",
+                          input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                          "_ ... </i><br>",
+                          "<br><i>{LOCAL_FOLDER}/{MODEL-ID}_...: <br>",
+                          input$in_eefull_localpath, "/", input$in_eefull_modelid,
+                          "_... </i><br>",
+                          "Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message")
+          )
+        }
+      } else {
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full predict  ------
 
   observeEvent( input$in_eefull_gopre, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' & input$in_eefull_label != '' &
-             input$in_eefull_modelid != '' &
-             input$in_eefull_aoi != '' &
-             input$in_eefull_geepath != '' ) ) {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' & input$in_eefull_label != '' &
+               input$in_eefull_modelid != '' &
+               input$in_eefull_aoi != '' &
+               input$in_eefull_geepath != '' ) ) {
 
-      if (!input$in_eefull_checkbox){
-        # Full Run
-        shinyalert(
-          html = TRUE, type = "info",
-          title = paste0("Model prediction task submmited. Please wait."),
-          text = paste0("Creating the predictions here:<br>",
-                        "<i>{GEE_ASSETS}/{MODEL-ID}_prediction_{TARGET-YEAR}:<br>",
-                        input$in_eefull_geepath, "/", input$in_eefull_modelid,
-                        "_prediction_", input$in_eefull_targetyear,
-                        "<br>. Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-      }
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        if (!input$in_eefull_checkbox){
+          # Full Run
+          shinyalert(
+            html = TRUE, type = "info",
+            title = paste0("Model prediction task submmited. Please wait."),
+            text = paste0("Creating the predictions here:<br>",
+                          "<i>{GEE_ASSETS}/{MODEL-ID}_prediction_{TARGET-YEAR}:</i><br>",
+                          input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                          "_prediction_", input$in_eefull_targetyear,
+                          "<br><br>. Wait for results in your R console and Earth Engine app.",
+                          " Don't close R until you see a Finish message"))
+        }
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdd <- sdm_modis_prediction_py(
-        ee_project = input$ee_project,
-        species = input$in_eefull_label,
-        model_id = input$in_eefull_modelid,
-        gee_assets = input$in_eefull_geepath,
-        range_asset = input$in_eefull_aoi,
-        tile_degrees = input$in_eefull_tiles,
-        target_year  = (input$in_eefull_targetyear),
-        run_mode = tolower(input$in_eefull_modepre), #  full test
-        max_concurrent = input$in_eefull_maxconc,
-        crs = input$in_eefull_crs,
-        scale = input$in_eefull_scale,
-        min_year = input$in_eefull_yy[1],
-        max_year = input$in_eefull_yy[2],
-        show_cml = TRUE, show_result = TRUE,
-        dry_run =  input$in_eefull_checkbox)
+        cmdd <- sdm_modis_prediction_py(
+          ee_project = input$in_ee_project,
+          species = input$in_eefull_label,
+          model_id = input$in_eefull_modelid,
+          gee_assets = input$in_eefull_geepath,
+          range_asset = input$in_eefull_aoi,
+          tile_degrees = input$in_eefull_tiles,
+          target_year  = (input$in_eefull_targetyear),
+          run_mode = tolower(input$in_eefull_modepre), #  full test
+          max_concurrent = input$in_eefull_maxconc,
+          crs = input$in_eefull_crs,
+          scale = input$in_eefull_scale,
+          min_year = input$in_eefull_yy[1],
+          max_year = input$in_eefull_yy[2],
+          show_cml = TRUE, show_result = TRUE,
+          dry_run =  input$in_eefull_checkbox)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
-      if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",
-                   title = paste0("Run this code in your console for Model prediction:"),
-                   text = paste0(cmdd$cmd))
+        if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0("Run this code in your console for Model prediction:"),
+                     text = paste0(cmdd$cmd))
+        } else {
+          # Full Run
+          logid <- sessionIDgen(letter = FALSE)
+          write.table( c(cmdd$cmd , cmdd$log),
+                       file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
+          shinyalert(
+            html = TRUE, type = "success",
+            title = paste0("Task finished. Check the results in your R console",
+                           " and Earth Engine app."),
+            text = paste0('Results here: <br>',
+                          input$in_eefull_geepath, "/", input$in_eefull_modelid,
+                          "_prediction_", input$in_eefull_targetyear))
+        }
       } else {
-        # Full Run
-        logid <- sessionIDgen(letter = FALSE)
-        write.table( c(cmdd$cmd , cmdd$log),
-                     file = paste0(tempFolder, '/cola2EE_F-MODIStpred_', logid, '_test.txt'))
-        shinyalert(
-          html = TRUE, type = "success",
-          title = paste0("Task finished. Check the results in your R console",
-                         " and Earth Engine app."),
-          text = paste0(cmdd$cmd))
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
   ### SRV EE full download  ------
 
   observeEvent( input$in_eefull_godow, {
-    status("running"); showStartStop(  ); delay(1,{ # actionhere
-    if ( all(input$ee_project != '' &
-             input$in_eefull_geepath != '' &
-             input$in_eefull_aoi != '' &
-             input$in_eefull_gdfolder != '' &
-             input$in_eefull_gdprefix != '' &
-             input$in_eefull_modelid != '' &
-             input$in_eefull_targetyear != ''
-    ) ) {
-      # Complete parameters
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      if ( all(input$in_ee_project != '' &
+               input$in_eefull_geepath != '' &
+               input$in_eefull_aoi != '' &
+               input$in_eefull_gdfolder != '' &
+               input$in_eefull_gdprefix != '' &
+               input$in_eefull_modelid != '' &
+               input$in_eefull_targetyear != ''
+      ) ) {
+        # Complete parameters
 
-      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+        if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
-      (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
-      # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
-      # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
-      (ee_scr_path <- system.file(package = 'cola', 'ee'))
-      (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
+        (py <- cola::adaptFilePath(Sys.getenv("COLA_PYTHON_PATH")))
+        # (py <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe')
+        # (ee_scr_path <- system.file(package = 'cola', 'sat_ts_fusion'))
+        (ee_scr_path <- system.file(package = 'cola', 'ee'))
+        (ee_scr <- system.file(package = 'cola', 'ee/cml_EEtoGD.py'))
 
-      # output$out_status <- renderUI({
-      #   tags$span(" Running, wait... ", style = "color: red;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span(" Running, wait... ", style = "color: red;")
+        # })
 
-      cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
-                      ' --ee_project ', input$ee_project,
-                      ' --ee_folder ', input$in_eefull_geepath, '/',
-                      input$in_eefull_modelid, '_prediction_', input$in_eefull_targetyear,
-                      ' --gd_folder ', input$in_eefull_gdfolder,
-                      ' --prefix ', input$in_eefull_gdprefix,
-                      ' --scale ', input$in_eefull_scale,
-                      ' --gee_assets ', input$in_eefull_geepath,
-                      ' --region ', input$in_eefull_aoi)
+        cmdee <- paste0(cola::adaptFilePath(py), ' ', cola::adaptFilePath(ee_scr),
+                        ' --ee_project ', input$in_ee_project,
+                        ' --ee_folder ', input$in_eefull_geepath, '/',
+                        input$in_eefull_modelid, '_prediction_', input$in_eefull_targetyear,
+                        ' --gd_folder ', input$in_eefull_gdfolder,
+                        ' --prefix ', input$in_eefull_gdprefix,
+                        ' --scale ', input$in_eefull_scale,
+                        ' --gee_assets ', input$in_eefull_geepath,
+                        ' --region ', input$in_eefull_aoi)
 
-      # output$out_status <- renderUI({
-      #   tags$span("Finished", style = "color: blue;")
-      # })
+        # output$out_status <- renderUI({
+        #   tags$span("Finished", style = "color: blue;")
+        # })
 
 
-      if (!input$in_eefull_checkbox){  # Full Run
-        shinyalert(
-          html = TRUE, type = "warning",
-          title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
-          text = paste0("Wait for results in your R console and Earth Engine app.",
-                        " Don't close R until you see a Finish message"))
-
-        # python gee_to_gd.py --ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
-        # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
-        # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
-
-        cat('\n\t CMD Google Earth download to Google Drive:\n', cmdee, '\n\n')
-
-        intCMD <- tryCatch(
-          system( cmdee , intern = TRUE),
-          error = function(e) e$message)
-
-        cat('\n\t Task done. \n\n')
-
-        save(intCMD, file = 'intCMD_gee2gd.Rdata')
-
-        cat(intCMD)
-        cond <- !any(grep('ERROR', intCMD))
-
-        if(cond){ # Success
-          logid <- sessionIDgen(letter = FALSE)
-          write.table( c(cmdee , intCMD),
-                       file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
-
+        if (!input$in_eefull_checkbox){  # Full Run
           shinyalert(
-            html = TRUE, type = "success",
-            title = paste0("Tasks submitted"),
-            text = paste0('Please check your Earth Engine console and Google Drive')
-          )
+            html = TRUE, type = "warning",
+            title = paste0("Task submmited. Exporting raster to Google Drive, please wait."),
+            text = paste0(" Your results will be here:<br> My Drive/", input$in_eefull_gdfolder,
+                          "<br><br>Wait for results in your R console, Earth Engine and Google Drive apps.",
+                          " Don't close R until you see a Finish message"))
 
-        } else { # Error
-          errormessage <- paste0('Error: ', intCMD, '')
-          shinyalert(html = TRUE, type = "error",
-                     title = paste0("Tasks not submitted"),
-                     text = errormessage)
+          # python gee_to_gd.py --in_ee_project project --ee_folder projects/PROJECT/assets/FOLDER \
+          # --gd_folder gee/gd_export --prefix cola2 --crs EPSG:4326 --scale 250 \
+          # --gee_assets projects/PROJ/assets --region projects/PROJ/assets/AOI
+
+          cat('\n\t CMD Google Earth download to Google Drive:\n', cmdee, '\n')
+
+          intCMD <- tryCatch(
+            system( cmdee , intern = TRUE),
+            error = function(e) e$message)
+
+          cat('\n\t Task done. \n\n')
+
+          save(intCMD, file = 'intCMD_gee2gd.Rdata')
+          cat(intCMD, sep = '\n')
+          cond <- !any(grep('ERROR', intCMD))
+
+          if(cond){ # Success
+            logid <- sessionIDgen(letter = FALSE)
+            write.table( c(cmdee , intCMD),
+                         file = paste0(tempFolder, '/cola2EE_G-Export_', logid, '.txt'))
+
+            shinyalert(
+              html = TRUE, type = "success",
+              title = paste0("Tasks submitted"),
+              text = paste0('Please check your Earth Engine console and Google Drive')
+            )
+
+          } else { # Error
+            errormessage <- paste0('Error: ', intCMD, '')
+            shinyalert(html = TRUE, type = "error",
+                       title = paste0("Tasks not submitted"),
+                       text = errormessage)
+          }
+
+        } else if (input$in_eefull_checkbox){
+          # only code
+          shinyalert(html = TRUE, type = "info",#
+                     title = paste0("Run this code in your console:"),
+                     text = paste0(cmdee))
         }
 
-      } else if (input$in_eefull_checkbox){
-        # only code
-        shinyalert(html = TRUE, type = "info",#
-                   title = paste0("Run this code in your console:"),
-                   text = paste0(cmdee))
+      } else {
+        # Incomplete params
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Complete the parameters. Some are missing"),
+                   text = paste0(''))
       }
-
-    } else {
-      # Incomplete params
-      shinyalert(html = TRUE, type = "error",
-                 title = paste0("Complete the parameters. Some are missing"),
-                 text = paste0(''))
-    }
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-    # SRV EE extcovs ---------
+  # SRV EE mosaic ---------
+
+  updateSelectizeInput(session, inputId = 'in_eemos_crs',
+                       choices = c("", crs_df$label),
+                       selected = NA, server = TRUE)
+
+  ## folder mosaic button
+  isolate({
+    observeEvent(
+      input$foldermos, {
+        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        shinyDirChoose(input, 'foldermos', roots=volumes, filetypes=c('', 'xyz'))
+        inpf <- input$foldermos
+        #
+        if ( 'character' %in% class('inpf') & !is.null( names(inpf) ) ){
+          roo <- inpf$root
+          paa <- inpf$path
+          un <- unlist(paa)
+          (roo <- gsub('.+\\(|\\)', '', roo))
+          new_wd <- file.path(roo, paste0(paa[paa != ''], collapse = '/'))
+          updateTextInput(session, inputId = 'in_eemos_localpath',
+                          value = new_wd, label = 'Local path:',
+                          placeholder = 'Local path')
+
+          updateTextInput(session, inputId = 'in_eemos_outfile',
+                          value = paste0(new_wd, '/mosaic.tif'), label = 'Local path:',
+                          placeholder = 'Local path')
+
+        }
+      })
+  })
+
+  ## List files
+  observeEvent( input$in_eemos_list, {
+    message("List button was pressed")
+
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+
+      # input <- list(in_eemos_localpath = 'C:/cola/anoa/gee', pattern = '*.tif')
+      layersA <- list.files(path = input$in_eemos_localpath,
+                            pattern = input$in_eemos_prefix,
+                            full.names = TRUE)
+
+      if( length(layersA) != 0){
+
+        isSpatial <- sapply(layersA, function(x){
+          # Try reading as a raster
+          # x <- layers2CompileEE[1]
+          tryCatch({
+            r <- rast(x)
+            inherits(r, "SpatRaster")
+          }, error = function(e) {
+            FALSE  # Not a valid raster file
+          })
+        })
+
+        layers2CompileEE <<- layersA[isSpatial]
+
+        lay2CompEEDf <<- data.frame(full = layers2CompileEE,
+                                    short = basename(layers2CompileEE))
+
+        if (devug){
+          print(lay2CompEEDf)
+        }
+        updateSelectizeInput(session
+                             , inputId = "in_eemos_layers"
+                             , choices = lay2CompEEDf$short
+                             , selected = lay2CompEEDf$short
+        )
+
+        layProjections <<- sapply(layers2CompileEE, function(x){
+          tryCatch(terra::crs(rast(x), proj = TRUE), error = function(e) NULL)
+        })
+
+
+        isLatlonPrj <<- sapply(layers2CompileEE, function(x){
+          isGEO <- terra::is.lonlat( rast(x) )
+        })
+
+        layersLatLon <- sum(isLatlonPrj)
+
+        layDetails <- cbind.data.frame(row.names = NULL,
+                                       name = lay2CompEEDf$short
+                                       , proj = layProjections
+                                       , LonLat = isLatlonPrj
+        )
+
+        print(layDetails, row.names = FALSE)
+
+        layDetails$long <- layers2CompileEE
+        if( any(isLatlonPrj)){
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0(length(layers2CompileEE), " layers found."),
+                     text = paste0(layersLatLon,
+                                   " layers has no projected coordinates system, and there(s) ",
+                                   length(unique(layProjections)),
+                                   ' projections. See details in the console. All layers must have the same projection'))
+        } else {
+          enable('in_eemos_go')
+          shinyalert(html = TRUE, type = "info",
+                     title = paste0(length(layers2CompileEE), " layers found."),
+                     text = paste0("There(s) ", length(unique(layProjections)),
+                                   ' projections. See details in the console.'))
+        }
+
+      }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  })
+
+  observeEvent( input$in_eemos_go,{
+    message("Do merge layers")
+
+    if(length(input$in_eemos_layers) != 0 ){
+    shinyalert(html = TRUE, type = "info",
+               title = paste0(" layers found."),
+               text = paste0("There(s) ", length(unique(layProjections)),
+                             ' projections. See details in the console.'))
+
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+
+      print( input$in_eemos_layers )
+      print(0)
+      print( lay2CompEEDf$full[ lay2CompEEDf$short %in%  input$in_eemos_layers ] )
+
+      # gdalbuildvrt(input_file_list=temp_file_list_name,
+      #   separate=separate,output.vrt=output.vrt,verbose=verbose,...)
+
+      # out_mosaic_name <- gsub(  x = input$in_eemos_outfile, pattern = input$in_eemos_prefix,  replacement = '')
+      out_mosaic_name <- input$in_eemos_outfile
+      message(paste0(' Saving mosaic file as: ', out_mosaic_name) )
+
+      tryCatch(gdalUtilities::gdalbuildvrt(
+        gdalfile = lay2CompEEDf$full[ lay2CompEEDf$short %in%  input$in_eemos_layers ]
+        , output.vrt = out_mosaic_name
+        , allow_projection_difference = TRUE
+      ), error = function(e) NULL )
+
+      out_projected_name <- file.path(
+        dirname(input$in_eemos_outfile),
+        paste0('proj_', basename(input$in_eemos_outfile))
+      )
+
+      if(input$in_eemos_crs != ''){
+        tryCatch(
+          gdalUtilities::gdalwarp(
+            srcfile = out_mosaic_name,
+            dstfile = out_projected_name,
+            to = crs_df$crs_code[crs_df$label %in% input$in_eemos_crs]
+          ), error = function(e) NULL )
+      }
+
+      if( input$in_eemos_cola){
+        if(file.exists(out_projected_name)){
+
+          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+          rv$log <- paste0(rv$log, # _______
+                           ' ... DONE');updateVTEXT(rv$log) #
+          rv$tifready <- TRUE
+          rv$tif <- out_projected_name
+          rv$tiforig <- out_projected_name
+
+          suggestedName <- suggestName(rv$layersList, type = 'Resistance')
+          #cat('suggestedName:',  suggestedName, '\n')
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Surface resistance created succesfully<br>",
+                                    'Layer name: ', suggestedName)
+          )
+
+          rv$layersList <- funLayersList(
+            df = rv$layersList, tempFolder,
+            inout = 'out', type =  'Resistance',
+            internal = rv$tif, public = suggestedName)
+
+
+          newOutput <- suggestName(rv$layersList, type = 'Resistance')
+
+          ## Inputs boxes
+          colaUpdateSelectizeInput(
+            ids = c('in_name_sur_edi',
+                    'in_name_sur_dis', 'in_name_sur_cdp',
+                    'in_name_sur_crk', 'in_name_sur_lcc'),
+            typex = 'Resistance', field = 'public', val = newOutput)
+
+          updateSelectizeInput( # inputsPoints
+            session, "in_points_ly",
+            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+            , server = TRUE
+          )
+
+          updateColaLayersLists(layersList = rv$layersList)
+
+          #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
+
+          rv$tif_sp <- terra::rast(rv$tif)
+          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
+          rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
+          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
+            palette = "viridis", reverse = TRUE,
+            domain = rng_rstif, na.color = "transparent")
+
+          # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
+          #rv$llmap <<- rv$llmap %>%
+          #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
+
+          # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
+          lastLLx <- "Surface resistance"
+        } else {
+          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
+          updateVTEXT(rv$log)
+          lastLLx <- NULL
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Surface resistance not created succesfully"),
+                     text = 'Check the console log')
+        }
+
+        output$ll_map_h2r <- leaflet::renderLeaflet({
+          makeLL(lastLL = lastLLx)
+        })
+      }
+
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+    }
+  })
+
+
+
+  # SRV EE extcovs ---------
   # isolate(observeEvent(input$in_eeloadcovs, {
   #   if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
   #   shinyjs::enable('in_eeruncovs')
@@ -9071,15 +9432,15 @@ server <- function(input, output, session) {
     if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
     (ee_scr_path <- system.file(package = 'cola', 'ee'))
 
-    # input <- list(ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
+    # input <- list(in_ee_project = 'gonzalezivan', local_file = 'C:/cola/Anoa/Anoa_present_ardianti.shp', ee_pts = 'cola/anoa')
 
     cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_covsExtraction.py ',
-                    input$ee_project, ' ',
+                    input$in_ee_project, ' ',
                     cola::adaptFilePath(input$ee_localfile), ' ', input$ee_ptspath,
                     ' ', input$in_eeabs,'  2>&1')
-    #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
-    # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
-    cat(' Uploading points EE:\n')
+    #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
+    # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
+    cat(' CMD Uploading local points to EE:\n')
     cat(cmdee, '\n')
 
     intCMD <- tryCatch(
@@ -9089,7 +9450,7 @@ server <- function(input, output, session) {
                 intern = TRUE)),
       error = function(e) e$message)
 
-    cat(intCMD)
+    cat(intCMD, sep = '\n')
 
     cond <- !any(grep('ERROR', intCMD))
 
@@ -9194,24 +9555,24 @@ if (FALSE){ # if FALSE
     #header = shinydashboard::dashboardHeader(
     header = shinydashboardPlus::dashboardHeader(
 
-    #   leftUi = tagList(
-    #     dropdownBlock(
-    #       id = "sessioninfo",
-    #       title = "Session info",
-    #       icon = icon("circle-info"),
-    #       h4(#sessionID
-    #         paste0('Session ID:', sessionID,
-    #                ifelse(
-    #                  COLA_SERVER == 0,
-    #                  paste0('\nCOLA_DATA_PATH:', COLA_DATA_PATH,
-    #                         '\nWorking directory:', getwd(),
-    #                         '\nR-temp:', cola::adaptFilePath(tempdir())),
-    #                  ''
-    #                )
-    #         )
-    #       )
-    #     )
-    #   ),
+      #   leftUi = tagList(
+      #     dropdownBlock(
+      #       id = "sessioninfo",
+      #       title = "Session info",
+      #       icon = icon("circle-info"),
+      #       h4(#sessionID
+      #         paste0('Session ID:', sessionID,
+      #                ifelse(
+      #                  COLA_SERVER == 0,
+      #                  paste0('\nCOLA_DATA_PATH:', COLA_DATA_PATH,
+      #                         '\nWorking directory:', getwd(),
+      #                         '\nR-temp:', cola::adaptFilePath(tempdir())),
+      #                  ''
+      #                )
+      #         )
+      #       )
+      #     )
+      #   ),
 
       dropdownMenu(
         # https://fontawesome.com/search?q=delet&ip=classic&ic=free-collection
@@ -9242,6 +9603,7 @@ if (FALSE){ # if FALSE
 
           # https://fontawesome.com/search?q=edit&o=r&m=free
 
+          menuItemOutput("taber"),
           menuItemOutput("tabee"),
 
 
@@ -9576,14 +9938,14 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_uncrs_pts', title = 'Load vectorial point layer'),
               bsTooltip(id = 'sel_crs', title = 'Select a coordinates system vectorial layer', placement = 'top'),
               bsTooltip(id = 'coo_tif', title = 'Assign selected coordinate system to the raster layer'),
-              bsTooltip(id = 'sel_crs2', title = 'Select a coordinates system for the raster', placement = 'top'),
+              bsTooltip(id = 'sel_crsvect', title = 'Select a coordinates system for the raster', placement = 'top'),
               bsTooltip(id = 'coo_pts', title = 'Assign selected coordinate system to the vector layer'),
 
 
               # trigger: hover, click, focus // options = list(container = "body") # Prevents clipping
-              bsTooltip(id = 'ee_project', title = 'Username used to connect Google Earth Engine'),
+              bsTooltip(id = 'in_ee_project', title = 'Username used to connect Google Earth Engine'),
               bsTooltip(id = 'vout_eeinfo', title = 'Consumption monthly quota is usually 150h (900m, 540,000s) EECU'),
-              bsTooltip(id = 'ee_connect', title = 'Check connection with Earth engine', placement = 'top'),
+              bsTooltip(id = 'in_ee_connect', title = 'Check connection with Earth engine', placement = 'top'),
               bsTooltip(id = 'ee_userquota', title = 'Username'),
               bsTooltip(id = 'ee_quota', title = 'Check quota'),
               bsTooltip(id = 'ee_ptspath', title = 'Name and path of GEE feature file to be written', placement = 'top'),
@@ -9864,6 +10226,110 @@ if (FALSE){ # if FALSE
               )
             )),
 
+          # UI Earth ranger  ----
+          shinydashboard::tabItem(
+            'taber',
+            fluidPage(
+              # EE check ---------
+              div(style =
+                    # "margin-top: -30px"
+                    HTML('.box {margin-top: 0px;margin-left: 0px; margin-right: 0px; margin-bottom:0px;padding:-10px}
+                    div {padding: 0 !important;}'
+                    )),
+              h2(' Download information from Earth Ranger'),
+              h3(' https://www.earthranger.com/'),
+              fluidRow(
+                column(width = 4,
+                       textInput(width = "100%",
+                                 value = '',
+                                 placeholder = 'Organisation server URL',
+                                 label =  'ER Server:',
+                                 'in_er_server')),
+                column(width = 4,
+                       textInput(width = "100%",
+                                 value = '',
+                                 placeholder = 'Username',
+                                 label =  'ER Username:',
+                                 'in_er_username')),
+
+                column(width = 4,
+                       textInput(width = "100%",
+                                 value = '',
+                                 placeholder = '***',
+                                 label =  'ER Password:',
+                                 'in_er_pwd')),
+
+                column(width = 3,
+                       dateInput(
+                         inputId = "in_er_datestart",
+                         label = "Start date:",
+                         value = Sys.Date(), # Default to today's date
+                         min = "2020-01-01", # Earliest selectable date
+                         max = "2030-12-31", # Latest selectable date
+                         format = "yyyy-mm-dd", # Display format
+                         startview = "month", # Initial view in calendar
+                         weekstart = 1, # Week starts on Monday
+                         language = "en", # Language for month/day names
+                         autoclose = TRUE # Close calendar after selection
+                       )),
+
+                column(width = 3,
+                       dateInput(
+                         inputId = "in_er_dateend",
+                         label = "Final date:",
+                         value = Sys.Date(), # Default to today's date
+                         min = "2020-01-01", # Earliest selectable date
+                         max = "2030-12-31", # Latest selectable date
+                         format = "yyyy-mm-dd", # Display format
+                         startview = "month", # Initial view in calendar
+                         weekstart = 1, # Week starts on Monday
+                         language = "en", # Language for month/day names
+                         autoclose = TRUE # Close calendar after selection
+                       )),
+
+                column(width = 3,
+                       textInput(width = "100%",
+                                 value = '',
+                                 placeholder = 'Subject group as Earth Ranger',
+                                 label =  'Subject group:',
+                                 'in_er_subject')
+                       # , selectInput('temp', label = 'Subject group (2):', choices = c('GroupA', 'GroupB', 'Groupc'))
+                       ),
+
+                column(3,
+                       style = "padding-left:0px; padding-right:5px;",
+                       numericInput(width = "100%",min = 0, max = 99999,
+                                    step = 1, value = 0,
+                                    label =  'KDE Resolution (meters):',
+                                    inputId = 'in_er_resmeters')
+                ),
+                # next row
+                column(2, style = "padding-left:10px; padding-right:10px; padding-top:20px; padding-bottom:20px;"
+                       , shinyDirButton( id = 'folderer',
+                                         label = 'Select a folder', title = 'Please select a folder',
+                                         multiple = FALSE)),
+                column(4, textInput(width = "100%", value = '', placeholder = 'Local path',
+                                    label = 'Local results path:', inputId = 'in_er_localpath') ),
+                column(2, checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde') ),
+                column(2, checkboxInput(label = 'Load to Cola?', inputId = 'in_er_cola') ),
+
+                column(2
+                       , style = "padding-left:10px; padding-right:10px; padding-top:0px; padding-bottom:0px;"
+                       , actionButton(width = "100%", label = 'Get data', 'in_er_go'))
+              ) # end box ABC
+            ), #FR
+
+            # EE upload ---------
+
+            div(style = "margin-top: -20px"),
+            #h2('  Map here '),
+            fluidRow(
+              leaflet::leafletOutput("ll_map_ear", height = "600px") %>%
+                shinycssloaders::withSpinner(color="#0dc5c1")
+            )
+          ),
+
+
           # UI EE  ----
           shinydashboard::tabItem(
             'tabee',
@@ -9895,11 +10361,11 @@ if (FALSE){ # if FALSE
                                    value = '',
                                    placeholder = 'EE project',
                                    label =  'EE project',
-                                   'ee_project'),
+                                   'in_ee_project'),
 
                          actionButton(width = "100%",
                                       label = 'Check connection',
-                                      'ee_connect')),
+                                      'in_ee_connect')),
                   column(width = 4,
                          shinydashboard::valueBoxOutput("box1", width = 12)
                   )
@@ -10013,11 +10479,12 @@ if (FALSE){ # if FALSE
                                                            multiple = FALSE)),
                                     column(9, textInput(width = "100%", value = '', placeholder = 'Local path',
                                                         label = 'Local results path:', inputId = 'in_eefull_localpath') ),
-                                    column(9, textInput(width = "100%", value = '', placeholder = 'colaExports',
-                                                        label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder')),
-                                    column(3, textInput(width = "100%", value = '', placeholder = 'filePrefix',
-                                                        label = 'Files prefix:', inputId = 'in_eefull_gdprefix')),
-
+                                    shiny::fluidRow(
+                                      column(9, textInput(width = "100%", value = '', placeholder = 'colaExports',
+                                                          label = 'Folder in Google Drive:', inputId = 'in_eefull_gdfolder')),
+                                      column(3, textInput(width = "100%", value = '', placeholder = 'filePrefix',
+                                                          label = 'Files prefix:', inputId = 'in_eefull_gdprefix'))
+                                    ),
                                     column(4, actionButton( width = "100%", "in_eefull_goexp", "A) Export covs")),
                                     column(4, actionButton( width = "100%", "in_eefull_gogap", "B) Fill Gaps")),
                                     column(4, actionButton( width = "100%", "in_eefull_gomet", "C) Metrics")),
@@ -10088,8 +10555,9 @@ if (FALSE){ # if FALSE
                                            textInput(width = "100%", value = 'EPSG:4326',
                                                      placeholder = '', label = 'CRS:',
                                                      inputId = 'in_eefull_crs')),
-                                    column(5, checkboxInput("in_eefull_checkbox", label = "Only code", value = FALSE)),
-                                    column(7, actionButton(width = "100%", "in_eefull_go", "Run full workflow"))
+                                    column(3,  div(style = "margin-top: 10px"), uiOutput("out_status2")),
+                                    column(3, checkboxInput("in_eefull_checkbox", label = "Only code", value = FALSE)),
+                                    column(6, actionButton(width = "100%", "in_eefull_go", "Run full workflow"))
                             )
                           ) # close box
                 ), # close tab panel
@@ -10490,7 +10958,7 @@ if (FALSE){ # if FALSE
                 )
               ), # close tsp
 
-              # EE Compile tifs  ---------
+              # EE Mosaic tifs  ---------
               br(),
               h2('Mosaic layers'),
 
@@ -10498,29 +10966,38 @@ if (FALSE){ # if FALSE
                 width = 12, solidHeader = T, collapsible = T,
                 title = "Compile raster layers into a single file",
                 status = "info", collapsed = FALSE,
+                column(7,
+                       column(2, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
+                              shinyDirButton(
+                                id = 'foldermos',
+                                label = 'Select folder:', title = 'Please select the folder with layers',
+                                multiple = FALSE)),
+                       column(10,
+                              textInput(width = "100%", value = '', placeholder = 'Local path',
+                                        label = 'Local results path:', inputId = 'in_eemos_localpath') ),
+                       column(4,  style = "padding-left:5px; padding-right:5px;",
+                              textInput(placeholder = 'prefix', value = 'cola2',
+                                        label = 'Files prefix:', inputId = 'in_eemos_prefix')),
+                       column(4,  style = "padding-left:5px; padding-right:5px;",
+                              textInput(placeholder = 'Resulting file (not include the same prefix)', value = 'cola2',
+                                        label = 'Final mosaic:', inputId = 'in_eemos_outfile')),
+                       column(4,  style = "padding-left:5px; padding-right:5px;",
+                              selectizeInput("in_eemos_crs", "Select CRS:", choices = NULL)
+                       ), #
+                       column(4,
+                              #div(style = "margin-top: 20px"),
+                              actionButton(width = "100%", "in_eemos_list", "List layers")),
+                       column(4,
+                              actionButton(width = "100%", "in_eemos_go", "Mosaic layers") )
+                       , column(3, checkboxInput(label = 'Load to Cola?', inputId = 'in_eemos_cola') )
+                ),
+                column(5,
+                       selectizeInput( label = 'Available layers:',
+                                       inputId = 'in_eemos_layers', multiple = TRUE,
+                                       choices = NULL) ),
 
-                column(2, style = "padding-left:10px; padding-right:20px; padding-top:20px; padding-bottom:20px;",
-                       shinyDirButton(
-                         id = 'foldermos',
-                         label = 'Select folder:', title = 'Please select the folder with layers',
-                         multiple = FALSE)),
-                column(10, textInput(width = "100%", value = '', placeholder = 'Local path',
-                                     label = 'Local results path:', inputId = 'in_eemos_localpath') ),
-                column(4,  style = "padding-left:5px; padding-right:5px;",
-                       textInput(placeholder = 'prefix', value = 'cola2',
-                                 label = 'Files prefix:', inputId = 'in_eedow_prefix')),
-                column(4,  style = "padding-left:5px; padding-right:5px;",
-                       textInput(placeholder = 'exportDriveFolder', value = 'cola2',
-                                 label = 'Final mosaic:', inputId = 'in_eedow_file')),
-                column(4,
-                       div(style = "margin-top: 20px"),
-                       actionButton(width = "100%", "in_eemos_go", "Mosaic layers"))
               ) # box
 
-              # ), # tab panel
-              # tabPanel( "Make params", h2(' ')  ), # tab panel
-              # tabPanel("Select covariates", h2(' ')), # tab panel
-              # tabPanel("Model params", h2(' '))
             ) # Fluid page
           ), # tabItem
 
@@ -11325,44 +11802,69 @@ if (FALSE){ # if FALSE
               column(4, actionButton("sessPath", "Run")),
               column(4, verbatimTextOutput("sessLog"))
             )
-          ),
+          ), # tab close
 
 
           # UI COORDS ----
           shinydashboard::tabItem(
             tabName = 'tab_coords',
             h2(' Assigning projection to your points or raster'),
-            fluidRow(
-              column(6, shiny::fileInput(
-                'in_uncrs_tif', 'Load ASCII or RSG file',
-                buttonLabel = 'Search', placeholder = 'No file',
-                accept=c('.asc', '.rsg'), multiple=FALSE)
-              ),
-              column(6, shiny::fileInput(
-                'in_uncrs_pts', 'Load CSV or XY file',
-                buttonLabel = 'Search', placeholder = 'No file',
-                accept=c('.xy', '.csv'), multiple=FALSE)
-              )),
-            fluidRow(
-              column(3,
-                     selectizeInput("sel_crs", "Select", choices = NULL), #
-              ),
-              column(3,div(style = "margin-top: 20px"),
-                     actionButton("coo_tif",
-                                  HTML("Assign raster projection"), icon = icon("play")),
-                     div(style = "margin-top: 20px"),
-                     downloadButton('newtifDwn', 'Download')
-              ),
-              column(3,
-                     selectizeInput("sel_crs2", "Select", choices = NULL), #
-              ),
-              column(3,div(style = "margin-top: 20px"),
-                     actionButton("coo_pts",
-                                  HTML("Assign raster proyection"), icon = icon("play")),
-                     div(style = "margin-top: 20px"),
-                     downloadButton('newshpDwn', 'Download')
-              ),
+            fluidPage(
+              #              fluidRow(
+              column(6,
+                     column(7,
+                            shiny::fileInput(
+                              'in_uncrs_tif', 'Load ASCII or RSG file',
+                              buttonLabel = 'Search', placeholder = 'No file',
+                              accept=c('.asc', '.rsg', '.tif', '.img'), multiple=FALSE)
+                     )
+                     , column(3, div(style = "margin-bottom: 20px"),
+                              actionButton("coo_tif", HTML("Assign raster projection"),
+                                           icon = icon("play"))
+                     ),
+
+                     column(7 #div(style = "margin-top: -20px; margin-left: -20px; margin-right: -20px"),
+                            , div(style = "margin-bottom: -20px")
+                            , selectizeInput("sel_crs", "Select CRS:"
+                                             ,  options = list(
+                                               create = FALSE,        # Prevent creating new values
+                                               highlight = TRUE,      # Highlight matches
+                                               openOnFocus = TRUE,    # Show list when focused
+                                               closeAfterSelect = TRUE
+                                               # , searchField = "text"
+                                               #,  # Search only in text field
+                                               #                                          score = I("function(search) {
+                                               #   return function(item) {
+                                               #     return item.text.toLowerCase() === search.toLowerCase() ? 1 : 0;
+                                               #   };
+                                               # }")                   # Only exact matches score > 0
+                                             )
+                                             , choices = NULL)
+                     )
+                     , column(3
+                              , div(style = "margin-top: 8px")
+                              , downloadButton('newtifDwn', 'Download')
+                     )
+                     # , column(6, # div(style = "margin-top: 20px"),
+              )
+              , column(6, div(style = "margin-left: -20px; margin-right: -20px"),
+                       column(7, shiny::fileInput(
+                         'in_uncrs_pts', 'Load CSV or XY file',
+                         buttonLabel = 'Search', placeholder = 'No file',
+                         accept=c('.xy', '.csv'), multiple=FALSE)
+                       )
+                       , column(3, div(style = "margin-bottom: 20px"),
+                                actionButton("coo_pts",
+                                             HTML("Assign vector proyection"), icon = icon("play")))
+                       , column(7
+                                , div(style = "margin-bottom: -20px")
+                                , selectizeInput("sel_crsvect", "Select", choices = NULL) #
+                       )
+                       , column(3, #div(style = "margin-top: 20px"),
+                                downloadButton('newshpDwn', 'Download'))
+              )
             ),
+
             # https://shiny.posit.co/r/articles/build/selectize/
             leaflet::leafletOutput("ll_coord", height = "600px") %>%shinycssloaders::withSpinner(color="#0dc5c1")
             ,

@@ -27,7 +27,7 @@ from rasterio.transform import from_origin
 from scipy.stats import gaussian_kde
 from shapely.geometry import Point
 from ecoscope.io.earthranger import EarthRangerIO
-import ime, os, sys, argparse
+import time, os, sys, argparse
 from datetime import datetime
 
 # =============================================================================
@@ -54,8 +54,9 @@ def parse_args():
     p = argparse.ArgumentParser(description='SDM MODIS Wall-to-Wall Prediction')
     # ── Core identifiers (shared across scripts) ──────────────────────────────
     p.add_argument('--server', type = str, required = True,
-        help='Folder in your Google Drive account to save the results'
-    p.add_argument('--username',      type=str, required=True)
+        help='Organisation server URL')
+    p.add_argument('--username',      type=str, required=True,
+        help='Your username')
     p.add_argument('--pwd',      type=str, required=True,
                    help='Your password')
     p.add_argument('--datefrom', type=str, required=True,
@@ -66,10 +67,11 @@ def parse_args():
                     help = 'The subject group to analyse (species + study area, as defined in EarthRanger)')
     p.add_argument('--oudir',        type=str required=True,
                     help = 'Local path where results will be saved')
+    p.add_argument('--dokde',  type=int, required=True,
+                   help='Calculate the Kernel density estimation (KDE), 1:yes, 0:no')
     p.add_argument('--spatresinmeters',   type=int, required=True,
                    help = 'KDE raster resolution in metres')
-    p.add_argument('--region',  type=str, required=True,
-                   help='Feature with the extent to export the layers')
+
     return p.parse_args()
 
 args = parse_args()
@@ -80,7 +82,9 @@ DATE_FROM = args.datefrom
 DATE_TO = args.dateto
 SUBJECT_GROUP = args.subjetgroup
 OUTPUT_DIR = args.oudir
+DO_KDE = args.spatresinmeters
 KDE_RES_M = args.spatresinmeters
+DO_KDE = arg.dokde
 
 # ER_SERVER   = sys.argv[1] # "https://your-organisation.pamdas.org"   # ← organisation server URL
 # ER_USERNAME = sys.argv[2] # "your_username"
@@ -262,33 +266,34 @@ def main():
     print()
 
     # Export CoLa-ready inputs
-    shp_path = export_points(gdf_utm,              OUTPUT_DIR, safe_name)
-    tif_path = export_kde_raster(gdf_utm, epsg,    OUTPUT_DIR, safe_name, KDE_RES_M)
-
+    shp_path = export_points(gdf_utm, OUTPUT_DIR, safe_name)
+    if DO_KDE == 1:
+        tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_DIR, safe_name, KDE_RES_M)
+    #
     print(f"""
 {"═" * 60}
   Done. CoLa inputs ready:
+  Source points shapefile    : {shp_path}""")
+  
+  print(f"Habitat suitability raster : {tif_path}") if DO_KDE == 1 else None
+  print("""{"═" * 60}""")
 
-  Habitat suitability raster : {tif_path}
-  Source points shapefile    : {shp_path}
 
-  These files can be loaded directly into the CoLa DSS
-  (Habitat suitability ↔ resistance  →  Kernels / Corridors).
-
-  Integration note for developers:
-  ─────────────────────────────────
-  To embed this in the DSS, the user would supply:
-    • EarthRanger server URL  (their organisation's instance)
-    • Username / password     (or OAuth token)
-    • Subject group name      (dropdown from er.get_subjectgroups())
-    • Date range
-    • KDE resolution
-
-  The DSS would call pull_tracking_data() and both export
-  functions, then pass the outputs directly to the existing
-  resistance / kernel / corridor pipeline — no file upload needed.
-{"═" * 60}
-""")
+#  These files can be loaded directly into the CoLa DSS
+#  (Habitat suitability ↔ resistance  →  Kernels / Corridors).
+#
+#  Integration note for developers:
+#  ─────────────────────────────────
+#  To embed this in the DSS, the user would supply:
+#    • EarthRanger server URL  (their organisation's instance)
+#    • Username / password     (or OAuth token)
+#    • Subject group name      (dropdown from er.get_subjectgroups())
+#    • Date range
+#    • KDE resolution
+#
+#  The DSS would call pull_tracking_data() and both export
+#  functions, then pass the outputs directly to the existing
+#  resistance / kernel / corridor pipeline — no file upload needed.
 
 
 if __name__ == "__main__":

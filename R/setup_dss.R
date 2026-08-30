@@ -133,5 +133,6 @@ setup_cola_dss <- function(
   library(terra)
   library(viridis)
 
-  cat("\n\n   === All libraries required for COLA's DSS installed === \n\n")
+  #cat("\n\n   === All libraries required for COLA's DSS installed === \n\n")
+  message("   === All libraries required for COLA's DSS installed === ")
 }

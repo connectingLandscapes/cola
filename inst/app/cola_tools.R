@@ -107,7 +107,6 @@ isProjected <- function(rastPath, details = FALSE){
     if (details){
       print(gi)
     }
-
     g2 <- strsplit(x = gi, split = '\n')[[1]]
     (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
   } else{

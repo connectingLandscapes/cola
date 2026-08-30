@@ -1229,7 +1229,7 @@ lccZarr_py <- function(inshp, intif, outtif,
   # # be running.
   # gbLim = sys.argv[10] # Default 6
 
-  ### lccZarrB_py part 2 ---------------
+  ## lccZarrB_py part 2 ---
   # # Path to resistance grid
   # rg = sys.argv[1]
   #
@@ -1396,9 +1396,10 @@ lccZarrA_py <- function(inshp, intif,
                         tempFolder = NULL,
                         pairzarr = NULL,
                         distzarr = NULL,
+                        reOrderFile = NULL,
+                        nodeidsFile = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
-                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
                         show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
@@ -1425,8 +1426,12 @@ lccZarrA_py <- function(inshp, intif,
   if(is.null(distzarr)){
     (distzarr <- paste0(tempFolder, '/', tempH5, '_dist.zarr'))
   }
-  (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
-  (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
+  if(is.null( reOrderFile )){
+    (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
+  }
+  if(is.null( nodeidsFile )){
+    (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
+  }
 
   # # INPUTS part A
   # # Path to file holding xy coordinates
@@ -2750,8 +2755,8 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
-#' @title  Compile TIFS from
-#' @description Compile tifs from a path and pattern
+#' @title  Compile TIFS from path and pattern
+#' @description Compile tifs from a path and pattern, specially from cola::batch_lczB( )
 #' @param pathh String. Folder path
 #' @param patt String. Pattern
 #' @param outt String. TIF path
@@ -2782,12 +2787,12 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 #' with the name /{outFolder}/{prefTif}_{pref}_{i}.tif
 #' @param py Python executable location
 #' @param src Python script location
-#' @param pathh String. Folder path
 #' @param nBatches Integer. Number of batches.
-#' @param shFolder String. Path where to save the sh
+#' @param shFolder String. Path where to save the sh.
+#' @param shFolder String. Path where to save the logs.
 #' @param outFolder String. Path where to save tif file
-#' @param pref String. Prefix name to incluide into job, log, tif file.
-#' @param prefTif String. Out TIF prefix. Default is 'out_lczB'
+#' @param pref String. Prefix name to incluide into job, log, and tif file.
+#' @param prefTif String. Out TIF prefix. Default is 'out_lczB'. Usefull to sum all layers with cola::compileTifs( )
 #' @param rs String. Full path to surface resistance raster layer
 #' @param smt Integer. Smooth as lcc_py( )
 #' @param tole Integer. Tolerance as lcc_py( )
@@ -2797,7 +2802,7 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 #' @param hours Integer. Hours assigned to the task in the cluster
 #' @param ncores Integer. Number of cores assigned to the task in the cluster
 #' @param ramGB Integer. RAM in GB assigned to the task in the cluster
-#' @param RUN Logical. Submit the sh job? Only is submited if out tif file not exists.
+#' @param RUN Logical. Submit the sh job? If FALSE, only creates sh file. If TRUE, only runs if out tif file not exists.
 #' @return Path of the resulting raster layer. Will be same as input if no change was made
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -2806,8 +2811,10 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 
 batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALSE,
                        pref, prefTif = 'outlczB',
-                       py = '/home/ig299/.conda/envs/cola/bin/python',
-                       src = '/home/ig299/cola/inst/python/lcc_hpc2_zarr.py',
+                       py = Sys.getenv("COLA_PYTHON_PATH"),
+                       # py = '/home/ig299/.conda/envs/cola/bin/python',
+                       #src = '/home/ig299/cola/inst/python/lcc_hpc2_zarr.py',
+                       src = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
                        sr,  dzarr, smt = 0, tole = 0,
                        ncores, ordcsv, idcsv, ramGB, hours){
   # (ocsv <- '/scratch/ig299/kuching/temp/asian_palm_civet_i5.csv')
@@ -2928,17 +2935,17 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     #' 2>&1'
     ''
   ))
-  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
-  cat('\n\t Creating GEE results in: \n',
-      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n\t',
+  cat('\n   - CoLa2 Covariates imagery export - \n\t Creating GEE results in: \n',
+      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n  ',
       gee_assets,'/', species, '_SDM_modis_', target_year, '\n',
       ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '')
 
   if (show_cml | dry_run){
+  cat('\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
 
   if (!dry_run){
@@ -2963,7 +2970,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
   ##++
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
@@ -3036,14 +3043,14 @@ sdm_modis_extract_py <- function(
 
   ### Create CMD
 
-  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat(' Creating GEE results in: \n',
+  cat('\n   - CoLa2 Covariates + points extract - \n\t Creating GEE results in: \n',
       '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID} \n\t',
       gee_assets,'/', species, '_SDM_modis_exports_', model_id, '\n\t',
       ' The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01 \n',
       ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt \n',
-      ' ', working_dir, '/completed_batches_',species,'_', model_id,'.txt \n',
+      '       ', working_dir, '/completed_batches_',species,'_', model_id,'.txt \n',
       sep = '')
 
   aargs <- c('--ee_project', ee_project,
@@ -3070,7 +3077,7 @@ sdm_modis_extract_py <- function(
   if (show_cml | dry_run){
   cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
     cat('\n', cmd_, '\n')
-    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
 
   if (!dry_run){
@@ -3079,7 +3086,7 @@ sdm_modis_extract_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3169,10 +3176,9 @@ sdm_model_fitting_py <- function(
     #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
     #' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
     #' These files are written locally:
-    #' cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
-  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n\ Creating local results in {WORKING_DIR} - ', working_dir ,' \n   Files are:  ',
+  cat('\n   - CoLa2 Model fitting - \n\t  Creating local results in {WORKING_DIR} - ', working_dir ,' \n   Files are:  ',
       model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
       model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
 
@@ -3196,7 +3202,7 @@ sdm_model_fitting_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3290,15 +3296,15 @@ sdm_modis_prediction_py <- function(
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
-  cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n  Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
+  cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
       '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
 
   if (show_cml | dry_run){
     cat('\n\t CMD sdm model prediction: \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
 
   if (!dry_run){
@@ -3309,8 +3315,8 @@ sdm_modis_prediction_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-  # cat(' ==== START ', paste(rep('=', 40), collapse = ''), '\n')
-  cat(' ==== END ', paste(rep('=', 40), collapse = ''), '\n')
+  # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
@@ -3369,21 +3375,21 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
 
     ##### OPT B Verbose ---------
     out <- tryCatch({processx::run( ... ,
-      # out <- tryCatch({ processx::run( quotepath(py), argss ,
+                                    # out <- tryCatch({ processx::run( quotepath(py), argss ,
 
-      # command = python, args = c("-u", script),
-      stdout_line_callback = function(line, proc) {
-        # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
-        msg <- sprintf( line )
-        if (docat) cat(msg, "\n")
-        writeLines(msg, log_con)
-      },
-      stderr_line_callback = function(line, proc) {
-        #msg <- sprintf("[%s] ERR: %s", format(Sys.time(), "%H:%M:%S"), line)
-        msg <- sprintf("ERR: %s", line)
-        if (docat) cat(msg, "\n")
-        writeLines(msg, log_con)
-      }
+                                    # command = python, args = c("-u", script),
+                                    stdout_line_callback = function(line, proc) {
+                                      # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
+                                      msg <- sprintf( line )
+                                      if (docat) cat(msg, "\n")
+                                      writeLines(msg, log_con)
+                                    },
+                                    stderr_line_callback = function(line, proc) {
+                                      #msg <- sprintf("[%s] ERR: %s", format(Sys.time(), "%H:%M:%S"), line)
+                                      msg <- sprintf("ERR: %s", line)
+                                      if (docat) cat(msg, "\n")
+                                      writeLines(msg, log_con)
+                                    }
     ); close(log_con)}, error = function(e){  close(log_con); e } )
 
     # on.exit(  )
@@ -3398,3 +3404,118 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
 # python = 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe'
 # script = 'C:/Users/gonza/AppData/Local/R/win-library/4.5/cola/ee/tenseconds.py'
 # ab <- catandcapt( python, c('-u', script) , log_file = 'C:/cola/try2.txt' )
+
+
+
+#' @title SDM MODIS wall-to-wall prediction script
+#' @description Applies a pre-trained RF classifier to pre-exported MODIS metrics tiles
+#' to produce a wall-to-wall habitat suitability map.
+#' All inputs derived from MODEL_ID (classifier, features) and
+#' SPECIES + TARGET_YEAR (metrics tiles). Output folder also
+#' derived from MODEL_ID + TARGET_YEAR.
+#' IMPORTANT: Gaussian kernel parameters must be identical to those used in
+#' sdm_modis_extraction.py — predictor values must match between training
+#' and prediction or model performance will degrade.
+#' Usage:
+#'   python sdm_modis_wall_to_wall.py --species puma --model_id puma_modis_m2 \
+#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
+#'
+#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
+#' sdm_model_fitting_py( ) {Classifier} function
+#'
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String.
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
+#' @param run_mode String. Execution mode, 'test', 'full'
+#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
+#' @param crs String. Year for single-batch test run
+#' @param scale Integer. Pixel size in meters. Default is 250m
+#' @param min_year Integer. Default is 2000.
+#' @param max_year Integer. Default is 2025.
+#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
+#' @param gee_assets String. EE path to
+#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+earthRanger_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/cml_connectER.py'),
+    ee_project,
+    species,
+    model_id,
+    target_year,
+    run_mode, # test full
+    max_concurrent = 3,
+    crs, scale = 250,
+    min_year, max_year,
+    tile_degrees,
+    gee_assets,
+    range_asset,
+    show_cml = TRUE, show_result = TRUE,
+    dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  if( !run_mode %in% c('test', 'full')){
+    stop("Not valid method. It must be 'test', or 'full'")
+  }
+
+  ### Create CMD
+  aargs <- c(
+    adaptFilePath(pyscript),
+    '--ee_project', ee_project,
+    '--species', species,
+    '--model_id', model_id,
+    '--target_year', target_year,
+    '--run_mode', run_mode,
+    '--max_concurrent', max_concurrent,
+    '--crs', crs,
+    '--scale', scale,
+    '--tile_degrees', tile_degrees,
+    '--min_year', min_year,
+    '--max_year', max_year,
+    '--gee_assets', gee_assets,
+    '--range_asset', range_asset)
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+
+  cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
+      '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
+
+  if (show_cml | dry_run){
+    cat('\n\t CMD sdm model prediction: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
+  }
+
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+  }
+  # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
+
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+}
