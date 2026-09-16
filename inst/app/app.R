@@ -91,20 +91,17 @@
             yes = COLA_VIZ_THREs_PIX, no = 1000000) ))
   base::options('COLA_VIZ_THREs_PIX' = COLA_VIZ_THREs_PIX)
 
-
   (COLA_VIZ_RES_NCOL <- as.numeric(Sys.getenv('COLA_VIZ_RES_NCOL')))
   (COLA_VIZ_RES_NCOL <- as.numeric(
     ifelse( is.numeric(COLA_VIZ_RES_NCOL) & !is.na(COLA_VIZ_RES_NCOL),
             yes = COLA_VIZ_RES_NCOL, no = 1000) ))
   base::options('COLA_VIZ_RES_NCOL' = COLA_VIZ_RES_NCOL)
 
-
   (COLA_VIZ_RES_NROW <- as.numeric(Sys.getenv('COLA_VIZ_RES_NROW')))
   (COLA_VIZ_RES_NROW <- as.numeric(
     ifelse( is.numeric(COLA_VIZ_RES_NROW) & !is.na(COLA_VIZ_RES_NROW),
             yes = COLA_VIZ_RES_NROW, no = 1000) ))
   base::options('COLA_VIZ_RES_NROW' = COLA_VIZ_RES_NROW)
-
 
   (COLA_VERSION <- system.file(package = 'cola', 'DESCRIPTION'))
   if( file.exists(COLA_VERSION)){
@@ -114,7 +111,6 @@
     COLA_VERSION <- ''
   }
 
-
   ## EE
   (COLA_EE <- as.numeric(Sys.getenv('COLA_EE')))
   (COLA_EE <- as.numeric(
@@ -122,7 +118,14 @@
             yes = 1, no = 0) ))
   base::options('COLA_EE' = COLA_EE)
 
-  ## EE
+  ## ER
+  (COLA_ER <- as.numeric(Sys.getenv('COLA_ER')))
+  (COLA_ER <- as.numeric(
+    ifelse( COLA_ER == 1 & !is.na(COLA_ER),
+            yes = 1, no = 0) ))
+  base::options('COLA_ER' = COLA_ER)
+
+  ## DEBUG
   (COLA_DEBUG <- as.numeric(Sys.getenv('COLA_DEBUG')))
   (COLA_DEBUG <- as.numeric(
     ifelse( COLA_DEBUG == 1 & !is.na(COLA_DEBUG),
@@ -142,7 +145,6 @@
       source('N:/My Drive/git/cola/inst/app/cola_tools.R')
     }
   }
-
 
   (hs2rs_samp_file <- system.file(package = 'cola', 'sampledata/sampleTif.tif'))
   # file.exists(hs2rs_file)
@@ -177,28 +179,32 @@
   # (cat(' >> R-tempdir(): ', cola::adaptFilePath(tempdir()), '\n\n'))
 }
 
+# https://convertico.com/image-to-ascii/
 cat(paste0('\n\n
-                                 =++==+++=            ---------------------
+                                 =++==+++=            ------------------------
            -=-               ==+*#**==+*##+=-=
-         =++=--:::::---------=+*#///####+#%####=-       Welcome to CoLa ',COLA_VERSION,'
+         =++=--:::::---------=+*#///####+#%####=-      Welcome to CoLa ',COLA_VERSION,'
        ==%%%%%%%@@@@@=+@@@%%%"#////########*+++++
-      +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****    ----------------------
+      +=%%%%%%%%@@@@@@@@%%%%%#||||||++######*0****    ------------------------
      ++%%%%%%%%%@@@@@@@@%%%%%%#||||||+=*#######****
     *#*%%   %%   %%  %%%   %%%%#||||||++*#%####*+=++   getwd():', '
    +###%  %%%  @  %  %%  @  %%%%%%%%%%%%+--++%%*+==+     ', getwd(),'
-  /+##%%%___%%___%%___%__%__%%%#####%%%%    |  *#==+   COLA_DATA_PATH: ', '
+  /+##%%%   %%   %%   %  %  %%%#####%%%%    |  *#==+   COLA_DATA_PATH: ', '
  |   #%%%%%%%%%%%%%%%%%%%%%%%%#####%%%##=   |_   +=-     ', COLA_DATA_PATH, '
  |   %#%%%%%%%%%%%%%%%%%%%%%###########++         #*   tempFolder:', '
  |   #%%%%%%%@%%#:::::::::::#####===#####         **     ', tempFolder, '
  #   #####=-####-::::::::::#####=::::=####        **   R-tempdir():', '
  #   #####=--###-:::::::::-#####::::::####        +*     ', cola::adaptFilePath(tempdir()), '
      #####=--####----------#####-------####
-'))
-cat('\n COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
+\n'))
+if(COLA_EE) {
+  cat(' COLA_EE: ', ifelse(COLA_EE == 1, 'Active', 'Not ready'), '\n')
+}
+if(COLA_ER) {
+  cat(' COLA_ER: ', ifelse(COLA_ER == 1, 'Active', 'Not ready'), '\n')
+}
 
 
-# https://convertico.com/image-to-ascii/
-#(cat('\n >> getwd(): ', getwd(), '\n'))
 
 
 # >> SERVER ---------------------------------------------------------------------------
@@ -207,24 +213,26 @@ server <- function(input, output, session) {
   # COLA DEBUG ----
 
   if(COLA_DEBUG == 1){
-    message('\t ¡¡ Debugging CoLa. You should not seen this !!')
+    message(' == Debugging CoLa. You should not seen this == ')
+    updateTextInput( inputId = 'ee_ptspath', value = 'projects/gonzalezivan/assets/cola2/tiger50',
+                     session = session, label = 'Layer to create in EE:', placeholder = 'projects/USER/assets/LAYER')
     updateTextInput( inputId = 'in_eefull_localpath', value = 'C:/cola/anoa/labA',
                      session = session, label = 'Local path:', placeholder = 'Local path')
-    updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola2',
+    updateTextInput( inputId = 'in_eefull_geepath', value = 'projects/gonzalezivan/assets/cola',
                      session = session, label = 'EE path:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola2/anoa72',
+    updateTextInput( inputId = 'in_eefull_occasset', value = 'projects/gonzalezivan/assets/cola2/tiger50',
                      session = session, label = 'Points file path:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola2/anoa72_box',
+    updateTextInput( inputId = 'in_eefull_aoi', value = 'projects/gonzalezivan/assets/cola2/tiger50_box',
                      session = session, label = 'Area of interest / region:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_colname', value = 'preabs',
                      session = session, label = 'Column name:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_label', value = 'labA',
+    updateTextInput( inputId = 'in_eefull_label', value = 'labtig50',
                      session = session, label = 'Label:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_modelid', value = 'modA',
+    updateTextInput( inputId = 'in_eefull_modelid', value = 'modTig50',
                      session = session, label = 'Model ID:', placeholder = '')
     updateTextInput( inputId = 'in_eefull_gdfolder', value = 'cola2',
                      session = session, label = 'Google Drive folder:', placeholder = '')
-    updateTextInput( inputId = 'in_eefull_gdprefix', value = 'cola2',
+    updateTextInput( inputId = 'in_eefull_gdprefix', value = 'cola3',
                      session = session, label = 'Files prefix:', placeholder = '')
     updateTextInput( inputId = 'in_ee_project', value = 'gonzalezivan',
                      session = session, label = 'EE project:', placeholder = '')
@@ -241,7 +249,7 @@ server <- function(input, output, session) {
     updateTextInput( inputId = 'in_eemos_outfile', value = 'C:/cola/mosaic/merge1.tif',
                      session = session, label = 'Final mosaic:', placeholder = '')
 
-    updateTextInput( inputId = 'in_er_server', value = 'twiga.pamdas.org',
+    updateTextInput( inputId = 'in_er_server', value = 'https://twiga.pamdas.org',
                      session = session, label = 'Server:', placeholder = '')
     updateTextInput( inputId = 'in_er_username', value = 'IGonzalez',
                      session = session, label = 'Username:', placeholder = '')
@@ -254,6 +262,11 @@ server <- function(input, output, session) {
                      session = session, label = 'Local path:', placeholder = '')
     updateNumericInput( inputId = 'in_er_resmeters', value = 1000,
                         session = session, label = 'KDE pixel in meters:')
+
+    updateDateInput( inputId = 'in_er_datestart', value = '2020-12-16')
+    updateDateInput( inputId = 'in_er_dateend', value = '2026-12-16')
+
+    #input$in_er_datestart
     # in_er_datestart in_er_dateend
 
   }
@@ -5667,8 +5680,6 @@ server <- function(input, output, session) {
 
         rv$crk <- out_crk$file
 
-        rv$crk <- out_crk$file
-
         if(!file.exists(out_crk$file)){
           rv$log <- paste0(rv$log, ' --- ERROR');updateVTEXT(rv$log) # _______
           rv$llmap
@@ -7261,12 +7272,183 @@ server <- function(input, output, session) {
       })
   })
 
-  observeEvent(
-    input$in_er_cola, {
 
-    })
+  (observeEvent(input$in_er_go, {
+    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+
+      print('Run ER')
+      # print(input$in_er_server)
+      # print(input$in_er_username)
+      # print(input$in_er_pwd)
+      # print(input$in_er_subject)
+      # print(as.character(input$in_er_datestart) != '')
+      # print(as.character(input$in_er_dateend))
+      # print(input$in_er_localpath)
 
 
+      if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
+
+      print('Run ER')
+      if ( !( input$in_er_server != '' & input$in_er_username != '' &
+              input$in_er_pwd != '' & input$in_er_subject != '' &
+              as.character(input$in_er_datestart) != '' &
+              as.character(input$in_er_dateend)  != '' &
+              input$in_er_localpath != '' & input$in_er_localshp != "")
+      ){
+        print('Run ER3')
+        shinyalert(html = TRUE, type = "error",
+                   title = paste0("Some parameters are missing"),
+                   text = paste0(' Please complete the inputs before running the function')
+        )
+
+      } else {
+        print('Run ER4')
+        shinyalert(html = TRUE, type = "info",
+                   title = paste0("Connecting to Earth Ranger \n Please close this window and wait few seconds")
+        )
+
+        if (!dir.exists(input$in_er_localpath)) {
+          dir.create(input$in_er_localpath, recursive = TRUE )
+        }
+
+        # input <- list( in_er_server = 'https://twiga.pamdas.org',
+        #                in_er_username = 'IGonzalez',
+        #                in_er_pwd = 'temp12345',
+        #                in_er_datestart = '2010-12-16',
+        #                in_er_dateend = '2027-12-16',
+        #                in_er_subject = 'NAM_test',
+        #                in_er_localpath = 'C:/cola/er',
+        #                in_er_dokde= 1,
+        #                in_er_resmeters= 1000
+        # )
+        print('Run ER5')
+
+        outshp <- file.path(input$in_er_localpath, input$in_er_localshp)
+        outtif <- file.path(input$in_er_localpath, input$in_er_localtif)
+
+        rv$log <- paste0(rv$log, ' Connecting to ER ... please wait');updateVTEXT(rv$log) # _______
+
+        tStartER <- Sys.time()
+        earthR <- earthRanger_py(
+          py = "C:/Users/gonza/AppData/Local/r-miniconda/envs/earthranger/python.exe",
+          pyscript = '"N:/My Drive/git/cola/inst/ee/cml_connectER.py"',
+          server = input$in_er_server,
+          username = input$in_er_username,
+          pwd = input$in_er_pwd,
+          datefrom = as.character(input$in_er_datestart),
+          dateto = as.character(input$in_er_dateend),
+          subject = input$in_er_subject,
+          outtif = outtif,
+          outshp = outshp,
+          # outdir = input$in_er_localpath,
+          dokde = (input$in_er_dokde & input$in_er_localtif != '' & input$in_er_localpath != ''),
+          spatresinmeters = input$in_er_resmeters,
+
+          show_cml = TRUE, show_result = TRUE,
+          dry_run = FALSE)
+
+        tElapER <- Sys.time() - tStartER
+        textElapER <- paste(round(as.numeric(tElapER), 2), attr(tElapER, 'units'))
+
+        # The function worked.
+        cond  <- file.exists(outshp)
+        cond2 <- file.exists(outtif)
+
+        # Worked
+        if(cond){
+          shinyalert(html = TRUE, type = "success",
+                     title = paste0("Earth Ranger connected!"),
+                     text = paste0(' Request finished. Check your layers in ', input$in_er_localpath)
+          )
+          if(input$in_er_cola){
+            rv$log <- paste0(rv$log, ' Points finised: ',textElapER,' --- DONE');updateVTEXT(rv$log) # _______
+            params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
+
+            rv$pts <- outshp
+            rv$ptsready <- TRUE
+
+            suggestedNewName <- suggestName(rv$layersList, type = 'Points')
+
+            shinyalert(html = TRUE, type = "success",
+                       title = paste0("Points created succesfully<br>",
+                                      'Layer name: ', suggestedNewName)
+            )
+
+            rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                           inout = 'out', type =  'Points',
+                                           internal =  points_file$file,
+                                           public = suggestedNewName)
+
+
+            points_shp <- sf::read_sf(outshp)
+            points_shp$sortID <- 1:nrow(points_shp)
+            rv$pts_sp <<- points_shp
+            rv$pts_sp_gcs <- sf::st_transform(points_shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
+            updateColaLayersLists(rv$layersList)
+
+            if(grepl('Suitability', in_points_ly )){
+              lastLLx <-  'Habitat suitability'
+            } else if(grepl('Resistance', in_points_ly )){
+              lastLLx <- 'Surface resistance'
+            }
+
+            ###################
+            if(cond2){ # kernels exists
+              rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
+
+              #### ......
+              suggestedName <- suggestName(rv$layersList, type = 'Kernels')
+              shinyalert(html = TRUE, type = "success",
+                         title = paste0("Resistant kernels created succesfully<br>",
+                                        'Layer name: ', suggestedName)
+              )
+
+              rv$layersList <- funLayersList(
+                df = rv$layersList, tempFolder,
+                inout = 'out', type =  'Kernels',
+                internal = rv$crk, public = suggestedName)
+
+              ## Inputs boxes
+              colaUpdateSelectizeInput(
+                ids = c('in_name_crk_pri'),
+                typex = 'Kernels', field = 'public', val = suggestedName)
+
+              updateColaLayersLists(layersList = rv$layersList)
+              #### ......
+              params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+
+              # crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
+              # # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
+              # crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
+              # rv$crk_quan <- crk_quan
+
+              rv$crkready <- TRUE
+              rv$crk <- out_crk$file
+              rv$crk_sp <- terra::rast(out_crk$file);
+              #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+              rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+              lastLLx <- 'Kernels'
+            }
+          }
+          makeLL(lastLL = lastLLx)
+
+        } else {
+          # No worked
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Earth Ranger not connected"),
+                     text = paste0(intCMD)
+          )
+
+          rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
+          shinyalert(html = TRUE, type = "error",
+                     title = paste0("Points no generated"),
+                     text = earthR$log)
+          lastLLx <- NULL
+
+        }
+      }
+      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+  })) # end isolate
 
   # EE server ------
   # Enables EE tab
@@ -7431,8 +7613,8 @@ server <- function(input, output, session) {
 
           ## Check local files
           files2upload <- input$ee_localfile
-          cat(' ee_localfile : \n')
-          print(input$ee_localfile)
+          # cat(' ee_localfile : \n')
+          # print(input$ee_localfile)
           #
           # cat(' files2upload : \n')
           # print(files2upload)
@@ -7467,16 +7649,20 @@ server <- function(input, output, session) {
             # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
 
             # eeproject shp eeasset %abs
-            cmdee <- paste0(cola::adaptFilePath(py), ' ', ee_scr_path,'/cml_uploadFeature.py ',
+            cmdee <- paste0(cola::adaptFilePath(py), ' ',
+                            #cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
+                            cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
+                            #ee_scr_path,'/cml_uploadFeature.py ',
                             input$in_ee_project, ' ',
                             cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
                             input$ee_absloc,
                             '' #'  2>&1'
             )
+            cmdee <- adaptFilePath( cmdee )
             #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
             # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
-            cat(' Uploading points EE:\n')
-            cat(cmdee, '\n')
+            cat(' CMD Uploading points EE:\n')
+            cat(cmdee,  '\n')
 
             intCMD <- tryCatch(
               capture.output(
@@ -7484,16 +7670,16 @@ server <- function(input, output, session) {
                         ignore.stderr = FALSE, intern = TRUE)),
               error = function(e) e$message)
 
-            cat(intCMD)
+            cat(intCMD, sep = '\n')
 
             cond <- !any(grep('ERROR', intCMD))
 
             if(cond){
               taskid <- grep('Upload submitted', intCMD, value = TRUE)
 
-              shinyalert(html = TRUE, type = "success",
+              shinyalert(html = TRUE, type = "info",
                          title = paste0("Task submitted"),
-                         text = paste0(' Task ID submitted. Please check your earth engine console <br>', taskid,
+                         text = paste0(' Task submitted to Earth Engine. Please check your earth engine console <br>', taskid,
                                        'The next assets will be created: <br>',
                                        input$ee_ptspath, '<br>',
                                        input$ee_ptspath, '_box'
@@ -8288,7 +8474,7 @@ server <- function(input, output, session) {
                       intern = TRUE)),
             error = function(e) e$message)
 
-          cat(intCMD)
+          cat(intCMD, sep = '\n')
           cond <- !any(grep('ERROR', intCMD))
 
           if(cond){ # Success
@@ -8525,7 +8711,7 @@ server <- function(input, output, session) {
                       intern = TRUE)),
             error = function(e) e$message)
 
-          cat(intCMD)
+          cat(intCMD, sep = '\n')
           cond <- !any(grep('ERROR', intCMD))
 
           # output$out_status <- renderUI({
@@ -8631,7 +8817,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full gap B  ------
+  # SRV EE full gap B  ------
   observeEvent( input$in_eefull_gogap, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' & input$in_eefull_label  != '' &
@@ -8698,7 +8884,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full metrics C  ------
+  # SRV EE full metrics C  ------
   observeEvent( input$in_eefull_gomet, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' & input$in_eefull_label  != '' &
@@ -8764,8 +8950,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full extract  ------
-
+  # SRV EE full extract  ------
   observeEvent( input$in_eefull_goext, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' &
@@ -8846,8 +9031,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full fit training  ------
-
+  # SRV EE full fit training  ------
   observeEvent( input$in_eefull_gofit, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' & input$in_eefull_label != '' &
@@ -8931,8 +9115,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full predict  ------
-
+  # SRV EE full predict  ------
   observeEvent( input$in_eefull_gopre, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' & input$in_eefull_label != '' &
@@ -9004,8 +9187,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
-  ### SRV EE full download  ------
-
+  # SRV EE full download  ------
   observeEvent( input$in_eefull_godow, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
       if ( all(input$in_ee_project != '' &
@@ -9213,119 +9395,153 @@ server <- function(input, output, session) {
   })
 
   observeEvent( input$in_eemos_go,{
-    message("Do merge layers")
+    message("  Merging layers")
 
     if(length(input$in_eemos_layers) != 0 ){
-    shinyalert(html = TRUE, type = "info",
-               title = paste0(" layers found."),
-               text = paste0("There(s) ", length(unique(layProjections)),
-                             ' projections. See details in the console.'))
+      shinyalert(html = TRUE, type = "info",
+                 title = paste0(length(input$in_eemos_layers)," layers found."),
+                 text = paste0("There(s) ", length(unique(layProjections)),
+                               ' projections. See details in the console.'))
 
-    status("running"); showStartStop(  ); delay(1,{ # actionherestart
+      status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-      print( input$in_eemos_layers )
-      print(0)
-      print( lay2CompEEDf$full[ lay2CompEEDf$short %in%  input$in_eemos_layers ] )
+        # print( input$in_eemos_layers )
+        # print(0)
+        # print(  )
 
-      # gdalbuildvrt(input_file_list=temp_file_list_name,
-      #   separate=separate,output.vrt=output.vrt,verbose=verbose,...)
+        # gdalbuildvrt(input_file_list=temp_file_list_name,
+        #   separate=separate,output.vrt=output.vrt,verbose=verbose,...)
 
-      # out_mosaic_name <- gsub(  x = input$in_eemos_outfile, pattern = input$in_eemos_prefix,  replacement = '')
-      out_mosaic_name <- input$in_eemos_outfile
-      message(paste0(' Saving mosaic file as: ', out_mosaic_name) )
+        # out_mosaic_name <- gsub(  x = input$in_eemos_outfile, pattern = input$in_eemos_prefix,  replacement = '')
 
-      tryCatch(gdalUtilities::gdalbuildvrt(
-        gdalfile = lay2CompEEDf$full[ lay2CompEEDf$short %in%  input$in_eemos_layers ]
-        , output.vrt = out_mosaic_name
-        , allow_projection_difference = TRUE
-      ), error = function(e) NULL )
+        layers2merge <- lay2CompEEDf$full[ lay2CompEEDf$short %in%  input$in_eemos_layers ]
 
-      out_projected_name <- file.path(
-        dirname(input$in_eemos_outfile),
-        paste0('proj_', basename(input$in_eemos_outfile))
-      )
 
-      if(input$in_eemos_crs != ''){
-        tryCatch(
-          gdalUtilities::gdalwarp(
-            srcfile = out_mosaic_name,
-            dstfile = out_projected_name,
-            to = crs_df$crs_code[crs_df$label %in% input$in_eemos_crs]
-          ), error = function(e) NULL )
-      }
+        terra::vrt(layers2merge, out_mosaic_name)
+        #(tempListfile <- tempfile(fileext = '.txt', pattern = sessionID))
+        #writeLines(text = layers2merge, con = tempListfile)
+        #file.edit(tempListfile)
+        out_mosaic_name <- input$in_eemos_outfile
 
-      if( input$in_eemos_cola){
-        if(file.exists(out_projected_name)){
+        message(paste0(' Saving mosaic file as: ', out_mosaic_name) )
+        mosaicLog <- tryCatch({
 
-          params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+          r_lst <- lapply(layers2merge, rast)
+          # create spatial raster collection
+          coll <- sprc(x = r_lst)
 
-          rv$log <- paste0(rv$log, # _______
-                           ' ... DONE');updateVTEXT(rv$log) #
-          rv$tifready <- TRUE
-          rv$tif <- out_projected_name
-          rv$tiforig <- out_projected_name
+          # combine all rasters
+          mosaic(x = coll, fun = "mean", filename = out_mosaic_name)
 
-          suggestedName <- suggestName(rv$layersList, type = 'Resistance')
-          #cat('suggestedName:',  suggestedName, '\n')
-          shinyalert(html = TRUE, type = "success",
-                     title = paste0("Surface resistance created succesfully<br>",
-                                    'Layer name: ', suggestedName)
+        }, error = function(e) e )
+
+        if (file.exists(out_mosaic_name)){
+
+
+          out_projected_name <- file.path(
+            dirname(input$in_eemos_outfile),
+            paste0('proj_', basename(input$in_eemos_outfile))
           )
 
-          rv$layersList <- funLayersList(
-            df = rv$layersList, tempFolder,
-            inout = 'out', type =  'Resistance',
-            internal = rv$tif, public = suggestedName)
+          if(input$in_eemos_crs != '' ){
+            tryCatch(
+              gdalUtilities::gdalwarp(
+                srcfile = out_mosaic_name,
+                dstfile = out_projected_name,
+                to = crs_df$crs_code[crs_df$label %in% input$in_eemos_crs]
+              ), error = function(e) NULL )
+          }
+
+          if( input$in_eemos_cola){
+            if(file.exists(out_projected_name)){
+
+              params_txt <- updateParamsTEXT(params_txt = params_txt, sr = TRUE)
+
+              suggestedNewName <- suggestName(rv$layersList, type = 'Suitability')
+
+              shinyalert(html = TRUE, type = "success",
+                         title = paste0("Surface resistance loaded succesfully<br>",
+                                        'Layer name: ', suggestedNewName)
+              )
+
+              rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                             inout = 'in', type =  'Suitability',
+                                             internal = newtifPath, public = suggestedNewName)
+
+              updateSelectizeInput( # inputs
+                session, "in_name_hs",
+                choices = unlist(subset(rv$layersList, type == 'Suitability')[,'public']),
+                selected = getLast(rv$layersList, 'Suitability', 'public')
+                #, server = TRUE
+              )
+
+              updateSelectizeInput( # inputs points
+                session, "in_points_ly",
+                choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
+                selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
+                , server = TRUE
+              )
+
+              newOutput <- suggestName(
+                rv$layersList, type = 'Resistance')
+
+              updateTextInput(
+                session, "out_name_sur",
+                value = newOutput
+                #, server = TRUE
+              )
+
+              updateColaLayersLists(layersList = rv$layersList)
+
+              params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
+              rv$newtifPath <- newtifPath
+              rv$hs <- newtifPath
+              rv$hsready <- TRUE
+
+              pdebug(devug=devug,sep='\n',pre='-',"tempFolder","inSurSessID",
+                     "rv$inSurSessID", "newtifPath")
+
+              rv$log <- paste0(rv$log, '--- DONE')
+              updateVTEXT(rv$log)
 
 
-          newOutput <- suggestName(rv$layersList, type = 'Resistance')
+              rv$hs_sp <- terra::rast(rv$hs)
+              #rng_newtif <- c(newtif@data@min, newtif@data@max)
+              #rv$hs_rng <- rng_newtif <- range(rv$hs_sp[], na.rm = TRUE)
+              rv$hs_rng <- rng_newtif <- getMnMx(rv$hs)
 
-          ## Inputs boxes
-          colaUpdateSelectizeInput(
-            ids = c('in_name_sur_edi',
-                    'in_name_sur_dis', 'in_name_sur_cdp',
-                    'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = newOutput)
+              updateTextInput(session, inputId = "in_sur_3",
+                              value = max(rv$hs_rng[1], 0, na.rm = TRUE))
+              updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
 
-          updateSelectizeInput( # inputsPoints
-            session, "in_points_ly",
-            choices = unlist(subset(rv$layersList, type %in% c('Suitability', 'Resistance'))[,'public']),
-            selected = c(getLast(rv$layersList, 'Resistance', 'public'), getLast(rv$layersList, 'Suitability', 'public'))[1]
-            , server = TRUE
-          )
+              rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                                           domain = rng_newtif, na.color = "transparent")
 
-          updateColaLayersLists(layersList = rv$layersList)
+              makeLL(lastLL = "Habitat suitability")
 
-          #rv <- list(tif_sp = terra::rast("/data/tempR//colaQCZ2025012818543305//out_surface_RTL2025012818544805.tif"))
+            } else {
+              rv$log <- paste0(rv$log, '\n -- Error creating the "Habitat suitability" TIF file')
+              updateVTEXT(rv$log)
+              lastLLx <- NULL
+              shinyalert(html = TRUE, type = "error",
+                         title = paste0("Surface resistance not created succesfully"),
+                         text = 'Check the console log')
+            }
 
-          rv$tif_sp <- terra::rast(rv$tif)
-          #rv$tif_rng <- rng_rstif <- range(hs2rs_tif[], na.rm = TRUE)
-          rv$tif_rng <- rng_rstif <- getMnMx(rastPath = rv$tif_sp)[1:2]
-          rv$tif_pal <- rsPal <<- leaflet::colorNumeric(
-            palette = "viridis", reverse = TRUE,
-            domain = rng_rstif, na.color = "transparent")
+            output$ll_map_h2r <- leaflet::renderLeaflet({
+              makeLL(lastLL = lastLLx)
+            })
+          }
 
-          # rv$llmap rv$hsready rv$tifready rv$ptsready # rv$llmap
-          #rv$llmap <<- rv$llmap %>%
-          #leafsurface <<- leaflet::leaflet() %>%leaflet::addTiles() %>%
-
-          # pdebug(devug=devug,sep='\n',pre='---H2S\n'," hs2rs_tif[]") # = = = = = = = = = = = = = = = = = = =
-          lastLLx <- "Surface resistance"
         } else {
-          rv$log <- paste0(rv$log, '\n -- Error creating the "Surface resistance" TIF file')
-          updateVTEXT(rv$log)
-          lastLLx <- NULL
+          # error
           shinyalert(html = TRUE, type = "error",
-                     title = paste0("Surface resistance not created succesfully"),
-                     text = 'Check the console log')
+                     title = paste0("Surface resistance not created succesfully. Mosaic failed."),
+                     text = paste0('Check the console log. You can mosaic those layer externally and then upload them back',
+                                   'in the DSS if the error persists.'))
         }
 
-        output$ll_map_h2r <- leaflet::renderLeaflet({
-          makeLL(lastLL = lastLLx)
-        })
-      }
-
-      showStartStop( FALSE ) ; status("finished") }) # actionhereclose
+        showStartStop( FALSE ) ; status("finished") }) # actionhereclose
     }
   })
 
@@ -9442,6 +9658,8 @@ server <- function(input, output, session) {
     # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
     cat(' CMD Uploading local points to EE:\n')
     cat(cmdee, '\n')
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
+
 
     intCMD <- tryCatch(
       capture.output(
@@ -10239,27 +10457,28 @@ if (FALSE){ # if FALSE
               h2(' Download information from Earth Ranger'),
               h3(' https://www.earthranger.com/'),
               fluidRow(
-                column(width = 4,
+                column(width = 2,
+                       style = "padding-left:0px; padding-right:0px;",
                        textInput(width = "100%",
                                  value = '',
                                  placeholder = 'Organisation server URL',
                                  label =  'ER Server:',
                                  'in_er_server')),
-                column(width = 4,
+                column(width = 2,
                        textInput(width = "100%",
                                  value = '',
                                  placeholder = 'Username',
                                  label =  'ER Username:',
                                  'in_er_username')),
 
-                column(width = 4,
+                column(width = 2,
                        textInput(width = "100%",
                                  value = '',
                                  placeholder = '***',
                                  label =  'ER Password:',
                                  'in_er_pwd')),
 
-                column(width = 3,
+                column(width = 2,
                        dateInput(
                          inputId = "in_er_datestart",
                          label = "Start date:",
@@ -10273,7 +10492,7 @@ if (FALSE){ # if FALSE
                          autoclose = TRUE # Close calendar after selection
                        )),
 
-                column(width = 3,
+                column(width = 2,
                        dateInput(
                          inputId = "in_er_dateend",
                          label = "Final date:",
@@ -10287,34 +10506,37 @@ if (FALSE){ # if FALSE
                          autoclose = TRUE # Close calendar after selection
                        )),
 
-                column(width = 3,
+                column(width = 2,
                        textInput(width = "100%",
                                  value = '',
                                  placeholder = 'Subject group as Earth Ranger',
                                  label =  'Subject group:',
                                  'in_er_subject')
                        # , selectInput('temp', label = 'Subject group (2):', choices = c('GroupA', 'GroupB', 'Groupc'))
-                       ),
-
-                column(3,
-                       style = "padding-left:0px; padding-right:5px;",
-                       numericInput(width = "100%",min = 0, max = 99999,
-                                    step = 1, value = 0,
-                                    label =  'KDE Resolution (meters):',
-                                    inputId = 'in_er_resmeters')
                 ),
+
                 # next row
-                column(2, style = "padding-left:10px; padding-right:10px; padding-top:20px; padding-bottom:20px;"
+                column(1, style = "padding-left:5px; padding-right:5px; padding-top:20px; padding-bottom:5px;"
                        , shinyDirButton( id = 'folderer',
                                          label = 'Select a folder', title = 'Please select a folder',
                                          multiple = FALSE)),
-                column(4, textInput(width = "100%", value = '', placeholder = 'Local path',
+                column(2, textInput(width = "100%", value = '', placeholder = 'Local path',
                                     label = 'Local results path:', inputId = 'in_er_localpath') ),
-                column(2, checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde') ),
-                column(2, checkboxInput(label = 'Load to Cola?', inputId = 'in_er_cola') ),
+                column(2, textInput(width = "100%", value = '', placeholder = 'points.shp',
+                                    label = 'Point file name:', inputId = 'in_er_localshp') ),
+                column(2, textInput(width = "100%", value = '', placeholder = 'KDEraster.tif',
+                                    label = 'Raster file name:', inputId = 'in_er_localtif') ),
+                column(2, #style = "padding-left:0px; padding-right:0px;",
+                       numericInput(width = "100%",min = 0, max = 99999,
+                                    step = 1, value = 0,
+                                    label =  'KDE Resolution (meters):',
+                                    inputId = 'in_er_resmeters')),
+                column(2, checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde'),
+                checkboxInput(label = 'Load to Cola?', inputId = 'in_er_cola') ),
 
-                column(2
-                       , style = "padding-left:10px; padding-right:10px; padding-top:0px; padding-bottom:0px;"
+                column(1
+                       , style = "padding-left:5px; padding-right:5px; padding-top:20px; padding-bottom:5px;"
+                       #, style = "padding-top:10px; padding-bottom:0px;" # padding-left:10px; padding-right:10px;
                        , actionButton(width = "100%", label = 'Get data', 'in_er_go'))
               ) # end box ABC
             ), #FR

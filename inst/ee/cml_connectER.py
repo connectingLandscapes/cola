@@ -26,9 +26,10 @@ import rasterio
 from rasterio.transform import from_origin
 from scipy.stats import gaussian_kde
 from shapely.geometry import Point
-from ecoscope.io.earthranger import EarthRangerIO
+from ecoscope.io.earthranger import EarthRangerIO #
 import time, os, sys, argparse
 from datetime import datetime
+import pyogrio
 
 # =============================================================================
 # 1. CONNECTION SETTINGS
@@ -53,20 +54,16 @@ from datetime import datetime
 def parse_args():
     p = argparse.ArgumentParser(description='SDM MODIS Wall-to-Wall Prediction')
     # ── Core identifiers (shared across scripts) ──────────────────────────────
-    p.add_argument('--server', type = str, required = True,
-        help='Organisation server URL')
-    p.add_argument('--username',      type=str, required=True,
-        help='Your username')
+    p.add_argument('--server', type = str, required = True, help='Organisation server URL')
+    p.add_argument('--username', type=str, required=True, help='Your username')
     p.add_argument('--pwd',      type=str, required=True,
                    help='Your password')
     p.add_argument('--datefrom', type=str, required=True,
                    help='Initital date, format YYYY-mm-dd')
-   p.add_argument('--dateto', type=str,  required=True,
-                   help='Final date, format YYYY-mm-dd')
-    p.add_argument('--subjetgroup',  type=str, required=True,
-                    help = 'The subject group to analyse (species + study area, as defined in EarthRanger)')
-    p.add_argument('--oudir',        type=str required=True,
-                    help = 'Local path where results will be saved')
+    p.add_argument('--dateto', type=str,  required=True,help='Final date, format YYYY-mm-dd')
+    p.add_argument('--subjectgroup',  type=str, required=True, help = 'The subject group to analyse (species + study area, as defined in EarthRanger)')
+    p.add_argument('--outshp', type=str, required=True, help = 'Local full file name where points will be saved')
+    p.add_argument('--outtif', type=str, required=True, help = 'Local file full name where KDE raster will be saved')
     p.add_argument('--dokde',  type=int, required=True,
                    help='Calculate the Kernel density estimation (KDE), 1:yes, 0:no')
     p.add_argument('--spatresinmeters',   type=int, required=True,
@@ -80,11 +77,22 @@ ER_USERNAME = args.username
 ER_PASSWORD = args.pwd
 DATE_FROM = args.datefrom
 DATE_TO = args.dateto
-SUBJECT_GROUP = args.subjetgroup
-OUTPUT_DIR = args.oudir
-DO_KDE = args.spatresinmeters
+SUBJECT_GROUP = args.subjectgroup
+OUTPUT_SHP = args.outshp
+OUTPUT_TIF = args.outtif
 KDE_RES_M = args.spatresinmeters
-DO_KDE = arg.dokde
+DO_KDE = args.dokde
+
+# ER_USERNAME = 'IGonzalez'
+# ER_PASSWORD = 'temp12345'
+# ER_SERVER = 'https://twiga.pamdas.org'
+# DATE_FROM = '2010-01-20'
+# DATE_TO = '2027-01-20'
+# SUBJECT_GROUP = 'NAM_test'
+# OUTPUT_SHP = 'C:/cola/earthranger/abc.shp'
+# OUTPUT_TIF = 'C:/cola/earthranger/abc.tif'
+# KDE_RES_M = 1000
+# DO_KDE = 1
 
 # ER_SERVER   = sys.argv[1] # "https://your-organisation.pamdas.org"   # ← organisation server URL
 # ER_USERNAME = sys.argv[2] # "your_username"
@@ -105,6 +113,7 @@ DO_KDE = arg.dokde
 # =============================================================================
 
 def pull_tracking_data(server, username, password, group, date_from, date_to):
+    # server, username, password, group, date_from, date_to = ER_SERVER, ER_USERNAME, ER_PASSWORD, SUBJECT_GROUP, DATE_FROM, DATE_TO
     """Connect to EarthRanger and return a GeoDataFrame of GPS relocations."""
 
     print(f"Connecting to EarthRanger: {server}")
@@ -162,22 +171,47 @@ def reproject_utm(gdf):
 #    CoLa uses these as the starting locations for least-cost path analysis.
 # =============================================================================
 
-def export_points(gdf, out_dir, name):
+def export_points(gdf, out_shp, name):
+    # gdf = gdf_utm, out_shp = OUTPUT_SHP, name = safe_name
     """Save GPS locations as a shapefile with X/Y attribute columns."""
-    path = os.path.join(out_dir, f"{name}_points.shp")
-
+    #path = os.path.join(out_dir, f"{name}_points.shp")
+    path = out_shp
+    dir_name = os.path.dirname(path)
+    # Create the directory and any missing parent directories
+    os.makedirs(dir_name, exist_ok=True)
+    #
+    if os.path.isfile(path):
+        print("   File exists and is a regular file. Addind _1.shp as prefix")
+        path = path.replace('.shp', '_1.shp')
+    #
     pts       = gdf.copy()
     pts["X"]  = pts.geometry.x
     pts["Y"]  = pts.geometry.y
-    keep      = ["X", "Y", "geometry"]
+    # print(pts.dtypes)
+    keep      = ["X", "Y", "geometry"] #  
     for col in ["subject_name", "recorded_at"]:
         if col in pts.columns:
             keep.append(col)
-
+    #
     export         = pts[keep].copy()
     export.columns = [c[:10] for c in export.columns]   # shapefile 10-char limit
-    export.to_file(path)
-
+    #
+    # ESRI Shapefile (DBF) has no datetime field type — tz-aware columns like
+    # recorded_at raise "DriverSupportError: ESRI Shapefile does not support
+    # datetime fields". Cast any datetime column to string before writing.
+    for col in export.columns:
+        if str(export[col].dtype).startswith("datetime64"):
+            export[col] = export[col].astype(str)
+    #
+    export["sortid"] = np.arange(0, len(export))  # stop is exclusive, so +1 to include 10
+    export["name"] = str(name)
+    export.to_file(path, engine="pyogrio")
+    # print(export.dtypes)
+    # type(export)
+    ## From PJ points: gdf = gpd.GeoDataFrame(dfCoords, geometry=gpd.points_from_xy(dfCoords.X, dfCoords.Y), crs=src.crs)
+    # gdf2 = gpd.GeoDataFrame(export[  [c[:10] for c in export.columns] + ["sortid" , "name"] ],
+    #                        geometry=gpd.points_from_xy(pts.geometry.x, pts.geometry.y), 
+    #                        crs = export.crs)
     print(f"  Source points → {path}  ({len(export):,} points)")
     return path
 
@@ -192,9 +226,19 @@ def export_points(gdf, out_dir, name):
 #    resolution to guarantee identical X and Y cell dimensions.
 # =============================================================================
 
-def export_kde_raster(gdf, epsg, out_dir, name, resolution_m=500):
+def export_kde_raster(gdf, epsg, out_tif, name, resolution_m=500):
     """Compute a KDE density surface and save as a GeoTIFF."""
-    path = os.path.join(out_dir, f"{name}_hs_kde.tif")
+    # path = os.path.join(out_dir, f"{name}_hs_kde.tif")
+    path = out_tif
+    dir_name = os.path.dirname(path)
+    # Create the directory and any missing parent directories
+    os.makedirs(dir_name, exist_ok=True)
+    #
+    print("   Calculating KDE")
+    if os.path.isfile(path):
+        print("File exists and is a regular file. Addind _1.tif as prefix")
+        path = path.replace('.tif', '_1.tif')
+    #
 
     xs = gdf.geometry.x.values.astype(float)
     ys = gdf.geometry.y.values.astype(float)
@@ -249,7 +293,7 @@ def export_kde_raster(gdf, epsg, out_dir, name, resolution_m=500):
 # =============================================================================
 
 def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    # os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # Sanitise group name for use as a filename
     safe_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in SUBJECT_GROUP)
@@ -258,25 +302,25 @@ def main():
     print("  EarthRanger → CoLa  |  Live Data Integration Demo")
     print("═" * 60 + "\n")
 
+    # er = EarthRangerIO(server=ER_SERVER, username=ER_USERNAME, password=ER_PASSWORD)
     # Pull live data from EarthRanger
     gdf          = pull_tracking_data(ER_SERVER, ER_USERNAME, ER_PASSWORD,
                                       SUBJECT_GROUP, DATE_FROM, DATE_TO)
     gdf_utm, epsg = reproject_utm(gdf)
-
-    print()
-
     # Export CoLa-ready inputs
-    shp_path = export_points(gdf_utm, OUTPUT_DIR, safe_name)
+    shp_path = export_points(gdf_utm, OUTPUT_SHP, safe_name)
     if DO_KDE == 1:
-        tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_DIR, safe_name, KDE_RES_M)
+        tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_TIF, safe_name, KDE_RES_M)
     #
+    
     print(f"""
 {"═" * 60}
   Done. CoLa inputs ready:
   Source points shapefile    : {shp_path}""")
-  
-  print(f"Habitat suitability raster : {tif_path}") if DO_KDE == 1 else None
-  print("""{"═" * 60}""")
+    if DO_KDE == 1:
+        print(f"Habitat suitability raster : {tif_path}")
+    #
+    print("""{"═" * 60}""")
 
 
 #  These files can be loaded directly into the CoLa DSS

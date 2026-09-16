@@ -10,6 +10,7 @@ Cinnects EE from command line
 import ee
 import sys
 import geemap
+#from geemap import geojson_to_ee, ee_to_geojson
 import pandas as pd 
 import geopandas as gpd
 import json
@@ -44,13 +45,12 @@ def main() -> None:
         
         
     # shapefile_path = '/home/shiny/test/anoa66.shp'
-    # shapefile_path = 'C:/cola/anoa/anoa66.shp'
     # shapefile_path = 'C:/Users/ig299/cola/ptsa.shp'
-    # shapefile_path = 'C:/cola/anoa/anoa_test.shp'
+    # shapefile_path = 'C:/cola/tiger40pts.shp'
     # eelogpath = 'C:/Users/ig299/cola/eelogpath'
     # project_name = 'gonzalezivan'
-    # percabs = 60
-    # ee_name = 'projects/gonzalezivan/assets/cola/a'  
+    # percabs = 0 60
+    # ee_name = 'projects/gonzalezivan/assets/cola2/tiger50'  
   
   # Convert distance threshold to float or integer
     try:
@@ -125,15 +125,19 @@ def main() -> None:
         gdf.to_file(shapefile_path.replace(".shp", "and" + str(percabs) + "simabs.shp") )
         print (  ' Writing file ')
     #    
-    #
-    #
-    # convert it into geo-json 
+    # Convert it into geo-json 
     json_df = json.loads(gdf.explode(index_parts=False).to_json())
     json_box = json.loads(gpdbox.explode(index_parts=False).to_json())
-    #        
+    #
+    #    
     # create a gee object with geemap
-    ee_object = geemap.geojson_to_ee(json_df)
-    ee_box = geemap.geojson_to_ee(json_box)
+    # ee_object = geemap.geojson_to_ee(json_df) # old - no working
+    ee_object = ee.FeatureCollection(json_df)
+    #ee_object = geemap.shp_to_ee(shapefile_path)
+    #ee_object = geemap.geopandas_to_ee(json_df)
+    #ee_object = geemap.geopandas_to_ee(gdf)
+    #ee_box = geemap.geojson_to_ee(json_box) # old - no working
+    ee_box = ee.FeatureCollection(json_box)
     #
     #
     # upload this object to earthengine
@@ -143,13 +147,13 @@ def main() -> None:
     #create and launch the task
     task_config = {
         'collection': ee_object, 
-        'description':'Uploading shapefile', #+ hapefile_path,
+        'description':'Uploading shapefile ' + ee_name, #+ hapefile_path,
         'assetId': ee_name.replace('.shp', '')
     }
     #
     box_tax_config = {
         'collection': ee_box, 
-        'description':'Uploading box ',
+        'description':'Uploading box '+ee_name,
         'assetId': ee_name.replace('.shp', '')+'_box'
     }
     #

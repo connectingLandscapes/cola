@@ -3407,60 +3407,35 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
 
 
 
-#' @title SDM MODIS wall-to-wall prediction script
-#' @description Applies a pre-trained RF classifier to pre-exported MODIS metrics tiles
-#' to produce a wall-to-wall habitat suitability map.
-#' All inputs derived from MODEL_ID (classifier, features) and
-#' SPECIES + TARGET_YEAR (metrics tiles). Output folder also
-#' derived from MODEL_ID + TARGET_YEAR.
-#' IMPORTANT: Gaussian kernel parameters must be identical to those used in
-#' sdm_modis_extraction.py — predictor values must match between training
-#' and prediction or model performance will degrade.
-#' Usage:
-#'   python sdm_modis_wall_to_wall.py --species puma --model_id puma_modis_m2 \
-#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
-#'
-#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-#' sdm_model_fitting_py( ) {Classifier} function
-#'
-#' @param py String. Python executable location. No spaces allowed.
+#' @title Connects with EarthRanger API to download information
+#' @description Download species occurrences and Kernel density estimation (KDE)
+#' @param py String. Python executable location. No spaces allowed. Must have installed
 #' @param pyscript String. Python script location. No spaces allowed.
-#' @param ee_project String.
-#' @param species String. Species name, e.g. puma
-#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
-#' @param run_mode String. Execution mode, 'test', 'full'
-#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
-#' @param crs String. Year for single-batch test run
-#' @param scale Integer. Pixel size in meters. Default is 250m
-#' @param min_year Integer. Default is 2000.
-#' @param max_year Integer. Default is 2025.
-#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
-#' @param gee_assets String. EE path to
-#' @param range_asset String. EE path for the feature collection with the spatial extent
-#' @param show_cml Logical. Print the back-end command line? Default TRUE
-#' @param show_result Logical. Print the command line result? Default TRUE
-#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+#' @param server String. Organisation server URL, including the 'https://' prefix
+#' @param username String. Username
+#' @param pwd String. Password. Not stored locally
+#' @param datefrom String. Date-from, format YYYY-mm-dd
+#' @param dateto String. Date-to, format YYYY-mm-dd
+#' @param subject String. The subject group to analyse (species + study area, as defined in EarthRanger)
+#' @param outtif String. Output full raster file name
+#' @param outshp String. Output full shapefile name
+#' @param spatresinmeters String. Raster resolution in meters of the Kernel density estimation (KDE)
+#' @param dokde Integer. Calculate density kernel raster?  1: yes, 0: no
+#' @return List with log slot. The resulting layer will be saved in the outdir
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
 earthRanger_py <- function(
-    py = Sys.getenv("COLA_PYTHON_PATH"),
+    py = Sys.getenv("ER_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'ee/cml_connectER.py'),
-    ee_project,
-    species,
-    model_id,
-    target_year,
-    run_mode, # test full
-    max_concurrent = 3,
-    crs, scale = 250,
-    min_year, max_year,
-    tile_degrees,
-    gee_assets,
-    range_asset,
+    server, username, pwd,
+    datefrom, dateto,
+    subject,
+    outtif, outshp,
+    dokde = 0,
+    spatresinmeters = 250,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3471,39 +3446,34 @@ earthRanger_py <- function(
     stop('Script not found')
   }
 
-  if( !run_mode %in% c('test', 'full')){
-    stop("Not valid method. It must be 'test', or 'full'")
+  if( dokde %in% c(1, TRUE)){
+    dokde <- 1
+  } else {
+    dokde <- 0
   }
 
   ### Create CMD
   aargs <- c(
     adaptFilePath(pyscript),
-    '--ee_project', ee_project,
-    '--species', species,
-    '--model_id', model_id,
-    '--target_year', target_year,
-    '--run_mode', run_mode,
-    '--max_concurrent', max_concurrent,
-    '--crs', crs,
-    '--scale', scale,
-    '--tile_degrees', tile_degrees,
-    '--min_year', min_year,
-    '--max_year', max_year,
-    '--gee_assets', gee_assets,
-    '--range_asset', range_asset)
+    '--server', server,
+    '--username', username,
+    '--pwd', pwd,
+    '--datefrom', datefrom,
+    '--dateto', dateto,
+    '--subject', subject,
+    '--outtif', outtif,
+    '--outshp', outshp,
+    '--dokde', dokde,
+    '--spatresinmeters', spatresinmeters)
 
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
-      '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
-
   if (show_cml | dry_run){
-    cat('\n\t CMD sdm model prediction: \n')
-    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
-    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
+    cat('\n\t CMD EarthRanger: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_), '\n\n')
   }
 
   if (!dry_run){

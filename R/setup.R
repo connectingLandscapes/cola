@@ -425,7 +425,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   cat (sep = '', '\n  +Step 4/', nSteps, ' Installing & checking conda modules\n')
 
   # Install collectively
-  if ( !onlyIndividual ){
+  if ( ! onlyIndividual ){
 
     # Try 3 times to install all the indivudal packages
     for(i in 1:3){
@@ -820,7 +820,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       posA <- grep('COLA_PYTHON_PATH', Renviron)
       (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
-      Renviron[posA] <- paste0('COLA_PYTHON_PATH="', pyCola, '"')
+      Renviron[posA] <- paste0('COLA_PYTHON_PATH="', adaptFilePath(pyCola), '"')
 
       posB <- grep('COLA_SCRIPTS_PATH', Renviron)
       (posB <- ifelse(length(posB) == 0, length(Renviron) + 1, posB))
@@ -870,12 +870,37 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
 
       if(earthranger){
+        cat (sep = '', '\n  + Extra step: Installing EarthRanger\n\n')
+        cat (sep = '', '    This step will take some time ... please wait\n')
+
+        lists_conda_er <- conda_list()
+        if( ! lists_conda_er$name %in%  "earthranger"){
+          tryCatch(conda_create("earthranger"), error = function (e ) e )
+          lists_conda_er <- conda_list()
+          py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python)
+        } else {
+          py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python)
+        }
+
+        tryCatch(conda_install("earthranger", packages = c('ecoscope'), pip  = TRUE, error = function (e ) e ))
+        tryCatch(conda_install("earthranger", packages = c('geopandas', 'rasterio', 'scipy', 'pyogrio', 'fiona')), error = function (e ) e )
+        tryCatch(conda_install("earthranger", packages = c('pyogrio'), pip  = TRUE), error = function (e ) e )
+
+        if (spyder){
+          tryCatch(conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
+        }
+        # conda_create( envname = 'earthranger', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
+        # conda_install( envname = 'er2', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
+
         pos <- grep('COLA_ER', Renviron)
         # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
         if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_ER=1'}
+
+        posA <- grep('ER_PYTHON_PATH', Renviron)
+        (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
+        Renviron[posA] <- paste0('ER_PYTHON_PATH="', py_er, '"')
+
       }
-
-
 
       #cat(Renviron, sep = '\n')
       writeLines(text = Renviron, con = renv)
@@ -924,9 +949,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     }
   }  else {
     cat (sep = '\n', "    Error: Can't load conda modules.\n\n\t Here the error: \n\t", cmdans)
+    diagnose_cola()
+    stop()
   }
 }
 
+## C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat remove --yes --name cola --all
 ## cola::setup_cola(ask = FALSE, zarr = TRUE)
 ## reticulate::conda_remove('cola')
 
