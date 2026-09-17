@@ -3454,7 +3454,7 @@ earthRanger_py <- function(
 
   ### Create CMD
   aargs <- c(
-    adaptFilePath(pyscript),
+    quotepath(adaptFilePath(pyscript)),
     '--server', server,
     '--username', username,
     '--pwd', pwd,
@@ -3476,11 +3476,10 @@ earthRanger_py <- function(
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_), '\n\n')
   }
 
-  if (!dry_run){
+  if ( !dry_run ){
     argss <-  c('-u',  aargs)
     (intCMD <- catandcapt( adaptFilePath(py), argss,
                            docat = show_result) )
-
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }

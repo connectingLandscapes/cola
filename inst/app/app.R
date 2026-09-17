@@ -260,7 +260,19 @@ server <- function(input, output, session) {
 
     updateTextInput( inputId = 'in_er_localpath', value = 'C:/cola/earthranger',
                      session = session, label = 'Local path:', placeholder = '')
-    updateNumericInput( inputId = 'in_er_resmeters', value = 1000,
+    ##
+    updateTextInput( value = 's.shp', placeholder = 'points.shp',
+                        label = 'Point file name:', inputId = 'in_er_localshp')
+    updateTextInput(value = 'kde.tif', placeholder = 'KDEraster.tif',
+                        label = 'Raster file name:', inputId = 'in_er_localtif')
+
+    updateCheckboxInput(label = 'Do KDE?', inputId = 'in_er_dokde', value = TRUE )
+    updateCheckboxInput(label = 'Load to Cola?', inputId = 'in_er_cola', value = TRUE )
+
+    updateTextInput( inputId = 'in_er_sh', value = 'sh.shp',
+                     session = session, label = 'points:', placeholder = '')
+
+    updateNumericInput( inputId = 'in_er_resmeters', value = 10000,
                         session = session, label = 'KDE pixel in meters:')
 
     updateDateInput( inputId = 'in_er_datestart', value = '2020-12-16')
@@ -7276,7 +7288,6 @@ server <- function(input, output, session) {
   (observeEvent(input$in_er_go, {
     status("running"); showStartStop(  ); delay(1,{ # actionherestart
 
-      print('Run ER')
       # print(input$in_er_server)
       # print(input$in_er_username)
       # print(input$in_er_pwd)
@@ -7288,21 +7299,18 @@ server <- function(input, output, session) {
 
       if (!dir.exists(tempFolder)) {dir.create(tempFolder)}
 
-      print('Run ER')
       if ( !( input$in_er_server != '' & input$in_er_username != '' &
               input$in_er_pwd != '' & input$in_er_subject != '' &
               as.character(input$in_er_datestart) != '' &
               as.character(input$in_er_dateend)  != '' &
               input$in_er_localpath != '' & input$in_er_localshp != "")
       ){
-        print('Run ER3')
         shinyalert(html = TRUE, type = "error",
                    title = paste0("Some parameters are missing"),
                    text = paste0(' Please complete the inputs before running the function')
         )
 
       } else {
-        print('Run ER4')
         shinyalert(html = TRUE, type = "info",
                    title = paste0("Connecting to Earth Ranger \n Please close this window and wait few seconds")
         )
@@ -7318,10 +7326,11 @@ server <- function(input, output, session) {
         #                in_er_dateend = '2027-12-16',
         #                in_er_subject = 'NAM_test',
         #                in_er_localpath = 'C:/cola/er',
+        #                in_er_localshp = 'b1.shp',
+        #                in_er_localtif = 'b1.tif',
         #                in_er_dokde= 1,
-        #                in_er_resmeters= 1000
+        #                in_er_resmeters= 10000
         # )
-        print('Run ER5')
 
         outshp <- file.path(input$in_er_localpath, input$in_er_localshp)
         outtif <- file.path(input$in_er_localpath, input$in_er_localtif)
@@ -7330,8 +7339,8 @@ server <- function(input, output, session) {
 
         tStartER <- Sys.time()
         earthR <- earthRanger_py(
-          py = "C:/Users/gonza/AppData/Local/r-miniconda/envs/earthranger/python.exe",
-          pyscript = '"N:/My Drive/git/cola/inst/ee/cml_connectER.py"',
+          # py = "C:/Users/gonza/AppData/Local/r-miniconda/envs/earthranger/python.exe",
+          # pyscript = 'N:/My Drive/git/cola/inst/ee/cml_connectER.py',
           server = input$in_er_server,
           username = input$in_er_username,
           pwd = input$in_er_pwd,
@@ -7362,8 +7371,9 @@ server <- function(input, output, session) {
           )
           if(input$in_er_cola){
             rv$log <- paste0(rv$log, ' Points finised: ',textElapER,' --- DONE');updateVTEXT(rv$log) # _______
-            params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
 
+
+            params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
             rv$pts <- outshp
             rv$ptsready <- TRUE
 
@@ -7376,15 +7386,15 @@ server <- function(input, output, session) {
 
             rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
                                            inout = 'out', type =  'Points',
-                                           internal =  points_file$file,
+                                           internal =  outshp,
                                            public = suggestedNewName)
 
+            pdebug(devug=devug,sep='\n',pre='-',"rv$log")
 
             points_shp <- sf::read_sf(outshp)
             points_shp$sortID <- 1:nrow(points_shp)
             rv$pts_sp <<- points_shp
             rv$pts_sp_gcs <- sf::st_transform(points_shp, crs = sf::st_crs("+proj=longlat +datum=WGS84"))
-            updateColaLayersLists(rv$layersList)
 
             if(grepl('Suitability', in_points_ly )){
               lastLLx <-  'Habitat suitability'
@@ -7392,9 +7402,9 @@ server <- function(input, output, session) {
               lastLLx <- 'Surface resistance'
             }
 
+
             ###################
             if(cond2){ # kernels exists
-              rv$log <- paste0(rv$log, ' --- DONE: ', textElapCrk);updateVTEXT(rv$log) # _______
 
               #### ......
               suggestedName <- suggestName(rv$layersList, type = 'Kernels')
@@ -7403,19 +7413,21 @@ server <- function(input, output, session) {
                                         'Layer name: ', suggestedName)
               )
 
+
               rv$layersList <- funLayersList(
                 df = rv$layersList, tempFolder,
                 inout = 'out', type =  'Kernels',
-                internal = rv$crk, public = suggestedName)
+                internal = outtif, public = suggestedName)
 
+              print('3')
               ## Inputs boxes
               colaUpdateSelectizeInput(
                 ids = c('in_name_crk_pri'),
                 typex = 'Kernels', field = 'public', val = suggestedName)
 
-              updateColaLayersLists(layersList = rv$layersList)
               #### ......
               params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+              print('4')
 
               # crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
               # # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
@@ -7423,12 +7435,13 @@ server <- function(input, output, session) {
               # rv$crk_quan <- crk_quan
 
               rv$crkready <- TRUE
-              rv$crk <- out_crk$file
-              rv$crk_sp <- terra::rast(out_crk$file);
+              rv$crk <- outtif
+              rv$crk_sp <- terra::rast(outtif);
               #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
               rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
               lastLLx <- 'Kernels'
             }
+              updateColaLayersLists(layersList = rv$layersList)
           }
           makeLL(lastLL = lastLLx)
 
@@ -7502,7 +7515,7 @@ server <- function(input, output, session) {
         # param1 = sys.argv[1] # project name
         # param2 = sys.argv[2] # shapefile path
         # param3 = sys.argv[3] # ee asset
-        # input <- list(in_ee_project = 'gonzalezivan')
+        # <- <- list(in_ee_project = 'gonzalezivan')
 
         cmdee <- paste0(py, ' ', ee_scr_path,'/cml_connectEE.py ',
                         input$in_ee_project, ' ', tempFolder, ' ')

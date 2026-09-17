@@ -1,5 +1,5 @@
 """
-EarthRanger → CoLa DSS  |  Live Data Integration Demo
+EarthRanger → CoLa DSS  |  Live Data Integration
 ======================================================
 This script demonstrates how the Connecting Landscapes (CoLa) DSS could pull
 animal tracking data directly from EarthRanger (via the Ecoscope Python library)
@@ -89,22 +89,11 @@ DO_KDE = args.dokde
 # DATE_FROM = '2010-01-20'
 # DATE_TO = '2027-01-20'
 # SUBJECT_GROUP = 'NAM_test'
-# OUTPUT_SHP = 'C:/cola/earthranger/abc.shp'
-# OUTPUT_TIF = 'C:/cola/earthranger/abc.tif'
-# KDE_RES_M = 1000
+# OUTPUT_SHP = 'C:/cola/earthranger/a1.shp'
+# OUTPUT_TIF = 'C:/cola/earthranger/a1.tif'
+# KDE_RES_M = 10000
 # DO_KDE = 1
 
-# ER_SERVER   = sys.argv[1] # "https://your-organisation.pamdas.org"   # ← organisation server URL
-# ER_USERNAME = sys.argv[2] # "your_username"
-# ER_PASSWORD = sys.argv[3] # "your_password"
-## Date range for the analysis
-#DATE_FROM = sys.argv[4] # "2025-01-01"
-#DATE_TO   = sys.argv[5] # "2025-04-01"
-## The subject group to analyse (species + study area, as defined in EarthRanger)
-#SUBJECT_GROUP = sys.argv[6] # "Your_Species_StudyArea"
-## Output folder for CoLa inputs
-#OUTPUT_DIR    = sys.argv[7] # "./cola_inputs"
-#KDE_RES_M     = sys.argv[8] # 500       # KDE raster resolution in metres
 
 # =============================================================================
 # 2. CONNECT AND PULL DATA
@@ -299,7 +288,7 @@ def main():
     safe_name = "".join(c if c.isalnum() or c in "_-" else "_" for c in SUBJECT_GROUP)
 
     print("\n" + "═" * 60)
-    print("  EarthRanger → CoLa  |  Live Data Integration Demo")
+    print("  EarthRanger → CoLa  |  Live Data Integration ")
     print("═" * 60 + "\n")
 
     # er = EarthRangerIO(server=ER_SERVER, username=ER_USERNAME, password=ER_PASSWORD)
@@ -320,7 +309,7 @@ def main():
     if DO_KDE == 1:
         print(f"Habitat suitability raster : {tif_path}")
     #
-    print("""{"═" * 60}""")
+    print("═" * 60 + "\n")
 
 
 #  These files can be loaded directly into the CoLa DSS

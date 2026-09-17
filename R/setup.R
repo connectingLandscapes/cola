@@ -869,32 +869,43 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_EE=1'}
       }
 
+      ## Step6. Earth ranger ----------------------------------------------
+
       if(earthranger){
-        cat (sep = '', '\n  + Extra step: Installing EarthRanger\n\n')
+        cat (sep = '', '\n  + Extra step: Installing EarthRanger\n')
         cat (sep = '', '    This step will take some time ... please wait\n')
 
         lists_conda_er <- conda_list()
-        if( ! lists_conda_er$name %in%  "earthranger"){
+        if( ! "earthranger" %in%  lists_conda_er$name){
           tryCatch(conda_create("earthranger"), error = function (e ) e )
           lists_conda_er <- conda_list()
-          py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python)
-        } else {
-          py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python)
         }
 
-        tryCatch(conda_install("earthranger", packages = c('ecoscope'), pip  = TRUE, error = function (e ) e ))
-        tryCatch(conda_install("earthranger", packages = c('geopandas', 'rasterio', 'scipy', 'pyogrio', 'fiona')), error = function (e ) e )
-        tryCatch(conda_install("earthranger", packages = c('pyogrio'), pip  = TRUE), error = function (e ) e )
+        (py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python))
+        (avLibsER <- reticulate::py_list_packages(envname = 'er', python = py_er)) # envName = 'cola'
 
-        if (spyder){
+        (erLibs <- c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy', 'pyogrio')) # 'pyogrio'
+        (erLibs2inst <- erLibs[!erLibs %in% avLibsER$package])
+        if ( ! any(erLibs2inst %in% avLibsER$package )) {
+          tryCatch(conda_install("earthranger", packages = erLibs2inst, pip  = TRUE, error = function (e ) e ))
+        }
+        # if ( ! 'scipy' %in% avLibsER$package ){
+        #   tryCatch(conda_install("er", packages = c('geopandas', 'rasterio', 'fiona', 'scipy')), error = function (e ) e )
+        # }
+        # if ( ! 'pyogrio' %in% avLibsER$package ){
+        #   tryCatch(conda_install("er", packages = c('pyogrio'), pip  = TRUE), error = function (e ) e )
+        # }
+
+        if (spyder &  (! 'spyder-kernels' %in% avLibsER$package) ){
           tryCatch(conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
         }
         # conda_create( envname = 'earthranger', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
         # conda_install( envname = 'er2', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
 
         pos <- grep('COLA_ER', Renviron)
-        # (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-        if (length(pos) == 0){Renviron[length(Renviron) + 1] <- 'COLA_ER=1'}
+        (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
+        Renviron[pos] <- paste0('COLA_ER="', py_er, '"')
+
 
         posA <- grep('ER_PYTHON_PATH', Renviron)
         (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
