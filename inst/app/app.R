@@ -7389,7 +7389,7 @@ server <- function(input, output, session) {
                                            internal =  outshp,
                                            public = suggestedNewName)
 
-            pdebug(devug=devug,sep='\n',pre='-',"rv$log")
+            #pdebug(devug=devug,sep='\n',pre='-',"rv$log")
 
             points_shp <- sf::read_sf(outshp)
             points_shp$sortID <- 1:nrow(points_shp)
