@@ -16,15 +16,16 @@ crk_compare_py(
   shpfield = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/crk_compare.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
-\item{intif}{String. File path to the input file used as reference raster.}
+\item{intif}{String. Full file path to the input file used as reference raster.}
 
 \item{intifs}{String. File path to files to be compared. A single string is required
-with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'}
+with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'. The first file
+used as the baseline scenario (sc0)}
 
 \item{outcsvabs}{String. File path to the csv output absolute difference table}
 
@@ -45,16 +46,18 @@ with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'}
 
 \item{pyscript}{Python script location}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
-List of two slots: 'file' with the 'outpngabs' folder if success, 
+List of two slots: 'file' with the 'outpngabs' folder if success,
 and 'log' with any resulting message.
 }
 \description{
-This tool compares the cumulative resistance kernels
+This tool compares the cumulative resistance kernels. Compares the first layer with the other provided.
 }
 \examples{
 library(cola)

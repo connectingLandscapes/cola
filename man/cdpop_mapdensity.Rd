@@ -13,8 +13,8 @@ cdpop_mapdensity(
   bandwidths = "None",
   type = "count",
   crs = "None",
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{

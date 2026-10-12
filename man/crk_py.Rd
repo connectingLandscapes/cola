@@ -16,8 +16,8 @@ crk_py(
   crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/crk.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -46,13 +46,15 @@ determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kern
 
 \item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
 
 \item{maxram}{Numeric. RAM to use in GB}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

@@ -13,8 +13,8 @@ cdpop_py(
   xy = NULL,
   tempFolder,
   prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE)),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -32,7 +32,7 @@ cdpop_py(
 
 \item{prefix}{String. String added to output folder}
 
-\item{cml}{String. Print the cola command line?. Default TRUE}
+\item{show_cml}{String. Print the cola command line?. Default TRUE}
 
 \item{tempfolder}{String. Folder where results will be saved}
 }

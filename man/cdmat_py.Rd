@@ -13,8 +13,8 @@ cdmat_py(
   crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/create_cdmat.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -34,9 +34,11 @@ cdmat_py(
 
 \item{pyscript}{Python script location}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with the CSV matrix

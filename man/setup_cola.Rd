@@ -8,15 +8,27 @@ setup_cola(
   envName = "cola",
   nSteps = 5,
   force = FALSE,
-  yml = FALSE,
-  onlyIndividual = FALSE,
-  ask = TRUE,
-  dss = FALSE,
-  zarr = FALSE,
-  pyVer = "3.12.11",
   libs2Install = c("geopandas", "gdal", "h5py", "numexpr", "rasterio", "pytables",
     "pandas", "cython", "numba", "networkit==11.0", "fiona", "shapely", "kdepy",
-    "scikit-image")
+    "scikit-image"),
+  onlyIndividual = FALSE,
+  ask = TRUE,
+  dss = TRUE,
+  zarr = TRUE,
+  cola2 = FALSE,
+  earthranger = FALSE,
+  yml = FALSE,
+  spyder = FALSE,
+  updateCola = FALSE,
+  pyVer = "3.12.11",
+  oldestPyVer = "3.11",
+  COLA_DATA_PATH = NULL,
+  COLA_NCORES = 4,
+  COLA_RAMGB = 6,
+  COLA_DSS_UPL_MB = 250,
+  COLA_VIZ_THRES_PIX = 1e+06,
+  COLA_VIZ_RES_NCOL = 1000,
+  COLA_VIZ_RES_NROW = 1000
 )
 }
 \arguments{
@@ -24,19 +36,37 @@ setup_cola(
 
 \item{nSteps}{The number of steps for printing log in console}
 
-\item{force}{Force miniconda installation? Passed to `reticulate::install_miniconda()`}
+\item{force}{Force miniconda installation? Passed to ´reticulate::install_miniconda()´}
 
-\item{yml}{Use YML file to build the conda environment? Default FALSE}
+\item{libs2Install}{The name of python libraries}
 
 \item{onlyIndividual}{Try installing libraries one by one? Default FALSE}
 
-\item{ask}{Ask before installing reticulate, minoconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking}
+\item{ask}{Ask before installing reticulate, miniconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking}
 
-\item{dss}{Install cola DSS as well? Default FALSE}
+\item{dss}{Install cola DSS as well? Default TRUE}
 
-\item{zarr}{Logical. Are you planning to use zarr libary? Default FALSE}
+\item{zarr}{Logical. Are you planning to use zarr libary? Default TRUE}
 
-\item{libs2Install}{The name of python libraries}
+\item{cola2}{Logical. Installing CoLa2 python dependencies and enable DSS for it? Default is FALSE}
+
+\item{earthranger}{Logical. Installing earthranger python dependencies and enable DSS for it? Default is FALSE}
+
+\item{yml}{Use YML file to build the conda environment? Default FALSE}
+
+\item{COLA_DATA_PATH}{String. Path were CoLa DSS results and session folders}
+
+\item{COLA_NCORES}{Integer. Number of cores to use}
+
+\item{COLA_RAMGB}{Integer. GB or RAM to use in the 'heavy' or Joblib functions. Setting a RAM will allow you to run big analysis}
+
+\item{COLA_DSS_UPL_MB}{Integer. In MB, max size of input rasters in the CoLa DSS}
+
+\item{COLA_VIZ_THRES_PIX}{Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor}
+
+\item{COLA_VIZ_RES_NCOL}{Integer. Number of columns to resample the raster to be displayed in the cola DSS.}
+
+\item{COLA_VIZ_RES_NROW}{Integer. Number of rows  to resample the raster to be displayed in the cola DSS.}
 
 \item{pyVer.}{String. Python version to install}
 }
@@ -44,14 +74,14 @@ setup_cola(
 NULL. Prints in console logs regarding different steps
 }
 \description{
-Installs cola software. Includes `reticulate` R package, miniconda, cola conda environment and libraries,
+Installs cola software. Includes ´reticulate´ R package, miniconda, cola conda environment and libraries,
 and defines the ways R and python should interact
 }
 \examples{
 setup_cola()
 }
 \author{
-Ivan Gonzalez <ig299@nau.edu>
+Ivan Gonzalez <Ivan.Gonzalez@nau.edu>
 
 Patrick Jantz <Patrick.Jantz@gmail.com>
 }

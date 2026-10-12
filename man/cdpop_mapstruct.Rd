@@ -12,8 +12,8 @@ cdpop_mapstruct(
   method = "thin_plate_spline",
   neighbors,
   crs = "None",
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{

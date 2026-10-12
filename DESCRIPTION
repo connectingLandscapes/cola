@@ -4,7 +4,7 @@ Title: Connecting Landscapes
 Version: 2.3.0
 Author: Ivan.Gonzalez@nau.edu & Patrick.Jantz@nau.edu
 Maintainer: Ivan Gonzalez <gonzalezgarzonivan@gmail.com>
-Description: Set of tools for creating corridors, nodes, and others landscape
+Description: Set of tools for creating corridors, resistant kernels, and others landscape
     connectivity procedures. Also provides a dashboard for running all the tools under a graphical user interface.    
 License: GNU AGPLv3
 Encoding: UTF-8

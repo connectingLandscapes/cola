@@ -13,12 +13,12 @@ lccJoblib_py(
   tolerance,
   ncores = as.numeric(Sys.getenv("COLA_NCORES")),
   crs = "None",
-  maxram = 6,
+  maxram = as.numeric(Sys.getenv("COLA_RAMGB")),
   tempFolder = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc_joblib.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -36,17 +36,19 @@ lccJoblib_py(
 
 \item{crs}{String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{maxram}{Numeric. RAM to use}
+\item{maxram}{Numeric. RAM to use in GB}
 
 \item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
 
 \item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

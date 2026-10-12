@@ -197,7 +197,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   # (pyDiscover <- py_discover_config(use_environment = 'base'))
 
   # Step 3. Install your environment ----------------------------------------------
-  cat (sep = '', '\n  +Step 3/', nSteps, ' Installing & checking conda environment\n')
+  cat (sep = '', '\n  +Step 3/', nSteps, ' Installing & checking conda environment (~2.4 GB) \n')
 
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
@@ -873,7 +873,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
       if(earthranger){
         cat (sep = '', '\n  + Extra step: Installing EarthRanger\n')
-        cat (sep = '', '    This step will take some time ... please wait\n')
+        cat (sep = '', '    This step will take some time ... please wait (~1.5GB) \n')
 
         lists_conda_er <- conda_list()
         if( ! "earthranger" %in%  lists_conda_er$name){

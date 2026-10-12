@@ -25,6 +25,8 @@ library(cola)
 cola::diagnose_cola()
 cola::setup_cola()
 cola::setup_cola(ask = FALSE, zarr = TRUE, dss = TRUE, cola2 = TRUE)
+cola::setup_cola()
+
 file.edit(file.path(Sys.getenv('HOME'), '.Renviron'))
 .rs.restartR()
 Sys.getenv(c('COLA_PYTHON_PATH', 'COLA_SCRIPTS_PATH'))

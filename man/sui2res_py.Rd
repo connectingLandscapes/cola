@@ -15,8 +15,8 @@ sui2res_py(
   prj = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/s2res.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -40,9 +40,11 @@ sui2res_py(
 
 \item{pyscript}{String. Python script location}
 
-\item{cml}{Logical. Print the back-end command line? Default  TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default  TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.

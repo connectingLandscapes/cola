@@ -12,16 +12,18 @@ lccZarr_py(
   smooth,
   tolerance,
   ncores = as.numeric(Sys.getenv("COLA_NCORES")),
-  maxram = 6,
+  maxram = as.numeric(Sys.getenv("COLA_RAMGB")),
   crs = "None",
   sci = "None",
   eci = "None",
   tempFolder = NULL,
+  pairzarr = NULL,
+  distzarr = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscriptA = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
   pyscriptB = system.file(package = "cola", "python/lcc_hpc2_zarr.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -53,11 +55,13 @@ lccZarr_py(
 
 \item{pyscriptB}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

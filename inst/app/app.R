@@ -1581,7 +1581,7 @@ server <- function(input, output, session) {
 
   updateVTEXT <- function(txt, devug = FALSE){
     if(devug){print(txt)}
-    output$vout_cdp <- output$vout_h2r <- output$vout_pri <- output$vout_points <-
+    output$vout_era <- output$vout_cdp <- output$vout_h2r <- output$vout_pri <- output$vout_points <-
       output$vout_dist <- output$vout_crk <- output$vout_cdpop <- output$vout_com1 <-
       output$vout_lcc <- output$vout_edi <- renderText({isolate(txt)})
   }
@@ -7413,13 +7413,11 @@ server <- function(input, output, session) {
                                         'Layer name: ', suggestedName)
               )
 
-
               rv$layersList <- funLayersList(
                 df = rv$layersList, tempFolder,
                 inout = 'out', type =  'Kernels',
                 internal = outtif, public = suggestedName)
 
-              print('3')
               ## Inputs boxes
               colaUpdateSelectizeInput(
                 ids = c('in_name_crk_pri'),
@@ -7427,7 +7425,6 @@ server <- function(input, output, session) {
 
               #### ......
               params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
-              print('4')
 
               # crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
               # # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
@@ -9407,6 +9404,7 @@ server <- function(input, output, session) {
       showStartStop( FALSE ) ; status("finished") }) # actionhereclose
   })
 
+  # Merge layers
   observeEvent( input$in_eemos_go,{
     message("  Merging layers")
 
@@ -10467,8 +10465,23 @@ if (FALSE){ # if FALSE
                     HTML('.box {margin-top: 0px;margin-left: 0px; margin-right: 0px; margin-bottom:0px;padding:-10px}
                     div {padding: 0 !important;}'
                     )),
-              h2(' Download information from Earth Ranger'),
-              h3(' https://www.earthranger.com/'),
+              fluidRow(
+                column(3,
+                       tags$td(style = "width: 25%", align = "top",
+                               h3(' Connect to Earth Ranger',
+                                  style="text-align: center;vertical-align: top")
+                       )),
+                column(2,
+                       a("More info of about how to connect Earth Ranger here",
+                         href = "https://support.earthranger.com/step-0-what-is-earthranger/how-to-get-earthranger-and-register-your-organization",
+                         target = "_blank")
+                       # , h4(' Run CDPOP module. ')
+                ),
+                column(7, verbatimTextOutput("vout_era") , # %>%shinycssloaders::withSpinner(color="#0dc5c1")
+                       tags$head(tags$style("#vout_era{overflow-y:scroll; max-height: 70px}")))
+              ),
+
+
               fluidRow(
                 column(width = 2,
                        style = "padding-left:0px; padding-right:0px;",
@@ -10541,14 +10554,14 @@ if (FALSE){ # if FALSE
                                     label = 'Raster file name:', inputId = 'in_er_localtif') ),
                 column(2, #style = "padding-left:0px; padding-right:0px;",
                        numericInput(width = "100%",min = 0, max = 99999,
-                                    step = 1, value = 0,
+                                    step = 1, value = 10000,
                                     label =  'KDE Resolution (meters):',
                                     inputId = 'in_er_resmeters')),
                 column(2, checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde'),
                 checkboxInput(label = 'Load to Cola?', inputId = 'in_er_cola') ),
 
                 column(1
-                       , style = "padding-left:5px; padding-right:5px; padding-top:20px; padding-bottom:5px;"
+                       , style = "padding-left:-25px; padding-right:0px; padding-top:20px; padding-bottom:5px;"
                        #, style = "padding-top:10px; padding-bottom:0px;" # padding-left:10px; padding-right:10px;
                        , actionButton(width = "100%", label = 'Get data', 'in_er_go'))
               ) # end box ABC
