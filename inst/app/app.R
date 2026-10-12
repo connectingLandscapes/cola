@@ -8387,7 +8387,7 @@ server <- function(input, output, session) {
 
 
         cmdd <- sdm_modis_prediction_py(
-          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
+          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_wall_to_wall.py'),
           ee_project = input$in_ee_project,
           species = input$in_eepre_label,
           model_id = input$in_eepre_modelid,
@@ -8397,6 +8397,7 @@ server <- function(input, output, session) {
           target_year  = (input$in_eepre_target),
           run_mode = tolower(input$in_eepre_runmode),
           max_concurrent = input$in_eepre_maxconc,
+          use_exported_metrics = TRUE, # metrics come from the MODIS export steps
           crs = input$in_eepre_crs,
           scale = input$in_eepre_scale,
           min_year = input$in_eepre_yy[1],
@@ -8666,6 +8667,7 @@ server <- function(input, output, session) {
           gee_assets = input$in_eefull_geepath,
           working_dir = input$in_eefull_localpath,
           local_csv = train_csv,
+          scale = input$in_eefull_scale,
           imp_thresh = input$in_eetra_impthr,
           categorical_threshold = input$in_eetra_catthr,
           show_cml = TRUE, show_result = TRUE,
@@ -8684,6 +8686,7 @@ server <- function(input, output, session) {
           target_year  = (input$in_eefull_targetyear),
           run_mode = tolower(input$in_eefull_modepre), #  full test
           max_concurrent = input$in_eefull_maxconc,
+          use_exported_metrics = TRUE, # metrics come from the MODIS export steps
           crs = input$in_eefull_crs,
           scale = input$in_eefull_scale,
           min_year = input$in_eefull_yy[1],
@@ -8775,9 +8778,9 @@ server <- function(input, output, session) {
             html = TRUE, type = "info",
             title = paste0("MODIS extraction (1/3) task submitted. Please wait."),
             text = paste0("Creating the results in this path:<br>",
-                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/temp:</i><br><p>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}/temp:</i><br><p>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/temp</p><br>",
                           "Wait for results in your R console and Earth Engine app.",
                           " Don't close R until you see a Finish message"))
         }
@@ -8819,7 +8822,7 @@ server <- function(input, output, session) {
             title = paste0("Task finished. Check the results in your R console",
                            " and Earth Engine app."),
             text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/temp"))
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/temp"))
         }
       } else {
         # Incomplete params
@@ -8845,9 +8848,9 @@ server <- function(input, output, session) {
             html = TRUE, type = "info",
             title = paste0("MODIS extraction (2/3 - gap filling) task submitted. Please wait."),
             text = paste0("Creating the results in this path:<br>",
-                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/temp</i><br><p>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}/temp</i><br><p>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/temp</p><br>",
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/temp</p><br>",
                           "Wait for results in your R console and Earth Engine app.",
                           " Don't close R until you see a Finish message"))
         }
@@ -8886,7 +8889,7 @@ server <- function(input, output, session) {
             title = paste0("Task finished. Check the results in your R console",
                            " and Earth Engine app."),
             text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/temp"))
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/temp"))
         }
       } else {
         # Incomplete params
@@ -8912,9 +8915,9 @@ server <- function(input, output, session) {
             html = TRUE, type = "info",
             title = paste0("MODIS extraction (3/3 - metrics) task submitted. Please wait."),
             text = paste0("Creating the results in this path:<br>",
-                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/metrics</i><br><p>",
+                          "<i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}/metrics</i><br><p>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/metrics</p><br>",
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/metrics</p><br>",
                           "Wait for results in your R console and Earth Engine app.",
                           " Don't close R until you see a Finish message"))
         }
@@ -8953,7 +8956,7 @@ server <- function(input, output, session) {
             title = paste0("Task finished. Check the results in your R console",
                            " and Earth Engine app."),
             text = paste0('Results in: ',input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_",input$in_eefull_targetyear,"/metrics"))      }
+                          "_SDM_modis_",input$in_eefull_scale,"m_",input$in_eefull_targetyear,"/metrics"))      }
       } else {
         # Incomplete params
         shinyalert(html = TRUE, type = "error",
@@ -8980,9 +8983,9 @@ server <- function(input, output, session) {
             html = TRUE, type = "info",
             title = paste0("Task submmited. Points + image extraction. Please wait."),
             text = paste0("Creating the results in this path:<br>",
-                          "<br><i>{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL}</i><br>",
+                          "<br><i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_exports_{MODEL}</i><br>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_exports_",input$in_eefull_modelid,"<br>",
+                          "_SDM_modis_",input$in_eefull_scale,"m_exports_",input$in_eefull_modelid,"<br>",
                           "Wait for results in your R console and Earth Engine app.",
                           " Don't close R until you see a Finish message"))
         }
@@ -9032,7 +9035,7 @@ server <- function(input, output, session) {
                            " and Earth Engine app."),
             text = paste0("Creating the results in this path:<br>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
-                          "_SDM_modis_exports_",input$in_eefull_modelid,"<br>")
+                          "_SDM_modis_",input$in_eefull_scale,"m_exports_",input$in_eefull_modelid,"<br>")
           )
         }
       } else {
@@ -9084,6 +9087,7 @@ server <- function(input, output, session) {
           gee_assets = input$in_eefull_geepath,
           working_dir = input$in_eefull_localpath,
           local_csv = train_csv,
+          scale = input$in_eefull_scale,
           imp_thresh = input$in_eefull_impthr,
           categorical_threshold = input$in_eefull_catthr,
           show_cml = TRUE, show_result = TRUE,
@@ -9162,6 +9166,7 @@ server <- function(input, output, session) {
           target_year  = (input$in_eefull_targetyear),
           run_mode = tolower(input$in_eefull_modepre), #  full test
           max_concurrent = input$in_eefull_maxconc,
+          use_exported_metrics = TRUE, # metrics come from the MODIS export steps
           crs = input$in_eefull_crs,
           scale = input$in_eefull_scale,
           min_year = input$in_eefull_yy[1],
@@ -10206,11 +10211,11 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeexp_crs', title = 'Coordinate reference system. Requires ESPG code format'),
               bsTooltip(id = 'in_eeexp_checkbox', title = 'Only provide the code? You can run it on your console'),
               bsTooltip(id = 'in_eeexp_gomodistest', title = 'Run test'),
-              bsTooltip(id = 'in_eeexp_gomodis', title = 'Run first step of MODIS extraction. Keep same parameters for B and C. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}'),
+              bsTooltip(id = 'in_eeexp_gomodis', title = 'Run first step of MODIS extraction. Keep same parameters for B and C. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}'),
               bsTooltip(id = 'in_eeexp_gogaptest', title = 'Run test'),
               bsTooltip(id = 'in_eeexp_gogaps', title = 'Run second step of MODIS extraction, filling gaps. Requires step A to be finished'),
               bsTooltip(id = 'in_eeexp_gometricstest', title = 'Run test'),
-              bsTooltip(id = 'in_eeexp_gometrics', title = 'Calculate spatial metrics of MODIS imagery. Requires step B to be finished. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}/metrics'),
+              bsTooltip(id = 'in_eeexp_gometrics', title = 'Calculate spatial metrics of MODIS imagery. Requires step B to be finished. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}/metrics'),
               bsTooltip(id = 'in_eeext_label', title = 'Label to use as extraction name. e.g. (Puma, or Borneo)'),
               bsTooltip(id = 'in_eeext_geepath', title = 'Path to GEE folder where a MODIS datasets exists. Should be same as *Export* module'),
               bsTooltip(id = 'in_eeext_occasset', title = 'Path to GEE points dataset. Must include the date field in numeric format (yyyy), and a presence/absence column'),
@@ -10228,7 +10233,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeext_gap', title = 'Prior years used for gap-fill'),
               bsTooltip(id = 'in_eeext_scale', title = 'Export scale in metres'),
               bsTooltip(id = 'in_eeext_pbuffer', title = 'Buffer around each point for predictor stack (m)'),
-              bsTooltip(id = 'in_eeext_go', title = 'Extract values at points locations from MODIS stack. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL_ID}'),
+              bsTooltip(id = 'in_eeext_go', title = 'Extract values at points locations from MODIS stack. Creates the output {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_exports_{MODEL_ID}'),
               bsTooltip(id = 'in_eeext_checkbox', title = 'Only provide the code? You can run it on your console'),              bsTooltip(id = 'in_eetra_label', title = 'Label to use as extraction name. e.g. (Puma, or Borneo). Must match with *Extraction* module'),
               bsTooltip(id = 'in_eetra_modelid', title = 'Unique model ID to add as sufix to the folder, specific to the ocurrence dataset (e.g. pumacolombia, orangutan)'),
               bsTooltip(id = 'in_eetra_path', title = 'Path to GEE folder where a MODIS datasets exists. Should be same as *Export* module'),

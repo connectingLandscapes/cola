@@ -15,6 +15,7 @@ import sys
 import os
 import ee
 import argparse
+import json
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import (roc_auc_score, r2_score,
                              mean_absolute_error, balanced_accuracy_score)
@@ -22,8 +23,8 @@ from sklearn.inspection import permutation_importance
 from sklearn.preprocessing import LabelEncoder
 from mrmr import mrmr_classif, mrmr_regression
 import warnings
-import time
 warnings.filterwarnings('ignore')
+import predictors as P
 
 # =============================================================================
 # 0. ARGUMENT PARSING
@@ -38,6 +39,11 @@ def parse_args():
     p.add_argument('--model_id',     type=str, required=True,
                    help='Unique model run ID, e.g. puma_modis_m2. '
                         'All local and GEE outputs are named after this.')
+    p.add_argument('--predictor_source', type=str, default='modis',
+                   choices=sorted(P.SOURCES),
+                   help='Must match extraction (locates the training folder)')
+    p.add_argument('--scale',        type=int, default=None,
+                   help='Must match extraction (default: source native)')
 
     # ── Mode ──────────────────────────────────────────────────────────────────
     p.add_argument('--mode',         type=str, default='binary',
@@ -77,9 +83,12 @@ TARGET_COL   = args.target_col
 GEE_ASSETS   = args.gee_assets
 WORKING_DIR  = args.working_dir
 IMP_THRESH   = args.imp_thresh
+SOURCE       = args.predictor_source
+SCALE        = P.resolve_scale(SOURCE, args.scale)
 
 # Training data asset folder — matches EXPORT_FOLDER from extraction script
-TRAINING_ASSET_FOLDER = f'{GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL_ID}'
+TRAINING_ASSET_FOLDER = (f'{GEE_ASSETS}/{SPECIES}_SDM_{P.source_tag(SOURCE, SCALE)}'
+                         f'_exports_{MODEL_ID}')
 
 # Local outputs — all named after MODEL_ID
 LOCAL_CSV       = args.local_csv or os.path.join(WORKING_DIR,
@@ -128,7 +137,7 @@ META_COLS = [
     'nObs_priorFill_5km', 'nObs_priorFill_10km',
     'nObs_interp_250m', 'nObs_interp_1km',
     'nObs_interp_5km', 'nObs_interp_10km',
-    'lcluc_class',
+    'lcluc_class', 'predictor_source', 'scale', 'gap_years',
 ]
 
 # =============================================================================
@@ -185,6 +194,7 @@ def fc_to_dataframe(asset_id, max_retries=3):
             return pd.DataFrame([f['properties'] for f in info['features']])
         except Exception as e:
             if attempt < max_retries - 1:
+                import time
                 print(f'  Retry {attempt+1}/{max_retries}: {e}')
                 time.sleep(5)
             else:
@@ -223,7 +233,7 @@ def load_training_data():
     print(f'\nMerged: {len(df)} rows x {df.shape[1]} columns')
 
     if failed:
-        print(f'\n⚠️  {len(failed)} assets failed: {failed}')
+        print(f'\nWARNING: {len(failed)} assets failed: {failed}')
 
     if SAVE_LOCAL_CSV:
         df.to_csv(LOCAL_CSV, index=False)
@@ -236,14 +246,9 @@ def load_training_data():
 # =============================================================================
 
 def identify_variable_types(X):
-    scale_suffixes = ('_250m', '_1km', '_5km', '_10km')
     categorical, continuous = [], []
     for col in X.columns:
-        base = col
-        for sfx in scale_suffixes:
-            if col.endswith(sfx):
-                base = col[:-len(sfx)]
-                break
+        base = get_base_name(col)
         if base in FORCE_CONTINUOUS or col in FORCE_CONTINUOUS:
             continuous.append(col)
         elif base in CATEGORICAL_VARS or col in CATEGORICAL_VARS:
@@ -284,7 +289,10 @@ def compute_sedi(y_true, y_prob):
     H, F = np.clip(H, eps, 1-eps), np.clip(F, eps, 1-eps)
     num   = np.log(F) - np.log(H) + np.log(1-H) - np.log(1-F)
     denom = np.log(F) + np.log(H) + np.log(1-H) + np.log(1-F)
-    return -num / denom if denom != 0 else 0.0
+    # Ferro & Stephenson (2011). Before 2026-10-07 this returned -num/denom,
+    # so earlier summaries report SEDI with the wrong sign (reporting only;
+    # ORSS drives selection and sizing).
+    return num / denom if denom != 0 else 0.0
 
 
 def compute_oob_metric(rf, X, y):
@@ -325,8 +333,8 @@ def remove_low_importance(features, imp_df):
     low_imp   = imp_df[imp_df['importance_pct'] < abs_threshold]['feature'].tolist()
     remaining = [f for f in features if f not in low_imp]
     removed   = [f for f in features if f in low_imp]
-    print(f'  Importance threshold: {IMP_THRESH} of mean '
-          f'({mean_imp }) = {abs_threshold }')
+    print(f'  Importance threshold: {IMP_THRESH:.0%} of mean '
+          f'({mean_imp:.3%}) = {abs_threshold:.3%}')
     return remaining, removed
 
 
@@ -400,10 +408,8 @@ def print_metrics(metrics):
 # =============================================================================
 
 def get_base_name(col):
-    for sfx in ('_250m', '_1km', '_5km', '_10km'):
-        if col.endswith(sfx):
-            return col[:-len(sfx)]
-    return col
+    """Strip the scale suffix (any base scale: _250m, _30m, _1km, ...)."""
+    return P.base_name(col)
 
 
 def run_mrmr_with_scale_filter(X_cont, y, n_vars):
@@ -467,7 +473,7 @@ def test_categorical_features(selected, X, y, cat_cols, sample_weights=None):
         improvement = metric_test - current_metric
         added = improvement > CAT_IMP_THRESHOLD
         print(f'  {cat}: {cfg["metric_name"]} = {metric_test:.4f} '
-              f'({improvement:+.4f}) {"✅ added" if added else "❌ skipped"}')
+              f'({improvement:+.4f}) {"OK added" if added else "FAIL skipped"}')
         if added:
             current_features, current_metric, current_rf = (
                 test_features, metric_test, rf_test)
@@ -495,7 +501,7 @@ def run_variable_selection(X, y, metric_full, metric_target,
         print(f'{cfg["metric_name"]}: {metric_sel:.4f} (target: {metric_target:.4f})')
 
         if metric_sel >= metric_target:
-            print('✅ Meets target')
+            print('OK: Meets target')
             imp = get_permutation_importance(rf, X[selected_cont], y)
             print(f'\nPermutation importance (top {min(20, len(imp))}):')
             print(imp.head(20).to_string(index=False))
@@ -509,24 +515,24 @@ def run_variable_selection(X, y, metric_full, metric_target,
                 rf2, metric_rem = fit_rf(X[remaining], y, sample_weight=sample_weights)
                 print(f'{cfg["metric_name"]} after removal: {metric_rem:.4f}')
                 if metric_rem >= metric_target:
-                    print('✅ Still meets target')
+                    print('OK: Still meets target')
                     selected_cont, rf, metric_sel = remaining, rf2, metric_rem
                 else:
-                    print('⚠️  Dropped below target — keeping original selection')
+                    print('WARNING: Dropped below target - keeping original selection')
             else:
                 print('No low importance features to remove')
 
             return test_categorical_features(selected_cont, X, y,
                                              cat_cols, sample_weights)
         else:
-            print('❌ Below target')
+            print('FAIL: Below target')
             if n_vars >= len(cont_cols):
                 print('Cannot add more features. Testing categoricals anyway...')
                 return test_categorical_features(selected_cont, X, y,
                                                  cat_cols, sample_weights)
             else:
                 n_vars = min(n_vars + INCREMENT, len(cont_cols))
-                print(f'Adding {INCREMENT} → trying {n_vars}')
+                print(f'Adding {INCREMENT} -> trying {n_vars}')
 
     return selected_cont, rf, metric_sel
 
@@ -542,21 +548,34 @@ if __name__ == '__main__':
     print(f'Working dir:     {WORKING_DIR}')
     print(f'GEE classifier:  {GEE_CLASSIFIER_ID}')
     print('=' * 60)
-    
-    
-    try:
-        # os.makedirs with exist_ok=True will create the folder and any missing parents
-        os.makedirs(WORKING_DIR, exist_ok=True)
-        print(f"Folder ready at: {os.path.abspath(WORKING_DIR)}")
-    except OSError as e:
-        print(f"Error creating folder '{WORKING_DIR}': {e}")
-        
+
+    os.makedirs(WORKING_DIR, exist_ok=True)
     os.chdir(WORKING_DIR)
 
     # ── STEP 1: LOAD DATA ─────────────────────────────────────────────────────
     print('\nSTEP 1: Loading data')
     print('-' * 40)
     df = load_training_data()
+
+    # Training data stamped by extraction (from 2026-10-07) must match the
+    # source/scale this model is registered under; wall-to-wall reads them
+    # back from the features asset.
+    for col, expected in [('predictor_source', SOURCE), ('scale', SCALE)]:
+        if col in df.columns:
+            found = set(df[col].dropna().unique())
+            if found != {expected}:
+                sys.exit(f'Training data {col}={sorted(found)} does not match '
+                         f'--{col} {expected}')
+        else:
+            print(f'Note: training data has no {col} column (extracted before '
+                  f'2026-10-07); assuming {expected}.')
+
+    # Prior years extraction gap-filled with; wall-to-wall must use the same.
+    GAP_YEARS, stamped = P.recorded_gap_years(
+        df['gap_years'] if 'gap_years' in df.columns else [])
+    if not stamped:
+        print(f'Note: training data has no gap_years column (extracted before '
+              f'2026-10-09); assuming the default {GAP_YEARS}.')
 
     feature_cols = [c for c in df.columns if c not in META_COLS and c != TARGET_COL]
     X_full       = df[feature_cols].copy()
@@ -571,9 +590,7 @@ if __name__ == '__main__':
 
     print(f'Features before cleaning: {len(feature_cols)}')
     if MODE == 'binary':
-        percnum = round(float(y.mean()),2)*100
-        print(f'Presences: {int(y.sum())} ({  round(float(y.mean()),2)*100 }) | '
-        #print(f'Presences: {int(y.sum())} ({y.mean():.1%}) | '
+        print(f'Presences: {int(y.sum())} ({y.mean():.1%}) | '
               f'Absences: {int((1-y).sum())}')
 
     # Drop non-numeric
@@ -590,29 +607,23 @@ if __name__ == '__main__':
         print(f'Dropping {len(sentinel_cols)} all-sentinel columns')
         X_full = X_full.drop(columns=sentinel_cols)
 
-    # Fill sentinels
+    # Fill sentinels and NAs. The same per-column fill values are exported
+    # with the selected features so wall-to-wall fills masked predictors
+    # identically (before 2026-10-06 prediction passed -9999 instead).
     FILL_ZERO_COLS = ['lcluc_terra_ht', 'lcluc_wet_ht',
                       'lcluc_terra_short_pct', 'lcluc_wet_short_pct']
-    sentinel_mask = X_full == -9999
-    if sentinel_mask.any().any():
-        n_sentinel = int(sentinel_mask.sum().sum())
-        print(f'Replacing {n_sentinel} sentinels')
-        for col in X_full.columns:
-            mask = X_full[col] == -9999
-            if not mask.any(): continue
-            base = col
-            for sfx in ('_250m','_1km','_5km','_10km'):
-                if col.endswith(sfx): base = col[:-len(sfx)]; break
-            if base in FILL_ZERO_COLS or col in FILL_ZERO_COLS:
-                X_full.loc[mask, col] = 0.0
-            else:
-                X_full.loc[mask, col] = X_full.loc[~mask, col].median()
-
-    # Impute NAs
-    na_count = X_full.isna().sum().sum()
-    if na_count > 0:
-        print(f'Imputing {na_count} NAs with column median')
-        X_full = X_full.fillna(X_full.median(numeric_only=True))
+    fill_values = {}
+    for col in X_full.columns:
+        base = get_base_name(col)
+        if base in FILL_ZERO_COLS or col in FILL_ZERO_COLS:
+            fill_values[col] = 0.0      # class absent -> ecological zero
+        else:
+            fill_values[col] = float(X_full.loc[X_full[col] != -9999, col].median())
+    n_sentinel = int((X_full == -9999).sum().sum())
+    na_count   = int(X_full.isna().sum().sum())
+    if n_sentinel or na_count:
+        print(f'Replacing {n_sentinel} sentinels and {na_count} NAs with fill values')
+        X_full = X_full.replace(-9999, np.nan).fillna(fill_values)
 
     # Remove near-zero variance
     nzv = X_full.var()[X_full.var() < 1e-6].index.tolist()
@@ -634,7 +645,7 @@ if __name__ == '__main__':
                                    sample_weight=sample_weights)
     metric_target = metric_full * ACCURACY_THRESH
     print(f'Full {cfg["metric_name"]}: {metric_full:.4f} | '
-          f'Target (95 perc): {metric_target:.4f} | '
+          f'Target (95%): {metric_target:.4f} | '
           f'Size: {get_model_size_mb(rf_full):.1f} MB')
 
     # ── STEP 3: VARIABLE SELECTION ────────────────────────────────────────────
@@ -676,7 +687,7 @@ if __name__ == '__main__':
 
     print(f'\n{cfg["metric_name"]}: {metric_selected:.4f} | '
           f'Full: {metric_full:.4f} | '
-          f'Retention: {metric_selected/metric_full * 100} ')
+          f'Retention: {metric_selected/metric_full:.1%}')
 
     # ── STEP 4: MODEL SIZING ──────────────────────────────────────────────────
     print(f'\nSTEP 4: Model sizing')
@@ -689,9 +700,9 @@ if __name__ == '__main__':
             metric = compute_oob_metric(rf, X_sel, y)
             size   = get_model_size_mb(rf)
             valid  = (metric >= metric_target) and (size <= MAX_MODEL_MB)
-            print(f'Trees: {n_trees:3d}, node: {node_size:3d} → '
+            print(f'Trees: {n_trees:3d}, node: {node_size:3d} -> '
                   f'{cfg["metric_name"]}: {metric:.4f}, '
-                  f'Size: {size:5.1f}MB {"✅" if valid else "❌"}')
+                  f'Size: {size:5.1f}MB {"OK" if valid else "FAIL"}')
             sizing_results.append({
                 'n_trees': n_trees, 'node_size': node_size,
                 'metric': metric, 'size_mb': size,
@@ -706,11 +717,11 @@ if __name__ == '__main__':
         (results_df['metric'] >= metric_selected - SIZING_TOLERANCE) &
         (results_df['meets_size'])]
     if len(valid_df) == 0:
-        print(f'⚠️  No config within tolerance — using best available')
+        print(f'WARNING: No config within tolerance - using best available')
         valid_df = results_df[results_df['meets_size']]
     optimal = valid_df.sort_values(['metric','n_trees'],
                                    ascending=[False,True]).iloc[0]
-    print(f'\n✅ Optimal: {int(optimal.n_trees)} trees, '
+    print(f'\nOK: Optimal: {int(optimal.n_trees)} trees, '
           f'node {int(optimal.node_size)}, '
           f'{cfg["metric_name"]} {optimal.metric:.4f}, '
           f'{optimal.size_mb:.1f} MB')
@@ -744,7 +755,8 @@ if __name__ == '__main__':
         'rank'   : range(1, len(selected_features) + 1),
         'feature': selected_features,
         'type'   : ['categorical' if f in cat_cols else 'continuous'
-                    for f in selected_features]
+                    for f in selected_features],
+        'fill_value': [fill_values[f] for f in selected_features],
     }).to_csv(OUTPUT_FEATURES, index=False)
     print(f'Features: {OUTPUT_FEATURES}')
 
@@ -754,6 +766,9 @@ if __name__ == '__main__':
     pd.Series({
         'species'            : SPECIES,
         'model_id'           : MODEL_ID,
+        'predictor_source'   : SOURCE,
+        'scale'              : SCALE,
+        'gap_years'          : GAP_YEARS,
         'mode'               : MODE,
         'n_features_full'    : len(feature_cols),
         'n_features_selected': len(selected_features),
@@ -833,6 +848,11 @@ if __name__ == '__main__':
             collection=ee.FeatureCollection([
                 ee.Feature(ee.Geometry.Point([0, 0]), {
                     'selected_features': ','.join(selected_features),
+                    'predictor_source'  : SOURCE,
+                    'scale'             : SCALE,
+                    'gap_years'         : GAP_YEARS,
+                    'fill_values'       : json.dumps({f: fill_values[f]
+                                                      for f in selected_features}),
                     'n_features'        : len(selected_features),
                     'species'           : SPECIES,
                     'model_id'          : MODEL_ID,
@@ -846,7 +866,7 @@ if __name__ == '__main__':
         print(f'  Features export started')
 
     except ImportError:
-        print('geemap not installed — skipping GEE export')
+        print('geemap not installed - skipping GEE export')
     except Exception as e:
         print(f'GEE export error: {e}')
 
@@ -873,5 +893,3 @@ if __name__ == '__main__':
     print(f'  {GEE_FEATURES_ID}')
     print('\nDetailed metrics:')
     print_metrics(final_metrics)
-    print('\n\n Model fitting done.')
-

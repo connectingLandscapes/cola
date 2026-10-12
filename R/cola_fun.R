@@ -2854,8 +2854,34 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 
 ## CoLa 2 -------------------------
 
+## Native resolution (m) of each SDM predictor source; the scripts default
+## --scale to it. Must match SOURCES in predictors.py.
+.sdm_native_scale <- c(modis = 250, hls_l30 = 30, hls_s30 = 30, embed = 10)
+
+## GEE folder tag the scripts use, e.g. 'modis_250m' (predictors.source_tag)
+.sdm_tag <- function(predictor_source, scale = NULL){
+  if (is.null(scale) || identical(as.character(scale), '')) {
+    scale <- .sdm_native_scale[[predictor_source]]
+  }
+  paste0(predictor_source, '_', scale, 'm')
+}
+
+## Arguments the SDM scripts no longer take (scaleosdm_gee, Oct 2026). The
+## wrappers still accept them so existing calls keep working; any value given
+## is reported and not passed on.
+.sdm_unused <- function(...){
+  given <- Filter(function(x) !is.null(x), list(...))
+  if (length(given)) {
+    cat('\n  Note: no longer used by the SDM scripts, ignored: ',
+        paste(names(given), collapse = ', '), '\n', sep = '')
+  }
+}
+
 #' @title SDM MODIS Export Pipeline
-#' @description Exports gap-filled 16-day NDVI/EVI composites at 250m as EE assets, aready for use in wall-to-wall SDM prediction.
+#' @description OPTIONAL step. Exports gap-filled MODIS NDVI/EVI metric tiles
+#' as EE assets for sdm_prediction_py(use_exported_metrics = TRUE). Prediction
+#' computes the same metrics in memory by default; exporting first is cheaper
+#' only when two or more models map the same species and year.
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String.
@@ -2864,21 +2890,21 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' @param stage String. 'export_annual', 'gap_fill', 'reduce_to_metrics'
 #' @param run_mode String. 'test' or 'full'
 #' @param max_concurrent Integer. Default is 3.
-#' @param gap_years Integer . Default is 2.
-#' @param min_year Integer. Default is 2025.
-#' @param max_year Integer. Default is 2025.
-#' @param crs String. Default is EPSG:4326
-#' @param scale Integer. Default is 250
-#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
-#' @param gee_assets String. EE path to
+#' @param gap_years Integer. Prior years used for gap-fill; should match extraction. Default is 2.
+#' @param scale Integer. Pixel size in metres. Default is 250 (MODIS native)
+#' @param tile_degrees Numeric. Tile size in degrees; must match prediction. Default is 2
+#' @param gee_assets String. EE path to the root assets folder
 #' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param estimate_only Logical. Only print the cost estimate. Default FALSE
+#' @param min_year,max_year,crs No longer used (CRS is fixed to EPSG:4326; years
+#' are checked against the data coverage). Accepted and ignored.
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slot. Creates multiband aasets per tile and year in the GEE folders:
-#' BASE_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}'
-#' TEMP_FOLDER    = f'{BASE_FOLDER}/temp'
-#' METRICS_FOLDER = f'{BASE_FOLDER}/metrics'
+#' @return List with log slot. Creates multiband assets per tile and year in the GEE folders:
+#' BASE_FOLDER    = {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}
+#' TEMP_FOLDER    = {BASE_FOLDER}/temp
+#' METRICS_FOLDER = {BASE_FOLDER}/metrics
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -2891,13 +2917,12 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          run_mode = 'full', # test or full
                          max_concurrent = 3,
                          gap_years = 2,
-                         min_year = 2000,
-                         max_year = 2025,
-                         crs = 'EPSG:4326',
                          scale = 250,
                          tile_degrees = 2,
                          gee_assets,
                          range_asset,
+                         estimate_only = FALSE,
+                         min_year = NULL, max_year = NULL, crs = NULL,
                          show_cml = TRUE, show_result = TRUE,
                          dry_run = FALSE){
 
@@ -2915,31 +2940,30 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     stop('Not valid method. It must be export_annual, gap_fill,  or reduce_to_metrics')
   }
 
-  ### Create CMD
-  (cmd_ <- paste0(
-    quotepath(py), ' ', quotepath(pyscript),
-    ' --ee_project ', ee_project,
-    ' --species ', species,
-    ' --target_year ', target_year,
-    ' --stage ', stage,
-    ' --run_mode ', run_mode,
-    ' --max_concurrent ', max_concurrent,
-    ' --gap_years ', gap_years,
-    ' --min_year ', min_year,
-    ' --max_year ', max_year,
-    ' --crs ', crs,
-    ' --scale ', scale,
-    ' --tile_degrees ', tile_degrees,
-    ' --gee_assets ', gee_assets,
-    ' --range_asset ', range_asset,
-    #' 2>&1'
-    ''
-  ))
-  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  aargs <- c('--ee_project', ee_project,
+             '--species', species,
+             '--target_year', target_year,
+             '--stage', stage,
+             '--run_mode', run_mode,
+             '--max_concurrent', max_concurrent,
+             '--gap_years', gap_years,
+             '--scale', scale,
+             '--tile_degrees', tile_degrees,
+             '--gee_assets', gee_assets,
+             '--range_asset', range_asset,
+             if (isTRUE(estimate_only)) '--estimate_only')
 
+  ### Create CMD
+  (cmd_ <- paste0(quotepath(py), ' ', quotepath(pyscript), ' ',
+                  paste0(aargs, collapse = ' '), collapse = ''))
+
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  .sdm_unused(min_year = min_year, max_year = max_year, crs = crs)
+
+  base_folder <- paste0(gee_assets, '/', species, '_SDM_', .sdm_tag('modis', scale), '_', target_year)
   cat('\n   - CoLa2 Covariates imagery export - \n\t Creating GEE results in: \n',
-      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR} \n  ',
-      gee_assets,'/', species, '_SDM_modis_', target_year, '\n',
+      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR} \n  ',
+      base_folder, '\n',
       ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '')
 
   if (show_cml | dry_run){
@@ -2949,23 +2973,8 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   if (!dry_run){
-    args <- c('-u', quotepath(pyscript),
-              '--ee_project', ee_project,
-              '--species', species,
-              '--target_year', target_year,
-              '--stage', stage,
-              '--run_mode', run_mode,
-              '--max_concurrent', max_concurrent,
-              '--gap_years', gap_years,
-              '--min_year', min_year,
-              '--max_year', max_year,
-              '--crs', crs,
-              '--scale', scale,
-              '--tile_degrees', tile_degrees,
-              '--gee_assets', gee_assets,
-              '--range_asset', range_asset)
-
-    (intCMD <- catandcapt(quotepath(py), args, docat = show_result))
+    argss <- c('-u', quotepath(pyscript), aargs)
+    (intCMD <- catandcapt(quotepath(py), argss, docat = show_result))
 
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -2976,37 +2985,46 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
-#' @title SDM MODIS Predictor Extraction
-#' @description Extracts predictor variables at species occurrence locations using
-#' MODIS 250m NDVI/EVI. All outputs are named after SPECIES and MODEL_ID so multiple
-#' runs never overwrite each other.
-#' Usage:    python sdm_modis_extraction.py --species puma --model_id puma_modis_m2
-#'  --run_mode full [--ee_project geersprocessing] [--batch_size 25] ...
+#' @title SDM Predictor Extraction
+#' @description Extracts predictor variables at species occurrence locations
+#' from one imagery source (MODIS, HLS L30/S30 or Satellite Embeddings) plus
+#' static layers. All outputs are named after SPECIES, source/scale and
+#' MODEL_ID so multiple runs never overwrite each other. Stops before any task
+#' if occurrence years fall outside the source's coverage.
+#' Usage:    python sdm_extraction.py --species puma --model_id puma_modis_m2
+#'  --run_mode full [--predictor_source modis] [--scale 250] ...
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String.
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param working_dir String. Local folder for the resume log
 #' @param run_mode String. Execution mode, 'single', 'full', 'resume'
 #' @param batch_year Integer. Year for single-batch test run
 #' @param batch_num Integer. Batch number for single-batch test run
 #' @param batch_size Integer. Points per batch. Default is 25
-#' @param max_concurrent Integer. Max concurrent GEE tasks. Default is 5.
+#' @param max_concurrent Integer. Max concurrent GEE tasks. Default is 3.
 #' @param occurrence_asset String. GEE asset path for occurrence points.
 #' Default: {gee_assets}/{species}_occurrences_batched
-#' @param column_train String. Column with the presence/absense [0-1] values
+#' @param column_train String. Column with the presence/absence [0-1] values.
+#' Only this column and year are kept from the occurrence asset. Default 'presence'
 #' @param gee_assets String. Root GEE assets folder (no trailing slash).
-#' @param min_year Integer. Default is 2000.
-#' @param max_year Integer. Default is 2025.
-#' @param gap_years Integer . Default is 2.
-#' @param target_scale Integer. Export scale in metres. Default is 250
-#' @param point_buffer Integer. Buffer around each point for predictor stack (m)
+#' @param predictor_source String. 'modis' (250 m, 2001+), 'hls_l30' (30 m),
+#' 'hls_s30' (30 m) or 'embed' (10 m, 2017+). Default 'modis'
+#' @param scale Integer. Analysis scale in metres; NULL for the source's native
+#' resolution. Can only be coarser than native. Must match fitting.
+#' @param gap_years Integer. Prior years used for gap-fill. Default is 2.
+#' @param estimate_only Logical. Only print the cost estimate. Default FALSE
+#' @param target_scale Old name for scale, used when scale is NULL.
+#' @param min_year,max_year,point_buffer No longer used (years are checked
+#' against the source's coverage; the buffer follows the largest kernel).
+#' Accepted and ignored.
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slots. In GEE will create this folder: {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID}
-#'  The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01
-#'  The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt
+#' @return List with log slots. In GEE will create this folder: {GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL-ID}
+#'  The assets will be named as: SDM_{SOURCE}_{SPECIES}_{YEAR}_b01
+#'  The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{SOURCE}_{SCALE}m_{MODEL_ID}.txt
 #' @examples
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3014,16 +3032,19 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
 sdm_modis_extract_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
-    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_extraction.py'),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_extraction.py'),
     ee_project, species,
     model_id,
     working_dir,
     run_mode = 'single', # 'single', 'full', 'resume'
     batch_year, batch_num, batch_size,
     max_concurrent = 3,
-    occurrence_asset, column_train, gee_assets,
-    min_year = 2000, max_year = 2025,
-    gap_years = 2, target_scale = 250, point_buffer = 15000,
+    occurrence_asset, column_train = 'presence', gee_assets,
+    predictor_source = 'modis', scale = NULL,
+    gap_years = 2,
+    estimate_only = FALSE,
+    target_scale = NULL,
+    min_year = NULL, max_year = NULL, point_buffer = NULL,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3037,6 +3058,11 @@ sdm_modis_extract_py <- function(
   if( ! run_mode %in% c('single', 'full', 'resume')){
     stop('Not valid method. It must be single, resume or full')
   }
+  if( ! predictor_source %in% names(.sdm_native_scale)){
+    stop('Not valid predictor_source. It must be one of: ',
+         paste(names(.sdm_native_scale), collapse = ', '))
+  }
+  if (is.null(scale)) scale <- target_scale
 
   ## Fix working directory
   working_dir <- cola::quotepath(working_dir)
@@ -3044,13 +3070,15 @@ sdm_modis_extract_py <- function(
   ### Create CMD
 
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  .sdm_unused(min_year = min_year, max_year = max_year, point_buffer = point_buffer)
 
+  tag <- .sdm_tag(predictor_source, scale)
   cat('\n   - CoLa2 Covariates + points extract - \n\t Creating GEE results in: \n',
-      '\t {GEE_ASSETS}/{SPECIES}_SDM_modis_exports_{MODEL-ID} \n\t',
-      gee_assets,'/', species, '_SDM_modis_exports_', model_id, '\n\t',
-      ' The assets will be named as: SDM_MODIS_{SPECIES}_{YEARS}_b01 \n',
-      ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{MODEL_ID}.txt \n',
-      '       ', working_dir, '/completed_batches_',species,'_', model_id,'.txt \n',
+      '\t {GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL-ID} \n\t',
+      gee_assets,'/', species, '_SDM_', tag, '_exports_', model_id, '\n\t',
+      ' The assets will be named as: SDM_', toupper(predictor_source), '_{SPECIES}_{YEAR}_b01 \n',
+      ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{SOURCE}_{SCALE}m_{MODEL_ID}.txt \n',
+      '       ', working_dir, '/completed_batches_', species, '_', tag, '_', model_id, '.txt \n',
       sep = '')
 
   aargs <- c('--ee_project', ee_project,
@@ -3065,17 +3093,16 @@ sdm_modis_extract_py <- function(
     '--occurrence_asset', occurrence_asset,
     '--column_train', column_train,
     '--gee_assets', gee_assets,
-    '--min_year', min_year,
-    '--max_year', max_year,
+    '--predictor_source', predictor_source,
+    if (!is.null(scale)) c('--scale', scale),
     '--gap_years', gap_years,
-    '--target_scale', target_scale,
-    '--point_buffer', point_buffer)
+    if (isTRUE(estimate_only)) '--estimate_only')
 
     (cmd_ <- paste0(quotepath(py), ' ', quotepath(pyscript), ' ',
                    paste0(aargs, collapse = ' ' ), collapse = '' ) )
 
   if (show_cml | dry_run){
-  cat('\n\tCMD SDM MODIS extraction (', run_mode,'): \n')
+  cat('\n\tCMD SDM extraction (', run_mode,'): \n')
     cat('\n', cmd_, '\n')
     cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
@@ -3109,6 +3136,8 @@ sdm_modis_extract_py <- function(
 #' @param working_dir String. Local working directory for model outputs. Skip spcaces.
 #' @param local_csv String. Path to local training CSV to skip EE asset loading.
 #' Default: {working_dir}/{model_id}_training.csv'
+#' @param predictor_source String. Must match extraction. Default 'modis'
+#' @param scale Integer. Must match extraction; NULL for the source's native resolution.
 #' @param imp_thresh Float. Relative importance threshold for feature pruning. Default is 0.10
 #' @param categorical_threshold Integer. Max unique values to treat a variable as categorical. Default is 20
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
@@ -3140,6 +3169,8 @@ sdm_model_fitting_py <- function(
     gee_assets,
     working_dir,
     local_csv,
+    predictor_source = 'modis',
+    scale = NULL,
     imp_thresh = 0.1,
     categorical_threshold = 20,
     show_cml = TRUE, show_result = TRUE,
@@ -3163,6 +3194,8 @@ sdm_model_fitting_py <- function(
     '--gee_assets', gee_assets,
     '--working_dir', working_dir,
     '--local_csv', local_csv,
+    '--predictor_source', predictor_source,
+    if (!is.null(scale)) c('--scale', scale),
     '--imp_thresh', imp_thresh,
     '--categorical_threshold', categorical_threshold
   )
@@ -3209,37 +3242,37 @@ sdm_model_fitting_py <- function(
 
 
 
-#' @title SDM MODIS wall-to-wall prediction script
-#' @description Applies a pre-trained RF classifier to pre-exported MODIS metrics tiles
-#' to produce a wall-to-wall habitat suitability map.
-#' All inputs derived from MODEL_ID (classifier, features) and
-#' SPECIES + TARGET_YEAR (metrics tiles). Output folder also
-#' derived from MODEL_ID + TARGET_YEAR.
-#' IMPORTANT: Gaussian kernel parameters must be identical to those used in
-#' sdm_modis_extraction.py — predictor values must match between training
-#' and prediction or model performance will degrade.
+#' @title SDM wall-to-wall prediction script
+#' @description Applies a pre-trained RF classifier tile by tile to produce a
+#' wall-to-wall habitat suitability map. The predictor source and scale are
+#' read from the model (MODEL_ID); predictors are built with the same code as
+#' extraction. Imagery metrics are computed in memory unless
+#' use_exported_metrics = TRUE, which reads the MODIS metric tiles from
+#' sdm_modis_export_py() (MODIS models only).
 #' Usage:
-#'   python sdm_modis_wall_to_wall.py --species puma --model_id puma_modis_m2 \
+#'   python sdm_wall_to_wall.py --species puma --model_id puma_modis_m2 \
 #'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
 #'
-#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-#' sdm_model_fitting_py( ) {Classifier} function
+#' This function requires the classifier from sdm_model_fitting_py( ), and the
+#' metrics from sdm_modis_export_py( ) only with use_exported_metrics = TRUE.
 #'
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String.
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
+#' @param target_year. Integer. Year to map
 #' @param run_mode String. Execution mode, 'test', 'full'
 #' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
-#' @param crs String. Year for single-batch test run
-#' @param scale Integer. Pixel size in meters. Default is 250m
-#' @param min_year Integer. Default is 2000.
-#' @param max_year Integer. Default is 2025.
-#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
-#' @param gee_assets String. EE path to
+#' @param tile_degrees Numeric. Tile size in degrees; must match the export when
+#' use_exported_metrics = TRUE. NULL chooses it from the model's scale.
+#' @param gee_assets String. EE path to the root assets folder
 #' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param use_exported_metrics Logical. Read exported MODIS metric tiles instead
+#' of computing them in memory. Default FALSE
+#' @param estimate_only Logical. Only print the cost estimate. Default FALSE
+#' @param crs,scale,min_year,max_year No longer used (source and scale come from
+#' the model; CRS is fixed). Accepted and ignored.
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
@@ -3251,17 +3284,19 @@ sdm_model_fitting_py <- function(
 
 sdm_modis_prediction_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
-    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_wall_to_wall.py'),
+    pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_wall_to_wall.py'),
     ee_project, species,
     model_id,
     target_year,
     run_mode, # test full
     max_concurrent = 3,
-    crs, scale = 250,
-    min_year, max_year,
-    tile_degrees,
+    tile_degrees = NULL,
     gee_assets,
     range_asset,
+    use_exported_metrics = FALSE,
+    estimate_only = FALSE,
+    crs = NULL, scale = NULL,
+    min_year = NULL, max_year = NULL,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3285,18 +3320,17 @@ sdm_modis_prediction_py <- function(
     '--target_year', target_year,
     '--run_mode', run_mode,
     '--max_concurrent', max_concurrent,
-    '--crs', crs,
-    '--scale', scale,
-    '--tile_degrees', tile_degrees,
-    '--min_year', min_year,
-    '--max_year', max_year,
+    if (!is.null(tile_degrees)) c('--tile_degrees', tile_degrees),
     '--gee_assets', gee_assets,
-    '--range_asset', range_asset)
+    '--range_asset', range_asset,
+    if (isTRUE(use_exported_metrics)) '--use_exported_metrics',
+    if (isTRUE(estimate_only)) '--estimate_only')
 
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  .sdm_unused(crs = crs, scale = scale, min_year = min_year, max_year = max_year)
 
   cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
       '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
@@ -3380,7 +3414,7 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
                                     # command = python, args = c("-u", script),
                                     stdout_line_callback = function(line, proc) {
                                       # msg <- sprintf("[%s] OUT: %s", format(Sys.time(), "%H:%M:%S"), line)
-                                      msg <- sprintf( line )
+                                      msg <- line  # not sprintf(line): R errors on a bare '%' in script output
                                       if (docat) cat(msg, "\n")
                                       writeLines(msg, log_con)
                                     },
