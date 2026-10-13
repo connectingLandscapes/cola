@@ -15,8 +15,8 @@ lcc_py(
   crs = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc.py"),
-  cml = TRUE,
-  show.result = TRUE
+  show_cml = TRUE,
+  show_result = TRUE
 )
 }
 \arguments{
@@ -38,11 +38,13 @@ lcc_py(
 
 \item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

@@ -2884,9 +2884,9 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' only when two or more models map the same species and year.
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
-#' @param ee_project String.
-#' @param species String.
-#' @param target_year Integer.
+#' @param ee_project String. Google Earth Engine project or username
+#' @param species String. Species name
+#' @param target_year Integer. Year to project the prediction.
 #' @param stage String. 'export_annual', 'gap_fill', 'reduce_to_metrics'
 #' @param run_mode String. 'test' or 'full'
 #' @param max_concurrent Integer. Default is 3.
@@ -2967,7 +2967,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
       ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '')
 
   if (show_cml | dry_run){
-  cat('\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
+    cat('\n\tCMD sdm MODIS (', stage, '-', run_mode ,'): \n')
     cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
   }
@@ -2995,7 +2995,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #'  --run_mode full [--predictor_source modis] [--scale 250] ...
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
-#' @param ee_project String.
+#' @param ee_project String. Google Earth Engine project or username
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
 #' @param working_dir String. Local folder for the resume log
@@ -3127,7 +3127,7 @@ sdm_modis_extract_py <- function(
 #       [--ee_project geersprocessing] [--mode binary] ...
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
-#' @param ee_project String.
+#' @param ee_project String. Google Earth Engine project or username
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
 #' @param mode String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'
@@ -3258,7 +3258,7 @@ sdm_model_fitting_py <- function(
 #'
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
-#' @param ee_project String.
+#' @param ee_project String. Google Earth Engine project or username
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
 #' @param target_year. Integer. Year to map
@@ -3354,6 +3354,104 @@ sdm_modis_prediction_py <- function(
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ) )
 }
+
+
+
+
+#' @title Batch exporting Google Earth Engine rasters to Google Drive
+#' @description Export all the rasters inside a Google Earth Ranger folder
+#' Usage:
+#'   python cml_EEtoGD.py --species puma --model_id puma_modis_m2 \
+#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
+#'
+#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
+#' sdm_model_fitting_py( ) {Classifier} function
+#'
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String. Google Earth Engine project or username
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
+#' @param run_mode String. Execution mode, 'test', 'full'
+#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
+#' @param crs String. Year for single-batch test run
+#' @param scale Integer. Pixel size in meters. Default is 250m
+#' @param min_year Integer. Default is 2000.
+#' @param max_year Integer. Default is 2025.
+#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
+#' @param gee_assets String. EE path to
+#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+export_ee2gd_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/cml_EEtoGD.py'),
+    ee_project,
+    ee_folder,
+    gd_folder,
+    prefix,
+    scale = 250,
+    crs = 'EPSG:4326',
+    region,
+    show_cml = TRUE, show_result = TRUE,
+    dry_run = FALSE){
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+
+  ### Create CMD
+  aargs <- c(
+    adaptFilePath(pyscript),
+    '--in_ee_project', ee_project,
+    '--ee_folder', ee_folder,
+    '--gd_folder', gd_folder,
+    '--prefix', prefix,
+    '--scale',  scale,
+    '--crs',  crs,
+    '--region', region)
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+
+  cat('\n   - CoLa2 Rasters export  - \n\t   Looking GEE rasters in: ', ee_folder, ' \n', sep = '')
+
+  if (show_cml | dry_run){
+    cat('\n\t CMD Raster export: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
+  }
+
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+  }
+  # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
+
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+}
+
+
 
 
 #' @title Submit a console task printing report and saving it
@@ -3457,6 +3555,7 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
 #' @param dokde Integer. Calculate density kernel raster?  1: yes, 0: no
 #' @return List with log slot. The resulting layer will be saved in the outdir
 #' @examples
+#' @author Courtney Marneweck <courtney@@giraffeconservation.org>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export

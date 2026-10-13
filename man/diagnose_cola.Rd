@@ -42,7 +42,9 @@ diagnose_cola()
 diagnose_cola()
 }
 \author{
-Ivan Gonzalez <ig299@nau.edu>
+Ivan Gonzalez <Ivan.Gonzalez@nau.edu>
 
 Patrick Jantz <Patrick.Jantz@gmail.com>
+
+Ivan Gonzalez <ig299@nau.edu>
 }

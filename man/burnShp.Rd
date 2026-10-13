@@ -27,9 +27,11 @@ burnShp(
 
 \item{polpath}{String. Location of the vector layer}
 
-\item{cml}{Logical. Print the back-end command line? Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{show.result}{Logical. Print the command line result? Default TRUE}
+\item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
@@ -52,8 +54,8 @@ plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
 intif2 <- tempfile(fileext = '.tif')
 file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
 rasterizedPol2 <- burnShp(
-  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'), 
-  burnval = 200, 
+  polPath = system.file(package = 'cola', 'sampledata/samplePolygon.shp'),
+  burnval = 200,
   rastPath = intif2
 )
 plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
