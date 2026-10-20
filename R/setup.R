@@ -889,6 +889,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         if ( ! any(erLibs2inst %in% avLibsER$package )) {
           tryCatch(conda_install("earthranger", packages = erLibs2inst, pip  = TRUE, error = function (e ) e ))
         }
+        # # conda_remove("earthranger")
         # if ( ! 'scipy' %in% avLibsER$package ){
         #   tryCatch(conda_install("er", packages = c('geopandas', 'rasterio', 'fiona', 'scipy')), error = function (e ) e )
         # }

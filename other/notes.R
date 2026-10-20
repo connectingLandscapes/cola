@@ -252,3 +252,19 @@ nodeidsFile = 'C:/cola/filea7a845ad590b_nodeidsFile.csv'
 #           </tr>
 #           </table>
 #
+## ER
+# ER_USERNAME = 'IGonzalez'
+# ER_PASSWORD = 'temp12345'
+# ER_SERVER = 'https://twiga.pamdas.org'
+# DATE_FROM = '2010-01-20'
+# DATE_TO = '2025-01-20'
+# SUBJECT_GROUP = 'NAM_test'
+# OUTPUT_DIR = 'C:/cola/earthranger'
+# KDE_RES_M = 1000
+# DO_KDE = 1
+#
+# import ecoscope
+# from ecoscope.io.earthranger import EarthRangerIO
+# er = ecoscope.io.earthranger.EarthRangerIO(server='https://twiga.pamdas.org', username='IGonzalez', password='temp12345')
+#
+# er = EarthRangerIO(server='twiga.pamdas.org', username='IGonzalez', password='temp12345')

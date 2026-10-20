@@ -1579,7 +1579,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
   # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
 
 
-  # lccZarrB_py part 2 ----
+  ## lccZarrB_py part 2 -------
   # # Path to resistance grid
   # rg = sys.argv[1]
   #
@@ -2913,11 +2913,11 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_modis_export.py'),
                          ee_project, species, target_year,
-                         stage = '',
+                         scale = 250,
+                         stage = '', # ['export_annual', 'gap_fill', 'reduce_to_metrics']
                          run_mode = 'full', # test or full
                          max_concurrent = 3,
                          gap_years = 2,
-                         scale = 250,
                          tile_degrees = 2,
                          gee_assets,
                          range_asset,
@@ -3030,16 +3030,20 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-sdm_modis_extract_py <- function(
+sdm_extract_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_extraction.py'),
     ee_project, species,
     model_id,
     working_dir,
     run_mode = 'single', # 'single', 'full', 'resume'
-    batch_year, batch_num, batch_size,
+    batch_year = 2015,
+    batch_num = 1,
     max_concurrent = 3,
-    occurrence_asset, column_train = 'presence', gee_assets,
+    batch_size = 25,
+    occurrence_asset,
+    column_train = 'presence',
+    gee_assets,
     predictor_source = 'modis', scale = NULL,
     gap_years = 2,
     estimate_only = FALSE,
@@ -3066,6 +3070,10 @@ sdm_modis_extract_py <- function(
 
   ## Fix working directory
   working_dir <- cola::quotepath(working_dir)
+  if (!dir.exists(working_dir)){
+    dir.create( working_dir, recursive = TRUE )
+  }
+
 
   ### Create CMD
 
@@ -3115,7 +3123,13 @@ sdm_modis_extract_py <- function(
   }
   cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
-  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+  # projects/gonzalezivan/assets/cola2/A1_SDM_modis_250m_exports_A1m1
+  return( list(log = intCMD, cmd = cmd_,
+               result = paste0("EE files created in '",
+                               gee_assets,"/",
+                               species , "_SDM_",predictor_source, "_",
+                               scale , "m_exports" , model_id,
+                               "' . " ) ) )
 }
 
 
@@ -3237,7 +3251,18 @@ sdm_model_fitting_py <- function(
   }
   cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
-  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+  # Local outputs:
+  #   C:/cola/cola2/A1m1\A1m1_rf_final.pkl
+  #   C:/cola/cola2/A1m1\A1m1_selected_features.csv
+  #   C:/cola/cola2/A1m1\A1m1_rf_summary.csv
+  #
+  # GEE outputs:
+  #   projects/gonzalezivan/assets/cola2/A1m1_RF_classifier
+  #   projects/gonzalezivan/assets/cola2/A1m1_RF_classifier_strings
+  #   projects/gonzalezivan/assets/cola2/A1m1_selected_features
+
+  return( list(log = paste0("", intCMD), cmd = cmd_ ,
+          result = paste0('')) )
 }
 
 
@@ -3282,18 +3307,19 @@ sdm_model_fitting_py <- function(
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-sdm_modis_prediction_py <- function(
+sdm_prediction_py <- function(
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/sdm_wall_to_wall.py'),
-    ee_project, species,
+    ee_project,
+    species,
     model_id,
-    target_year,
-    run_mode, # test full
-    max_concurrent = 3,
-    tile_degrees = NULL,
     gee_assets,
     range_asset,
+    target_year,
     use_exported_metrics = FALSE,
+    run_mode = 'full', # test full
+    max_concurrent = 3,
+    tile_degrees = NULL,
     estimate_only = FALSE,
     crs = NULL, scale = NULL,
     min_year = NULL, max_year = NULL,
@@ -3352,7 +3378,10 @@ sdm_modis_prediction_py <- function(
   # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
   cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
-  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+  return( list(log = paste0("", intCMD), cmd = cmd_ ,
+          result = paste0('Results are inside the folder: ',
+                          gee_assets, "/", model_id , "_prediction_", target_year )) )
+  # projects/gonzalezivan/assets/cola2/A1m1_prediction_2025
 }
 
 
@@ -3416,7 +3445,7 @@ export_ee2gd_py <- function(
   ### Create CMD
   aargs <- c(
     adaptFilePath(pyscript),
-    '--in_ee_project', ee_project,
+    '--ee_project', ee_project,
     '--ee_folder', ee_folder,
     '--gd_folder', gd_folder,
     '--prefix', prefix,
