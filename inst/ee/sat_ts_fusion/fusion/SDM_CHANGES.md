@@ -4,12 +4,75 @@ For the Shiny app maintainer: what changed in the inputs, outputs and
 behaviour of the `sdm_*` scripts, and what the app needs to handle.
 
 - **Compared against:** scaleosdm_gee commit `51d2251`, the version these
-  scripts were copied from before this update.
-- **Current as of:** scaleosdm_gee `877cd48` (12 Oct 2026).
+  scripts were copied from before the first sync (PR #1).
+- **Current as of:** scaleosdm_gee `0c86769` (21 Oct 2026). The newest
+  changes are in the first section below.
 
 The full history and the measurements behind each change are in `CLAUDE.md`
 of the scaleosdm_gee repository (github.com/forest-rev/scaleosdm_gee,
 private).
+
+## Update, 21 Oct 2026: fitting and prediction fail loudly
+
+These changes respond to the `m4` run of 20 Oct. Wall-to-wall warned that
+the model had no `predictor_source`, `fill_values` or `gap_years`, and its
+feature list included `yyyy`.
+
+### Refitting under an existing model ID now stops at the start
+
+- **What went wrong.** GEE export tasks can't overwrite an existing asset:
+  the task fails and the old asset stays. Fitting started its three exports
+  (classifier, tree strings, selected features) without checking them. So
+  refitting `m4` left the previous fit's assets in GEE, and wall-to-wall
+  predicted with the old model, while the new `.pkl` sat on disk.
+- **Now:** before fitting, the script checks for this model's outputs: the
+  three GEE assets and the local `_rf_final.pkl`, `_selected_features.csv`,
+  `_rf_sizing.csv` and `_rf_summary.csv`. If any exist, it stops straight
+  away with a list of them. The cached `_training.csv` doesn't count,
+  because fitting reuses it.
+- **To refit deliberately:** pass `--overwrite` (`overwrite = TRUE` in
+  `sdm_model_fitting_py()`). It deletes the old GEE assets just before
+  exporting the new ones.
+- **Fitting waits for its exports** and prints `OK` or `FAIL` for each. If
+  any fails, the script exits with an error after saving the local outputs,
+  so the GUI can tell the fit isn't usable for prediction yet.
+
+For the GUI: a user who re-runs a fit with the same model ID now gets the
+"already been fit" message. You may want an "overwrite" checkbox on the
+fitting panels, passed as `overwrite = TRUE`.
+
+### Prediction checks the model's predictors before starting
+
+`m4` listed `yyyy` as a predictor. That's a column of the occurrence data
+which the extraction of the time copied into the training tables. The
+predictor stack can't build it, so every tile would have failed.
+Wall-to-wall now checks this once, before the cost estimate (so
+`estimate_only` shows it too). It stops with a message to re-extract with
+the current scripts and refit.
+
+### Your suggestions
+
+- **Keep the gap-fill layers:** `--keep_intermediate` on
+  `sdm_modis_export.py` (`keep_intermediate = TRUE` in
+  `sdm_modis_export_py()`). It keeps the annual, merged and gap-filled
+  assets in `{BASE_FOLDER}/temp` instead of deleting each once the next
+  step has used it. It's off by default because of storage: on the 2° test
+  tile these took 173 MB against 7 MB for the metrics, which would be about
+  115 GB or more for the puma range. Re-running a stage still works with
+  them kept (tested).
+- **Don't train if the outputs exist:** covered by the check above, for both
+  the GEE assets and the local `.pkl`/`.csv` files.
+- **`tile_degrees = 0`** in export and prediction (and
+  `sdm_cost_estimate.py`) means "choose from the scale": 2° at 250 m, 0.25°
+  at 30 m, 0.1° at 10 m. In prediction, `NULL` works the same way. When
+  prediction uses exported metrics, export and prediction must still end up
+  with the same tile size; passing 0 to both does that.
+
+### Also fixed
+
+A relative `--working_dir` made fitting write its outputs one folder too
+deep (`out/out/...`), because it changes into that folder after building
+the paths. The GUI passes absolute paths, so it wasn't affected.
 
 ## New default run sequence
 
@@ -49,7 +112,7 @@ names. The export script keeps its name because it only exports MODIS.
 The scripts now import three helper modules, `predictors.py`, `grid.py` and
 `cost.py`, which must sit in the same folder as the scripts.
 
-### Output lines containing `%` broke `catandcapt()` (fixed in this PR)
+### Output lines containing `%` broke `catandcapt()` (fixed in PR #1)
 
 `catandcapt()` echoed each Python output line with `sprintf(line)`. R's
 `sprintf()` errors on a bare `%` ("too few arguments" or "unrecognised format
@@ -206,7 +269,7 @@ Predictor values differ from older runs, because:
 Regenerate models and predictions made before 6 October 2026 rather than
 mixing them with new ones.
 
-## For the GUI, later (not changed in this update)
+## For the GUI, later (listed with PR #1)
 
 - **Unused inputs:** the year ranges (`*_yy`), CRS (`*_crs`), point buffer
   (`*_pbuffer`) and prediction scale (`in_eepre_scale`) no longer do

@@ -2892,10 +2892,13 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 #' @param max_concurrent Integer. Default is 3.
 #' @param gap_years Integer. Prior years used for gap-fill; should match extraction. Default is 2.
 #' @param scale Integer. Pixel size in metres. Default is 250 (MODIS native)
-#' @param tile_degrees Numeric. Tile size in degrees; must match prediction. Default is 2
+#' @param tile_degrees Numeric. Tile size in degrees; must match prediction. 0 chooses it
+#' from the scale (2 at 250 m). Default is 2
 #' @param gee_assets String. EE path to the root assets folder
 #' @param range_asset String. EE path for the feature collection with the spatial extent
 #' @param estimate_only Logical. Only print the cost estimate. Default FALSE
+#' @param keep_intermediate Logical. Keep the annual, merged and gap-filled assets in
+#' {BASE_FOLDER}/temp instead of deleting each once used (uses GEE storage). Default FALSE
 #' @param min_year,max_year,crs No longer used (CRS is fixed to EPSG:4326; years
 #' are checked against the data coverage). Accepted and ignored.
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
@@ -2922,6 +2925,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                          gee_assets,
                          range_asset,
                          estimate_only = FALSE,
+                         keep_intermediate = FALSE,
                          min_year = NULL, max_year = NULL, crs = NULL,
                          show_cml = TRUE, show_result = TRUE,
                          dry_run = FALSE){
@@ -2951,7 +2955,8 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
              '--tile_degrees', tile_degrees,
              '--gee_assets', gee_assets,
              '--range_asset', range_asset,
-             if (isTRUE(estimate_only)) '--estimate_only')
+             if (isTRUE(estimate_only)) '--estimate_only',
+             if (isTRUE(keep_intermediate)) '--keep_intermediate')
 
   ### Create CMD
   (cmd_ <- paste0(quotepath(py), ' ', quotepath(pyscript), ' ',
@@ -3157,6 +3162,9 @@ sdm_extract_py <- function(
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
+#' @param overwrite Logical. Replace this model's existing outputs (GEE classifier,
+#' strings and features assets; local .pkl/.csv). If FALSE and any exist, fitting stops
+#' at the start. Default FALSE
 #' @return List with log slot. In Google Earth Engine these assets are created:
 #' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
 #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
@@ -3187,6 +3195,7 @@ sdm_model_fitting_py <- function(
     scale = NULL,
     imp_thresh = 0.1,
     categorical_threshold = 20,
+    overwrite = FALSE,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3211,7 +3220,8 @@ sdm_model_fitting_py <- function(
     '--predictor_source', predictor_source,
     if (!is.null(scale)) c('--scale', scale),
     '--imp_thresh', imp_thresh,
-    '--categorical_threshold', categorical_threshold
+    '--categorical_threshold', categorical_threshold,
+    if (isTRUE(overwrite)) '--overwrite'
   )
 
   (cmd_ <- paste0(
@@ -3230,7 +3240,7 @@ sdm_model_fitting_py <- function(
       model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
 
   cat('\n Creating GEE results in {GEE_ASSETS} - ', gee_assets ,' \n  Assets are:  ',
-      model_id, '_RF_classifier_strings, ', model_id, '_RF_classifier_strings, ',
+      model_id, '_RF_classifier, ', model_id, '_RF_classifier_strings, ',
       model_id, '_selected_features \n\n', sep = '')
 
 
@@ -3290,7 +3300,7 @@ sdm_model_fitting_py <- function(
 #' @param run_mode String. Execution mode, 'test', 'full'
 #' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
 #' @param tile_degrees Numeric. Tile size in degrees; must match the export when
-#' use_exported_metrics = TRUE. NULL chooses it from the model's scale.
+#' use_exported_metrics = TRUE. NULL or 0 chooses it from the model's scale.
 #' @param gee_assets String. EE path to the root assets folder
 #' @param range_asset String. EE path for the feature collection with the spatial extent
 #' @param use_exported_metrics Logical. Read exported MODIS metric tiles instead

@@ -59,8 +59,12 @@ def parse_args():
     p.add_argument('--estimate_only', action='store_true',
                    help='Print the cost estimate for this stage and exit')
     p.add_argument('--tile_degrees', type=float, default=None,
-                   help='Default: chosen from --scale (grid.auto_tile_degrees); '
-                        'must match wall-to-wall')
+                   help='0 or omitted: chosen from --scale '
+                        '(grid.auto_tile_degrees); must match wall-to-wall')
+    p.add_argument('--keep_intermediate', action='store_true',
+                   help='Keep the annual, merged and gap-filled assets in '
+                        '{base}/temp instead of deleting each once the next '
+                        'step has used it (for inspection; uses GEE storage)')
 
     # ── Asset paths ───────────────────────────────────────────────────────────
     p.add_argument('--gee_assets',   type=str,
@@ -88,6 +92,7 @@ GAP_YEARS      = args.gap_years
 CRS            = P.CRS
 TILE_DEGREES   = args.tile_degrees or G.auto_tile_degrees(SCALE)
 GEE_ASSETS     = args.gee_assets
+KEEP_INTERMEDIATE = args.keep_intermediate
 
 RANGE_ASSET    = args.range_asset or f'{GEE_ASSETS}/{SPECIES}_iucn_range'
 BASE_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_{TAG}_{TARGET_YEAR}'
@@ -197,7 +202,9 @@ def run_export_annual(tiles, years, max_concurrent=3):
 #   Step 0:      target year + long-gap flags      -> merged_{y0}
 #   Step 1..N:   fill long gaps from prior year yk -> merged_{yk}
 #   Final:       linear interpolation              -> gapfilled
-# Each step deletes the assets it consumed once its export succeeds.
+# Each step deletes the assets it consumed once its export succeeds,
+# unless --keep_intermediate. Kept assets do not affect resume: the
+# state below looks for the furthest step first.
 #
 # Resumable: each tile restarts after its latest existing merged asset.
 # Tiles that fail at any step are dropped and reported at the end.
@@ -254,6 +261,8 @@ def run_gap_fill(tiles, years, max_concurrent=3):
         all_eecu += eecu
         for item in completed:
             step[item['tile']] = item['new_step']
+            if KEEP_INTERMEDIATE:
+                continue
             for old_id in item['delete']:
                 try: ee.data.deleteAsset(old_id)
                 except Exception: pass
@@ -336,7 +345,7 @@ def run_reduce_to_metrics(tiles, max_concurrent=3):
     print(f'  Completed: {len(completed)}, Failed: {len(failed)}, '
           f'EECU-s: {total_eecu:,.1f}')
 
-    for item in completed:
+    for item in (completed if not KEEP_INTERMEDIATE else []):
         try:
             ee.data.deleteAsset(_gapfilled_asset_id(item['tile']))
             print(f'  Deleted gapfilled: {item["tile"]}')
