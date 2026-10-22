@@ -2854,6 +2854,96 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 
 ## CoLa 2 -------------------------
 
+
+#' @title Ulpoad local point layer to EE assets
+#' @description Use local points file and submitt an upload task to EE
+#' Usage:
+#'   python cml_uploadFeature.py --species puma --model_id puma_modis_m2 \
+#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
+#'
+#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
+#' sdm_model_fitting_py( ) {Classifier} function
+#'
+#' @param py String. Python executable location. No spaces allowed.
+#' @param pyscript String. Python script location. No spaces allowed.
+#' @param ee_project String. Google Earth Engine project or username
+#' @param species String. Species name, e.g. puma
+#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
+#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
+#' @param run_mode String. Execution mode, 'test', 'full'
+#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
+#' @param crs String. Year for single-batch test run
+#' @param scale Integer. Pixel size in meters. Default is 250m
+#' @param min_year Integer. Default is 2000.
+#' @param max_year Integer. Default is 2025.
+#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
+#' @param gee_assets String. EE path to
+#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+#' @examples
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+localPoints2ee_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'ee/cml_uploadFeature.py'),
+    ee_project,
+    shapefile_path,
+    ee_name,
+    num_abs,
+    abs_meth = 'background',
+    show_cml = TRUE, show_result = TRUE,
+    dry_run = FALSE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
+  ### Create CMD
+  aargs <- c(
+    cola::adaptFilePath(pyscript),
+    '--ee_project', ee_project,
+    '--shapefile_path', cola::adaptFilePath(shapefile_path),
+    '--ee_name', ee_name,
+    '--num_abs', num_abs,
+    '--abs_meth',  abs_meth)
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+
+  cat('\n   - CoLa2 Feature upload  - \n\t   Uploading points as: ', ee_name, ' \n', sep = '')
+
+  if (show_cml | dry_run){
+    cat('\n\t CMD Raster export: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n  Check the progress of the tasks in: \n    https://code.earthengine.google.com/#\n\n')
+  }
+
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+  }
+  # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+  cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
+
+  return( list(log = paste0("", intCMD), cmd = cmd_ ) )
+}
+
+
+
 ## Native resolution (m) of each SDM predictor source; the scripts default
 ## --scale to it. Must match SOURCES in predictors.py.
 .sdm_native_scale <- c(modis = 250, hls_l30 = 30, hls_s30 = 30, embed = 10)

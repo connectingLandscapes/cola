@@ -452,11 +452,9 @@ server <- function(input, output, session) {
       if( input$in_eefull_source == 'modis' ){
         enable("in_eefull_goexp")
         enable("in_eefull_gogap")
-        enable("in_eefull_goexp")
+        enable("in_eefull_gomet")
       }
 
-      enable("in_eefull_goexp")
-      enable("in_eefull_gomet")
       enable("in_eefull_goext")
       enable("in_eefull_gofit")
       enable("in_eefull_gopre")
@@ -7467,11 +7465,11 @@ server <- function(input, output, session) {
   })) # end isolate
 
   # EE server ------
-  # Enables EE tab
+  # Enables EE tab ony if is installed and not a server or debug mode
   output$tabee <- renderMenu({
     #print(rv$eecola)
     #print('rv$eecola == 1')
-    if(rv$eecola){
+    if(rv$eecola & (!COLA_SERVER & COLA_DEBUG)){
       #print( ' rv$eecola == 1 ')
       menuItem("GEE Suitability", tabName = "tabee", icon = icon("map")
       )
@@ -7678,8 +7676,8 @@ server <- function(input, output, session) {
 
             # eeproject shp eeasset %abs
             cmdee <- paste0(cola::adaptFilePath(py), ' ',
-                            #cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
-                            cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
+                            cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
+                            #cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
                             #ee_scr_path,'/cml_uploadFeature.py ',
                             input$in_ee_project, ' ',
                             cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
@@ -8516,6 +8514,12 @@ server <- function(input, output, session) {
               text = paste0('Please check your Earth Engine console and Google Drive')
             )
 
+            shinyalert(
+              html = TRUE, type = "info",
+              title = paste0("Look for duplicated folders"),
+              text = paste0('Google Drive might create more than one folder with the same name and save the layer among them')
+            )
+
           } else { # Error
             errormessage <- paste0('Error: ', intCMD, '')
             shinyalert(html = TRUE, type = "error",
@@ -9002,7 +9006,7 @@ server <- function(input, output, session) {
             html = TRUE, type = "info",
             title = paste0("Task submmited. Points + image extraction. Please wait."),
             text = paste0("Creating the results in this path:<br>",
-                          "<br><i>{GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_exports_{MODEL}</i><br>",
+                          "<br><i>{GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL}</i><br>",
                           input$in_eefull_geepath, "/", input$in_eefull_label,
                           "_SDM_modis_",input$in_eefull_scale,"m_exports_",input$in_eefull_modelid,"<br>",
                           "Wait for results in your R console and Earth Engine app.",
@@ -9185,7 +9189,7 @@ server <- function(input, output, session) {
           target_year  = (input$in_eefull_targetyear),
           run_mode = tolower(input$in_eefull_modepre), #  full test
           max_concurrent = input$in_eefull_maxconc,
-          use_exported_metrics = TRUE, # metrics come from the MODIS export steps
+          use_exported_metrics = FALSE, # metrics come from the MODIS export steps
           # crs = input$in_eefull_crs,
           scale = input$in_eefull_scale,
           # min_year = input$in_eefull_yy[1], max_year = input$in_eefull_yy[2],
@@ -10273,7 +10277,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeruncovs', title = 'Run covariates extraction', placement = 'top'),
 
               bsTooltip(id = 'in_eeexp_aoi', title = 'Path to GEE asset containing the study area geometry'),
-              bsTooltip(id = 'in_eeexp_eepath', title = 'Path to GEE folder where a subfolder with results will be created'),
+              bsTooltip(id = 'in_eeexp_eepath', title = 'Path to GEE folder where a subfolder with results will be created. An empty folder is prefered'),
               bsTooltip(id = 'in_eeexp_yy', title = 'Temporal range of the MODIS extraction'),
               bsTooltip(id = 'in_eeexp_label', title = 'Label to use as extraction name. e.g. (Puma, or Borneo)'),
               bsTooltip(id = 'in_eeexp_targetyear', title = 'Year to predict the species distribution'),
@@ -10295,8 +10299,8 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eeext_colname', title = 'Name with the presence/absence column. Needs to have 0/1 numeric format'),
               bsTooltip(id = 'in_eeext_aoi', title = 'Path to GEE asset containing the study area geometry'),
               bsTooltip(id = 'in_eeext_modelid', title = 'Unique model ID to add as sufix to the folder, specific to the ocurrence dataset (e.g. pumacolombia, orangutan)'),
-              bsTooltip(id = 'folderext', title = 'Local folder where log files will be saved'),
-              bsTooltip(id = 'in_eeext_localpath', title = 'Local folder where log files will be saved'),
+              bsTooltip(id = 'folderext', title = 'Local folder where training  files will be saved'),
+              bsTooltip(id = 'in_eeext_localpath', title = 'Local folder where log and train files will be saved'),
               bsTooltip(id = 'in_eeext_yy', title = 'Data range to extract values'),
               bsTooltip(id = 'in_eeext_mode', title = 'Execution mode'),
               bsTooltip(id = 'in_eeext_batchyear', title = 'Year for single-batch test run'),
@@ -10314,7 +10318,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eetra_colname', title = 'Column in the points dataset with the 0/1 values. '),
               bsTooltip(id = 'in_eetra_modex', title = 'Type of run: test or full.'),
               bsTooltip(id = 'foldertra', title = 'Local folder where log files will be saved'),
-              bsTooltip(id = 'in_eetra_localpath', title = 'Local folder where log files will be saved'),
+              bsTooltip(id = 'in_eetra_localpath', title = 'Local folder where files will be saved'),
               bsTooltip(id = 'in_eetra_impthr', title = 'Relative importance threshold for feature pruning'),
               bsTooltip(id = 'in_eetra_catthr', title = 'Max unique values to treat a variable as categorical'),
               bsTooltip(id = 'in_eetra_go', title = 'Run model training / fitting. Creates the output {GEE_ASSETS}/{MODEL_ID}_RF_classifier'),
@@ -10358,7 +10362,7 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_eefull_colname', title = 'Name with the presence/absence column. Needs to have 0/1 numeric format'),
               bsTooltip(id = 'in_eefull_modelid', title = 'Unique model ID to add as sufix to the folder, specific to the ocurrence dataset (e.g. pumacolombia, orangutan)'),
               bsTooltip(id = 'folderfull', title = 'Select / create a local folder'),
-              bsTooltip(id = 'in_eefull_localpath', title = 'Local folder where log files will be saved'),
+              bsTooltip(id = 'in_eefull_localpath', title = 'Local folder where training files will be saved'),
               bsTooltip(id = 'in_eefull_modeext', title = 'Execution mode. single, full or resume'),
               bsTooltip(id = 'in_eefull_modepre', title = 'Execution mode. Type of run: test or full'),
               bsTooltip(id = 'in_eefull_batchsize', title = 'Number of points for each batch'),
@@ -10383,8 +10387,9 @@ if (FALSE){ # if FALSE
              bsTooltip(id = 'in_eemos_prefix', title = 'Pattern used to list layers. E.g. "cola.+tif" means "cola", then anything, then "tif". "tif$" means only files ending with "tif"'),
              bsTooltip(id = 'in_eemos_outfile', title = 'Resulting merged and projected raster layer.'),
              bsTooltip(id = 'in_eemos_cola', title = 'Import the layer as suitability in CoLa?'),
-             bsTooltip(id = 'in_eemos_crs', title = 'Projected coordinate system of the final mosaic. E.g. ESRI:102028', placement = 'top'),
-
+             bsTooltip(id = 'in_eemos_crs', title = 'Projected coordinate system of the final mosaic. E.g. ESRI:102028 or Asian South Albers Equal Area', placement = 'top'),
+             bsTooltip(id = 'in_eemos_list', title = 'List layers in the folder with a giver pattern', placement = 'top'),
+             bsTooltip(id = 'in_eemos_go', title = 'Mosaic/merge selected layers and reproject if a CRS is selected', placement = 'top'),
 
               #includeMarkdown("md_intro.md")
               tabsetPanel(
@@ -10813,10 +10818,13 @@ if (FALSE){ # if FALSE
                                               label = 'GEE region/area of interest dataset file path:', inputId = 'in_eefull_aoi'),
                                     textInput(width = "100%", value = '', placeholder = 'column_name',
                                               label = 'Points dataset training column name:', inputId = 'in_eefull_colname'),
+                                    column( width = 6 ,
                                     textInput(width = "100%", placeholder = 'Puma or Sulawesi', value = '',
-                                              label = 'Species/Area ID/label:', inputId = 'in_eefull_label'),
+                                              label = 'Species/Area ID/label:', inputId = 'in_eefull_label'))
+                                    ,
+                                    column( width = 6 ,
                                     textInput(width = "100%", value = '', placeholder = 'Model_ID',
-                                              label = 'Model ID:', inputId = 'in_eefull_modelid'),
+                                              label = 'Model ID:', inputId = 'in_eefull_modelid') ),
                                     column(3, style = "padding-left:10px; padding-right:10px; padding-top:20px; padding-bottom:20px;",
                                            shinyDirButton( id = 'folderfull',
                                                            label = 'Select a folder', title = 'Please select a folder',
