@@ -29,7 +29,7 @@ def parse_args():
     p.add_argument('--target_years',     type=int, nargs='+', required=True,
                    help='Years to map wall-to-wall')
     p.add_argument('--tile_degrees',     type=float, default=None,
-                   help='Default: chosen from the scale (grid.auto_tile_degrees)')
+                   help='0 or omitted: chosen from the scale (grid.auto_tile_degrees)')
     p.add_argument('--use_exported_metrics', action='store_true',
                    help='Price the optional MODIS export + prediction from it '
                         '(cheaper only if 2+ models map the same year)')

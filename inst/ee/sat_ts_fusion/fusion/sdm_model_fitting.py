@@ -16,6 +16,7 @@ import os
 import ee
 import argparse
 import json
+import time
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import (roc_auc_score, r2_score,
                              mean_absolute_error, balanced_accuracy_score)
@@ -59,6 +60,11 @@ def parse_args():
     p.add_argument('--local_csv',    type=str, default=None,
                    help='Path to local training CSV to skip EE asset loading. '
                         'Default: {working_dir}/{model_id}_training.csv')
+    p.add_argument('--overwrite',    action='store_true',
+                   help="Replace this model's existing outputs: the GEE "
+                        'classifier, strings and features assets (deleted just '
+                        'before export) and the local .pkl/.csv files. Without '
+                        'it, fitting stops at the start if any exist.')
 
     # ── Variable selection ────────────────────────────────────────────────────
     p.add_argument('--imp_thresh',          type=float, default=0.10,
@@ -81,7 +87,9 @@ MODEL_ID     = args.model_id
 MODE         = args.mode
 TARGET_COL   = args.target_col
 GEE_ASSETS   = args.gee_assets
-WORKING_DIR  = args.working_dir
+# Absolute: main() chdirs into it, after which relative output paths built
+# from it would point one level too deep.
+WORKING_DIR  = os.path.abspath(args.working_dir)
 IMP_THRESH   = args.imp_thresh
 SOURCE       = args.predictor_source
 SCALE        = P.resolve_scale(SOURCE, args.scale)
@@ -91,7 +99,7 @@ TRAINING_ASSET_FOLDER = (f'{GEE_ASSETS}/{SPECIES}_SDM_{P.source_tag(SOURCE, SCAL
                          f'_exports_{MODEL_ID}')
 
 # Local outputs — all named after MODEL_ID
-LOCAL_CSV       = args.local_csv or os.path.join(WORKING_DIR,
+LOCAL_CSV       = os.path.abspath(args.local_csv) if args.local_csv else os.path.join(WORKING_DIR,
                                                    f'{MODEL_ID}_training.csv')
 OUTPUT_MODEL    = os.path.join(WORKING_DIR, f'{MODEL_ID}_rf_final.pkl')
 OUTPUT_FEATURES = os.path.join(WORKING_DIR, f'{MODEL_ID}_selected_features.csv')
@@ -102,6 +110,7 @@ OUTPUT_SUMMARY  = os.path.join(WORKING_DIR, f'{MODEL_ID}_rf_summary.csv')
 GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
 GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
 GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
+GEE_OUTPUTS       = [GEE_CLASSIFIER_ID, GEE_STRINGS_ID, GEE_FEATURES_ID]
 
 # =============================================================================
 # 2. FIXED PARAMETERS (not user-facing)
@@ -537,6 +546,45 @@ def run_variable_selection(X, y, metric_full, metric_target,
     return selected_cont, rf, metric_sel
 
 # =============================================================================
+# 6b. GEE OUTPUT ASSETS
+# Export tasks cannot overwrite an asset: the task fails and the old asset
+# stays (checked 2026-10-21). Before this check, refitting under an existing
+# MODEL_ID left the previous fit's classifier and features in GEE, and
+# wall-to-wall predicted with them.
+# =============================================================================
+
+def existing_assets(asset_ids):
+    found = []
+    for asset_id in asset_ids:
+        try:
+            ee.data.getAsset(asset_id)
+            found.append(asset_id)
+        except ee.EEException:
+            pass
+    return found
+
+
+def wait_for_exports(tasks, check_interval=15):
+    """Wait for export tasks; returns the descriptions of those that did not
+    complete."""
+    failed, pending = [], list(tasks)
+    while pending:
+        still = []
+        for task in pending:
+            s = task.status()
+            if s['state'] == 'COMPLETED':
+                print(f"  OK   {s['description']}")
+            elif s['state'] in ('FAILED', 'CANCELLED'):
+                print(f"  FAIL {s['description']}: {s.get('error_message', s['state'])}")
+                failed.append(s['description'])
+            else:
+                still.append(task)
+        pending = still
+        if pending:
+            time.sleep(check_interval)
+    return failed
+
+# =============================================================================
 # 7. MAIN
 # =============================================================================
 
@@ -548,6 +596,20 @@ if __name__ == '__main__':
     print(f'Working dir:     {WORKING_DIR}')
     print(f'GEE classifier:  {GEE_CLASSIFIER_ID}')
     print('=' * 60)
+
+    # Checked before fitting, which can take a long time, so a clash is
+    # reported before any work rather than as failed exports at the end.
+    # The training CSV is a cache that fitting reuses, so it does not count.
+    existing = existing_assets(GEE_OUTPUTS) + [
+        f for f in (OUTPUT_MODEL, OUTPUT_FEATURES, OUTPUT_SIZING, OUTPUT_SUMMARY)
+        if os.path.exists(f)]
+    if existing and not args.overwrite:
+        sys.exit('This model has already been fit; these outputs exist:\n  '
+                 + '\n  '.join(existing)
+                 + '\nUse a new --model_id, delete them, or pass --overwrite '
+                   'to replace them.')
+    elif existing:
+        print(f'--overwrite: will replace {len(existing)} existing output(s)')
 
     os.makedirs(WORKING_DIR, exist_ok=True)
     os.chdir(WORKING_DIR)
@@ -823,12 +885,20 @@ if __name__ == '__main__':
         finally:
             ml.tree_to_string = original_fn
 
+        if args.overwrite:
+            for asset_id in existing_assets(GEE_OUTPUTS):
+                ee.data.deleteAsset(asset_id)
+                print(f'  Deleted old {asset_id}')
+
+        export_tasks = []
+
         # Classifier asset
         task = ee.batch.Export.classifier.toAsset(
             classifier=ml.strings_to_classifier(ee_strings),
             description=GEE_CLASSIFIER_ID.split('/')[-1],
             assetId=GEE_CLASSIFIER_ID)
         task.start()
+        export_tasks.append(task)
         print(f'  Classifier export started')
 
         # Tree strings (preserves output mode for wall-to-wall)
@@ -837,14 +907,16 @@ if __name__ == '__main__':
                        {'tree_index': i, 'tree_string': s, 'output_mode': output_mode})
             for i, s in enumerate(ee_strings)
         ])
-        ee.batch.Export.table.toAsset(
+        task = ee.batch.Export.table.toAsset(
             collection=strings_fc,
             description=f'{MODEL_ID}_RF_strings',
-            assetId=GEE_STRINGS_ID).start()
+            assetId=GEE_STRINGS_ID)
+        task.start()
+        export_tasks.append(task)
         print(f'  Strings export started')
 
         # Selected features
-        ee.batch.Export.table.toAsset(
+        task = ee.batch.Export.table.toAsset(
             collection=ee.FeatureCollection([
                 ee.Feature(ee.Geometry.Point([0, 0]), {
                     'selected_features': ','.join(selected_features),
@@ -862,13 +934,20 @@ if __name__ == '__main__':
                 })
             ]),
             description=f'{MODEL_ID}_selected_features',
-            assetId=GEE_FEATURES_ID).start()
+            assetId=GEE_FEATURES_ID)
+        task.start()
+        export_tasks.append(task)
         print(f'  Features export started')
 
+        print('  Waiting for the exports to finish...')
+        export_failed = wait_for_exports(export_tasks)
+
     except ImportError:
-        print('geemap not installed - skipping GEE export')
+        export_failed = ['geemap not installed - no GEE export']
+        print(export_failed[0])
     except Exception as e:
-        print(f'GEE export error: {e}')
+        export_failed = [f'GEE export error: {e}']
+        print(export_failed[0])
 
     # ── FINAL SUMMARY ─────────────────────────────────────────────────────────
     print('\n' + '=' * 60)
@@ -893,3 +972,10 @@ if __name__ == '__main__':
     print(f'  {GEE_FEATURES_ID}')
     print('\nDetailed metrics:')
     print_metrics(final_metrics)
+
+    # Local outputs are written either way; without the GEE assets the model
+    # cannot be used for prediction, so make the caller see it.
+    if export_failed:
+        sys.exit(f'\nGEE export FAILED ({", ".join(export_failed)}). Local '
+                 f'outputs were saved; wall-to-wall cannot use this model '
+                 f'until the GEE assets exist.')

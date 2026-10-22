@@ -48,7 +48,7 @@ def parse_args():
     p.add_argument('--estimate_only', action='store_true',
                    help='Print the cost estimate and exit')
     p.add_argument('--tile_degrees', type=float, default=None,
-                   help='Default: chosen from the model scale; with '
+                   help='0 or omitted: chosen from the model scale; with '
                         '--use_exported_metrics, must match export')
 
     # ── Asset paths ───────────────────────────────────────────────────────────
@@ -240,6 +240,23 @@ def ensure_folder(folder):
         else:
             print(f'  Error:   {folder}: {e}')
 
+def check_features_buildable(features, source, scale, prior, region):
+    """Stop before any task if the model needs predictors the stack cannot
+    build. Seen 2026-10-20: a model listed 'yyyy', a column of the occurrence
+    data that the extraction of the time copied into the training tables;
+    every tile would have failed at select(). Exported metric tiles have the
+    same band names as the in-memory metrics."""
+    metrics = P.source_predictors(source, TARGET_YEAR, prior, region)
+    names   = P.assemble_stack(source, metrics, TARGET_YEAR, scale, CRS).bandNames()
+    missing = ee.List(features).removeAll(names).getInfo()
+    if missing:
+        raise SystemExit(
+            f'Model {MODEL_ID} uses {len(missing)} predictor(s) that the '
+            f'{source} stack does not have: {missing}. These usually come '
+            f'from extra columns of the occurrence data (training data '
+            f'extracted before 2026-10-12, when extraction began keeping only '
+            f'year and the response column). Re-extract and refit the model.')
+
 # =============================================================================
 # 6. MAIN
 # =============================================================================
@@ -283,6 +300,12 @@ def main():
     else:
         print(f'Loading range from {RANGE_ASSET}...')
         tiles = G.build_tiles(ee.FeatureCollection(RANGE_ASSET), tile_degrees)
+
+    # Band names do not depend on the tile, so one check covers them all.
+    if tiles:
+        check_features_buildable(features, source, scale,
+                                 P.prior_years(TARGET_YEAR, gap_years, usable[0]),
+                                 tiles[0]['geom'])
 
     print(C.report([C.prediction(source, len(tiles), tile_degrees, scale,
                                  max_concurrent=MAX_CONCURRENT, exported=exported)],
