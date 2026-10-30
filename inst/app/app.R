@@ -259,7 +259,7 @@ server <- function(input, output, session) {
                      session = session, label = 'Subject:', placeholder = '')
 
     updateTextInput( inputId = 'in_er_localpath', value = 'C:/cola/earthranger',
-                     session = session, label = 'Local path:', placeholder = '')
+                     session = session, label = 'Local results path:', placeholder = '')
     ##
     updateTextInput( value = 's.shp', placeholder = 'points.shp',
                         label = 'Point file name:', inputId = 'in_er_localshp')
@@ -10639,7 +10639,7 @@ if (FALSE){ # if FALSE
                 ),
 
                 # next row
-                column(1, style = "padding-left:5px; padding-right:5px; padding-top:20px; padding-bottom:5px;"
+                column(1, style = "padding-left:5px; padding-right:5px; padding-top:25px; padding-bottom:5px;"
                        , shinyDirButton( id = 'folderer',
                                          label = 'Select a folder', title = 'Please select a folder',
                                          multiple = FALSE)),
@@ -10654,11 +10654,12 @@ if (FALSE){ # if FALSE
                                     step = 1, value = 10000,
                                     label =  'KDE Resolution (meters):',
                                     inputId = 'in_er_resmeters')),
-                column(2, checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde'),
+                column(1,   style = "width: 12.5%;"   # 1.5 / 12 * 100
+                       , checkboxInput(label = 'Do KDE?', inputId = 'in_er_dokde'),
                 checkboxInput(label = 'Load to Cola?', inputId = 'in_er_cola') ),
 
-                column(1
-                       , style = "padding-left:-25px; padding-right:0px; padding-top:20px; padding-bottom:5px;"
+                column(1, style = "width: 12.5%;"   # 1.5 / 12 * 100
+                       #, style = "padding-left:-35px; padding-right:0px; padding-top:20px; padding-bottom:5px;"
                        #, style = "padding-top:10px; padding-bottom:0px;" # padding-left:10px; padding-right:10px;
                        , actionButton(width = "100%", label = 'Get data', 'in_er_go'))
               ) # end box ABC

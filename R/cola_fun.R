@@ -2978,10 +2978,11 @@ localPoints2ee_py <- function(
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String. Google Earth Engine project or username
-#' @param species String. Species name
+#' @param species String. Species name, used a prefix label of folders and layers
 #' @param target_year Integer. Year to project the prediction.
-#' @param stage String. 'export_annual', 'gap_fill', 'reduce_to_metrics'
-#' @param run_mode String. 'test' or 'full'
+#' @param stage String. Desired output. Needs to run in this  order: 'export_annual' is first step,
+#'  'gap_fill' second, and 'reduce_to_metrics' the last.
+#' @param run_mode String. Mode of running. 'test' for trying functionality or 'full', default for actual execution
 #' @param max_concurrent Integer. Default is 3.
 #' @param gap_years Integer. Prior years used for gap-fill; should match extraction. Default is 2.
 #' @param scale Integer. Pixel size in metres. Default is 250 (MODIS native)
