@@ -103,6 +103,19 @@ METRICS_FOLDER = f'{BASE_FOLDER}/metrics'
 # 2. TASK MANAGEMENT
 # =============================================================================
 
+##  Function: Create folder if doesn't exists
+def ensure_folder(path):
+    """Create an Earth Engine folder if it doesn't exist."""
+    try:
+        ee.data.getAsset(path)
+        print(f"Folder exists: {path}")
+    except ee.EEException:
+        ee.data.createAsset({"type": "FOLDER"}, path)
+        print(f"Folder created: {path}")
+
+##  Create folder if doesn't exists
+ensure_folder(GEE_ASSETS)
+
 def submit_and_wait(task_list, max_concurrent=3, check_interval=30):
     total_eecu = 0
     completed, failed = [], []

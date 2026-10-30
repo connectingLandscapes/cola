@@ -18,6 +18,58 @@ from shapely.geometry import Point, box
 from sat_ts_fusion import eecolatools as ect
 import os
 from pathlib import Path
+import argparse
+
+# =============================================================================
+# 0. ARGUMENT PARSING
+# =============================================================================
+
+def parse_args():
+    p = argparse.ArgumentParser(description='Download GEE files to Google Drive')
+    # ── Core identifiers (shared across scripts) ──────────────────────────────
+    p.add_argument('--ee_project',   type=str, default='geersprocessing')
+    p.add_argument('--point_path',      type=str, required=True,
+                   help = 'Path to the local point file. If there spaces "quote the whole path"')
+    p.add_argument('--ee_layer',      type=str, required=True,
+                   help='Path of the layer to create')
+    p.add_argument('--presence_col', type=str, default='preabs',
+                   help='Name of the column containing the 0/1 integer values of presence and absences'
+                   'If not provided, preabs col will be created and all points filled with 1')
+    p.add_argument('--number_abs', type=str, default='0',
+                   help='Number of absences to simulate. Can be an integer or a % of the original presence'
+                   ' e.g. 100 for ine hundred points or 100% for same amount in the points in the layer')
+    p.add_argument('--abs_method',  type=str, required=False,
+                   help='Method for creating absences: background, blocks, environmental'
+                   'similarity')
+    p.add_argument('--block_size',  type=str, required=False,
+                   help='Block size to create absences. Default 10km if not provided')
+
+    return p.parse_args()
+
+args = parse_args()
+
+# =============================================================================
+# 1. DERIVED PARAMETERS
+# =============================================================================
+
+# Path to file holding xy coordinates
+project_name = args.ee_project # project name
+shapefile_path = args.point_path # shapefile path
+ee_layer = args.ee_layer # ee asset
+number_abs = str(args.number_abs) # % of absences based of presences
+presence_col = args.presence_col
+abs_method = args.abs_method
+
+
+# percabs 
+
+EEPROJECT = args.ee_project
+EEFOLDER = args.ee_folder
+GDFOLDER = args.gd_folder
+PREFIX = args.prefix
+SCALE = args.scale
+CRS = args.crs
+REGION = args.region
 
 
 # import os
@@ -32,7 +84,7 @@ def main() -> None:
     # Path to file holding xy coordinates
     project_name = sys.argv[1] # project name
     shapefile_path = sys.argv[2] # shapefile path
-    ee_name = sys.argv[3] # ee asset
+    ee_layer = sys.argv[3] # ee asset
     percabs = int(sys.argv[4]) # % of absences based of presences
     try:
         eelogpath = str(sys.argv[5]) # 
@@ -50,7 +102,7 @@ def main() -> None:
     # eelogpath = 'C:/Users/ig299/cola/eelogpath'
     # project_name = 'gonzalezivan'
     # percabs = 0 60
-    # ee_name = 'projects/gonzalezivan/assets/cola2/tiger50'  
+    # ee_layer = 'projects/gonzalezivan/assets/cola2/tiger50'  
   
   # Convert distance threshold to float or integer
     try:
@@ -69,7 +121,7 @@ def main() -> None:
    
     # try:
     #     # Attempt to get asset information
-    #     info = ee.data.getInfo(ee_name)
+    #     info = ee.data.getInfo(ee_layer)
     #     return info is None
     # except Exception as e:
     #     # Handle errors (e.g., asset doesn't exist)
@@ -147,14 +199,14 @@ def main() -> None:
     #create and launch the task
     task_config = {
         'collection': ee_object, 
-        'description':'Uploading shapefile ' + ee_name, #+ hapefile_path,
-        'assetId': ee_name.replace('.shp', '')
+        'description':'Uploading shapefile ' + ee_layer, #+ hapefile_path,
+        'assetId': ee_layer.replace('.shp', '')
     }
     #
     box_tax_config = {
         'collection': ee_box, 
-        'description':'Uploading box '+ee_name,
-        'assetId': ee_name.replace('.shp', '')+'_box'
+        'description':'Uploading box '+ee_layer,
+        'assetId': ee_layer.replace('.shp', '')+'_box'
     }
     #
     try:
@@ -186,9 +238,9 @@ def main() -> None:
     
     
     # params2  = {
-        #     'id': ee_name.replace('.shp', 'Ingest'),
+        #     'id': ee_layer.replace('.shp', 'Ingest'),
         #     'description':'testfromTableIng',
-        #     'assetId': ee_name.replace('.shp', '')
+        #     'assetId': ee_layer.replace('.shp', '')
         # }
         # 
         # idx = ee.data.newTaskId()

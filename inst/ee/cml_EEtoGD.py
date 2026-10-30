@@ -13,6 +13,7 @@ Usage:
 """
 
 import ee, argparse
+import time
 
 # =============================================================================
 # 0. ARGUMENT PARSING
@@ -34,6 +35,10 @@ def parse_args():
     # ── Asset paths ───────────────────────────────────────────────────────────
     p.add_argument('--region',  type=str, required=True,
                    help='Feature with the extent to export the layers')
+    p.add_argument('--wait',  type=str, required=False,
+                   help='Time in seconds to wait before submitting a task. Avoid duplicating'
+                   ' Google Drive folders with the same name. Default is 1 (second)')
+    
     return p.parse_args()
 ## Output to be saved here:  desc = safe_name(f'{MODEL_ID}_suitability_{TARGET_YEAR}_{tile["name"]}')
 
@@ -50,6 +55,11 @@ PREFIX = args.prefix
 SCALE = args.scale
 CRS = args.crs
 REGION = args.region
+
+if args.wait is not None:
+    WAIT = int(args.wait)
+else:
+    WAIT = 1
 
 # =============================================================================
 # EEFOLDER = 'projects/gonzalezivan/assets/cola2/tigercomp_SDM_modis_2025/metrics'
@@ -83,7 +93,9 @@ def main() -> None:
                 crs = CRS,
                 maxPixels=1e9)
             print(f'Task submited: {nname}')
+            time.sleep(WAIT)
             task.start()
+            
         except Exception as e:
             print(f' ERROR in {nname}: {e}')
     print( '\n' )

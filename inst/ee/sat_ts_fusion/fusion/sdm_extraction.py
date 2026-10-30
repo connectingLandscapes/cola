@@ -20,6 +20,7 @@ from datetime import datetime
 import predictors as P
 import cost as C
 
+
 # =============================================================================
 # 0. ARGUMENT PARSING
 # =============================================================================
@@ -103,6 +104,7 @@ GEE_ASSETS       = args.gee_assets
 TARGET_COL       = args.target_col
 WORKING_DIR      = args.working_dir
 
+
 OCCURRENCE_ASSET = (args.occurrence_asset or
                     f'{GEE_ASSETS}/{SPECIES}_occurrences_batched')
 EXPORT_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_{TAG}_exports_{MODEL_ID}'
@@ -116,6 +118,20 @@ REGION_BUFFER_M  = 1.5 * max(P.KERNEL_RADII_M)
 # =============================================================================
 # 2. TASK MANAGEMENT
 # =============================================================================
+
+##  Function: Create folder if doesn't exists
+def ensure_folder(path):
+    """Create an Earth Engine folder if it doesn't exist."""
+    try:
+        ee.data.getAsset(path)
+        print(f"Folder exists: {path}")
+    except ee.EEException:
+        ee.data.createAsset({"type": "FOLDER"}, path)
+        print(f"Folder created: {path}")
+
+##  Create folder if doesn't exists
+ensure_folder(GEE_ASSETS)
+
 
 def wait_for_tasks(tasks, check_interval=60):
     pending = list(tasks)
