@@ -64,6 +64,7 @@ batch_lczB(
 Path of the resulting raster layer. Will be same as input if no change was made
 }
 \description{
+Only runs on Linux cluster.
 Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
 resulting order csv file (number of pairs FLCC to run) and divide it by the nBatches, creating
 different bash files for lcc_hpc2_zarr.py. Each bash file is intended to create a raster tif

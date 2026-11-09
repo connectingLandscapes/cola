@@ -2,7 +2,7 @@
 % Please edit documentation in R/cola_fun.R
 \name{burnShp}
 \alias{burnShp}
-\title{Add values to  maps of least cost paths}
+\title{Add values to raster layers}
 \usage{
 burnShp(
   polPath,
@@ -30,8 +30,6 @@ burnShp(
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.

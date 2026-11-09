@@ -6,13 +6,14 @@
 \usage{
 cdpop_py(
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  cdpopscript = system.file(package = "cola", "CDPOP/src/CDPOP.py"),
+  pyscript = system.file(package = "cola", "CDPOP/src/CDPOP.py"),
   inputvars = NULL,
   agevars = NULL,
   cdmat = NULL,
   xy = NULL,
   tempFolder,
   prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE)),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
@@ -20,7 +21,7 @@ cdpop_py(
 \arguments{
 \item{py}{String. Python executable location}
 
-\item{cdpopscript}{String. CDOPOP Python script location}
+\item{pyscript}{String. CDOPOP Python script location}
 
 \item{inputvars}{String. CSV parameters file path location. Full path or relative to the CDOPOP Python script}
 
@@ -31,6 +32,8 @@ cdpop_py(
 \item{xy}{String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script}
 
 \item{prefix}{String. String added to output folder}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{String. Print the cola command line?. Default TRUE}
 

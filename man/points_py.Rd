@@ -5,6 +5,8 @@
 \title{Simulate spatial points}
 \usage{
 points_py(
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  pyscript = system.file(package = "cola", "python/create_source_points.py"),
   intif,
   outshp,
   smin,
@@ -12,13 +14,16 @@ points_py(
   npoints,
   issuit = "Yes",
   upcrs = "None",
-  py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/create_source_points.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
+\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default version should point to a conda environment. Might change among computers versions}
+
+\item{pyscript}{String. Python script location}
+
 \item{intif}{String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed}
 
 \item{smin}{Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.}
@@ -31,9 +36,7 @@ points_py(
 
 \item{upcrs}{String. Update CRS parameter projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text-based files like ASCII or RSG rasters, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default version should point to a conda environment. Might change among computers versions}
-
-\item{pyscript}{String. Python script location}
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
@@ -42,8 +45,6 @@ points_py(
 \item{inshp}{String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{outtif}{String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with the created shapefile

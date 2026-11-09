@@ -5,19 +5,24 @@
 \title{Creates CDmatrix for CDPOP model}
 \usage{
 cdmat_py(
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  pyscript = system.file(package = "cola", "python/create_cdmat.py"),
   inshp,
   intif,
   outcsv,
   maxdist,
   ncores = Sys.getenv("COLA_NCORES"),
   crs = "None",
-  py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/create_cdmat.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
+\item{py}{Python executable location}
+
+\item{pyscript}{Python script location}
+
 \item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{intif}{String.}
@@ -30,15 +35,11 @@ cdmat_py(
 
 \item{crs}{String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{Python executable location}
-
-\item{pyscript}{Python script location}
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with the CSV matrix

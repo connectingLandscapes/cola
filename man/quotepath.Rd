@@ -4,10 +4,12 @@
 \alias{quotepath}
 \title{Quote file path if space is detected}
 \usage{
-quotepath(path)
+quotepath(path, quo = "\\"")
 }
 \arguments{
-\item{path}{The file path to be quoted}
+\item{path}{String. The file path to be quoted}
+
+\item{quote}{String. Character to use as quote}
 }
 \description{
 This function add double quotes to the string if a space is detected

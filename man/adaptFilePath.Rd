@@ -4,10 +4,12 @@
 \alias{adaptFilePath}
 \title{Adapt file path. Change backslash to slash}
 \usage{
-adaptFilePath(path)
+adaptFilePath(path, quo = "\\"")
 }
 \arguments{
 \item{path}{File location}
+
+\item{quote}{String. Character to use as quote}
 }
 \value{
 File location String using slash as separator

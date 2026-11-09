@@ -18,6 +18,7 @@ prio_py(
   tolerance = 1000,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/prioritize_core_conn.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
@@ -43,11 +44,11 @@ prio_py(
 
 \item{pyscript}{Python script location. Default is `system.file(package = 'cola', 'python/prioritize_core_conn.py')`}
 
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
+
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with CDPOP results

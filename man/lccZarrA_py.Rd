@@ -17,7 +17,8 @@ lccZarrA_py(
   reOrderFile = NULL,
   nodeidsFile = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscriptA = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
+  pyscript = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
@@ -39,7 +40,9 @@ lccZarrA_py(
 
 \item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
 
-\item{pyscriptA}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`}
+\item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
@@ -54,10 +57,6 @@ lccZarrA_py(
 \item{sci}{Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.}
 
 \item{eci}{Numeric. End corridor index. Default is 'None'}
-
-\item{pyscriptB}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

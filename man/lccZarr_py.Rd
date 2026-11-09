@@ -5,6 +5,9 @@
 \title{Factorial least cost corridors on Zarr}
 \usage{
 lccZarr_py(
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  pyscriptA = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
+  pyscriptB = system.file(package = "cola", "python/lcc_hpc2_zarr.py"),
   inshp,
   intif,
   outtif,
@@ -19,14 +22,18 @@ lccZarr_py(
   tempFolder = NULL,
   pairzarr = NULL,
   distzarr = NULL,
-  py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscriptA = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
-  pyscriptB = system.file(package = "cola", "python/lcc_hpc2_zarr.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
+\item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
+
+\item{pyscriptA}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`}
+
+\item{pyscriptB}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`}
+
 \item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
@@ -49,19 +56,13 @@ lccZarr_py(
 
 \item{tempFolder}{String. Path to the temporal folder where intermediate zarr files will be saved.}
 
-\item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
-
-\item{pyscriptA}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`}
-
-\item{pyscriptB}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`}
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

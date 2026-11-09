@@ -5,24 +5,31 @@
 \title{Suitability to resistance}
 \usage{
 sui2res_py(
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  pyscript = system.file(package = "cola", "python/s2res.py"),
   intif,
   outtif,
+  dry_run = FALSE,
   minval,
   maxval,
   maxout,
   shape,
   nodata = NULL,
   prj = "None",
-  py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/s2res.py"),
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
+\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions}
+
+\item{pyscript}{String. Python script location}
+
 \item{intif}{String. File path to the input raster.}
 
 \item{outtif}{String. File path of the output surface resistance}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{minval}{Numeric. The lower value on the input raster to cut off. Pixels with values under the given number will be ignored. In the front end the values automatically derived from the input file.}
 
@@ -36,15 +43,9 @@ sui2res_py(
 
 \item{prj}{string. Projection information in the case the input raster `intif` has no spatial projection. For GeoTiffs, this is automatically determined. For text based files, this must be input by the user. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{String. Python location or executable. The string used in R command line to activate `cola`. The default versio should point to a conda environment. Might change among computers versions}
-
-\item{pyscript}{String. Python script location}
-
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.

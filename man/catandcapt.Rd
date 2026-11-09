@@ -4,7 +4,7 @@
 \alias{catandcapt}
 \title{Submit a console task printing report and saving it}
 \usage{
-catandcapt(..., log_file = NULL, docat = TRUE)
+catandcapt(comm, argss, log_file = NULL, docat = TRUE)
 }
 \arguments{
 \item{dots}{Mix. Other arguments to be passed to}

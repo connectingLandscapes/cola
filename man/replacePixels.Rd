@@ -2,7 +2,7 @@
 % Please edit documentation in R/cola_fun.R
 \name{replacePixels}
 \alias{replacePixels}
-\title{Add values to  maps of least cost paths}
+\title{Replace pixel values based on polygons}
 \usage{
 replacePixels(
   polPath,

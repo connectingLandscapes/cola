@@ -5,6 +5,8 @@
 \title{Factorial least cost corridors}
 \usage{
 lcc_py(
+  py = Sys.getenv("COLA_PYTHON_PATH"),
+  pyscript = system.file(package = "cola", "python/lcc.py"),
   inshp,
   intif,
   outtif,
@@ -13,13 +15,16 @@ lcc_py(
   tolerance,
   ncores = as.numeric(Sys.getenv("COLA_NCORES")),
   crs = "None",
-  py = Sys.getenv("COLA_PYTHON_PATH"),
-  pyscript = system.file(package = "cola", "python/lcc.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
+\item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
+
+\item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`}
+
 \item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
@@ -34,17 +39,13 @@ lcc_py(
 
 \item{crs}{String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.}
 
-\item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
-
-\item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc.py')`}
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{outif}{String. Path output GeoTIFF file name.}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

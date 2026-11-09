@@ -1,5 +1,10 @@
 "
+# Documentation
+setwd('N:/My Drive/git/cola')
+roxygen2::roxygenise()
+"
 
+"
 ############################ installing #################################
 detach('package:cola', unload=TRUE)
 .rs.restartR()

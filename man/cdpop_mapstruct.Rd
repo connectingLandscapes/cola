@@ -12,6 +12,7 @@ cdpop_mapstruct(
   method = "thin_plate_spline",
   neighbors,
   crs = "None",
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
@@ -30,6 +31,8 @@ cdpop_mapstruct(
 \item{neighbors}{String. Number of neighbors to use for interpolation. Either a positive integer < the total number of occupied points or 'all'.}
 
 \item{crs}{String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.

@@ -10,17 +10,19 @@ sdm_modis_export_py(
   ee_project,
   species,
   target_year,
+  scale = 250,
   stage = "",
   run_mode = "full",
   max_concurrent = 3,
   gap_years = 2,
-  min_year = 2000,
-  max_year = 2025,
-  crs = "EPSG:4326",
-  scale = 250,
   tile_degrees = 2,
   gee_assets,
   range_asset,
+  estimate_only = FALSE,
+  keep_intermediate = FALSE,
+  min_year = NULL,
+  max_year = NULL,
+  crs = NULL,
   show_cml = TRUE,
   show_result = TRUE,
   dry_run = FALSE
@@ -33,31 +35,35 @@ sdm_modis_export_py(
 
 \item{ee_project}{String. Google Earth Engine project or username}
 
-\item{species}{String. Species name}
+\item{species}{String. Species name, used a prefix label of folders and layers}
 
 \item{target_year}{Integer. Year to project the prediction.}
 
-\item{stage}{String. 'export_annual', 'gap_fill', 'reduce_to_metrics'}
+\item{scale}{Integer. Pixel size in metres. Default is 250 (MODIS native)}
 
-\item{run_mode}{String. 'test' or 'full'}
+\item{stage}{String. Desired output. Needs to run in this  order: 'export_annual' is first step,
+'gap_fill' second, and 'reduce_to_metrics' the last.}
+
+\item{run_mode}{String. Mode of running. 'test' for trying functionality or 'full', default for actual execution}
 
 \item{max_concurrent}{Integer. Default is 3.}
 
-\item{gap_years}{Integer . Default is 2.}
+\item{gap_years}{Integer. Prior years used for gap-fill; should match extraction. Default is 2.}
 
-\item{min_year}{Integer. Default is 2025.}
+\item{tile_degrees}{Numeric. Tile size in degrees; must match prediction. 0 chooses it
+from the scale (2 at 250 m). Default is 2}
 
-\item{max_year}{Integer. Default is 2025.}
-
-\item{crs}{String. Default is EPSG:4326}
-
-\item{scale}{Integer. Default is 250}
-
-\item{tile_degrees}{Integer.  Path/filename of a template raster used for interpolation}
-
-\item{gee_assets}{String. EE path to EE folder where subfolder willbe created}
+\item{gee_assets}{String. EE path to the root assets folder}
 
 \item{range_asset}{String. EE path for the feature collection with the spatial extent}
+
+\item{estimate_only}{Logical. Only print the cost estimate. Default FALSE}
+
+\item{keep_intermediate}{Logical. Keep the annual, merged and gap-filled assets in
+{BASE_FOLDER}/temp instead of deleting each once used (uses GEE storage). Default FALSE}
+
+\item{min_year, max_year, crs}{No longer used (CRS is fixed to EPSG:4326; years
+are checked against the data coverage). Accepted and ignored.}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
@@ -66,13 +72,16 @@ sdm_modis_export_py(
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
-List with log slot. Creates multiband aasets per tile and year in the GEE folders:
-BASE_FOLDER    = f'{GEE_ASSETS}/{SPECIES}_SDM_modis_{TARGET_YEAR}'
-TEMP_FOLDER    = f'{BASE_FOLDER}/temp'
-METRICS_FOLDER = f'{BASE_FOLDER}/metrics'
+List with log slot. Creates multiband assets per tile and year in the GEE folders:
+BASE_FOLDER    = {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}
+TEMP_FOLDER    = {BASE_FOLDER}/temp
+METRICS_FOLDER = {BASE_FOLDER}/metrics
 }
 \description{
-Exports gap-filled 16-day NDVI/EVI composites at 250m as EE assets, aready for use in wall-to-wall SDM prediction.
+OPTIONAL step. Exports gap-filled MODIS NDVI/EVI metric tiles
+as EE assets for sdm_prediction_py(use_exported_metrics = TRUE). Prediction
+computes the same metrics in memory by default; exporting first is cheaper
+only when two or more models map the same species and year.
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

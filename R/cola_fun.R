@@ -20,20 +20,7 @@ cola_dss <- function(launch.browser = TRUE)  {
 }
 
 
-#' @title Quote file path if space is detected
-#' @description This function add double quotes to the string if a space is detected
-#' @param path The file path to be quoted
-#' @examples
-#' library(cola)
-#' quotepath(path = c('C:/Users/First Second Name/Documents', 'C:/Users/FirstSecondName/Documents'))
-#' @author Ivan Gonzalez <ig299@@nau.edu>
-#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
-#' @export
-quotepath <- function(path)  {
-  #path <- 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/KAZA2025resamp/Leop_Clip_500m.tif'
-  (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
-  return( newpath )
-}
+
 
 
 #' @title  Makes a population structure map from CDPOP results interpolation
@@ -44,6 +31,7 @@ quotepath <- function(path)  {
 #' @param template String. Path/filename of a template raster used for interpolation
 #' @param method String. Interpolation method. One of 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'.
 #' @param neighbors String. Number of neighbors to use for interpolation. Either a positive integer < the total number of occupied points or 'all'.
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
@@ -62,8 +50,16 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                             pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
                             grids, template,
                             method = 'thin_plate_spline',
-                            neighbors, crs = 'None', show_cml = TRUE, show_result = TRUE){
+                            neighbors, crs = 'None',
+                            dry_run = FALSE,
+                            show_cml = TRUE, show_result = TRUE){
 
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
   # 1. List of CDPOP grid.csv files containing population genetic structure
   # 2. Path/filename of a template raster used for interpolation
   # 3. Interpolation method. One of 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'.
@@ -83,48 +79,71 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
   }
 
   ### Create CMD
-  (cmd_inter <- paste0(
-    py, ' ', pyscript, ' ',
-    grids, ' ', template, ' ',
-    # allele, ' ', hetero, ' ',
-    method, ' ', neighbors, ' ', crs, ' 2>&1'))
-  if (show_cml){
+
+  aargs <- c(
+    adaptFilePath(pyscript),
+    #'--grids',
+    grids,
+    #'--template',
+    template,
+    #'--method',
+    method,
+    #'--neighbors',
+    neighbors,
+    #'--crs',
+    crs
+  )
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  # (cmd_inter <- paste0(
+  #   py, ' ', pyscript, ' ',
+  #   grids, ' ', template, ' ',
+  #   # allele, ' ', hetero, ' ',
+  #   method, ' ', neighbors, ' ', crs, ' 2>&1'))
+
+  if (show_cml | dry_run){
     cat('\n\tCMD interpol struct: \n')
-    cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-    cat('\n\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
   }
 
-  prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
-  intCMD <- tryCatch(system( cmd_inter ,
-                             intern = TRUE),
-                     error = function(e) e$message)
-  #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
-  newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
-                   list.files(path = dirname(grids), full.names = TRUE))
 
-  # show_result = TRUE;
-  if(show_result){
-    print(intCMD)
+  if (!dry_run){
+    prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+    #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
+    newFiles <- grep(value = TRUE, pattern = 'heterozygosity.+.tif|alleles.+.tif',
+                     list.files(path = dirname(grids), full.names = TRUE))
+
+    list2rep <- list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
+                                   newFiles, ''),
+                     newFiles = newFiles,
+                     #log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
+                     log = paste0("", intCMD), cmd = cmd_  )
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+    list2rep <- list( log = paste0("", intCMD), cmd = cmd_)
   }
 
-  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))),
-                             newFiles, ''),
-               newFiles = newFiles,
-               #log =  c(intCMD, read.delim('cdpop_mapstruct.txt')) ) )
-               log = paste0("", intCMD) ) )
-
+  return( list2rep )
 }
 
 
 #' @title  Makes a population density map from CDPOP results interpolation
 #' @description Takes CDPOP results and generates a raster interpolation
 #' @param py Python executable location
-#' @param cdpopscript Python location
+#' @param pyscript Python script location
 #' @param grids String. Vector with the CDPOP output files to be interpolated
 #' @param template String. Raster template for interpolating the files
 #' @param method String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'
 #' @param bandwiths String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer
 #' @param type String. Specify whether count per cell or count per km2 should be returned. Options are: 'count', 'density'
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
@@ -142,7 +161,16 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                              pyscript = system.file(package = 'cola', 'python/interpolate_popdensity.py'),
                              grids, template, method = 'average', bandwidths = 'None',
-                             type = 'count', crs = 'None', show_cml = TRUE, show_result = TRUE){
+                             type = 'count', crs = 'None',
+                             dry_run = FALSE,
+                             show_cml = TRUE, show_result = TRUE){
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   if(! method %in% c('isj', 'silvermans', 'scotts', 'average', 'cv', 'user')){
     stop("Not valid method: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'")
@@ -162,30 +190,48 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     method, ' ', bandwidths, ' ', type, ' ', crs
     , ' 2>&1 ' #, logname
   ))
-  if (show_cml){
+
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(grids),
+    quotepath(template),
+    method,
+    bandwidths, type,  crs
+  )
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml | dry_run){
     cat('\n\tCMD interpol density: \n ')
-    cat(cmd_inter <- gsub(fixed = TRUE, '\\', '/', cmd_inter))
-    cat('\n\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
   }
 
-  prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
-  intCMD <- tryCatch(system( cmd_inter ,
-                             intern = TRUE),
-                     error = function(e) e$message)
-  #newFiles <- setdiff(list.files(path = dirname(grids), full.names = TRUE), prevFiles)
-  newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
-                   list.files(path = dirname(grids), full.names = TRUE))
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    prevFiles <- list.files(path = dirname(grids), full.names = TRUE)
 
-  # , show_result = TRUE
-  if(show_result){
-    print(intCMD)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+    newFiles <- grep(value = TRUE, pattern = paste0(type, '.+', method, '.+'),
+                     list.files(path = dirname(grids), full.names = TRUE))
+
+
+    resList <- list(file = ifelse(
+      any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
+      newFiles = newFiles,
+      log = paste0("", intCMD) )
+
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+    resList <- list(file = '', newFiles = NA,
+                    log = paste0("", intCMD), cmd = cmd_ )
   }
 
-
-  return( list(file = ifelse(any(file.exists(grep('tif', newFiles, value = TRUE))), newFiles, NA),
-               newFiles = newFiles,
-               log = paste0("", intCMD) ) )
-  #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
+  return( resList )
 }
 
 
@@ -193,7 +239,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @title  Run CDPOP model
 #' @description Run CDPOP model
 #' @param py String. Python executable location
-#' @param cdpopscript String. CDOPOP Python script location
+#' @param pyscript String. CDOPOP Python script location
 #' @param inputvars String. CSV parameters file path location. Full path or relative to the CDOPOP Python script
 #' @param agevars String. CSV age file path location. Full path or relative to the CDOPOP Python script
 #' @param cdmat String. CSV cost-distance matrix file path location. Full path or relative to the CDOPOP Python script
@@ -201,6 +247,7 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param tempfolder String. Folder where results will be saved
 #' @param prefix String. String added to output folder
 #' @param show_cml String. Print the cola command line?. Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
 #' (out_dir <- tempfile())
@@ -220,20 +267,32 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @export
 
 cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
-                     cdpopscript = system.file(package = 'cola', 'CDPOP/src/CDPOP.py'),
+                     pyscript = system.file(package = 'cola', 'CDPOP/src/CDPOP.py'),
                      inputvars = NULL, agevars = NULL,
                      cdmat = NULL,
                      xy = NULL,
                      tempFolder,
                      prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
+                     dry_run = FALSE,
                      show_cml = TRUE, show_result = TRUE){
-  #xyfilename  NO .csv required
+
+
+    #xyfilename  NO .csv required
   #agefilename .csv required
   #matecdmat	cdmats/EDcdmatrix16
   #dispcdmat	cdmats/EDcdmatrix16
 
   # file.copy('invars.csv', '/home/user/cola/inst/examples/invars.csv')
   # file.copy('age.csv', '/home/user/cola/inst/examples/agevars.csv')
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
   if ( is.null(inputvars) ){
     cat(' // Using default CDPOP invars.csv\n')
     (inputvars <- system.file(package = 'cola', 'sampledata/invars.csv'))
@@ -279,29 +338,47 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
            error = function(e) { NULL})
 
 
-  (cmd <- paste0(
-    quotepath(py), ' ',
-    quotepath(cdpopscript), ' ',
-    quotepath(datapath), ' invars.csv ', quotepath(cdpopPath)
-    , ' 2>&1 ' #, logname
-  ))
-  if (show_cml){
+  # (cmd <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(datapath), ' invars.csv ', quotepath(cdpopPath)
+  #   , ' 2>&1 ' #, logname
+  # ))
+  #
+
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(datapath),
+    'invars.csv',
+    quotepath(cdpopPath)
+    )
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+
+  if (show_cml | dry_run){
     cat('\n\tCMD CDPOP: \n')
-    cat(cmd, '\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
   }
 
-  CMDcp <- tryCatch(system(cmd, intern = TRUE), error = function(e) NULL)
 
-  if(show_result){
-    print(CMDcp)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+
 
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
   ans2ret <- list(newFiles = newFiles, datapath = datapath,
                   cdpopPath = cdpopPath,
-                  log =  CMDcp )
+                  log =  intCMD )
   #log =  paste0(intCMD, '-- ', read.delim(logname)) )
   return(ans2ret)
 
@@ -499,6 +576,7 @@ guessNoData <- function(path){
     }
   }
   if(is.na(ans) | ans == 'nan' | ans == '' | length(ans) == 0){
+    cat(" Couldn't find a NoData. Using -9999 as NoData")
     ans <- -9999
   }
   return(ans)
@@ -568,6 +646,7 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 #' @title  Adapt file path. Change backslash to slash
 #' @description Fix paths so internal console recognize paths. Change double backslash to slash
 #' @param path File location
+#' @param quote String. Character to use as quote
 #' @return File location String using slash as separator
 #' @examples
 #' newPath <- adaptFilePath('\\temp\\path\\to\\file\\here.tif')
@@ -575,13 +654,30 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-adaptFilePath <- function(path){
-  # path = "C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python/s2res.py C:/Users/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/sampledata/sampleTif.tif C:\\Users\\ig299\\AppData\\Local\\Temp\\RtmpwrUyVu/VM2024041715525605file51c6028258//out_surface_JQ2024041715525705file51c260d2c4b.tif 0.06788435 0.9989325 100 1 -9999 None"
-  (newpath <- ifelse(grepl(" ", path), yes = paste0('"', path, '"'), path))
-  return ( gsub(fixed = TRUE, '\\', '/', path) )
+adaptFilePath <- function(path, quo = '"'){
+  # path = "C:\\Users\\ig299\\AppData\\Local\\r-miniconda\\envs\\cola/python.exe
+  # path = "C:/My Drive/cola/python.exe"
+  # path = "N:/My Drive/git/cola/inst/sampledata/sampleTif.tif"; quo = "'"
+  # C:/My Drive/ig299/AppData/Local/Programs/R/R-4.3.3/library/cola/python/s2res.py
+  (newpath <- ifelse(grepl(" ", path), yes = paste0(quo, path, quo), path))
+  return ( gsub(fixed = TRUE, '\\', '/', newpath) )
 }
 
-
+#' @title Quote file path if space is detected
+#' @description This function add double quotes to the string if a space is detected
+#' @param path String. The file path to be quoted
+#' @param quote String. Character to use as quote
+#' @examples
+#' library(cola)
+#' quotepath(path = c('C:/Users/First Second Name/Documents', 'C:/Users/FirstSecondName/Documents'))
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+quotepath <- function(path, quo = '"')  {
+  #path <- 'N:/My Drive/connectivity-nasa-USFSIP/01_original-data/KAZA2025resamp/Leop_Clip_500m.tif'
+  (newpath <- ifelse(grepl(" ", path), yes = paste0(quo, path, quo), path))
+  return( newpath )
+}
 
 #' @title  Suitability to resistance
 #' @description Transforms suitability to resistance surface
@@ -607,18 +703,28 @@ adaptFilePath <- function(path){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-sui2res_py <- function(intif, outtif,
-                       minval, maxval, maxout, shape,
-                       nodata = NULL, prj = 'None',
-                       py = Sys.getenv("COLA_PYTHON_PATH"),
-                       pyscript = system.file(package = 'cola', 'python/s2res.py'),
-                       show_cml = TRUE, show_result = TRUE ){
+sui2res_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/s2res.py' ),
+    intif, outtif,
+    dry_run = FALSE,
+    minval, maxval, maxout, shape,
+    nodata = NULL, prj = 'None',
+    show_cml = TRUE, show_result = TRUE ){
   # minval = 0
   # maxval =  100
   # maxout = 100
   # shape = 1
   # nodata = -9999
   # prj = 'None'
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   ## Guess NA value if not provided
   if(is.null(nodata)){
@@ -627,36 +733,47 @@ sui2res_py <- function(intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  ## Create CMD
-  (cmd_s2res <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(minval, scientific=F), ' ',
-    format(maxval, scientific=F), ' ',
-    format(maxout, scientific=F), ' ',
-    format(shape, scientific=F), ' ',
-    format(nodata, scientific=F), ' ',
+  aargs <- c(
+    adaptFilePath(pyscript, "'"),
+     # '--suitability',
+    adaptFilePath(intif, "'"), # '--ooutput',
+    adaptFilePath(outtif, "'"), # '--minval',
+    format(minval, scientific=F), # '--maxval',
+    format(maxval, scientific=F), # '--maxout',
+    format(maxout, scientific=F), # '--shape',
+    format(shape, scientific=F), # '--nodata',
+    format(nodata, scientific=F), # '--crs',
     prj
-    , ' 2>&1 ' #, logname
-  ))
-  if (show_cml){
-    cat('\n\tCMD Surface : \n')
-    cat(cmd_s2res <- gsub(fixed = TRUE, '\\', '/', cmd_s2res))
+    #, ' 2>&1 '
+    )
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  ## Create CMD
+  # (cmd_s2res <- paste0( quotepath(py), ' ',
+  #   quotepath(pyscript), ' ', format(nodata, scientific=F), ' ',
+  #   prj , ' 2>&1 ' #, logname
+  # ))
+
+  if (show_cml | dry_run){
+    cat('\n\tCMD Suitability to resistance : \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system( cmd_s2res , intern = TRUE),
-                     error = function(e) e$message)
+  if (!dry_run){
+    (argss <-  c( aargs, '-u'))
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
-  if(show_result){
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(file = ifelse(file.exists(outtif), outtif, ''),
                #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+               log = paste0("", intCMD), cmd = cmd_ ) )
 }
 
 #' @title  Create random points
@@ -720,11 +837,22 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-points_py <- function(intif, outshp,
-                      smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
-                      py = Sys.getenv("COLA_PYTHON_PATH"),
-                      pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
-                      show_cml = TRUE, show_result = TRUE){
+points_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/create_source_points.py'),
+    intif, outshp,
+    smin, smax, npoints, issuit = 'Yes', upcrs = 'None',
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
   # smin = 2
   # smax =  95
   # npoints = 50
@@ -733,32 +861,54 @@ points_py <- function(intif, outshp,
   logname <- paste0(tools::file_path_sans_ext(outshp), '.txt')
 
 
-  (cmd_pts <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(intif), ' ',
-    quotepath(outshp), ' ',
-    format(smin, scientific=F), ' ',
-    format(smax, scientific=F), ' ',
-    format(npoints, scientific=F), ' ',
-    issuit, ' ', upcrs
-    , ' 2>&1 '# , logname
-  ))
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript)
+    , quotepath(intif)
+    , quotepath(outshp),
+    , format(smin, scientific=F),
+    , format(smax, scientific=F),
+    , format(npoints, scientific=F),
+    , issuit,
+    , upcrs
+  )
 
-  if (show_cml){
+  # (cmd_pts <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(outshp), ' ',
+  #   format(smin, scientific=F), ' ',
+  #   format(smax, scientific=F), ' ',
+  #   format(npoints, scientific=F), ' ',
+  #   issuit, ' ', upcrs
+  #   , ' 2>&1 '# , logname
+  # ))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+
+  if (show_cml | dry_run){
     cat('\n\tCMD Points: \n')
-    cat(cmd_pts <- gsub(fixed = TRUE, '\\', '/', cmd_pts))
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system(cmd_pts, intern = TRUE), error = function(e) e$message)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
+  }
+
   if(show_result){
     print(intCMD)
   }
 
   return( list(file = ifelse(file.exists(outshp), outshp, ''),
                # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+               log = paste0("", intCMD), cmd = cmd_ ) )
 
 
 }
@@ -790,13 +940,15 @@ points_py <- function(intif, outshp,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-cdmat_py <- function(inshp, intif, outcsv,
-                     maxdist,
-                     ncores = Sys.getenv("COLA_NCORES"),
-                     crs = 'None',
-                     py = Sys.getenv("COLA_PYTHON_PATH"),
-                     pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
-                     show_cml = TRUE, show_result = TRUE){
+cdmat_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/create_cdmat.py'),
+    inshp, intif, outcsv,
+    maxdist,
+    ncores = Sys.getenv("COLA_NCORES"),
+    crs = 'None',
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
   # maxdist = 100000
   # create_cdmat.py
   # [1] source points
@@ -806,41 +958,61 @@ cdmat_py <- function(inshp, intif, outcsv,
   # [5] cores
   # [6] Projection # User provided CRS if using ascii or other file without projection info, as epsg or esri string e.g. "ESRI:102028"Default None
 
-  # inshp =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_simpts_XYA2024070817112705.shp'
-  # intif =  '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_surface_HWP2024070817115305.tif'
-  # outcsv = '/tmp/RtmpiD9uhw/colaMJJ2024070817062505/out_cdmatrix_KQI.csv'
-  # maxdist = 100000; param5 = 1; param6 = 'None'
-  logname <- paste0(tools::file_path_sans_ext(outcsv), '.txt')
 
-  # pyscript <- system.file(package = 'cola', 'python/create_cdmat.py')
-  (cmd_cdmat <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outcsv),
-    ' ',
-    format(maxdist, scientific=F), ' ',
-    ncores, ' ', crs
-    , ' 2>&1 '
-    # , logname
-  ))
-  if (show_cml){
-    cat('\n\n\tCMD cdmat: \n')
-    cat(cmd_cdmat <- gsub(fixed = TRUE, '\\', '/', cmd_cdmat))
-    cat('\n\n')
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
   }
 
-  intCMD <- tryCatch(system(cmd_cdmat, intern = TRUE), error = function(e) e$message)
-  #checkcsv <- read.csv(outcsv); which(is.numeric(checkcsv)) ; summary(checkcsv); sum(checkcsv, )
+  logname <- paste0(tools::file_path_sans_ext(outcsv), '.txt')
 
-  if(show_result){
-    print(intCMD)
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(inshp),
+    quotepath(intif),
+    quotepath(outcsv),
+    format(maxdist, scientific=F),
+    ncores,
+    crs
+    )
+
+  # (cmd_cdmat <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(outcsv),
+  #   ' ',
+  #   format(maxdist, scientific=F), ' ',
+  #   ncores, ' ', crs
+  #   , ' 2>&1 '
+  #   # , logname
+  # ))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml | dry_run){
+    cat('\n\t CMD Cost-distance matrix: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
+    cat('\n\n')
+
+  }
+
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(file = ifelse(file.exists(outcsv), outcsv, ''),
-               # log =  paste0(intCMD, '-- ', read.delim(logname) ) ) )
-               log = paste0("", intCMD) ) )
+               log = paste0("", intCMD), cmd = cmd_ ) )
+
 }
 
 
@@ -872,12 +1044,14 @@ cdmat_py <- function(inshp, intif, outcsv,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lcc_py <- function(inshp, intif, outtif,
-                   maxdist, smooth, tolerance,
-                   ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
-                   py = Sys.getenv("COLA_PYTHON_PATH"),
-                   pyscript = system.file(package = 'cola', 'python/lcc.py'),
-                   show_cml = TRUE, show_result = TRUE){
+lcc_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/lcc.py'),
+    inshp, intif, outtif,
+    maxdist, smooth, tolerance,
+    ncores = as.numeric(Sys.getenv('COLA_NCORES')), crs = 'None',
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
   # [2] resistance surface
@@ -889,38 +1063,64 @@ lcc_py <- function(inshp, intif, outtif,
   # if(is.null(param8)){
   #   param8 <- guessNoData(intif)
   # }
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_lcc <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(maxdist, scientific=F), ' ',
-    format(smooth, scientific=F), ' ',
-    format(tolerance, scientific=F), " ",
-    format(ncores, scientific=F), " ",
-    crs
-    , ' 2>&1 ' #, logname
-  ))
+  # (cmd_lcc <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(outtif), ' ',
+  #   format(maxdist, scientific=F), ' ',
+  #   format(smooth, scientific=F), ' ',
+  #   format(tolerance, scientific=F), " ",
+  #   format(ncores, scientific=F), " ",
+  #   crs
+  #   , ' 2>&1 ' #, logname
+  # ))
 
-  if (show_cml){
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(pyscript),
+    quotepath(inshp),
+    quotepath(intif),
+    quotepath(outtif),
+    format(maxdist, scientific=F),
+    format(smooth, scientific=F),
+    format(tolerance, scientific=F),
+    format(ncores, scientific=F),
+    crs)
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml  | dry_run){
     cat('\n\tCMD LCC: \n')
-    cat(cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMD)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0("", intCMD) )
+              log = paste0("", intCMD),
+              cmd = cmd_  )
   return( ans )
 }
 
@@ -1029,15 +1229,25 @@ lcc_py <- function(inshp, intif, outtif,
 #' @export
 
 
-lccJoblib_py <- function(inshp, intif, outtif,
-                         maxdist, smooth, tolerance,
-                         ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                         crs = 'None',
-                         maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
-                         tempFolder = NULL,
-                         py = Sys.getenv("COLA_PYTHON_PATH"),
-                         pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
-                         show_cml = TRUE, show_result = TRUE){
+lccJoblib_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/lcc_joblib.py'),
+    inshp, intif, outtif,
+    maxdist, smooth, tolerance,
+    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+    crs = 'None',
+    maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+    tempFolder = NULL,
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   # "lcc_hdf5_v6.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
@@ -1062,43 +1272,46 @@ lccJoblib_py <- function(inshp, intif, outtif,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_lcc <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(maxdist, scientific=F), ' ',
-    format(smooth, scientific=F), ' ',
-    format(tolerance, scientific=F), " ",
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    h5file1, " ",
-    h5file2, " ",
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(inshp),
+    quotepath(intif),
+    quotepath(outtif),
+    format(maxdist, scientific=F),
+    format(smooth, scientific=F),
+    format(tolerance, scientific=F),
+    format(ncores, scientific=F),
+    crs,
+    h5file1,
+    h5file2,
     maxram
-    , ' 2>&1 ' #, logname
+    )
 
-  ))
-  (cmd_lcc <- gsub(fixed = TRUE, '\\', '/', cmd_lcc))
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
-  if (show_cml){
-    cat('\n\tCMD LCC joblib:\n', cmd_lcc)
+  if (show_cml  | dry_run){
+    cat('\n\tCMD LCC joblib:\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMD)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+    suppressWarnings(tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL))
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-
-  suppressWarnings(tryCatch(file.remove(c(h5file1, h5file2)), error = function(e) NULL))
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0("", intCMD) )
-  #print('ANS LCC');print(ans)
+              log = paste0("", intCMD),
+              cmd = cmd_  )
   return( ans )
+
 }
 
 
@@ -1146,19 +1359,21 @@ lccJoblib_py <- function(inshp, intif, outtif,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-lccZarr_py <- function(inshp, intif, outtif,
-                       maxdist, smooth, tolerance,
-                       ncores = as.numeric(Sys.getenv('COLA_NCORES')),
-                       maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
-                       crs = 'None',
-                       sci = 'None', eci = 'None',
-                       tempFolder = NULL,
-                       pairzarr = NULL,
-                       distzarr = NULL,
-                       py = Sys.getenv("COLA_PYTHON_PATH"),
-                       pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
-                       pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
-                       show_cml = TRUE, show_result = TRUE){
+lccZarr_py <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+    pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+    inshp, intif, outtif,
+    maxdist, smooth, tolerance,
+    ncores = as.numeric(Sys.getenv('COLA_NCORES')),
+    maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
+    crs = 'None',
+    sci = 'None', eci = 'None',
+    tempFolder = NULL,
+    pairzarr = NULL,
+    distzarr = NULL,
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
   # intif = '/home/shiny/cola/inst/sampledata/sampleSR.tif';
@@ -1171,6 +1386,13 @@ lccZarr_py <- function(inshp, intif, outtif,
 
   # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
 
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscriptA)){
+    stop('Script not found')
+  }
 
   if (is.null(tempFolder)){
     #tempFolder <- tempdir()
@@ -1282,68 +1504,113 @@ lccZarr_py <- function(inshp, intif, outtif,
 
   (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
 
+#   (cmd_lcc_zarrA <- paste0(
+#     quotepath(py), ' ',
+#     quotepath(pyscriptA), ' ',
+#     quotepath(inshp), ' ',
+#     quotepath(intif), ' ',
+#     format(maxdist, scientific=F), ' ',
+#     format(ncores, scientific=F), " ",
+#     crs, " ",
+#     pairzarr, " ",
+#     distzarr, " ",
+#     reOrderFile, " ",
+#     nodeidsFile, " ",
+#     maxram
+#     , ' 2>&1 ' #, logname
+#   ))
 
-  (cmd_lcc_zarrA <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscriptA), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    format(maxdist, scientific=F), ' ',
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    pairzarr, " ",
-    distzarr, " ",
-    reOrderFile, " ",
-    nodeidsFile, " ",
+  aargsA <- c( # script, then all
+    adaptFilePath(pyscriptA),
+    quotepath(inshp),
+    quotepath(intif),
+    format(maxdist, scientific=F),
+    format(ncores, scientific=F),
+    crs,
+    pairzarr, distzarr,
+    reOrderFile, nodeidsFile,
     maxram
-    , ' 2>&1 ' #, logname
-  ))
+    );
+
+  (cmdA_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargsA, collapse = ' '), collapse = ''))
+
 
   # A: inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
   # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
-  (cmd_lcc_zarrB <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscriptB), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    distzarr, " ",
-    format(smooth, scientific=F), ' ',
-    format(tolerance, scientific=F), " ",
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    reOrderFile, " ",
-    nodeidsFile, " ",
-    format(sci, scientific=F), " ",
-    format(eci, scientific=F), " "
-    , '2>&1 ' #, logname
-  ))
+  # (cmd_lcc_zarrB <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscriptB), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(outtif), ' ',
+  #   distzarr, " ",
+  #   format(smooth, scientific=F), ' ',
+  #   format(tolerance, scientific=F), " ",
+  #   format(ncores, scientific=F), " ",
+  #   crs, " ",
+  #   reOrderFile, " ",
+  #   nodeidsFile, " ",
+  #   format(sci, scientific=F), " ",
+  #   format(eci, scientific=F), " "
+  #   , '2>&1 ' #, logname
+  # ))
 
-  if (show_cml){
-    cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
+
+  ### Create CMD
+  aargsB <- c( # script, then all
+    adaptFilePath(pyscriptB),
+    quotepath(intif),
+    quotepath(outtif),
+    distzarr,
+    format(smooth, scientific=F),
+    format(tolerance, scientific=F),
+    format(ncores, scientific=F),
+    crs,
+    reOrderFile,
+    nodeidsFile,
+    format(sci, scientific=F),
+    format(eci, scientific=F),
+    )
+
+  (cmdB_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargsB, collapse = ' '), collapse = ''))
+
+  ## A
+  if (show_cml | dry_run){
+    cat('\n\tCMD LCC zarr A:\n')
+    cat(cmdA_ <- gsub(fixed = TRUE, '\\', '/', cmdA_))
     cat('\n\n')
   }
 
-  intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMDA)
+  if (!dry_run){
+    argssA <-  c('-u',  aargsA)
+    (intCMDA <- catandcapt( adaptFilePath(py), argssA,
+                           docat = show_result) )
+  } else {
+    intCMDA <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
-  if (show_cml){
-    cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
+  ## B
+  if (show_cml | dry_run){
+    cat('\n\tCMD LCC zarr B:\n')
+    cat(cmdB_ <- gsub(fixed = TRUE, '\\', '/', cmdB_))
     cat('\n\n')
   }
 
-  intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMDB)
+  if (!dry_run){
+    argssB <-  c('-u',  aargsB)
+    (intCMDB <- catandcapt( adaptFilePath(py), argssB,
+                            docat = show_result) )
+  } else {
+    intCMDB <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
+
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0(" A: ", intCMDA, '\n',
-                           " B: ", intCMDB, '\n') )
+              log = paste0(" Log A: ", intCMDA, '\n',
+                           " Log B: ", intCMDB, '\n'),
+              cmdA = cmdA_, cmdB = cmdB_ )
   #print('ANS LCC');print(ans)
   return( ans )
 }
@@ -1370,8 +1637,7 @@ lccZarr_py <- function(inshp, intif, outtif,
 #' @param eci Numeric. End corridor index. Default is 'None'
 #' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
-#' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
-#' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
@@ -1399,7 +1665,8 @@ lccZarrA_py <- function(inshp, intif,
                         reOrderFile = NULL,
                         nodeidsFile = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
-                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                        pyscript = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
+                        dry_run = FALSE,
                         show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
@@ -1413,6 +1680,12 @@ lccZarrA_py <- function(inshp, intif,
 
   # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
 
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscriptA)){
+    stop('Script not found')
+  }
 
   if (is.null(tempFolder)){
     #tempFolder <- tempdir()
@@ -1477,39 +1750,55 @@ lccZarrA_py <- function(inshp, intif,
 
   (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
 
+  # (cmd_lcc_zarrA <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscriptA), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(intif), ' ',
+  #   format(maxdist, scientific=F), ' ',
+  #   format(ncores, scientific=F), " ",
+  #   crs, " ",
+  #   pairzarr, " ",
+  #   distzarr, " ",
+  #   reOrderFile, " ",
+  #   nodeidsFile, " ",
+  #   maxram
+  #   , ' 2>&1 ' #, logname
+  # ))
 
-  (cmd_lcc_zarrA <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscriptA), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    format(maxdist, scientific=F), ' ',
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    pairzarr, " ",
-    distzarr, " ",
-    reOrderFile, " ",
-    nodeidsFile, " ",
+  # A: inshp intif maxdist ncores crs pairszarr distzarr reOrderFile nodeidsFile maxram
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(inshp),
+    quotepath(intif),
+    format(maxdist, scientific=F),
+    format(ncores, scientific=F),
+    crs,
+    pairzarr, distzarr,
+    reOrderFile, nodeidsFile,
     maxram
-    , ' 2>&1 ' #, logname
-  ))
+  )
 
-  # A: inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
-  if (show_cml){
-    cat('\n\tCMD LCC zarr A:\n', cmd_lcc_zarrA)
+  if (show_cml | dry_run){
+    cat('\n\tCMD LCC zarr A:\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMDA)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                            docat = show_result) )
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
-  ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
+  ans <- list(file = ifelse(file.exists(reOrderFile), reOrderFile, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0(" A: ", intCMDA, '\n' ) )
+              log = paste0(" A: ", intCMDA, '\n' ), cmd = cmd_ )
   #print('ANS LCC');print(ans)
   return( ans )
 }
@@ -1536,8 +1825,7 @@ lccZarrA_py <- function(inshp, intif,
 #' @param eci Numeric. End corridor index. Default is 'None'
 #' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
-#' @param pyscriptA Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
-#' @param pyscriptB Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
+#' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc2_zarr.py')`
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
@@ -1561,10 +1849,10 @@ lccZarrB_py <- function(inshp, intif, outtif,
                         crs = 'None',
                         sci = 'None', eci = 'None',
                         tempFolder = NULL,
-                        pairzarr = NULL,
+                        distzarr = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
-                        pyscriptA = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
-                        pyscriptB = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                        pyscript = system.file(package = 'cola', 'python/lcc_hpc2_zarr.py'),
+                        dry_run = FALSE,
                         show_cml = TRUE, show_result = TRUE){
 
   # inshp = system.file(package = 'cola', 'sampledata/points_sabah_50.shp');
@@ -1578,6 +1866,13 @@ lccZarrB_py <- function(inshp, intif, outtif,
 
   # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
 
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   ## lccZarrB_py part 2 -------
   # # Path to resistance grid
@@ -1632,44 +1927,44 @@ lccZarrB_py <- function(inshp, intif, outtif,
 
   (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
 
-  # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
-  (cmd_lcc_zarrB <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscriptB), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    distzarr, " ",
-    format(smooth, scientific=F), ' ',
-    format(tolerance, scientific=F), " ",
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    reOrderFile, " ",
-    nodeidsFile, " ",
-    format(sci, scientific=F), " ",
-    format(eci, scientific=F), " "
-    , '2>&1 ' #, logname
-  ))
+  ##
+  # B: intif outtif distzarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
 
-  intCMDA <- tryCatch(system(cmd_lcc_zarrA, intern = TRUE), error = function(e) e$message)
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(intif),
+    quotepath(outtif),
+    distzarr,
+    format(smooth, scientific=F),
+    format(tolerance, scientific=F),
+    format(ncores, scientific=F),
+    crs,
+    reOrderFile, nodeidsFile,
+    format(sci, scientific=F),
+    format(eci, scientific=F),
+  )
 
-  if(show_result){
-    print(intCMDA)
-  }
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
-  if (show_cml){
-    cat('\n\tCMD LCC zarr B:\n', cmd_lcc_zarrB)
+  if (show_cml | dry_run){
+    cat('\n\tCMD LCC zarr B:\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMDB <- tryCatch(system(cmd_lcc_zarrB, intern = TRUE), error = function(e) e$message)
-
-  if(show_result){
-    print(intCMDB)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                            docat = show_result) )
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0(" B: ", intCMDB, '\n') )
+              log = paste0(" B: ", intCMDB, '\n') , cmd = cmd_)
   #print('ANS LCC');print(ans)
   return( ans )
 }
@@ -1716,6 +2011,7 @@ crk_py <- function(inshp, intif, outtif,
                    crs = 'None',
                    py = Sys.getenv("COLA_PYTHON_PATH"),
                    pyscript = system.file(package = 'cola', 'python/crk.py'),
+                   dry_run = FALSE,
                    show_cml = TRUE, show_result = TRUE){
 
   # [1] source points
@@ -1727,6 +2023,13 @@ crk_py <- function(inshp, intif, outtif,
   # [7] cores
   # [8] proj
 
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
+
   if ( ! any( c('yes', 'no') %in% transform ) ){
     stop( 'transform needs to be "yes" or "no"' )
   }
@@ -1735,49 +2038,60 @@ crk_py <- function(inshp, intif, outtif,
     stop( 'shaoe needs to be "linear" or "gaussian"' )
   }
 
-
-  (cmd_crk <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(maxdist, scientific=F), ' ', # [4] distance threshold
-    format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
-    transform, ' ', #
-    format(volume, scientific=F), ' ', # [6] kernel volume
-    format(ncores, scientific=F), ' ', # [7] cores
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(inshp),
+    quotepath(intif),
+    quotepath(outtif),
+    format(maxdist, scientific=F),  # [4] distance threshold
+    format(shape, scientific=F),  # [5] kernel shape (linear, gaussian)
+    transform,  #
+    format(volume, scientific=F), # [6] kernel volume
+    format(ncores, scientific=F), # [7] cores
     crs
-    , ' 2>&1 ' #, logname
-  ) # [8] proj
-  )
-  (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
-  if (show_cml){
-    cat('\n\tCMD Kernel:\n',cmd_crk)
+    )
+
+  # (cmd_crk <- paste0(
+  #   quotepath(py), ' ', quotepath(pyscript), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(intif), ' ', quotepath(outtif), ' ',
+  #   format(maxdist, scientific=F), ' ', # [4] distance threshold
+  #   format(shape, scientific=F), ' ', # [5] kernel shape (linear, gaussian)
+  #   transform, ' ', #
+  #   format(volume, scientific=F), ' ', # [6] kernel volume
+  #   format(ncores, scientific=F), ' ', # [7] cores
+  #   crs # [8] proj
+  #   , ' 2>&1 ' ))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml | dry_run){
+    cat('\n\tCMD Kernel:\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
-
   }
 
-  intCMD <- paste('', tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message))
-  # (intCMD <- catandcapt( quotepath(py), argss, docat = show_result, log_file = NULL) )
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
-  #intCMD <- tryCatch(system(cmd_lcc, intern = TRUE), error = function(e) e$message)
+    logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+    metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
+                  shape = shape, transform = transform, volume = volume,
+                  ncores = ncores, crs = crs,
+                  log = paste0(intCMD, collapse = ' - '),
+                  done = ifelse(file.exists(outtif), 'yes', 'no'))
+    write.table(metaFile, logname )
 
-  if(show_result){
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-
-  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
-  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
-                shape = shape, transform = transform, volume = volume,
-                ncores = ncores, crs = crs,
-                log = paste0(intCMD, collapse = ' - '),
-                done = ifelse(file.exists(outtif), 'yes', 'no'))
-  write.table(metaFile, logname )
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0("", intCMD) )
+              log = paste0("", intCMD) , cmd = cmd_)
   # print('ANS CRK'); print(ans)
   return( ans )
 }
@@ -1829,8 +2143,16 @@ crkJoblib_py <- function(
     tempFolder = NULL,
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
+    dry_run = FALSE,
     show_cml = TRUE, show_result = TRUE){
 
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
   # "crk_joblib.py" "pts.shp inraster.tif out.tif 10000000 0 1000 6 None first.h5 second.h5 rmlimitinGB"
   # param3 = 25000
   # [1] source points: Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
@@ -1860,61 +2182,66 @@ crkJoblib_py <- function(
   h5file <- paste0(tempFolder, '/', tempH5, '_A.h5')
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-  (cmd_crk <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(inshp), ' ',
-    quotepath(intif), ' ',
-    quotepath(outtif), ' ',
-    format(maxdist, scientific=F), ' ',
-    shape, ' ', transform, " ",
-    format(volume, scientific=F), ' ', # kernel volume
-    format(ncores, scientific=F), " ",
-    crs, " ",
-    h5file, " ",
-    maxram
-    , ' 2>&1 ' #, logname
-  ))
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(inshp),
+    quotepath(intif), quotepath(outtif),
+    format(maxdist, scientific=F),
+    shape, transform,
+    format(volume, scientific=F),  # kernel volume
+    format(ncores, scientific=F),
+    crs,  h5file, maxram
+    )
 
-  (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+  # (cmd_crk <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(outtif), ' ',
+  #   format(maxdist, scientific=F), ' ',
+  #   shape, ' ', transform, " ",
+  #   format(volume, scientific=F), ' ', # kernel volume
+  #   format(ncores, scientific=F), " ",
+  #   crs, " ",
+  #   h5file, " ",
+  #   maxram
+  #   , ' 2>&1 ' #, logname
+  # ))
 
-  if (show_cml){
-    cat('\n\tCMD CRK joblib:\n', cmd_crk)
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  # (cmd_crk <- gsub(fixed = TRUE, '\\', '/', cmd_crk))
+
+  if (show_cml | dry_run){
+    cat('\n\tCMD CRK joblib:\n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system(cmd_crk, intern = TRUE), error = function(e) e$message)
-  # intCMD2 <- tryCatch(system2(cmd_crk, stdout = TRUE), error = function(e) e$message)
-  # output <- system2(py, args = c (
-  #   quotepath(pyscript),
-  #   quotepath(inshp),
-  #   quotepath(intif), quotepath(outtif),
-  #   format(maxdist, scientific=F),
-  #   shape, transform,
-  #   format(volume, scientific=F),
-  #   format(ncores, scientific=F),
-  #   crs, h5file, maxram), stdout = TRUE)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
+    logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
+    metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
+                  shape = shape, transform = transform, volume = volume,
+                  ncores = ncores, crs = crs,
+                  maxram = maxram,
+                  log = paste0(intCMD, collapse = ' - '),
+                  done = ifelse(file.exists(outtif), 'yes', 'no'))
+    write.table(metaFile, logname )
+    tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
 
-
-  if(show_result){
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-
-  logname <- paste0(tools::file_path_sans_ext(outtif), '.metadata')
-  metaFile <- c(inshp = inshp, intif = intif, outtif = outtif, maxdist = maxdist,
-                shape = shape, transform = transform, volume = volume,
-                ncores = ncores, crs = crs,
-                maxram = maxram,
-                log = paste0(intCMD, collapse = ' - '),
-                done = ifelse(file.exists(outtif), 'yes', 'no'))
-  write.table(metaFile, logname )
-
-
-  tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0("", intCMD) )
+              log = paste0("", intCMD) , cmd = cmd_)
   #print('ANS CRK'); print(ans)
   return( ans )
 }
@@ -1959,14 +2286,24 @@ crkJoblib_py <- function(
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-prio_py <- function(intif, incrk, inlcc,
-                    maskedcsname = paste0(tempfile(), '.tif'),
-                    outshppoint, outshppol, outshppatch,
-                    outtifpatch, outtif,
-                    threshold = 0.5, tolerance = 1000,
-                    py = Sys.getenv("COLA_PYTHON_PATH"),
-                    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
-                    show_cml = TRUE, show_result = TRUE){
+prio_py <- function(
+    intif, incrk, inlcc,
+    maskedcsname = paste0(tempfile(), '.tif'),
+    outshppoint, outshppol, outshppatch,
+    outtifpatch, outtif,
+    threshold = 0.5, tolerance = 1000,
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/prioritize_core_conn.py'),
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   # pri_py(py, incrk, inlcc, outshp, outtif, param5 = 0.5)
   # out_pri <- pri_py(py = py,
@@ -2016,44 +2353,62 @@ prio_py <- function(intif, incrk, inlcc,
 
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
-
-  (cmd_prio <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(intif), ' ',
-    quotepath(incrk), ' ',
-    quotepath(inlcc), ' ',
-    quotepath(maskedcsname), ' ',
-    quotepath(outshppoint), ' ',
-    quotepath(outshppol), ' ',
-    quotepath(outshppatch), ' ',
-    quotepath(outtifpatch), ' ',
-    quotepath(outtif), ' ',
-    format(threshold, scientific=F), " ",
+  ### Create CMD
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(intif),
+    quotepath(incrk),
+    quotepath(inlcc),
+    quotepath(maskedcsname),
+    quotepath(outshppoint),
+    quotepath(outshppol),
+    quotepath(outshppatch),
+    quotepath(outtifpatch),
+    quotepath(outtif),
+    format(threshold, scientific=F),
     format(tolerance, scientific=F)
-    , ' 2>&1 ' #, logname
-  ))
+    )
 
-  if (show_cml){
+  # (cmd_prio <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(incrk), ' ',
+  #   quotepath(inlcc), ' ',
+  #   quotepath(maskedcsname), ' ',
+  #   quotepath(outshppoint), ' ',
+  #   quotepath(outshppol), ' ',
+  #   quotepath(outshppatch), ' ',
+  #   quotepath(outtifpatch), ' ',
+  #   quotepath(outtif), ' ',
+  #   format(threshold, scientific=F), " ",
+  #   format(tolerance, scientific=F)
+  #   , ' 2>&1 ' #, logname
+  # ))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml | dry_run){
     cat('\n\tCMD prio: \n')
-    cat(cmd_prio <- gsub(fixed = TRUE, '\\', '/', cmd_prio))
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
-  intCMD <- tryCatch(system(cmd_prio, intern = TRUE),
-                     error = function(e) e$message)
-
-  if(show_result){
-    cat('\n\tlog CMD prio: \n')
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return(
     list(tif = ifelse(file.exists(outtif), outtif, ''),
          shp = ifelse(file.exists(outshppoint), outshppoint, ''),
          #log =  paste0(intCMD, '-- ', read.delim(logname)) ))
-         log = paste0("", intCMD) ) )
+         log = paste0("", intCMD), cmd = cmd_  ) )
 }
 
 
@@ -2098,16 +2453,25 @@ prio_py <- function(intif, incrk, inlcc,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
-crk_compare_py <- function(intif, intifs,
-                           outcsvabs, outcsvrel,
-                           outpngabs, outpngrel,
-                           outfolder,
-                           inshp = 'None',
-                           shpfield = 'None',
-                           py = Sys.getenv("COLA_PYTHON_PATH"),
-                           pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
-                           show_cml = TRUE, show_result = TRUE){
+crk_compare_py <- function(
+    intif, intifs,
+    outcsvabs, outcsvrel,
+    outpngabs, outpngrel,
+    outfolder,
+    inshp = 'None',
+    shpfield = 'None',
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/crk_compare.py'),
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
 
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/Users/pj276/Scratch/scenario_testing/size7_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s1_crk.tif,C:/Users/pj276/Scratch/scenario_testing/size7_s2_crk.tif"
   # C:/Users/pj276/Scratch/scenario_testing/size7_crk_abs_comp.png
@@ -2123,40 +2487,57 @@ crk_compare_py <- function(intif, intifs,
   # [6] shapefile to regionalize
   # [7] shapefile attribute/column name to aggregate
   logname <- paste0(tools::file_path_sans_ext(outfolder), '.txt')
-
   dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
 
-  (cmd_crk_comp <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(intif), ' ',
-    quotepath(intifs), ' ',
-    quotepath(outcsvabs), ' ',
-    quotepath(outcsvrel), ' ',
-    quotepath(outpngabs), ' ',
-    quotepath(outpngrel), ' ',
-    quotepath(outfolder), ' ',
-    quotepath(inshp), ' ',
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(intif),
+    quotepath(intifs),
+    quotepath(outcsvabs),
+    quotepath(outcsvrel),
+    quotepath(outpngabs),
+    quotepath(outpngrel),
+    quotepath(outfolder),
+    quotepath(inshp),
     quotepath(shpfield)
-    , ' 2>&1 ' #, logname
   )
-  )
-  if (show_cml){
+
+  # (cmd_crk_comp <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(intifs), ' ',
+  #   quotepath(outcsvabs), ' ',
+  #   quotepath(outcsvrel), ' ',
+  #   quotepath(outpngabs), ' ',
+  #   quotepath(outpngrel), ' ',
+  #   quotepath(outfolder), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(shpfield)
+  #   , ' 2>&1 ' #, logname
+  # ))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  if (show_cml | dry_run){
     cat('\n\tCMD Compare CRK: \n')
-    cat(cmd_crk_comp <- gsub(fixed = TRUE, '\\', '/', cmd_crk_comp))
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system(cmd_crk_comp, intern = TRUE),
-                     error = function(e) e$message)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
-  if(show_result){
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+               log = paste0("", intCMD), cmd = cmd_  ) )
 }
 
 #' @title  Compare maps of least cost paths
@@ -2200,15 +2581,25 @@ crk_compare_py <- function(intif, intifs,
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @export
-lcc_compare_py <- function(intif, intifs,
-                           outcsvabs, outcsvrel,
-                           outpngabs, outpngrel,
-                           outfolder,
-                           inshp = 'None',
-                           shpfield = 'None',
-                           py = Sys.getenv("COLA_PYTHON_PATH"),
-                           pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
-                           show_cml = TRUE, show_result = TRUE){
+lcc_compare_py <- function(
+    intif, intifs,
+    outcsvabs, outcsvrel,
+    outpngabs, outpngrel,
+    outfolder,
+    inshp = 'None',
+    shpfield = 'None',
+    py = Sys.getenv("COLA_PYTHON_PATH"),
+    pyscript = system.file(package = 'cola', 'python/lcc_compare.py'),
+    dry_run = FALSE,
+    show_cml = TRUE, show_result = TRUE){
+
+
+  if( !file.exists(py)){
+    stop('Python not found')
+  }
+  if( !file.exists(pyscript)){
+    stop('Script not found')
+  }
 
   # 'C:/Users/pj276/Scratch/scenario_testing/size7.tif
   # "C:/size7_crk.tif,C:/size7_s1_crk.tif,C:/size7_s2_crk.tif"
@@ -2227,41 +2618,59 @@ lcc_compare_py <- function(intif, intifs,
   dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
   logname <- paste0(tools::file_path_sans_ext(outfolder), '.txt')
 
-
-  (cmd_lcc_comp <- paste0(
-    quotepath(py), ' ',
-    quotepath(pyscript), ' ',
-    quotepath(intif), ' ',
-    quotepath(intifs), ' ',
-    quotepath(outcsvabs), ' ',
-    quotepath(outcsvrel), ' ',
-    quotepath(outpngabs), ' ',
-    quotepath(outpngrel), ' ',
-    quotepath(outfolder), ' ',
-    quotepath(inshp), ' ',
+  aargs <- c( # script, then all
+    adaptFilePath(pyscript),
+    quotepath(intif),
+    quotepath(intifs),
+    quotepath(outcsvabs),
+    quotepath(outcsvrel),
+    quotepath(outpngabs),
+    quotepath(outpngrel),
+    quotepath(outfolder),
+    quotepath(inshp),
     quotepath(shpfield)
-    , ' 2>&1 ' #, logname
   )
-  )
-  if (show_cml){
-    cat('\n\tCMD Comp LCC: \n ')
-    cat(cmd_lcc_comp <- gsub(fixed = TRUE, '\\', '/', cmd_lcc_comp))
+
+  (cmd_ <- paste0(
+    adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
+
+  # (cmd_lcc_comp <- paste0(
+  #   quotepath(py), ' ',
+  #   quotepath(pyscript), ' ',
+  #   quotepath(intif), ' ',
+  #   quotepath(intifs), ' ',
+  #   quotepath(outcsvabs), ' ',
+  #   quotepath(outcsvrel), ' ',
+  #   quotepath(outpngabs), ' ',
+  #   quotepath(outpngrel), ' ',
+  #   quotepath(outfolder), ' ',
+  #   quotepath(inshp), ' ',
+  #   quotepath(shpfield)
+  #   , ' 2>&1 ' #, logname
+  # ))
+
+  if (show_cml | dry_run){
+    cat('\n\t CMD Raster export: \n')
+    cat(cmd_ <- gsub(fixed = TRUE, '\\', '/', cmd_))
     cat('\n\n')
   }
 
-  intCMD <- tryCatch(system(cmd_lcc_comp, intern = TRUE), error = function(e) e$message)
+  if (!dry_run){
+    argss <-  c('-u',  aargs)
+    (intCMD <- catandcapt( adaptFilePath(py), argss,
+                           docat = show_result) )
 
-  if(show_result){
-    print(intCMD)
+  } else {
+    intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
   return( list(file = ifelse(file.exists(outpngabs), outpngabs, ''),
                #log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-               log = paste0("", intCMD) ) )
+               log = paste0("", intCMD), cmd = cmd_  ) )
 }
 
 
-#' @title  Add values to  maps of least cost paths
+#' @title  Add values to raster layers
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
 #' @param polpath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
@@ -2271,7 +2680,6 @@ lcc_compare_py <- function(intif, intifs,
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
-#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
 #' library(cola)
@@ -2364,8 +2772,6 @@ burnShp <- function(polPath, burnval = 'val2burn',
       , error = function(e) e$message)
   }
 
-
-
   #file.remove(rasterizedPath); file.copy(rastPath, rasterizedPath, overwrite = TRUE)
   # rasteri <- gdalUtils::gdal_rasterize(src_datasource = polPath, at = T,
   #                                      dst_filename = rastPath,
@@ -2382,7 +2788,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
 }
 
 
-#' @title  Add values to  maps of least cost paths
+#' @title  Replace pixel values based on polygons
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
 #'  Not working on Windows at the moment.
 #' @param polpath String. Location of the vector layer
@@ -2599,12 +3005,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   #} else { return(NA) }
 }
 
-
-
-
-
-
-
 ### Orig fitRaster2cola, cell size and nodata
 
 
@@ -2781,7 +3181,8 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 
 
 #' @title  Create and submit BASH task for second part of Zarr FLCC
-#' @description Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
+#' @description Only runs on Linux cluster.
+#' Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
 #' resulting order csv file (number of pairs FLCC to run) and divide it by the nBatches, creating
 #' different bash files for lcc_hpc2_zarr.py. Each bash file is intended to create a raster tif
 #' with the name /{outFolder}/{prefTif}_{pref}_{i}.tif
@@ -2853,8 +3254,6 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 
 
 ## CoLa 2 -------------------------
-
-
 
 #' @title Ulpoad local point layer to EE assets
 #' @description Use local points file and submitt an upload task to EE
@@ -3503,18 +3902,12 @@ sdm_prediction_py <- function(
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
 #' @param ee_project String. Google Earth Engine project or username
-#' @param species String. Species name, e.g. puma
-#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
-#' @param run_mode String. Execution mode, 'test', 'full'
-#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
+#' @param ee_folder String. Path in Google Earth Engine with the assets
+#' @param gd_folder String. Path in Google Drive to be created and where files will be stored
+#' @param prefix String. String to add to the layers in Google Drive
+#' @param region String. GEE asset containing the area of interest
 #' @param crs String. Year for single-batch test run
 #' @param scale Integer. Pixel size in meters. Default is 250m
-#' @param min_year Integer. Default is 2000.
-#' @param max_year Integer. Default is 2025.
-#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
-#' @param gee_assets String. EE path to
-#' @param range_asset String. EE path for the feature collection with the spatial extent
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
@@ -3531,9 +3924,9 @@ export_ee2gd_py <- function(
     ee_folder,
     gd_folder,
     prefix,
+    region,
     scale = 250,
     crs = 'EPSG:4326',
-    region,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3544,7 +3937,6 @@ export_ee2gd_py <- function(
   if( !file.exists(pyscript)){
     stop('Script not found')
   }
-
 
   ### Create CMD
   aargs <- c(
@@ -3602,7 +3994,9 @@ export_ee2gd_py <- function(
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
-catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
+catandcapt <- function( comm, argss, log_file = NULL, docat = TRUE ) {
+  # comm = adaptFilePath(py)
+
   # sepp = '\n', delay = 0.5, docat = TRUE
   # Print results
   # if (docat){
@@ -3634,13 +4028,15 @@ catandcapt <- function( ... , log_file = NULL, docat = TRUE ) {
   (log_con <- file(log_file, open = "a"))
   ##### OPT A No Verbose ---------
   if (!docat){
-    out <- tryCatch(system2( ... , stdout = TRUE), error = function(e) e$message)
+    out <- tryCatch(system2( command = comm,
+                             args = argss , stdout = TRUE), error = function(e) e$message)
     # out <- tryCatch( system2(  quotepath(py), args = argss , stdout = TRUE), error = function(e) e$message)
   } else {
 
     ##### OPT B Verbose ---------
-    out <- tryCatch({processx::run( ... ,
-                                    # out <- tryCatch({ processx::run( quotepath(py), argss ,
+    out <- tryCatch({processx::run( command = comm,
+                                    args = argss,
+                                    # out <- tryCatch({ processx::run( command = quotepath(py), args = argss , wd = '',
 
                                     # command = python, args = c("-u", script),
                                     stdout_line_callback = function(line, proc) {

@@ -13,12 +13,15 @@ cdpop_mapdensity(
   bandwidths = "None",
   type = "count",
   crs = "None",
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
 }
 \arguments{
 \item{py}{Python executable location}
+
+\item{pyscript}{Python script location}
 
 \item{grids}{String. Vector with the CDPOP output files to be interpolated}
 
@@ -30,7 +33,7 @@ cdpop_mapdensity(
 
 \item{crs}{String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.}
 
-\item{cdpopscript}{Python location}
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{bandwiths}{String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer}
 }

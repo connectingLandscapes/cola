@@ -16,8 +16,11 @@ sdm_model_fitting_py(
   gee_assets,
   working_dir,
   local_csv,
+  predictor_source = "modis",
+  scale = NULL,
   imp_thresh = 0.1,
   categorical_threshold = 20,
+  overwrite = FALSE,
   show_cml = TRUE,
   show_result = TRUE,
   dry_run = FALSE
@@ -41,9 +44,17 @@ sdm_model_fitting_py(
 \item{local_csv}{String. Path to local training CSV to skip EE asset loading.
 Default: {working_dir}/{model_id}_training.csv'}
 
+\item{predictor_source}{String. Must match extraction. Default 'modis'}
+
+\item{scale}{Integer. Must match extraction; NULL for the source's native resolution.}
+
 \item{imp_thresh}{Float. Relative importance threshold for feature pruning. Default is 0.10}
 
 \item{categorical_threshold}{Integer. Max unique values to treat a variable as categorical. Default is 20}
+
+\item{overwrite}{Logical. Replace this model's existing outputs (GEE classifier,
+strings and features assets; local .pkl/.csv). If FALSE and any exist, fitting stops
+at the start. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 

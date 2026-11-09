@@ -16,6 +16,7 @@ lcc_compare_py(
   shpfield = "None",
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc_compare.py"),
+  dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
 )
@@ -44,11 +45,11 @@ used as the baseline scenario (sc0)#' @param outcsvabs String. File path to the 
 
 \item{pyscript}{Python script location}
 
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
+
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 List of two slots: 'file' with the 'outpngabs' folder if success,

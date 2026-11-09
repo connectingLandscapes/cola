@@ -7530,7 +7530,9 @@ server <- function(input, output, session) {
         # param3 = sys.argv[3] # ee asset
         # <- <- list(in_ee_project = 'gonzalezivan')
 
-        cmdee <- paste0(py, ' ', ee_scr_path,'/cml_connectEE.py ',
+        cmdee <- paste0(py, ' ',
+                        cola::quotepath(file.path(ee_scr_path,'cml_connectEE.py'))
+                        , ' ',
                         input$in_ee_project, ' ', tempFolder, ' ')
         #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan /data/cola/colaXGY2026030209460105 2>&1'
         # cmdee <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaIJD2026030509435605/ 2>&1'
@@ -10729,7 +10731,7 @@ if (FALSE){ # if FALSE
                          #        actionButton(width = "100%",
                          #                     label = 'Check quota',
                          #                     'ee_quota')
-                         checkboxInput("in_ee_showassets", label = "Show assets", value = FALSE),
+                         checkboxInput("in_ee_showassets", label = "Show EE assets", value = FALSE),
                   ),
 
                   conditionalPanel(

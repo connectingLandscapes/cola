@@ -11,9 +11,9 @@ export_ee2gd_py(
   ee_folder,
   gd_folder,
   prefix,
+  region,
   scale = 250,
   crs = "EPSG:4326",
-  region,
   show_cml = TRUE,
   show_result = TRUE,
   dry_run = FALSE
@@ -26,6 +26,14 @@ export_ee2gd_py(
 
 \item{ee_project}{String. Google Earth Engine project or username}
 
+\item{ee_folder}{String. Path in Google Earth Engine with the assets}
+
+\item{gd_folder}{String. Path in Google Drive to be created and where files will be stored}
+
+\item{prefix}{String. String to add to the layers in Google Drive}
+
+\item{region}{String. GEE asset containing the area of interest}
+
 \item{scale}{Integer. Pixel size in meters. Default is 250m}
 
 \item{crs}{String. Year for single-batch test run}
@@ -35,26 +43,6 @@ export_ee2gd_py(
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
-
-\item{species}{String. Species name, e.g. puma}
-
-\item{model_id}{String. Unique model run ID, e.g. puma_modis_m2}
-
-\item{target_year.}{Integer. Year to map — must match sdm_modis_export.py}
-
-\item{run_mode}{String. Execution mode, 'test', 'full'}
-
-\item{max_concurrent}{Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).}
-
-\item{min_year}{Integer. Default is 2000.}
-
-\item{max_year}{Integer. Default is 2025.}
-
-\item{tile_degrees}{Integer.  Path/filename of a template raster used for interpolation}
-
-\item{gee_assets}{String. EE path to}
-
-\item{range_asset}{String. EE path for the feature collection with the spatial extent}
 }
 \value{
 List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
