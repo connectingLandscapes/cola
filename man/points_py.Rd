@@ -26,6 +26,8 @@ points_py(
 
 \item{intif}{String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed}
 
+\item{outshp}{String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.}
+
 \item{smin}{Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.}
 
 \item{smax}{Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.}
@@ -41,10 +43,6 @@ points_py(
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{inshp}{String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
-
-\item{outtif}{String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.}
 }
 \value{
 Path with the created shapefile
@@ -58,7 +56,8 @@ library(terra)
 hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
 # hs_path <- 'C:/path/to/raster.tif'
 (points_path <- tempfile(fileext = '.shp'))
-pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2, smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
+pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2,
+  smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 plot(vect(pts_result$file))
 }
 \author{

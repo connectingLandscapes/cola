@@ -13,9 +13,13 @@ diagnose_cola(
 )
 }
 \arguments{
-\item{envName}{The environment name. 'cola' by default}
+\item{envName}{String. The environment name. 'cola' by default}
 
-\item{libs2Install}{The name of python libraries}
+\item{cola2}{Logical. Consider CoLa2? Default is FALSE}
+
+\item{zarr}{Logical. Consider zarr python module? Default is TRUE}
+
+\item{libs2Install}{String. Vector of the name of python libraries}
 }
 \value{
 NULL. Prints in console five (5) logs regarding different steps

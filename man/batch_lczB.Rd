@@ -30,6 +30,8 @@ batch_lczB(
 
 \item{shFolder}{String. Path where to save the logs.}
 
+\item{logFolder}{String. Path where to save jobs logs}
+
 \item{outFolder}{String. Path where to save tif file}
 
 \item{RUN}{Logical. Submit the sh job? If FALSE, only creates sh file. If TRUE, only runs if out tif file not exists.}
@@ -38,9 +40,11 @@ batch_lczB(
 
 \item{prefTif}{String. Out TIF prefix. Default is 'out_lczB'. Usefull to sum all layers with cola::compileTifs( )}
 
-\item{py}{Python executable location}
+\item{py}{String. Python executable location}
 
-\item{src}{Python script location}
+\item{src}{String. Python script location}
+
+\item{sr}{String. Full path to surface resistance raster layer}
 
 \item{dzarr}{String. Full path to distance zarr file/folder.}
 
@@ -50,15 +54,13 @@ batch_lczB(
 
 \item{ncores}{Integer. Number of cores assigned to the task in the cluster}
 
+\item{ordcsv}{String. Full path to pairs order csv file}
+
 \item{idcsv}{String. Full path to nodes ids csv file.}
 
 \item{ramGB}{Integer. RAM in GB assigned to the task in the cluster}
 
 \item{hours}{Integer. Hours assigned to the task in the cluster}
-
-\item{rs}{String. Full path to surface resistance raster layer}
-
-\item{ordcsv.}{String. Full path to pairs order csv file}
 }
 \value{
 Path of the resulting raster layer. Will be same as input if no change was made
@@ -68,7 +70,7 @@ Only runs on Linux cluster.
 Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
 resulting order csv file (number of pairs FLCC to run) and divide it by the nBatches, creating
 different bash files for lcc_hpc2_zarr.py. Each bash file is intended to create a raster tif
-with the name /{outFolder}/{prefTif}_{pref}_{i}.tif
+with the name "[outFolder]/[prefTif]_[pref]_[i].tif"
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

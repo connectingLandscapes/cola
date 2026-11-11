@@ -46,6 +46,12 @@ earthRanger_py(
 \item{dokde}{Integer. Calculate density kernel raster?  1: yes, 0: no}
 
 \item{spatresinmeters}{String. Raster resolution in meters of the Kernel density estimation (KDE)}
+
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
 List with log slot. The resulting layer will be saved in the outdir

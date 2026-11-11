@@ -4,14 +4,18 @@
 #' @param zarr Logical. Run zarr corridors? Default FALSE
 #' @param doplot Logical. Plot results? Default FALSE. Requires ´terra´ library
 #' @return Text "Test finished"
+#' @import terra
 #' @examples
-#' library(cola)
-#' test_cola(run = TRUE )
+#' if (FALSE){
+#'     test_cola(run = TRUE )
+#' }
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 
 test_cola <- function(run = FALSE, zarr = FALSE, doplot = FALSE){
+
+  requireNamespace("terra")
 
   if (run){
     ## Habitat Suitability (HS) to surface resistance (SR)
@@ -21,17 +25,16 @@ test_cola <- function(run = FALSE, zarr = FALSE, doplot = FALSE){
     ## Intro
 
     if(doplot) {
-      library(terra)
-      plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
+      plot(terra::rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
            main = 'Sample Habitat Suitability')
 
-      plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
+      plot(terra::vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
            add = TRUE)
 
-      cat("plot(rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
+      cat("plot(terra::rast(system.file(package = 'cola', 'sampledata/sampleHS.tif')),
      main = 'Sample Surface Resistance')
 
-plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
+plot(terra::vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
      add = TRUE)
 
     ")
@@ -47,7 +50,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       maxout = 100, shape = 1
     )
 
-    plot(rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
+    plot(terra::rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
     ")
 
     outdir <- tempdir()
@@ -62,7 +65,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
     )
 
     if(doplot) {
-      plot(rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
+      plot(terra::rast(file.path(outdir, 'resistance.tif')), main = 'Created surface resistance')
     }
 
     ## Kernels
@@ -78,7 +81,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           shape = 'no',
           volume = '1')
 
-        plot(rast(kernels$file), main = 'Created kernels')
+        plot(terra::rast(kernels$file), main = 'Created kernels')
 
         ")
 
@@ -94,7 +97,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       volume = '1')
 
     if(doplot) {
-      plot(rast(kernels$file), main = 'Created kernels')
+      plot(terra::rast(kernels$file), main = 'Created kernels')
     }
 
 
@@ -109,7 +112,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           shape = 'no',
           volume = '1')
 
-        plot(rast(kernels_joblib$file), main = 'Created kernels parallel script')
+        plot(terra::rast(kernels_joblib$file), main = 'Created kernels parallel script')
 
         ")
 
@@ -125,7 +128,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       volume = '1')
 
     if(doplot) {
-      plot(rast(kernels_joblib$file), main = 'Created kernels parallel script')
+      plot(terra::rast(kernels_joblib$file), main = 'Created kernels parallel script')
     }
 
 
@@ -136,7 +139,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           outtif = file.path(outdir, 'corridors.tif'),
           maxdist = 100000, smooth = 0, tolerance = 0)
 
-        plot(rast(corridors$file), main = 'Created corridors')
+        plot(terra::rast(corridors$file), main = 'Created corridors')
 
         ")
 
@@ -147,7 +150,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       maxdist = 50000, smooth = 0, tolerance = 0)
 
     if(doplot) {
-      plot(rast(corridors$file), main = 'Created corridors')
+      plot(terra::rast(corridors$file), main = 'Created corridors')
     }
 
 
@@ -158,7 +161,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           outtif = file.path(outdir, 'corridors_joblib.tif'),
           maxdist = 100000, smooth = 0, tolerance = 0)
 
-    plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+    plot(terra::rast(corridors_joblib$file), main = 'Created corridors parallel script')
 
         ")
 
@@ -169,7 +172,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       maxdist = 100000, smooth = 0, tolerance = 0)
 
     if(doplot) {
-      plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+      plot(terra::rast(corridors_joblib$file), main = 'Created corridors parallel script')
     }
 
     corridors_joblib <- lccJoblib_py(
@@ -179,7 +182,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
       maxdist = 100000, smooth = 0, tolerance = 0)
 
     if(doplot) {
-      plot(rast(corridors_joblib$file), main = 'Created corridors parallel script')
+      plot(terra::rast(corridors_joblib$file), main = 'Created corridors parallel script')
     }
 
 
@@ -191,7 +194,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
           outtif = file.path(outdir, 'corridors_zarr.tif'),
           maxdist = 100000, smooth = 0, tolerance = 0)
 
-    plot(rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
+    plot(terra::rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
 
         ")
 
@@ -201,7 +204,7 @@ plot(vect(system.file(package = 'cola', 'sampledata/points_sabah_50.shp')),
         outtif = file.path(outdir, 'corridors_zarr.tif'),
         maxdist = 100000, smooth = 0, tolerance = 0)
       if(doplot) {
-        plot(rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
+        plot(terra::rast(corridors_zarr$file), main = 'Created corridors zarr parallel script')
       }
     }
 

@@ -16,6 +16,8 @@ lccZarrB_py(
   crs = "None",
   sci = "None",
   eci = "None",
+  nodeOrderFile,
+  nodeIdsFile,
   tempFolder = NULL,
   distzarr = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -29,6 +31,8 @@ lccZarrB_py(
 \item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
+
+\item{outtif}{String. Path output GeoTIFF file name.}
 
 \item{maxdist}{Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.}
 
@@ -46,7 +50,13 @@ lccZarrB_py(
 
 \item{eci}{Numeric. End corridor index. Default is 'None'}
 
+\item{nodeOrderFile}{String. Path to the output csv file with nodes order}
+
+\item{nodeIdsFile}{String. Path to the output csv file with nodes IDs}
+
 \item{tempFolder}{String. Path to the temporal folder where intermediate zarr files will be saved.}
+
+\item{distzarr}{String. H5 file to store point distance rasters. Created in temporal folder if not provided}
 
 \item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
 
@@ -57,8 +67,6 @@ lccZarrB_py(
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{outif}{String. Path output GeoTIFF file name.}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

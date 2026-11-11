@@ -2,6 +2,10 @@
 # Documentation
 setwd('N:/My Drive/git/cola')
 roxygen2::roxygenise()
+devtools::document()
+devtools::check()
+usethis::use_gpl3_license()
+tools:::analyze_license('GPL-3')
 "
 
 "
@@ -167,6 +171,18 @@ nodeidsFile = 'C:/cola/filea7a845ad590b_nodeidsFile.csv'
 # nThreads = '8'
 # upCRS = 'None'
 "
+
+# Pkg CRAN
+'
+pkgs <- c("DT", "RColorBrewer", "bit", "digest", "dplyr", "gdalUtilities",
+          "ggplot2", "highcharter", "htmltools", "htmlwidgets", "knitr",
+          "leaflet", "leaflet.extras", "magrittr", "processx", "raster",
+          "reshape2", "reticulate", "rmarkdown", "sf", "shiny", "shinyBS",
+          "shinyWidgets", "shinyalert", "shinycssloaders", "shinydashboard",
+          "shinydashboardPlus", "shinyjs", "terra", "tibble", "viridis")
+
+for (p in pkgs) usethis::use_package(p)   # adds to Imports
+'
 
 
 ## Step7. Errors ----------------------------------------------

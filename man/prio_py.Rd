@@ -24,6 +24,12 @@ prio_py(
 )
 }
 \arguments{
+\item{intif}{String. Path to surface resistance}
+
+\item{incrk}{String. Path to resistant kernel}
+
+\item{inlcc}{String. Path to corridors}
+
 \item{maskedcsname}{String. Temporal mask raster file}
 
 \item{outshppoint}{String. Path to the resulting centroid corridors shapefile}

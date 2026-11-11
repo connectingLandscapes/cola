@@ -19,8 +19,11 @@ Path of the resulting raster layer. Will be same as input if no change was made
 Adjust pixels to squared shape and assigns
 }
 \examples{
-library(cola)
-fitRaster2cola(inrasterpath = system.file(package = 'cola', 'sampledata/sampleSR.tif'))
+if (FALSE) {
+    newRast <- fitRaster2cola(
+          inrasterpath = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+          outrasterpath = tempfile(fileext = '.tif'))
+     }
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

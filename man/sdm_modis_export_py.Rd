@@ -60,7 +60,7 @@ from the scale (2 at 250 m). Default is 2}
 \item{estimate_only}{Logical. Only print the cost estimate. Default FALSE}
 
 \item{keep_intermediate}{Logical. Keep the annual, merged and gap-filled assets in
-{BASE_FOLDER}/temp instead of deleting each once used (uses GEE storage). Default FALSE}
+[BASE_FOLDER]/temp instead of deleting each once used (uses GEE storage). Default FALSE}
 
 \item{min_year, max_year, crs}{No longer used (CRS is fixed to EPSG:4326; years
 are checked against the data coverage). Accepted and ignored.}
@@ -73,9 +73,9 @@ are checked against the data coverage). Accepted and ignored.}
 }
 \value{
 List with log slot. Creates multiband assets per tile and year in the GEE folders:
-BASE_FOLDER    = {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}
-TEMP_FOLDER    = {BASE_FOLDER}/temp
-METRICS_FOLDER = {BASE_FOLDER}/metrics
+BASE_FOLDER    = "[GEE_ASSETS]/[SPECIES]_SDM_modis_[SCALE]m_[TARGET_YEAR]"
+TEMP_FOLDER    = "[BASE_FOLDER]/temp"
+METRICS_FOLDER = "[BASE_FOLDER]/metrics"
 }
 \description{
 OPTIONAL step. Exports gap-filled MODIS NDVI/EVI metric tiles

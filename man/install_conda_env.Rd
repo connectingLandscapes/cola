@@ -15,6 +15,8 @@ install_conda_env(
 \arguments{
 \item{envName}{The environment name. 'cola' by default}
 
+\item{useYML}{Logical. Use YML to create the environment}
+
 \item{ymlFile}{Path to YML to use. Default is NULL}
 
 \item{packagess}{String. Vector of packagess to be installed. Default is NULL}
@@ -25,7 +27,7 @@ install_conda_env(
 NULL. Prints in console logs regarding different steps
 }
 \description{
-Installs ´cola´ conda environment
+Installs `cola` conda environment
 }
 \examples{
 install_conda_env(envName = 'cola',

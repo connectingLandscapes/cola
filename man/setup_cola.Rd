@@ -26,7 +26,7 @@ setup_cola(
   COLA_NCORES = 4,
   COLA_RAMGB = 6,
   COLA_DSS_UPL_MB = 250,
-  COLA_VIZ_THRES_PIX = 1000000,
+  COLA_VIZ_THRES_PIX = 1e+06,
   COLA_VIZ_RES_NCOL = 1000,
   COLA_VIZ_RES_NROW = 1000
 )
@@ -36,7 +36,7 @@ setup_cola(
 
 \item{nSteps}{The number of steps for printing log in console}
 
-\item{force}{Force miniconda installation? Passed to ´reticulate::install_miniconda()´}
+\item{force}{Force miniconda installation? Passed to `reticulate::install_miniconda()`}
 
 \item{libs2Install}{The name of python libraries}
 
@@ -54,6 +54,14 @@ setup_cola(
 
 \item{yml}{Use YML file to build the conda environment? Default FALSE}
 
+\item{spyder}{Logical. Install spyder-kernel? Useful for running CoLa on Spyder}
+
+\item{updateCola}{Logical. Update CoLa to a latest python? Default is FALSE}
+
+\item{pyVer}{String. Python version to install}
+
+\item{oldestPyVer}{String. Oldest CoLa python version allowed. Used for conflicts. Default is 3.11.}
+
 \item{COLA_DATA_PATH}{String. Path were CoLa DSS results and session folders}
 
 \item{COLA_NCORES}{Integer. Number of cores to use}
@@ -67,18 +75,18 @@ setup_cola(
 \item{COLA_VIZ_RES_NCOL}{Integer. Number of columns to resample the raster to be displayed in the cola DSS.}
 
 \item{COLA_VIZ_RES_NROW}{Integer. Number of rows  to resample the raster to be displayed in the cola DSS.}
-
-\item{pyVer.}{String. Python version to install}
 }
 \value{
 NULL. Prints in console logs regarding different steps
 }
 \description{
-Installs cola software. Includes ´reticulate´ R package, miniconda, cola conda environment and libraries,
+Installs cola software. Includes `reticulate` R package, miniconda, cola conda environment and libraries,
 and defines the ways R and python should interact
 }
 \examples{
-setup_cola()
+if (FALSE){ 
+    setup_cola( )
+ }
 }
 \author{
 Ivan Gonzalez <Ivan.Gonzalez@nau.edu>

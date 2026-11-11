@@ -8,6 +8,8 @@ getMnMx(rastPath, na.rm = TRUE)
 }
 \arguments{
 \item{rastPath}{File location or raster layer. Accepts file path or SpatRaster object}
+
+\item{na.rm}{Logical. Ignore NA values? Defualt is TRUE}
 }
 \value{
 Numeric vector of two numbers
@@ -17,7 +19,7 @@ Extracts the min and max value from raster
 }
 \examples{
 input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-getMnMx(input_tif)
+getMnMx(rastPath = input_tif)
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

@@ -9,7 +9,7 @@ adaptFilePath(path, quo = "\\"")
 \arguments{
 \item{path}{File location}
 
-\item{quote}{String. Character to use as quote}
+\item{quo}{String. Character to use as quote}
 }
 \value{
 File location String using slash as separator

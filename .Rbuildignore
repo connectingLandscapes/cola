@@ -3,3 +3,4 @@
 notebook*
 .ini$
 desktop.ini
+^LICENSE\.md$

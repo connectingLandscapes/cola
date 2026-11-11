@@ -16,6 +16,7 @@ crkJoblib_py(
   crs = "None",
   maxram = as.numeric(Sys.getenv("COLA_RAMGB")),
   tempFolder = NULL,
+  h5file = NULL,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/crk_joblib.py"),
   dry_run = FALSE,
@@ -27,6 +28,8 @@ crkJoblib_py(
 \item{inshp}{String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file}
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
+
+\item{outtif}{String. Path output GeoTIFF file name.}
 
 \item{maxdist}{Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.}
 
@@ -47,6 +50,10 @@ determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kern
 
 \item{maxram}{Numeric. RAM to use in GB}
 
+\item{tempFolder}{String. Folder where temporal h5 file will be stored}
+
+\item{h5file}{String. Temporal h5 file will be stored. Only provide the name, since folder is a different argument.}
+
 \item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
 
 \item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`}
@@ -56,8 +63,6 @@ determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kern
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{outif}{String. Path output GeoTIFF file name.}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

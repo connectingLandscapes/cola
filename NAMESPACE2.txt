@@ -1,0 +1,5 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("stats", "na.omit")
+importFrom("methods", "is")
+importFrom("utils", "capture.output", "install.packages",
+               "installed.packages", "write.csv", "write.table")

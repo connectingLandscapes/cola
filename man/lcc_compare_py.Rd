@@ -28,6 +28,8 @@ lcc_compare_py(
 with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'. The first file
 used as the baseline scenario (sc0)#' @param outcsvabs String. File path to the csv output absolute difference table}
 
+\item{outcsvabs}{String. File path to the csv output absolute difference table}
+
 \item{outcsvrel}{String. File path to the csv output relative difference table}
 
 \item{outpngabs}{String. File path to the png output absolute difference plot}

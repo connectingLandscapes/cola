@@ -15,21 +15,19 @@ replacePixels(
 )
 }
 \arguments{
+\item{polPath}{String. Location of the vector layer}
+
 \item{burnval}{String. Value to burn. Can be a number or a attribute/column name}
 
 \item{rastPath}{String. Location of the raster layer}
 
-\item{colu}{Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.}
+\item{colu}{Logical/String. Column with the numeric value to rasterize. if FALSE is ignored.}
 
 \item{att}{Logical. Should be 'all-the-touched' pixels be considered? Default TRUE}
 
-\item{polpath}{String. Location of the vector layer}
+\item{rastCRS}{Logical. Use GDAL to perform the rasterization? Default FALSE}
 
-\item{lineBuffW}{Number. How many pixels should be used as buffer width for line geometries?}
-
-\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
-
-\item{show_result}{Logical. Print the command line result? Default TRUE}
+\item{gdal}{Logical. Use GDAL to perform the rasterization? Default FALSE}
 }
 \value{
 Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
@@ -39,8 +37,9 @@ Rasterize a polygon and sum it to an existing raster. Both layers need to be in 
  Not working on Windows at the moment.
 }
 \examples{
+if (FALSE){
 library(cola)
-library(terra)
+ibrary(terra)
 usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
 intif1 <- tempfile(fileext = '.tif')
 file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
@@ -51,7 +50,7 @@ replacedPol1 <- replacePixels(
  gdal = usegdal,
  rastPath = intif1
 )
-plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
+plot(terra::rast(replacedPol1), main = 'Replaced: Different value per polygon')
 
 intif2 <- tempfile(fileext = '.tif')
 file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
@@ -60,8 +59,8 @@ replacedPol2 <- replacePixels(
  burnval = 200,  gdal = usegdal,
  rastPath = intif2
 )
-plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
-
+plot(terra::rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+}
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

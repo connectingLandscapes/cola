@@ -56,7 +56,7 @@ sdm_extract_py(
 \item{batch_size}{Integer. Points per batch. Default is 25}
 
 \item{occurrence_asset}{String. GEE asset path for occurrence points.
-Default: {gee_assets}/{species}_occurrences_batched}
+Default: [GEE_ASSETS]/[SPECIES]_occurrences_batched}
 
 \item{column_train}{String. Column with the presence/absence [0-1] values.
 Only this column and year are kept from the occurrence asset. Default 'presence'}
@@ -86,9 +86,9 @@ Accepted and ignored.}
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
-List with log slots. In GEE will create this folder: {GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL-ID}
- The assets will be named as: SDM_{SOURCE}_{SPECIES}_{YEAR}_b01
- The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{SOURCE}_{SCALE}m_{MODEL_ID}.txt
+List with log slots. In GEE will create this folder: [GEE_ASSETS]/[SPECIES]_SDM_[SOURCE]_[SCALE]m_exports_[MODEL-ID]
+ The assets will be named as: SDM_[SOURCE]_[SPECIES]_[YEAR]_b01
+ The local log file is saved here: [WORKING_DIR]/completed_batches_[SPECIES]_[SOURCE]_[SCALE]m_[MODEL_ID].txt
 }
 \description{
 Extracts predictor variables at species occurrence locations

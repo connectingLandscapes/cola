@@ -37,12 +37,16 @@ sdm_model_fitting_py(
 
 \item{model_id}{String. Unique model run ID, e.g. puma_modis_m2}
 
+\item{modex}{String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'}
+
 \item{target_col}{String. Column with the absence/presence values, 0 and 1. Default is 'presence'}
+
+\item{gee_assets}{String. Root GEE assets folder (no trailing slash)}
 
 \item{working_dir}{String. Local working directory for model outputs. Skip spcaces.}
 
 \item{local_csv}{String. Path to local training CSV to skip EE asset loading.
-Default: {working_dir}/{model_id}_training.csv'}
+Default: [WORKING_DIR]/[MODEL_ID]_training.csv'}
 
 \item{predictor_source}{String. Must match extraction. Default 'modis'}
 
@@ -61,21 +65,17 @@ at the start. Default FALSE}
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
-
-\item{mode}{String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'}
-
-\item{gee_asset}{String. Root GEE assets folder (no trailing slash)}
 }
 \value{
 List with log slot. In Google Earth Engine these assets are created:
-GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
-GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
-GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
+GEE_CLASSIFIER_ID = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier'
+GEE_STRINGS_ID    = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier_strings'
+GEE_FEATURES_ID   = f'[GEE_ASSETS]/[MODEL_ID]_selected_features'
 These files are written locally:
-OUTPUT_MODEL    = {WORKING_DIR}/{MODEL_ID}_rf_final.pkl
-OUTPUT_FEATURES = {WORKING_DIR}/{MODEL_ID}_selected_features.csv
-OUTPUT_SIZING   = {WORKING_DIR}/{MODEL_ID}_rf_sizing.csv
-OUTPUT_SUMMARY  = {WORKING_DIR}/{MODEL_ID}_rf_summary.csv
+OUTPUT_MODEL    = [WORKING_DIR]/[MODEL_ID]_rf_final.pkl
+OUTPUT_FEATURES = [WORKING_DIR]/[MODEL_ID]_selected_features.csv
+OUTPUT_SIZING   = [WORKING_DIR]/[MODEL_ID]_rf_sizing.csv
+OUTPUT_SUMMARY  = [WORKING_DIR]/[MODEL_ID]_rf_summary.csv
 }
 \description{
 All outputs named after MODEL_ID — multiple runs never overwrite each other.

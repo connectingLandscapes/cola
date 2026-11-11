@@ -33,6 +33,10 @@ cdpop_mapstruct(
 \item{crs}{String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
+
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
 List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.

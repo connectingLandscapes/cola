@@ -31,6 +31,8 @@ lccJoblib_py(
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
 
+\item{outtif}{String. Path output GeoTIFF file name.}
+
 \item{maxdist}{Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.}
 
 \item{smooth}{Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.}
@@ -43,13 +45,13 @@ lccJoblib_py(
 
 \item{maxram}{Numeric. RAM to use in GB}
 
+\item{tempFolder}{String. Path to the temporal folder where intermediate zarr files will be saved.}
+
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{outif}{String. Path output GeoTIFF file name.}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

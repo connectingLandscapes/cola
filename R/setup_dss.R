@@ -1,3 +1,17 @@
+#' @title Install R packages in batch
+#' @description Installs R packages, trying CRAN, then github.
+#' @param x String. Name of the libraries to install. 
+#' @param devt Logical. Default FALSE. Is from a developer (github)?  
+#' @import devtools
+#' @return NULL. Prints in console logs regarding different steps
+#' @examples
+#' if (FALSE){ 
+#'   setup_cola_dss( )
+#' }
+#' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
 instPack <- function(x, devt = FALSE){
   sapply(x, FUN = function(y){
 
@@ -14,6 +28,20 @@ instPack <- function(x, devt = FALSE){
     }
   })
 }
+
+
+#' @title Install  \emph{COLA} graphical user interface
+#' @description Installs cola GUI. Requires several libraries to display maps and widgets.
+#' @param libs2colaDSS String. Name of the libraries to install. 
+#' @import devtools remotes
+#' @return NULL. Prints in console logs regarding different steps
+#' @examples
+#' if (FALSE){ 
+#'   setup_cola_dss( )
+#' }
+#' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
 
 setup_cola_dss <- function(
 
@@ -50,21 +78,20 @@ setup_cola_dss <- function(
     Sys.sleep(5)
   }
 
-  if (!require("devtools")) {
+  if (!requireNamespace("devtools")) {
     install.packages("devtools")
   }
-  library(devtools)
+  requireNamespace("devtools")
 
   if(Sys.info()["sysname"] == 'Windows'){
-    if(!find_rtools()){
+    if(!devtools::find_rtools()){
       warning(" No Rtools found. Please install it for your R version")
     }
   }
 
-  if (!require("remotes")) {
+  if (!requireNamespace("remotes")) {
     install.packages("remotes")
   }
-
 
   cola::instPack(libs2colaDSS )
 
@@ -73,65 +100,65 @@ setup_cola_dss <- function(
   #   devtools:::install_github("gearslaboratory/gdalUtils")
   # }
 
-  if (!require("shinydashboard")) {
+  if (!requireNamespace("shinydashboard")) {
     instPack("rstudio/shinydashboard", devt = TRUE)
   }
 
-  if (!require("shinySignals")) {
+  if (!requireNamespace("shinySignals")) {
     instPack("hadley/shinySignals")
-    if(!require('shinySignals') ){
+    if(!requireNamespace('shinySignals') ){
       remotes::install_github("hadley/shinySignals")
     }
   }
 
   # remotes::install_version("rjson", "0.2.20")
-  if (!require("shinySignals")) {
+  if (!requireNamespace("highcharter")) {
     instPack("highcharter") ## CRAN
-  }
+  } 
 
-  if(!require('highcharter') ){
+  if(!requireNamespace('highcharter') ){
     (remotes::install_github("jbkunst/highcharter"))
   }
 
-  if(!require('leaflet.extras') ){
+  if(!requireNamespace('leaflet.extras') ){
     remotes::install_github("trafficonese/leaflet.extras")
   }
 
-  library(bit) #
-  library(digest)
-  library(dplyr)
-  library(ggplot2)
-  library(gdalUtilities)
-  library(highcharter)
-  library(htmlwidgets)
-  library(htmltools)
-  library(leaflet)
-  library(leaflet.extras)
-  library(knitr)
-  library(magrittr)
-  #library(maptools) # deprecated
-  #library(raster) # deprecated
-  library(RColorBrewer)
-  #library(rgdal) # deprecated
-  #library(rgeos) # deprecated
-  library(rmarkdown)
-  library(sf)
-  library(shiny)
-  library(shinyalert)
-  library(shinyBS)
-  library(shinydashboard)
-  library(shinydashboardPlus)
-  library(shinyjs)
-  library(shinyWidgets)
-  library(dashboardthemes)
-  library(shinycssloaders)
-  library(tidyverse)
-  library(shiny)
-  library(reshape2)
-  library(DT)
-  library(tibble)
-  library(terra)
-  library(viridis)
+  requireNamespace("bit") #
+  requireNamespace("digest")
+  requireNamespace("dplyr")
+  requireNamespace("ggplot2")
+  requireNamespace("gdalUtilities")
+  requireNamespace("highcharter")
+  requireNamespace("htmlwidgets")
+  requireNamespace("htmltools")
+  requireNamespace("leaflet")
+  requireNamespace("leaflet.extras")
+  requireNamespace("knitr")
+  requireNamespace("magrittr")
+  #requireNamespace("maptools") # deprecated
+  #requireNamespace("raster") # deprecated
+  requireNamespace("RColorBrewer")
+  #requireNamespace("rgdal") # deprecated
+  #requireNamespace("rgeos") # deprecated
+  requireNamespace("rmarkdown")
+  requireNamespace("sf")
+  requireNamespace("shiny")
+  requireNamespace("shinyalert")
+  requireNamespace("shinyBS")
+  requireNamespace("shinydashboard")
+  requireNamespace("shinydashboardPlus")
+  requireNamespace("shinyjs")
+  requireNamespace("shinyWidgets")
+  requireNamespace("dashboardthemes")
+  requireNamespace("shinycssloaders")
+  requireNamespace("tidyverse")
+  requireNamespace("shiny")
+  requireNamespace("reshape2")
+  requireNamespace("DT")
+  requireNamespace("tibble")
+  requireNamespace("terra")
+  requireNamespace("viridis")
 
   #cat("\n\n   === All libraries required for COLA's DSS installed === \n\n")
   message("   === All libraries required for COLA's DSS installed === ")

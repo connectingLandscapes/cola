@@ -1,17 +1,20 @@
 #' @title Install  \emph{COLA}
-#' @description Installs cola software. Includes ´reticulate´ R package, miniconda, cola conda environment and libraries,
+#' @description Installs cola software. Includes `reticulate` R package, miniconda, cola conda environment and libraries,
 #' and defines the ways R and python should interact
 #' @param envName The environment name. 'cola' by default
 #' @param libs2Install The name of python libraries
 #' @param nSteps The number of steps for printing log in console
-#' @param force Force miniconda installation? Passed to ´reticulate::install_miniconda()´
+#' @param force Force miniconda installation? Passed to `reticulate::install_miniconda()`
 #' @param yml Use YML file to build the conda environment? Default FALSE
 #' @param ask Ask before installing reticulate, miniconda, and cola conda environment?. Default TRUE. If FALSE, will proceed without asking
 #' @param dss Install cola DSS as well? Default TRUE
-#' @param pyVer. String. Python version to install
+#' @param pyVer String. Python version to install
+#' @param spyder Logical. Install spyder-kernel? Useful for running CoLa on Spyder
 #' @param onlyIndividual Try installing libraries one by one? Default FALSE
 #' @param zarr Logical. Are you planning to use zarr libary? Default TRUE
 #' @param cola2 Logical. Installing CoLa2 python dependencies and enable DSS for it? Default is FALSE
+#' @param updateCola Logical. Update CoLa to a latest python? Default is FALSE
+#' @param oldestPyVer String. Oldest CoLa python version allowed. Used for conflicts. Default is 3.11.
 #' @param earthranger Logical. Installing earthranger python dependencies and enable DSS for it? Default is FALSE
 #' @param COLA_DATA_PATH String. Path were CoLa DSS results and session folders
 #' @param COLA_NCORES Integer. Number of cores to use
@@ -20,9 +23,12 @@
 #' @param COLA_VIZ_THRES_PIX Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor
 #' @param COLA_VIZ_RES_NCOL Integer. Number of columns to resample the raster to be displayed in the cola DSS.
 #' @param COLA_VIZ_RES_NROW Integer. Number of rows  to resample the raster to be displayed in the cola DSS.
+#' @import reticulate
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
-#' setup_cola()
+#' if (FALSE){ 
+#'     setup_cola( )
+#'  }
 #' @author Ivan Gonzalez <Ivan.Gonzalez@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -78,44 +84,44 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }
 
   ## Step 1. Install reticulate ----------------------------------------------
-  cat(sep = '', '\n  +Step 1/',nSteps, ': Installing & checking ´reticulate´ & ´processx´ R packages\n')
+  cat(sep = '', '\n  +Step 1/',nSteps, ': Installing & checking `reticulate` & `processx` R packages\n')
 
-  if (!require(reticulate) | !require(processx)){
+  if (!requireNamespace("reticulate") | !requireNamespace("processx")){
 
     user_permission <- FALSE
     if (ask){
-      user_permission <- utils::askYesNo("Install ´reticulate´ package?")
+      user_permission <- utils::askYesNo("Install `reticulate` package?")
     }
 
     if (isTRUE(user_permission) | !ask) {
-      cat(sep = '', '    Installing ´reticulate´\n')
+      cat(sep = '', '    Installing `reticulate`\n')
       install.packages('reticulate')
     } else {
-      message("You should run ´install.packages(c('reticulate', 'processx')´ before using this package")
+      message("You should run `install.packages(c('reticulate', 'processx')` before using this package")
       stop()
     }
 
   } else {
-    loadLib <- tryCatch({library(reticulate, quietly = TRUE); library(processx, quietly = TRUE)}, error = function(e) NULL)
+    loadLib <- tryCatch({requireNamespace("reticulate", quietly = TRUE); 
+      requireNamespace("processx", quietly = TRUE)}, error = function(e) NULL)
     if( is.null(loadLib) ) {
       diagnose_cola()
     } else {
-      cat(sep = '', '    ´reticulate´ package installed already!\n')
+      cat(sep = '', '    `reticulate` package installed already!\n')
     }
   }
 
 
-  library(reticulate)
-  library(processx)
-
+  requireNamespace("reticulate")
+  
   ## Step 2. Install miniconda ----------------------------------------------
 
   cat (sep = '', '\n  +Step 2/', nSteps, ' Installing & checking miniconda\n')
 
   # (sys <- reticulate::import("sys", convert = TRUE))
   # (instMiniConda <- tryCatch(reticulate::install_miniconda(force = TRUE), error = function (e) e))
-  # (updMiniConda <- tryCatch(reticulate::miniconda_update(path = miniconda_path()), error = function (e) e))
-  # miniconda_uninstall(miniconda_path())
+  # (updMiniConda <- tryCatch(reticulate::miniconda_update(path = reticulate::miniconda_path()), error = function (e) e))
+  # miniconda_uninstall(reticulate::miniconda_path())
   (miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL))
   (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
@@ -143,7 +149,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         paste0(
           "   Miniconda is likely to be installed but can't be found. Please try found 'conda' or 'conda.bat' files at:\n",
           '\t', newCondaPath2, '\n', '\t', newCondaPath , '\n',
-          '   Use R the command ´options(reticulate.conda_binary = "C:/path/to/conda.bat")´\n')
+          '   Use R the command `options(reticulate.conda_binary = "C:/path/to/conda.bat")`\n')
       )
       if(ask){
         user_permission <- utils::askYesNo("Reinstall miniconda? downloads 80MB and takes some minutes")
@@ -178,7 +184,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         diagnose_cola()
       }
     } else {
-      message("You should run ´reticulate::install_miniconda()´ before using this package")
+      message("You should run `reticulate::install_miniconda()` before using this package")
       stop()
     }
   } else {
@@ -202,11 +208,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
   if (is.null(condaLists)){
-    message(paste0('Is miniconda installed? Please run ´reticulate::conda_list()´ and be sure it returns a list of conda environments'))
+    message(paste0('Is miniconda installed? Please run `reticulate::conda_list()` and be sure it returns a list of conda environments'))
     diagnose_cola()
     stop("Can't find miniconda :/ ")
   } else {
-    if( class(condaLists) == 'data.frame'){
+    if ( any('data.frame' %in% is(condaLists)) ){
       if(any(grep('Anaconda|anaconda', condaLists$python))){
         warning(' STOP: Conda manager is Anaconda, not miniconda.',
                 ' Install miniconda by "reticulate::install_miniconda( force = TRUE)"')
@@ -220,14 +226,14 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
 
   if( is.null(pyBaseVersion) ){
-    message('We can´t check Python version for base conda environment.')
+    message('We can`t check Python version for base conda environment.')
     ## List conda after instaling
     diagnose_cola()
     stop()
   } else {
 
     ## Check base conda base version, update if older than 3.11
-    cat( '    Using', pyBaseVersion, 'for ´base´ conda environment\n')
+    cat( '    Using', pyBaseVersion, 'for `base` conda environment\n')
     (numPyVers <- as.numeric(substr(0, 4, x = gsub('Python|python| ', '', pyBaseVersion))))
     (numPyVers2 <- gsub('Python|python| ', '', pyBaseVersion))
     if ( zarr & numPyVers <= as.numeric(oldestPyVer) ){
@@ -248,14 +254,14 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   (numPyVers3  <- ifelse(!is.null(numPyVers), numPyVers, numPyVers2))
 
   ## Conda exists // check for cola
-  if ( class(condaLists) == 'data.frame' ){
+  if ( any('data.frame' %in% is(condaLists) ) ){
 
     ## Error: Env exists but empty -- prob broken uninstall
     if( envName %in% condaLists$name ){
       (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
       if (!file.exists(pyCola)){
         message(paste0(' Uninstalling corrupt previous installation'))
-        tryCatch(conda_remove(envName))
+        tryCatch(reticulate::conda_remove(envName))
         (condaLists <- tryCatch( reticulate::conda_list(), error = function (e) NULL))
       }
     }
@@ -277,7 +283,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
 
       if ( isTRUE( user_permission ) ) {
-        cat( '    Installing ´', envName, '´ conda environment ... \n', sep = '')
+        cat( '    Installing `', envName, '` conda environment ... \n', sep = '')
         if( !onlyIndividual ){
           insCondLog <- install_conda_env(
             envName = envName, useYML = yml,
@@ -292,9 +298,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
         ## Error: folder exists but empty
         if ( any( grep('Could not solve for environment specs', insCondLog) ) & isTRUE(force)){
-          envDir <- file.path(miniconda_path(), 'envs', envName)
+          envDir <- file.path(reticulate::miniconda_path(), 'envs', envName)
           if ( dir.exists(envDir) ){
-            conda_remove(envName)
+            reticulate::conda_remove(envName)
             unlink( envDir, recursive = TRUE, force = TRUE )
             insCondLog <- install_conda_env(envName = envName, useYML = yml,
                                             ymlFile = newYmlFile,
@@ -303,8 +309,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         }
         # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "create" "--yes" "--name" "cola" "python=3.8" "--quiet" "-c" "conda-forge"
       } else {
-        message(paste0('You need to run ´conda_create("', envName,'", python_version = "',
-                       pyVer,'")´ before using this package'))
+        message(paste0('You need to run `reticulate::conda_create("', envName,'", python_version = "',
+                       pyVer,'")` before using this package'))
         stop()
       }
 
@@ -312,7 +318,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       ## The env exists
 
       colaexe <- condaLists$python[condaLists$name %in% envName]
-      cat (sep = '', '    ´', envName, '´ conda environment installed in ', cola::adaptFilePath(colaexe), '\n')
+      cat (sep = '', '    `', envName, '` conda environment installed in ', cola::adaptFilePath(colaexe), '\n')
       (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
       (pyColaVersion <- tryCatch(system( paste0( pyCola, ' -V') , intern = TRUE), error = function(e) NULL))
       (pyVer2 <- gsub('Python|python| ', '', pyColaVersion))
@@ -364,18 +370,18 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   ## Confirm env name
   (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
   if ( is.null(pyCola) | length(pyCola) == 0 ){
-    message(paste0('You should run ´conda_create("', envName ,'")´ before using this package'))
+    message(paste0('You should run `reticulate::conda_create("', envName ,'")` before using this package'))
     stop()
   } else {
     if( is.character(pyCola) & file.exists(pyCola) ){
-      cat (sep = '', '    ´', envName, '´ conda environment named correctly!\n')
+      cat (sep = '', '    `', envName, '` conda environment named correctly!\n')
     } else {
 
       ## Error -- cola/python.exe saved on paths but doesn't exists
       if (!file.exists(pyCola)){
         if (!file.exists(pyCola)){
           message(paste0(' Uninstalling corrupt previous installation'))
-          tryCatch(conda_remove(envName))
+          tryCatch(reticulate::conda_remove(envName))
           insCondLog <- install_conda_env(envName = envName, useYML = yml, ymlFile = newYmlFile)
         }
       }
@@ -383,9 +389,9 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       ## Error -- no name of conda under "conda info --envs"
       (possiblePy <- grep(paste0(envName, '/python'), condaLists$python, value = TRUE))
       if( any(length(possiblePy)) ) {
-        (minibat <- file.path(miniconda_path(), 'condabin/conda.bat'))
+        (minibat <- file.path(reticulate::miniconda_path(), 'condabin/conda.bat'))
         if( file.exists(minibat) & !(envName %in% condaLists$name) ){
-          cat (sep = '', '    ´', envName ,'´ was found but in a different path: ', envPath2Add, '\n')
+          cat (sep = '', '    `', envName ,'` was found but in a different path: ', envPath2Add, '\n')
 
           ## Syntax example from reticulate:
           # + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "pytables"
@@ -401,7 +407,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
           if (is.null(pyCola)){
             envPath2Add <- dirname(dirname(possiblePy))
-            cat (sep = '', '    The ´', envName ,'´ was found but in a different path.\n',
+            cat (sep = '', '    The `', envName ,'` was found but in a different path.\n',
                  '    Try to run in your miniconda shell:\n         conda config --append envs_dirs ', envPath2Add, ' \n')
           }
         }
@@ -412,7 +418,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   (test_pyCola <- paste0( pyCola, ' -V'))
   (pyColaVersion <- tryCatch(system( test_pyCola , intern = TRUE), error = function(e) NULL))
   if( is.null(pyColaVersion)){
-    message('We can´t check python version.')
+    message('We can`t check python version.')
     ## List conda after instaling
     diagnose_cola()
     stop()
@@ -514,7 +520,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
 
       if( (! lib2 %in% avLibs$package ) | !versOK ){ #
-        cat(paste0(' \n --- Installing ´',  libs2inst[l], '´ module\n'))
+        cat(paste0(' \n --- Installing `',  libs2inst[l], '` module\n'))
         cat(' + Try 1, conda_install and conda-forge(',lib2inst,') \n')
 
         logPkg <- tryCatch(
@@ -524,7 +530,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
           error = function (e) e)
 
         # reticulate::conda_install(envname = envName, channel = "conda-forge", packages = 'numexpr')
-        # -- Installing ´gdal´ module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
+        # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
 
         ## If there's a problem installing trought conda-forge, use PIP
         if( any(!is.null(logPkg)) ){
@@ -581,10 +587,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
   }))))
 
   if( length(noInsLibs) > 0 ){
-    cat (sep = '', '  ´', envName, '´ conda environment installed!\n')
-    warning(paste(sep = '', "   Some python libraries aren't installed. Try ´reticulate::conda_install(envname = '", envName,
+    cat (sep = '', '  `', envName, '` conda environment installed!\n')
+    warning(paste(sep = '', "   Some python libraries aren't installed. Try `reticulate::conda_install(envname = '", envName,
                   "', channel = 'conda-forge', packages = c('",
-                  paste0(noInsLibs, collapse= "', '"), "')´"))
+                  paste0(noInsLibs, collapse= "', '"), "')`"))
     diagnose_cola()
 
   } else {
@@ -698,7 +704,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     #     # cat(cmd_add_gdal)
     #     logA <- tryCatch(system(cmd_add_gdal, intern = TRUE), error = function(e) e)
     #     # PS C:\WINDOWS\system32> setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\share\gdal
-    #     # CORRECTO: se guardó el valor especificado.
+    #     # CORRECTO: se guardo el valor especificado.
     #   }
     #
     #   ## Paths with dll files
@@ -711,7 +717,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     #                             (gsub(fixed = T, "/", "\\", gsub("//", "/", dirname(gdal_data_path)) ))
     #     ) )
     #     # setx /m GDAL_DATA C:\Users\Admin\AppData\Local\r-miniconda\envs\cola\Library\bin
-    #     # CORRECTO: se guardó el valor especificado.
+    #     # CORRECTO: se guardo el valor especificado.
     #   }
     #
     # cat (sep = '', "\n    If any error detected, try to run in the command line (or power shell) as admin the instruction: \n",
@@ -875,10 +881,10 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         cat (sep = '', '\n  + Extra step: Installing EarthRanger\n')
         cat (sep = '', '    This step will take some time ... please wait (~1.5GB) \n')
 
-        lists_conda_er <- conda_list()
+        lists_conda_er <- reticulate::conda_list()
         if( ! "earthranger" %in%  lists_conda_er$name){
-          tryCatch(conda_create("earthranger"), error = function (e ) e )
-          lists_conda_er <- conda_list()
+          tryCatch(reticulate::conda_create("earthranger"), error = function (e ) e )
+          lists_conda_er <- reticulate::conda_list()
         }
 
         (py_er <- adaptFilePath(subset(lists_conda_er, name == "earthranger")$python))
@@ -887,7 +893,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         (erLibs <- c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy', 'pyogrio')) # 'pyogrio'
         (erLibs2inst <- erLibs[!erLibs %in% avLibsER$package])
         if ( ! any(erLibs2inst %in% avLibsER$package )) {
-          tryCatch(conda_install("earthranger", packages = erLibs2inst, pip  = TRUE, error = function (e ) e ))
+          tryCatch(reticulate::conda_install("earthranger", packages = erLibs2inst, pip  = TRUE, error = function (e ) e ))
         }
         # if ( ! 'scipy' %in% avLibsER$package ){
         #   tryCatch(conda_install("er", packages = c('geopandas', 'rasterio', 'fiona', 'scipy')), error = function (e ) e )
@@ -897,7 +903,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         # }
 
         if (spyder &  (! 'spyder-kernels' %in% avLibsER$package) ){
-          tryCatch(conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
+          tryCatch(reticulate::conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
         }
         # conda_create( envname = 'earthranger', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
         # conda_install( envname = 'er2', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
@@ -971,8 +977,11 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
 #' @title Diagnose  \emph{COLA} installation
 #' @description Runs some test assessing the correct cola installation
-#' @param envName The environment name. 'cola' by default
-#' @param libs2Install The name of python libraries
+#' @param envName String. The environment name. 'cola' by default
+#' @param libs2Install String. Vector of the name of python libraries
+#' @param cola2 Logical. Consider CoLa2? Default is FALSE
+#' @param zarr Logical. Consider zarr python module? Default is TRUE
+#' @import reticulate
 #' @return NULL. Prints in console five (5) logs regarding different steps
 #' @examples
 #' diagnose_cola()
@@ -991,6 +1000,7 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
                                            'kdepy',
                                            'scikit-image')){
 
+
   if (cola2){
     libs2Install <- c('geemap', libs2Install)
   }
@@ -1000,40 +1010,40 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
   }
 
   cat(sep = '',
-      ' \n\n\t ==== Diagnosing CoLa ==== \nWe will look for errors. Running ´cola::setup_cola()´ should help you to configure the package.\n',
+      ' \n\n\t ==== Diagnosing CoLa ==== \nWe will look for errors. Running `cola::setup_cola()` should help you to configure the package.\n',
       ' Please refer to https://github.com/connectingLandscapes/cola/blob/main/known-issues.md for more details.\nHere the diagnostic: (please wait a moment)\n')
 
   colaDir <- 'NOTFOUND'
-  if ( !require(reticulate) ){
-    cat("  1. ´reticulate´ package is not installed. Try ´install.packages('reticulate')´ \n")
+  if ( !requireNamespace("reticulate") ){
+    cat("  1. `reticulate` package is not installed. Try `install.packages('reticulate')` \n")
 
   } else{
-    cat("  1. ´reticulate´ package installed. Evaluating next step \n")
-    library(reticulate)
+    cat("  1. `reticulate` package installed. Evaluating next step \n")
+    requireNamespace("reticulate")
     ## Reticulate available. Next check
     miniPath <- tryCatch(reticulate::miniconda_path(), error = function (e) NULL)
     (miniBase <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
 
     if (is.null(miniPath) | is.null(miniBase)){
-      cat("  2. ´miniconda´ software is not installed. Try ´reticulate::install_miniconda()´\n")
+      cat("  2. `miniconda` software is not installed. Try `reticulate::install_miniconda()`\n")
 
     } else {
-      cat("  2. ´miniconda´ software installed. Evaluating next step \n")
+      cat("  2. `miniconda` software installed. Evaluating next step \n")
       ## Miniconda available. Next check
       avEnv <- tryCatch(reticulate::conda_list(), error = function (e) NULL)
       if (is.null(avEnv)){
-        cat(sep = '', "  3. ´", envName, "´ conda environment not installed. Try ´reticulate::conda_create('",
-            envName, "')´\n")
+        cat(sep = '', "  3. `", envName, "` conda environment not installed. Try `reticulate::conda_create('",
+            envName, "')`\n")
       } else {
-        if ( class(avEnv) == 'data.frame' ){
+        if ( any('data.frame' %in% is(avEnv)) ){
           if( !envName %in% avEnv$name ){
-            cat(sep = '', "  3. ´", envName, "´ conda environment not installed. Try in R: \n\t    ´reticulate::conda_create('",
-                envName, "')´\n\t or in conda CMD ´conda env create -f ",
-                system.file('python/python_conda_config.yml', package = "cola"),"´\n")
+            cat(sep = '', "  3. `", envName, "` conda environment not installed. Try in R: \n\t    `reticulate::conda_create('",
+                envName, "')`\n\t or in conda CMD `conda env create -f ",
+                system.file('python/python_conda_config.yml', package = "cola"),"`\n")
 
           } else {
 
-            cat("  3. ´cola´ conda environment installed. Evaluating next step \n")
+            cat("  3. `cola` conda environment installed. Evaluating next step \n")
 
             ## cola available. Next check
             avLibs <- reticulate::py_list_packages(envname = envName,
@@ -1046,14 +1056,14 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
                   (gsub('==', '=', libs2Install) %in% avLibs$requirement))])
 
             if(length(noInsLibs) != 0){
-              cat(sep = '', "  4. Some python libraries aren't installed. Try:\nR: ´reticulate::conda_install(envname = '", envName,
+              cat(sep = '', "  4. Some python libraries aren't installed. Try:\nR: `reticulate::conda_install(envName = '", envName,
                   "', channel = 'conda-forge', packages = c('",
-                  paste0(noInsLibs, collapse= "', '"), "'))´\n conda CMD: conda install -n ", envName, " -c conda-forge ",
+                  paste0(noInsLibs, collapse= "', '"), "'))`\n conda CMD: conda install -n ", envName, " -c conda-forge ",
                   paste0(noInsLibs, collapse= " "), '\n'
               )
             } else {
 
-              cat("  4. All ´cola´ conda environment packages installed. Evaluating next step \n")
+              cat("  4. All `cola` conda environment packages installed. Evaluating next step \n")
 
 
               ## All libs installed
@@ -1071,8 +1081,8 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
 
               } else {
                 cat(sep = '', "  5. Can't connect to python scripts'. The scripts seems to exists, but are not saved ",
-                    "by ´cola::setup_cola( )´ likely because it wasn't able to run the test we designed.\n",
-                    "  ´Sys.getenv('COLA_PYTHON_PATH')´ and ´Sys.getenv('COLA_SCRIPTS_PATH')´ should have the paths to ´cola´ python and folder path.\n",
+                    "by `cola::setup_cola( )` likely because it wasn't able to run the test we designed.\n",
+                    "  `Sys.getenv('COLA_PYTHON_PATH')` and `Sys.getenv('COLA_SCRIPTS_PATH')` should have the paths to `cola` python and folder path.\n",
                     "This error usually arises when some libraries can't be used by python. ",
                     "We solved this by getting the last version of R\nPlease go to:\n\t",
                     "https://github.com/connectingLandscapes/cola/blob/main/known-issues.md")
@@ -1092,11 +1102,11 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
     ))
     if( FALSE) {
       cat(' We found some errors. Please chek the following steps:\n',
-          '  1. ´reticulate´ package installed. Try ´require(reticulate)´. Must be TRUE\n',
-          '  2. ´miniconda´ software installed. Try ´miniconda_path()´. Must a valid path\n',
-          '    2a. If error occurred, try: ´miniconda_update()´\n',
-          '    2b. If error occurred, try: ´reticulate::miniconda_uninstall()´ and then ´reticulate::install_miniconda()´\n',
-          '  3. ´cola´ conda environment installed. Try ´reticulate::conda_list()´ to see installed environments\n')
+          '  1. `reticulate` package installed. Try `require(reticulate)`. Must be TRUE\n',
+          '  2. `miniconda` software installed. Try `reticulate::miniconda_path()`. Must a valid path\n',
+          '    2a. If error occurred, try: `miniconda_update()`\n',
+          '    2b. If error occurred, try: `reticulate::miniconda_uninstall()` and then `reticulate::install_miniconda()`\n',
+          '  3. `cola` conda environment installed. Try `reticulate::conda_list()` to see installed environments\n')
     }
   }
 }
@@ -1104,11 +1114,13 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
 
 
 #' @title Install \emph{cola} conda environment
-#' @description Installs ´cola´ conda environment
+#' @description Installs `cola` conda environment
 #' @param envName The environment name. 'cola' by default
+#' @param useYML Logical. Use YML to create the environment
 #' @param ymlFile Path to YML to use. Default is NULL
 #' @param packagess String. Vector of packagess to be installed. Default is NULL
 #' @param pv String. Python version to use. Default value is '3.12.11'
+#' @import reticulate
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
 #' install_conda_env(envName = 'cola',
@@ -1118,6 +1130,8 @@ diagnose_cola <- function(envName = 'cola', cola2 = FALSE, zarr = TRUE,
 #' @export
 install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
                               packagess = NULL , pv = '3.12.11'){
+
+  requireNamespace("reticulate")
 
   if(useYML & is.null(ymlFile) ){
     ymlFile = system.file('python/python_conda_config.yml', package = "cola")
@@ -1129,32 +1143,32 @@ install_conda_env <- function(envName, useYML = FALSE, ymlFile = NULL,
 
   if( useYML ){
     ## Create env using yml file
-    (instCondEnv <- paste0(conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
+    (instCondEnv <- paste0(reticulate::conda_binary(), ' "env" "create" "--file" "', newYmlFile, '"'))
     cat('   Creating conda using YML file:', instCondEnv, '\n')
     insCondLog <- tryCatch(system(instCondEnv, intern = TRUE),
                            error = function(e) e$message) #
 
     if( any(grep('Could not solve for environment specs', insCondLog)) ){
-      cat('   YML creation failed. Trying conda_create("', envName, '")\n')
+      cat('   YML creation failed. Trying reticulate::conda_create("', envName, '")\n')
       insCondLog <- tryCatch(
-        conda_create(envname = envName, packages = packagess, python_version = pv),
+        reticulate::conda_create(envname = envName, packages = packagess, python_version = pv),
         error = function(e) e$message)
     }
 
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try:\n     conda_remove(envname ="', envName,
-           '")\n     conda_create("', envName, '", python_version = "3.12.11")\n')
+           'Try:\n     reticulate::conda_remove(envname ="', envName,
+           '")\n     reticulate::conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   } else {
     ## Creating env with no yml
     insCondLog <- tryCatch(
-      conda_create(envname =  envName,  packages = packagess,
+      reticulate::conda_create(envname =  envName,  packages = packagess,
                    python_version = pv), error = function(e) e$message)
 
     if( any(grep(' prefix already exists', insCondLog)) ){
       cat( 'ERROR: ', insCondLog, '\n',
-           'Try conda_remove(envname ="', envName, '"); conda_create("', envName, '", python_version = "3.12.11")\n')
+           'Try reticulate::conda_remove(envname ="', envName, '"); reticulate::conda_create("', envName, '", python_version = "3.12.11")\n')
     }
   }
   return(insCondLog)

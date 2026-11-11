@@ -45,7 +45,7 @@ export_ee2gd_py(
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }
 \value{
-List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]
 }
 \description{
 Export all the rasters inside a Google Earth Ranger folder
@@ -53,8 +53,8 @@ Usage:
   python cml_EEtoGD.py --species puma --model_id puma_modis_m2 \
   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
 
-This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-sdm_model_fitting_py( ) {Classifier} function
+This function requires the inputs of sdm_modis_export_py( ) [Metrics] and
+sdm_model_fitting_py( ) [Classifier] function
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

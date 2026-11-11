@@ -31,8 +31,10 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @param template String. Path/filename of a template raster used for interpolation
 #' @param method String. Interpolation method. One of 'multiquadric', 'thin_plate_spline', 'linear', or 'idw'.
 #' @param neighbors String. Number of neighbors to use for interpolation. Either a positive integer < the total number of occupied points or 'all'.
-#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
 #' grid <- system.file(package = 'cola', 'sampledata/cdpop/grid0.csv')
@@ -45,7 +47,6 @@ cola_dss <- function(launch.browser = TRUE)  {
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-
 cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                             pyscript = system.file(package = 'cola', 'python/interpolate_popstructure.py'),
                             grids, template,
@@ -82,15 +83,15 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   aargs <- c(
     adaptFilePath(pyscript),
-    #'--grids',
+    # --grids',
     grids,
-    #'--template',
+    # --template',
     template,
-    #'--method',
+    # --method',
     method,
-    #'--neighbors',
+    # --neighbors',
     neighbors,
-    #'--crs',
+    # --crs,
     crs
   )
 
@@ -141,10 +142,12 @@ cdpop_mapstruct <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param grids String. Vector with the CDPOP output files to be interpolated
 #' @param template String. Raster template for interpolating the files
 #' @param method String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'
-#' @param bandwiths String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer
+#' @param bandwidths String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer
 #' @param type String. Specify whether count per cell or count per km2 should be returned. Options are: 'count', 'density'
-#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @param crs String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.
 #' @examples
 #'
@@ -244,20 +247,21 @@ cdpop_mapdensity <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param agevars String. CSV age file path location. Full path or relative to the CDOPOP Python script
 #' @param cdmat String. CSV cost-distance matrix file path location. Full path or relative to the CDOPOP Python script
 #' @param xy String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script
-#' @param tempfolder String. Folder where results will be saved
+#' @param tempFolder String. Folder where results will be saved
 #' @param prefix String. String added to output folder
-#' @param show_cml String. Print the cola command line?. Default TRUE
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
 #' @examples
 #' (out_dir <- tempfile())
 #' dir.create(out_dir)
 #'
 #' (invarfile <- file.path(out_dir, 'invars.csv'))
 #' (xyfile <- file.path(out_dir, 'xy.csv'))
-#'
+#' (cdmatrix <- file.path(out_dir, 'xy.csv'))
 #' file.copy(system.file(package = 'cola', 'sampledata/invars.csv'), invarfile)
 #' file.copy(system.file(package = 'cola', 'sampledata/xy.csv'), xyfile)
+#' file.copy(system.file(package = 'cola', 'sampledata/cdmatrix.csv'), cdmatrix)
 #'
 #' cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
 #'                           prefix = 'test', tempFolder = out_dir)
@@ -272,7 +276,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
                      cdmat = NULL,
                      xy = NULL,
                      tempFolder,
-                     prefix = paste0('cdpopout', sessionIDgen(only3 = TRUE)),
+                     prefix = paste0('cdpopout', paste0(sample(LETTERS, 3), collapse = '')),
                      dry_run = FALSE,
                      show_cml = TRUE, show_result = TRUE){
 
@@ -372,7 +376,6 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
-
   newFiles0 <- list.files(path = datapath, recursive = TRUE, full.names = TRUE)
   (newFiles <- grep(pattern = cdpopPath, x = newFiles0, value = TRUE))
 
@@ -408,6 +411,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param mortrast String. Optional. Path to mortality/resistance raster. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are scaled between 0 and 100.
 #' @param survrast String. Optional. Path to survival/suitability raster. This argument will be ignored if a valid mortrast is provided. If it is a valid  raster, extracts the values to populate the 'Subpop_mortperc' field. The extracted values are flipped upside down and scaled between 0 and 100.
 #' @param porcEmpty Integer. percentage of locations (points) that randomly will be considered empty and possible to be colonized.
+#' @import terra sf
 #' @return String. Path to a temporal xy.csv file. Writes the same file at the outxy path
 #' @examples
 #' (tempfolder <- tempfile())
@@ -449,7 +453,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
   xy$ID <- 1:nrow(xy)
   xy$Subpopulation <- 1#:nrow(xy)
   if ( any(!c('XCOORD', 'YCOORD') %in% names(xy))  ){
-    xy_coord <- data.frame(geom(xy))
+    xy_coord <- data.frame( terra::geom(xy) )
     xy$XCOORD <- xy_coord$x
     xy$YCOORD <- xy_coord$y
   }
@@ -519,7 +523,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
               #rx <- terra::rast(survrast)
               #exct <- (terra::extract(rx, xynew[, c( 'X', 'Y')]))
               #vect2add <- as.numeric(exct[, 2])
-              vals2add <- (max(vect2add, na.rm = TRUE) - vect2add)/max(vect2add)*100
+              vals2add <- (max(vals2add, na.rm = TRUE) - vals2add)/max(vals2add)*100
               xynew$Subpop_mortperc <- vals2add
             }
           }
@@ -568,7 +572,7 @@ shp2xy <- function(shapefile, outxy, tempDir,
 guessNoData <- function(path){
   # path <- input_tif
   ans <- -9999
-  if (require(gdalUtilities) & file.exists(path)){
+  if (requireNamespace('gdalUtilities') & file.exists(path)){
     suppressWarnings( gi <- strsplit(gdalUtilities::gdalinfo(path, quiet = TRUE), '\n')[[1]] )
     ndv <- grep('NoData ', gi, value = TRUE)
     if( any(length(ndv)) ) {
@@ -587,10 +591,13 @@ guessNoData <- function(path){
 #' @title  Get MinMax value from raster layer
 #' @description Extracts the min and max value from raster
 #' @param rastPath File location or raster layer. Accepts file path or SpatRaster object
+#' @param na.rm Logical. Ignore NA values? Defualt is TRUE
+#' @import terra
+#' @importFrom terra setMinMax minmax global sources
 #' @return Numeric vector of two numbers
 #' @examples
 #' input_tif <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' getMnMx(input_tif)
+#' getMnMx(rastPath = input_tif)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -599,11 +606,9 @@ getMnMx <- function(rastPath, na.rm = TRUE){
   # rastPath <- rastPath0
   #rastPath = '/data/tempR/colaEXR2025012814493505/Mountainaire_prePercentCanopy30m.tif'
   # rastPath = 'C:/temp/cola/colaOCC2025011423394005//out_lcc_JCH2025011423414805.tif'
-  na.rm * 1
-
   ra <- c(NA, NA)
   # Path path
-  if(class(rastPath) == 'character'){
+  if( 'character' %in% is(rastPath)){
     invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
     #ra2 <- sf::gdal_utils('info', rastPath,  options = c('-stats'))
     ra <- as.numeric(strsplit(split = ',',
@@ -613,10 +618,10 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 
     if( !(all(is.numeric(ra)) & all(!is.infinite(ra)))  ){
       rst <- terra::rast(rastPath)
-      ra <- setMinMax(rst, force=TRUE)
-      ra <- minmax(rst)[1:2]
+      ra <- terra::setMinMax(rst, force=TRUE)
+      ra <- terra::minmax(rst)[1:2]
       if( !(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
-        ra <- global(rst, 'range' )
+        ra <- terra::global(rst, 'range' )
         if(!(all(is.numeric(ra)) & all(!is.infinite(ra))) ){
           (ra <- range(rst[], na.rm = TRUE))
         }
@@ -624,16 +629,16 @@ getMnMx <- function(rastPath, na.rm = TRUE){
     }
 
     # Raster path
-  } else if (class(rastPath) == 'SpatRaster'){
+  } else if ('SpatRaster' %in% is(rastPath)){
     rst <- (rastPath)
-    rastPath <- sources(rst)
+    rastPath <- terra::sources(rst)
     if(file.exists(rastPath)){ # in disk
       invisible(ras <- sf::gdal_utils('info', rastPath,  options = c('-mm'), quiet = TRUE))
       ra <- as.numeric(strsplit(split = ',',
                                 gsub('.+=', '', grep(strsplit(ras, '\n')[[1]], pattern = 'Min/Max', value = TRUE))
       )[[1]])
     } else { # in memory
-      ra <- minmax(rst)[1:2]
+      ra <- terra::minmax(rst)[1:2]
     }
   }
   return(ra)
@@ -646,7 +651,7 @@ getMnMx <- function(rastPath, na.rm = TRUE){
 #' @title  Adapt file path. Change backslash to slash
 #' @description Fix paths so internal console recognize paths. Change double backslash to slash
 #' @param path File location
-#' @param quote String. Character to use as quote
+#' @param quo String. Character to use as quote
 #' @return File location String using slash as separator
 #' @examples
 #' newPath <- adaptFilePath('\\temp\\path\\to\\file\\here.tif')
@@ -666,7 +671,7 @@ adaptFilePath <- function(path, quo = '"'){
 #' @title Quote file path if space is detected
 #' @description This function add double quotes to the string if a space is detected
 #' @param path String. The file path to be quoted
-#' @param quote String. Character to use as quote
+#' @param quo String. Character to use as quote
 #' @examples
 #' library(cola)
 #' quotepath(path = c('C:/Users/First Second Name/Documents', 'C:/Users/FirstSecondName/Documents'))
@@ -697,7 +702,8 @@ quotepath <- function(path, quo = '"')  {
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
+#' sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1,
+#'     maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 #' hs_rast <- terra::rast(sr$file)
 #' plot(hs_rast, main = 'Surface Resistance')
 #' @author Ivan Gonzalez <ig299@@nau.edu>
@@ -782,6 +788,8 @@ sui2res_py <- function(
 #' @param npts Numeric. Number of points
 #' @param rmin Numeric. Raster minimum values o¿to consider
 #' @param rmax Numeric. Raster maximun value to consider
+#' @importFrom terra xyFromCell
+#' @import terra
 #' @return Path with CDPOP results
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
@@ -800,7 +808,7 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
   randPos <- sample(newRast, size = npts)
 
   ## Extracting xy from selected cells
-  xyRand <- data.frame(xyFromCell(x, cell = randPos))
+  xyRand <- data.frame(terra::xyFromCell(rvect, cell = randPos))
 
   ## Extracting values from selected cells
   # xyRand$val <- terra::extract(x = x, y = randPos)[, 1]
@@ -814,9 +822,8 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @description Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
 #' @param py String. Python location or executable. The string used in R command line to activate `cola`. The default version should point to a conda environment. Might change among computers versions
 #' @param pyscript String. Python script location
-#' @param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance input raster with no spaces. Requires a projected file with square pixels. Not LonLat projection allowed
-#' @param outtif String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
+#' @param outshp String. Output point layer file path, with no spaces. Written in ESRI Shapefile format.
 #' @param smin Numeric. Minimum value. The lower value of the pixels in the raster to consider to simulate the points.
 #' @param smax Numeric. Maximum value. The upper value of the pixels in the raster to consider to simulate the points.
 #' @param npoints Integer. Number of points. Number of points to simulate.
@@ -832,7 +839,8 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
 #' # hs_path <- 'C:/path/to/raster.tif'
 #' (points_path <- tempfile(fileext = '.shp'))
-#' pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2, smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
+#' pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2,
+#'   smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 #' plot(vect(pts_result$file))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -845,6 +853,7 @@ points_py <- function(
     dry_run = FALSE,
     show_cml = TRUE, show_result = TRUE){
 
+  #@param inshp  String. Source points file path to the point layer with no spaces. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 
   if( !file.exists(py)){
     stop('Python not found')
@@ -864,11 +873,11 @@ points_py <- function(
   aargs <- c( # script, then all
     adaptFilePath(pyscript)
     , quotepath(intif)
-    , quotepath(outshp),
-    , format(smin, scientific=F),
-    , format(smax, scientific=F),
-    , format(npoints, scientific=F),
-    , issuit,
+    , quotepath(outshp)
+    , format(smin, scientific=F)
+    , format(smax, scientific=F)
+    , format(npoints, scientific=F)
+    , issuit
     , upcrs
   )
 
@@ -1020,7 +1029,7 @@ cdmat_py <- function(
 #' @description Run the factorial least cost corridors algorithm. Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
 #' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
 #' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
@@ -1203,13 +1212,14 @@ lcc_py <- function(
 #' @description Run the factorial least cost corridors algorithm using the parallel computing library joblib. Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
 #' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
 #' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param maxram Numeric. RAM to use in GB
+#' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
@@ -1330,13 +1340,17 @@ lccJoblib_py <- function(
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
 #' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
 #' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param maxram Numeric. RAM to use in GB
+#' @param nodeOrderFile String. Path to the output csv file with nodes order
+#' @param nodeIdsFile String. Path to the output csv file with nodes IDs
+#' @param pairzarr String. H5 file to store point pairs rasters. Created in temporal folder if not provided
+#' @param distzarr String. H5 file to store point distance rasters. Created in temporal folder if not provided
 #' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
 #' @param eci Numeric. End corridor index. Default is 'None'
 #' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
@@ -1368,10 +1382,12 @@ lccZarr_py <- function(
     ncores = as.numeric(Sys.getenv('COLA_NCORES')),
     maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
     crs = 'None',
-    sci = 'None', eci = 'None',
     tempFolder = NULL,
+    nodeOrderFile,
+    nodeIdsFile,
     pairzarr = NULL,
     distzarr = NULL,
+    sci = 'None', eci = 'None',
     dry_run = FALSE,
     show_cml = TRUE, show_result = TRUE){
 
@@ -1528,7 +1544,8 @@ lccZarr_py <- function(
     format(ncores, scientific=F),
     crs,
     pairzarr, distzarr,
-    reOrderFile, nodeidsFile,
+    nodeOrderFile,
+    nodeIdsFile,
     maxram
     );
 
@@ -1566,11 +1583,12 @@ lccZarr_py <- function(
     format(tolerance, scientific=F),
     format(ncores, scientific=F),
     crs,
-    reOrderFile,
-    nodeidsFile,
+    nodeOrderFile,
+    nodeIdsFile,
     format(sci, scientific=F),
-    format(eci, scientific=F),
+    format(eci, scientific=F)
     )
+
 
   (cmdB_ <- paste0(
     adaptFilePath(py), ' ', paste(aargsB, collapse = ' '), collapse = ''))
@@ -1626,15 +1644,14 @@ lccZarr_py <- function(
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
-#' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
-#' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param maxram Numeric. RAM to use in GB
-#' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
-#' @param eci Numeric. End corridor index. Default is 'None'
+#' @param nodeOrderFile String. Path to the output csv file with nodes order
+#' @param nodeIdsFile String. Path to the output csv file with nodes IDs
+#' @param pairzarr String. H5 file to store point pairs rasters. Created in temporal folder if not provided
+#' @param distzarr String. H5 file to store point distance rasters. Created in temporal folder if not provided
 #' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`
@@ -1662,8 +1679,7 @@ lccZarrA_py <- function(inshp, intif,
                         tempFolder = NULL,
                         pairzarr = NULL,
                         distzarr = NULL,
-                        reOrderFile = NULL,
-                        nodeidsFile = NULL,
+                        nodeOrderFile, nodeIdsFile,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
                         pyscript = system.file(package = 'cola', 'python/lcc_hpc1_zarr.py'),
                         dry_run = FALSE,
@@ -1683,7 +1699,7 @@ lccZarrA_py <- function(inshp, intif,
   if( !file.exists(py)){
     stop('Python not found')
   }
-  if( !file.exists(pyscriptA)){
+  if( !file.exists(pyscript)){
     stop('Script not found')
   }
 
@@ -1748,7 +1764,7 @@ lccZarrA_py <- function(inshp, intif,
   # # be running.
   # gbLim = sys.argv[10] # Default 6
 
-  (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
+  #(logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
 
   # (cmd_lcc_zarrA <- paste0(
   #   quotepath(py), ' ',
@@ -1775,7 +1791,7 @@ lccZarrA_py <- function(inshp, intif,
     format(ncores, scientific=F),
     crs,
     pairzarr, distzarr,
-    reOrderFile, nodeidsFile,
+    nodeOrderFile, nodeIdsFile,
     maxram
   )
 
@@ -1798,7 +1814,7 @@ lccZarrA_py <- function(inshp, intif,
 
   ans <- list(file = ifelse(file.exists(reOrderFile), reOrderFile, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0(" A: ", intCMDA, '\n' ), cmd = cmd_ )
+              log = paste0(" A: ", intCMD, '\n' ), cmd = cmd_ )
   #print('ANS LCC');print(ans)
   return( ans )
 }
@@ -1814,13 +1830,16 @@ lccZarrA_py <- function(inshp, intif,
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
 #' @param tolerance Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.
 #' @param smooth Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating corridors and should correspond to the maximum dispersal distance of the focal species. For example, if the maximum dispersal distance of the focal species is 10 km, set this value to 10000. Values greater than this will be converted to 0 before summing corridors.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster `intif`` has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
 #' @param maxram Numeric. RAM to use in GB
+#' @param nodeOrderFile String. Path to the output csv file with nodes order
+#' @param nodeIdsFile String. Path to the output csv file with nodes IDs
+#' @param distzarr String. H5 file to store point distance rasters. Created in temporal folder if not provided
 #' @param sci Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.
 #' @param eci Numeric. End corridor index. Default is 'None'
 #' @param tempFolder String. Path to the temporal folder where intermediate zarr files will be saved.
@@ -1848,6 +1867,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
                         maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
                         crs = 'None',
                         sci = 'None', eci = 'None',
+                        nodeOrderFile, nodeIdsFile,
                         tempFolder = NULL,
                         distzarr = NULL,
                         py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -1940,9 +1960,9 @@ lccZarrB_py <- function(inshp, intif, outtif,
     format(tolerance, scientific=F),
     format(ncores, scientific=F),
     crs,
-    reOrderFile, nodeidsFile,
+    nodeOrderFile, nodeIdsFile,
     format(sci, scientific=F),
-    format(eci, scientific=F),
+    format(eci, scientific=F)
   )
 
   (cmd_ <- paste0(
@@ -1964,7 +1984,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
 
   ans <- list(file = ifelse(file.exists(outtif), outtif, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
-              log = paste0(" B: ", intCMDB, '\n') , cmd = cmd_)
+              log = paste0(" B: ", intCMD, '\n') , cmd = cmd_)
   #print('ANS LCC');print(ans)
   return( ans )
 }
@@ -1973,7 +1993,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
 #' @description Run Cumulative resistant kernels algorithm
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.
 #' @param shape String This determines how the probability of dispersal declines with distance from the focal point.
 #'     'linear' implements the function "1 - (1/dThreshold) X d" where dThreshold is the specified distance threshold and
@@ -1985,7 +2005,6 @@ lccZarrB_py <- function(inshp, intif, outtif,
 #'  determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kernel volume parameter, dThreshold is the specified distance threshold, and pi is the mathematical constant pi. The constant is then multiplied by the distances to the focal point resulting in a scaled kernel volume.
 #' @param ncores Numeric. Number of cores. Number of CPU cores to run the analysis
 #' @param crs String. Projection string. String. Projection information in the case the input raster 'intif' has no spatial projection. Provide it as EPSG or ESRI string e.g. "ESRI:102028". Default value is ‘None’.
-#' @param maxram Numeric. RAM to use in GB
 #' @param py Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_joblib.py')`
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
@@ -2100,7 +2119,9 @@ crk_py <- function(inshp, intif, outtif,
 #' @description Run Cumulative resistant kernels algorithm using the parallel computing library joblib. Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
 #' @param intif String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels
-#' @param outif String. Path output GeoTIFF file name.
+#' @param outtif String. Path output GeoTIFF file name.
+#' @param tempFolder String. Folder where temporal h5 file will be stored
+#' @param h5file String. Temporal h5 file will be stored. Only provide the name, since folder is a different argument.
 #' @param maxdist Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.
 #' @param shape String This determines how the probability of dispersal declines with distance from the focal point.
 #'     'linear' implements the function `1 - (1/dThreshold) X d` where dThreshold is the specified distance threshold and
@@ -2141,6 +2162,7 @@ crkJoblib_py <- function(
     crs = 'None',
     maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
     tempFolder = NULL,
+    h5file = NULL,
     py = Sys.getenv("COLA_PYTHON_PATH"),
     pyscript = system.file(package = 'cola', 'python/crk_joblib.py'),
     dry_run = FALSE,
@@ -2178,8 +2200,12 @@ crkJoblib_py <- function(
   if (is.null(tempFolder)){
     tempFolder <- tempdir()
   }
-  tempH5 <- basename(tempfile())
-  h5file <- paste0(tempFolder, '/', tempH5, '_A.h5')
+
+  if(is.null(h5file)){
+    tempH5 <- basename(tempfile())
+    h5file <- paste0(tempFolder, '/', tempH5, '_A.h5')
+  }
+
   logname <- paste0(tools::file_path_sans_ext(outtif), '.txt')
 
   ### Create CMD
@@ -2233,7 +2259,7 @@ crkJoblib_py <- function(
                   log = paste0(intCMD, collapse = ' - '),
                   done = ifelse(file.exists(outtif), 'yes', 'no'))
     write.table(metaFile, logname )
-    tryCatch(file.remove(c(h5file, h5file2)), error = function(e) NULL)
+    tryCatch(file.remove(c(h5file)), error = function(e) NULL)
 
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -2257,6 +2283,9 @@ crkJoblib_py <- function(
 #' @description Run corridors prioritization algorithm. It takes the kernels and corridors as arguments.
 #' @param py Python executable location. Default is `Sys.getenv("COLA_PYTHON_PATH")`
 #' @param pyscript Python script location. Default is `system.file(package = 'cola', 'python/prioritize_core_conn.py')`
+#' @param intif String. Path to surface resistance
+#' @param incrk String. Path to resistant kernel
+#' @param inlcc String. Path to corridors
 #' @param maskedcsname String. Temporal mask raster file
 #' @param outshppoint String. Path to the resulting centroid corridors shapefile
 #' @param outshppol String. Path to the resulting corridors shapefile
@@ -2548,6 +2577,7 @@ crk_compare_py <- function(
 #' @param intifs String. File path to files to be compared. A single string is required
 #' with the complete path and no spaces, as "/c/path/a.csv,/c/path/b.csv,...'. The first file
 #' used as the baseline scenario (sc0)#' @param outcsvabs String. File path to the csv output absolute difference table
+#' @param outcsvabs String. File path to the csv output absolute difference table
 #' @param outcsvrel String. File path to the csv output relative difference table
 #' @param outpngabs String. File path to the png output absolute difference plot
 #' @param outpngrel String. File path to the png output relative difference plot
@@ -2672,14 +2702,13 @@ lcc_compare_py <- function(
 
 #' @title  Add values to raster layers
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
-#' @param polpath String. Location of the vector layer
+#' @param polPath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
-#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
+#' @param colu Logical/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
 #' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
-#' @param show_cml Logical. Print the back-end command line? Default TRUE
-#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param rastCRS String. CRS as string, required when raster has no projection
 #' @return Path of the resulting raster layer. Same as rastPath with the '_rasterized' suffix.
 #' @examples
 #' library(cola)
@@ -2691,7 +2720,9 @@ lcc_compare_py <- function(
 #'   burnval = 'val2burn', colu = TRUE,
 #'   rastPath = intif1
 #' )
-#' plot(rast(rasterizedPol1), main = 'Added: Different value per polygon')
+#' if (FALSE) {
+#'   plot(terra::rast(rasterizedPol1), main = 'Added: Different value per polygon')
+#' }
 #'
 #' intif2 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
@@ -2700,8 +2731,9 @@ lcc_compare_py <- function(
 #'   burnval = 200,
 #'   rastPath = intif2
 #' )
-#' plot(rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
-#'
+#' if (FALSE) {
+#'   plot(terra::rast(rasterizedPol2), main = 'Added: Same value for all the polygons')
+#'}
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -2791,18 +2823,20 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #' @title  Replace pixel values based on polygons
 #' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
 #'  Not working on Windows at the moment.
-#' @param polpath String. Location of the vector layer
+#' @param polPath String. Location of the vector layer
 #' @param burnval String. Value to burn. Can be a number or a attribute/column name
 #' @param rastPath String. Location of the raster layer
-#' @param colu Logial/String. Column with the numeric value to rasterize. if FALSE is ignored.
+#' @param colu Logical/String. Column with the numeric value to rasterize. if FALSE is ignored.
 #' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
-#' @param lineBuffW Number. How many pixels should be used as buffer width for line geometries?
-#' @param show_cml Logical. Print the back-end command line? Default TRUE
-#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param att Logical. Should be 'all-the-touched' pixels be considered? Default TRUE
+#' @param gdal Logical. Use GDAL to perform the rasterization? Default FALSE
+#' @param rastCRS Logical. Use GDAL to perform the rasterization? Default FALSE
+#' @import terra
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
+#' if (FALSE){
 #' library(cola)
-#' library(terra)
+#' ibrary(terra)
 #' usegdal <- ifelse(Sys.info()['sysname'] == 'Windows', FALSE, TRUE)
 #' intif1 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif1)
@@ -2813,7 +2847,7 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #'  gdal = usegdal,
 #'  rastPath = intif1
 #' )
-#' plot(rast(replacedPol1), main = 'Replaced: Different value per polygon')
+#' plot(terra::rast(replacedPol1), main = 'Replaced: Different value per polygon')
 #'
 #' intif2 <- tempfile(fileext = '.tif')
 #' file.copy(system.file(package = 'cola', 'sampledata/sampleSR.tif'), intif2)
@@ -2822,8 +2856,8 @@ burnShp <- function(polPath, burnval = 'val2burn',
 #'  burnval = 200,  gdal = usegdal,
 #'  rastPath = intif2
 #' )
-#' plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
-#'
+#' plot(terra::rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+#' }
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -2843,7 +2877,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
   #if( burnval != 0 & is.numeric(burnval) & !is.na(burnval) ){
   ## Polygon to write
   #(polPath <- gsub(x = rastPath, '.tif$', '_pol.shp'))
-
 
   ## Raster with new features
   (rasterizedPath <- gsub(x = rastPath, '.tif$', '_scefeat.tif'))
@@ -3007,16 +3040,21 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 
 ### Orig fitRaster2cola, cell size and nodata
 
-
 #' @title  Fit rasters to CoLa formats
 #' @description Adjust pixels to squared shape and assigns
 #' @param inrasterpath String. Path of the input raster
 #' @param outrasterpath String. Optional. Path of the fixed raster.If no provided will be
 #' same as input with the prefix out_
+#' @import terra gdalUtilities
+#' @importFrom terra res
+#' @importFrom raster raster extent
 #' @return Path of the resulting raster layer. Will be same as input if no change was made
 #' @examples
-#' library(cola)
-#' fitRaster2cola(inrasterpath = system.file(package = 'cola', 'sampledata/sampleSR.tif'))
+#' if (FALSE) {
+#'     newRast <- fitRaster2cola(
+#'           inrasterpath = system.file(package = 'cola', 'sampledata/sampleSR.tif'),
+#'           outrasterpath = tempfile(fileext = '.tif'))
+#'      }
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3047,11 +3085,11 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 
 
   if (!isProjected(inraster)){
-    return(NA)
     print(' Raster MUST have proceted coordinate system. Please update your layer.')
+    return(NA)
   } else {
 
-    if( require('gdalUtilities') ){
+    if( requireNamespace('gdalUtilities') ){
       # options(scipen = 999)
       # options(scipen = 9)
 
@@ -3111,19 +3149,19 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
         outraster0 <- inraster
       }
 
-    } else if(require('raster')){
+    } else if(requireNamespace('raster')){
       # print(3)
 
       options(digits = 20)
-      rx <- raster(inraster)
+      rx <- raster::raster(inraster)
       nd0 <- rx@file@nodatavalue
       if (length(nd0) == 0) { nd0 <- 0}
       nd0 <- nd0 == -9999
 
-      (pixsize <- res(rx))
+      (pixsize <- terra::res(rx))
       ps <- (length(pixsize) == 2 & pixsize[1]==pixsize[2] )
       if( !( nd & ps ) ) {
-        templ <- raster(  crs = rx@crs, res = rep(max(res(rx)), 2), ext = extent(rx))
+        templ <- raster::raster(  crs = rx@crs, res = rep(max(raster::res(rx)), 2), ext = raster::extent(rx))
         raster::resample(x = rx, y = templ, filename = outraster,
                          # NAflag = -9999,
                          overwrite = FALSE)
@@ -3155,6 +3193,46 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 }
 
 
+
+
+#' @title  Check if the raster layer is projected
+#' @description Rasterize a polygon and sum it to an existing raster. Both layers need to be in the same projection.
+#'  Not working on Windows at the moment.
+#' @param rastPath String. Location of the raster layer
+#' @param details Logical. Print the details? Defult FALSE
+#' @import terra
+#' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
+#' @examples
+#' plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+#'
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+
+## Evals if the raster is GEO or PROJ -----
+isProjected <- function(rastPath, details = FALSE){
+  #rastPath = 'C:/temp/cola/colaRKW2024081218272505//in_points_CHL2024081218292405.tif'
+
+  # cat(' +++ Evaluaring if is proj: ', rastPath, '\n')
+
+  if (requireNamespace('gdalUtilities')){
+    gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
+    #gi <- capture.output(gdalUtilities::gdalinfo(rastPath))
+
+    if (details){
+      print(gi)
+    }
+    g2 <- strsplit(x = gi, split = '\n')[[1]]
+    (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
+  } else{
+    isGEO <- terra::is.lonlat(rastPath);
+    (isProj <- !isGEO)
+  }
+  return(isProj)
+}
+
+
+
 #' @title  Compile TIFS from path and pattern
 #' @description Compile tifs from a path and pattern, specially from cola::batch_lczB( )
 #' @param pathh String. Folder path
@@ -3162,6 +3240,8 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 #' @param outt String. TIF path
 #' @param del0 Logical. Replace 0 by NA. Default TRUE
 #' @param ow Logical. Overwrite? Default TRUE
+#' @import terra
+#' @importFrom terra rast app writeRaster
 #' @return Path of the resulting raster layer. Will be same as input if no change was made
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3169,13 +3249,13 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
   # (tifs = list.files(path = '/scratch/ig299/', pattern = 'rsv2.+tif', full.names = TRUE))
   (tifs = list.files(path = pathh, pattern = patt, full.names = TRUE))
-  stk <- rast(tifs)
+  stk <- terra::rast(tifs)
   if(del0){
-    r <- app(stk, 'sum')
+    r <- terra::app(stk, 'sum')
     r[r[] == 0] <- NA
-    writeRaster(r, filename = outt, overwrite = ow)
+    terra::writeRaster(r, filename = outt, overwrite = ow)
   } else {
-    sumstk <- app(stk, 'sum', filename = outt, overwrite = ow)
+    sumstk <- terra::app(stk, 'sum', filename = outt, overwrite = ow)
   }
 }
 
@@ -3185,21 +3265,22 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 #' Create and submit BASH task for second part of Zarr FLCC. Takes the number of the
 #' resulting order csv file (number of pairs FLCC to run) and divide it by the nBatches, creating
 #' different bash files for lcc_hpc2_zarr.py. Each bash file is intended to create a raster tif
-#' with the name /{outFolder}/{prefTif}_{pref}_{i}.tif
-#' @param py Python executable location
-#' @param src Python script location
+#' with the name "[outFolder]/[prefTif]_[pref]_[i].tif"
+#' @param py String. Python executable location
+#' @param src String. Python script location
 #' @param nBatches Integer. Number of batches.
 #' @param shFolder String. Path where to save the sh.
 #' @param shFolder String. Path where to save the logs.
 #' @param outFolder String. Path where to save tif file
+#' @param logFolder String. Path where to save jobs logs
 #' @param pref String. Prefix name to incluide into job, log, and tif file.
 #' @param prefTif String. Out TIF prefix. Default is 'out_lczB'. Usefull to sum all layers with cola::compileTifs( )
-#' @param rs String. Full path to surface resistance raster layer
+#' @param sr String. Full path to surface resistance raster layer
 #' @param smt Integer. Smooth as lcc_py( )
 #' @param tole Integer. Tolerance as lcc_py( )
 #' @param dzarr String. Full path to distance zarr file/folder.
 #' @param idcsv String. Full path to nodes ids csv file.
-#' @param ordcsv. String. Full path to pairs order csv file
+#' @param ordcsv String. Full path to pairs order csv file
 #' @param hours Integer. Hours assigned to the task in the cluster
 #' @param ncores Integer. Number of cores assigned to the task in the cluster
 #' @param ramGB Integer. RAM in GB assigned to the task in the cluster
@@ -3208,7 +3289,6 @@ compileTifs <- function(pathh, patt, outt, del0 = TRUE, ow = TRUE){
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
-
 
 batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALSE,
                        pref, prefTif = 'outlczB',
@@ -3219,7 +3299,7 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
                        sr,  dzarr, smt = 0, tole = 0,
                        ncores, ordcsv, idcsv, ramGB, hours){
   # (ocsv <- '/scratch/ig299/kuching/temp/asian_palm_civet_i5.csv')
-  cat('--  This only works on linux cluster -- ')
+  cat('\n\n--  This only works on linux cluster -- \n\n')
   if ( ! all( unlist(sapply(c(dzarr, ordcsv, idcsv), file.exists)))  ){
     stop(' Some files not existing')
   }
@@ -3239,7 +3319,7 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
                  logFolder, '/', pref,'_', i, '_%A.log\n#SBATCH --time=',hours,
                  ':00:00\n#SBATCH --partition=core\n#SBATCH --cpus-per-task=',
                  ncores,'\n#SBATCH --mem ', ramGB, '000\nsrun ',
-                 py,' ', src ,' ',sr ,' ', outtif, ' ', dzarr, ' ', smt, ' ', tole, ' ', ncores, ' None ',
+                 py,' ', src ,' ', sr ,' ', outtif, ' ', dzarr, ' ', smt, ' ', tole, ' ', ncores, ' None ',
                  ordcsv, ' ', idcsv,' ', si,' ', ei,'\n\n')
     # cat(jb)
     base::writeLines(text = jb, con = out_bsh)
@@ -3255,35 +3335,21 @@ batch_lczB <- function(nBatches = 10, shFolder, logFolder, outFolder, RUN = FALS
 
 ## CoLa 2 -------------------------
 
-#' @title Ulpoad local point layer to EE assets
-#' @description Use local points file and submitt an upload task to EE
-#' Usage:
-#'   python cml_uploadFeature.py --species puma --model_id puma_modis_m2 \
-#'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
-#'
-#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-#' sdm_model_fitting_py( ) {Classifier} function
-#'
-#' @param py String. Python executable location. No spaces allowed.
-#' @param pyscript String. Python script location. No spaces allowed.
+#' @title Upload local point layer to EE assets
+#' @description Use local points file and submit an upload task to EE
+#' @param py String. Python executable location. No spaces allowed
+#' @param pyscript String. Python script location. No spaces allowed
 #' @param ee_project String. Google Earth Engine project or username
-#' @param species String. Species name, e.g. puma
-#' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param target_year. Integer. Year to map — must match sdm_modis_export.py
-#' @param run_mode String. Execution mode, 'test', 'full'
-#' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
-#' @param crs String. Year for single-batch test run
-#' @param scale Integer. Pixel size in meters. Default is 250m
-#' @param min_year Integer. Default is 2000.
-#' @param max_year Integer. Default is 2025.
-#' @param tile_degrees Integer.  Path/filename of a template raster used for interpolation
-#' @param gee_assets String. EE path to
-#' @param range_asset String. EE path for the feature collection with the spatial extent
+#' @param point_path String. Local path of the point layer
+#' @param presence_col String. Column containing the presences [1] and absences [0]
+#' @param ee_layer String. EE layer to be created. Use the full EE path
+#' @param num_abs String. Number of total absences or percentage of presences in the dataset. Could be 50, or 100[percent symbol] for using the same amount of point in the layer
+#' @param abs_meth String. If num_abs different to 0 or 0[percent symbol], method to calculate the absences
+#' @param block_size Float. Block size in meters to create the absences
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
-#' @examples
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER "[GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]"
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3297,6 +3363,7 @@ localPoints2ee_py <- function(
     presence_col = NULL,
     num_abs = 0,
     abs_meth = 'background',
+    block_size = NULL,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 
@@ -3316,14 +3383,17 @@ localPoints2ee_py <- function(
     ifelse (!is.null(presence_col), '--presence_col'),
     ifelse (!is.null(presence_col), presence_col),
     '--number_abs', num_abs,
-    '--abs_method',  abs_method)
+    '--abs_method',  abs_meth,
+    ifelse(!is.null(block_size), '--block_size', NULL),
+    ifelse(!is.null(block_size), block_size, NULL)
+  )
 
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n   - CoLa2 Feature upload  - \n\t   Uploading points as: ', ee_name, ' \n', sep = '')
+  cat('\n   - CoLa2 Feature upload  - \n\t   Uploading points as: ', ee_layer, ' \n', sep = '')
 
   if (show_cml | dry_run){
     cat('\n\t CMD Raster export: \n')
@@ -3391,17 +3461,16 @@ localPoints2ee_py <- function(
 #' @param range_asset String. EE path for the feature collection with the spatial extent
 #' @param estimate_only Logical. Only print the cost estimate. Default FALSE
 #' @param keep_intermediate Logical. Keep the annual, merged and gap-filled assets in
-#' {BASE_FOLDER}/temp instead of deleting each once used (uses GEE storage). Default FALSE
+#' [BASE_FOLDER]/temp instead of deleting each once used (uses GEE storage). Default FALSE
 #' @param min_year,max_year,crs No longer used (CRS is fixed to EPSG:4326; years
 #' are checked against the data coverage). Accepted and ignored.
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log slot. Creates multiband assets per tile and year in the GEE folders:
-#' BASE_FOLDER    = {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR}
-#' TEMP_FOLDER    = {BASE_FOLDER}/temp
-#' METRICS_FOLDER = {BASE_FOLDER}/metrics
-#' @examples
+#' BASE_FOLDER    = "[GEE_ASSETS]/[SPECIES]_SDM_modis_[SCALE]m_[TARGET_YEAR]"
+#' TEMP_FOLDER    = "[BASE_FOLDER]/temp"
+#' METRICS_FOLDER = "[BASE_FOLDER]/metrics"
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3460,7 +3529,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 
   base_folder <- paste0(gee_assets, '/', species, '_SDM_', .sdm_tag('modis', scale), '_', target_year)
   cat('\n   - CoLa2 Covariates imagery export - \n\t Creating GEE results in: \n',
-      '  {GEE_ASSETS}/{SPECIES}_SDM_modis_{SCALE}m_{TARGET_YEAR} \n  ',
+      '  [GEE_ASSETS]/[SPECIES]_SDM_modis_[SCALE]m_[TARGET_YEAR] \n  ',
       base_folder, '\n',
       ' The assets will be named as: tile_{LON}_{LAT}_y{TARGET-YEAR}_annual \n', sep = '')
 
@@ -3503,7 +3572,7 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param batch_size Integer. Points per batch. Default is 25
 #' @param max_concurrent Integer. Max concurrent GEE tasks. Default is 3.
 #' @param occurrence_asset String. GEE asset path for occurrence points.
-#' Default: {gee_assets}/{species}_occurrences_batched
+#' Default: [GEE_ASSETS]/[SPECIES]_occurrences_batched
 #' @param column_train String. Column with the presence/absence [0-1] values.
 #' Only this column and year are kept from the occurrence asset. Default 'presence'
 #' @param gee_assets String. Root GEE assets folder (no trailing slash).
@@ -3520,10 +3589,9 @@ sdm_modis_export_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slots. In GEE will create this folder: {GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL-ID}
-#'  The assets will be named as: SDM_{SOURCE}_{SPECIES}_{YEAR}_b01
-#'  The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{SOURCE}_{SCALE}m_{MODEL_ID}.txt
-#' @examples
+#' @return List with log slots. In GEE will create this folder: [GEE_ASSETS]/[SPECIES]_SDM_[SOURCE]_[SCALE]m_exports_[MODEL-ID]
+#'  The assets will be named as: SDM_[SOURCE]_[SPECIES]_[YEAR]_b01
+#'  The local log file is saved here: [WORKING_DIR]/completed_batches_[SPECIES]_[SOURCE]_[SCALE]m_[MODEL_ID].txt
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3580,10 +3648,10 @@ sdm_extract_py <- function(
 
   tag <- .sdm_tag(predictor_source, scale)
   cat('\n   - CoLa2 Covariates + points extract - \n\t Creating GEE results in: \n',
-      '\t {GEE_ASSETS}/{SPECIES}_SDM_{SOURCE}_{SCALE}m_exports_{MODEL-ID} \n\t',
+      '\t [GEE_ASSETS]/[SPECIES]_SDM_[SOURCE]_[SCALE]m_exports_[MODEL-ID] \n\t',
       gee_assets,'/', species, '_SDM_', tag, '_exports_', model_id, '\n\t',
-      ' The assets will be named as: SDM_', toupper(predictor_source), '_{SPECIES}_{YEAR}_b01 \n',
-      ' The local log file is saved here: {WORKING_DIR}/completed_batches_{SPECIES}_{SOURCE}_{SCALE}m_{MODEL_ID}.txt \n',
+      ' The assets will be named as: SDM_', toupper(predictor_source), '_[SPECIES]_[YEAR]_b01 \n',
+      ' The local log file is saved here: [WORKING_DIR]/completed_batches_[SPECIES]_[SOURCE]_[SCALE]m_[MODEL_ID].txt \n',
       '       ', working_dir, '/completed_batches_', species, '_', tag, '_', model_id, '.txt \n',
       sep = '')
 
@@ -3642,12 +3710,12 @@ sdm_extract_py <- function(
 #' @param ee_project String. Google Earth Engine project or username
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param mode String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'
+#' @param modex String. One option between 'binary', 'regression', 'multiclass'. Default is 'binary'
 #' @param target_col String. Column with the absence/presence values, 0 and 1. Default is 'presence'
-#' @param gee_asset String. Root GEE assets folder (no trailing slash)
+#' @param gee_assets String. Root GEE assets folder (no trailing slash)
 #' @param working_dir String. Local working directory for model outputs. Skip spcaces.
 #' @param local_csv String. Path to local training CSV to skip EE asset loading.
-#' Default: {working_dir}/{model_id}_training.csv'
+#' Default: [WORKING_DIR]/[MODEL_ID]_training.csv'
 #' @param predictor_source String. Must match extraction. Default 'modis'
 #' @param scale Integer. Must match extraction; NULL for the source's native resolution.
 #' @param imp_thresh Float. Relative importance threshold for feature pruning. Default is 0.10
@@ -3659,17 +3727,14 @@ sdm_extract_py <- function(
 #' strings and features assets; local .pkl/.csv). If FALSE and any exist, fitting stops
 #' at the start. Default FALSE
 #' @return List with log slot. In Google Earth Engine these assets are created:
-#' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
-#' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
-#' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
+#' GEE_CLASSIFIER_ID = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier'
+#' GEE_STRINGS_ID    = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier_strings'
+#' GEE_FEATURES_ID   = f'[GEE_ASSETS]/[MODEL_ID]_selected_features'
 #' These files are written locally:
-#' OUTPUT_MODEL    = {WORKING_DIR}/{MODEL_ID}_rf_final.pkl
-#' OUTPUT_FEATURES = {WORKING_DIR}/{MODEL_ID}_selected_features.csv
-#' OUTPUT_SIZING   = {WORKING_DIR}/{MODEL_ID}_rf_sizing.csv
-#' OUTPUT_SUMMARY  = {WORKING_DIR}/{MODEL_ID}_rf_summary.csv
-
-
-#' @examples
+#' OUTPUT_MODEL    = [WORKING_DIR]/[MODEL_ID]_rf_final.pkl
+#' OUTPUT_FEATURES = [WORKING_DIR]/[MODEL_ID]_selected_features.csv
+#' OUTPUT_SIZING   = [WORKING_DIR]/[MODEL_ID]_rf_sizing.csv
+#' OUTPUT_SUMMARY  = [WORKING_DIR]/[MODEL_ID]_rf_summary.csv
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3722,17 +3787,17 @@ sdm_model_fitting_py <- function(
     paste0(aargs, collapse = ' '),
     collapse = '' ) )
 
-    #' GEE_CLASSIFIER_ID = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier'
-    #' GEE_STRINGS_ID    = f'{GEE_ASSETS}/{MODEL_ID}_RF_classifier_strings'
-    #' GEE_FEATURES_ID   = f'{GEE_ASSETS}/{MODEL_ID}_selected_features'
-    #' These files are written locally:
+    # GEE_CLASSIFIER_ID = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier
+    # GEE_STRINGS_ID    = f'[GEE_ASSETS]/[MODEL_ID]_RF_classifier_strings
+    # GEE_FEATURES_ID   = f'[GEE_ASSETS]/[MODEL_ID]_selected_features
+    # These files are written locally:
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n   - CoLa2 Model fitting - \n\t  Creating local results in {WORKING_DIR} - ', working_dir ,' \n   Files are:  ',
+  cat('\n   - CoLa2 Model fitting - \n\t  Creating local results in [WORKING_DIR] - ', working_dir ,' \n   Files are:  ',
       model_id, '_rf_final.pkl, ', model_id, '_selected_features.csv, ',
       model_id, '_rf_sizing.csv,  ', model_id, '_rf_summary.csv \n', sep = '')
 
-  cat('\n Creating GEE results in {GEE_ASSETS} - ', gee_assets ,' \n  Assets are:  ',
+  cat('\n Creating GEE results in [GEE_ASSETS] - ', gee_assets ,' \n  Assets are:  ',
       model_id, '_RF_classifier, ', model_id, '_RF_classifier_strings, ',
       model_id, '_selected_features \n\n', sep = '')
 
@@ -3789,7 +3854,7 @@ sdm_model_fitting_py <- function(
 #' @param ee_project String. Google Earth Engine project or username
 #' @param species String. Species name, e.g. puma
 #' @param model_id String. Unique model run ID, e.g. puma_modis_m2
-#' @param target_year. Integer. Year to map
+#' @param target_year Integer. Year to map
 #' @param run_mode String. Execution mode, 'test', 'full'
 #' @param max_concurrent Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).
 #' @param tile_degrees Numeric. Tile size in degrees; must match the export when
@@ -3804,8 +3869,7 @@ sdm_model_fitting_py <- function(
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
-#' @examples
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3861,7 +3925,7 @@ sdm_prediction_py <- function(
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
   .sdm_unused(crs = crs, scale = scale, min_year = min_year, max_year = max_year)
 
-  cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}\n',
+  cat('\n   - CoLa2 model prediction  - \n\t   Creating GEE results in: [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]\n',
       '  ', gee_assets, '/', model_id, '_prediction_', target_year, ' \n', sep = '')
 
   if (show_cml | dry_run){
@@ -3896,8 +3960,8 @@ sdm_prediction_py <- function(
 #'   python cml_EEtoGD.py --species puma --model_id puma_modis_m2 \
 #'   --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
 #'
-#' This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-#' sdm_model_fitting_py( ) {Classifier} function
+#' This function requires the inputs of sdm_modis_export_py( ) [Metrics] and
+#' sdm_model_fitting_py( ) [Classifier] function
 #'
 #' @param py String. Python executable location. No spaces allowed.
 #' @param pyscript String. Python script location. No spaces allowed.
@@ -3911,8 +3975,7 @@ sdm_prediction_py <- function(
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
-#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
-#' @examples
+#' @return List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -3981,15 +4044,15 @@ export_ee2gd_py <- function(
 
 #' @title Submit a console task printing report and saving it
 #' @description Submit a console task printing report and saving it. Requires processx library
-#' @param dots Mix. Other arguments to be passed to
-#' @param delay Numeric. Seconds to wait in each query
-#' @param stepp String. Separator for each line
-#' @param logfile String. Separator for each line
+#' @param comm String. Path of the executable. No spaces allowed.
+#' @param argss String. Vector of arguments to pass. No spaces allowed.
+#' @param log_file String. File with the log
+#' @param docat Logical. Print live result?. Default TRUE
+#' @import processx
 #' @return List with log slot
 #' @examples
-#' catandcapt( Sys.getenv("COLA_PYTHON_PATH"),
+#' catandcapt( comm = Sys.getenv("COLA_PYTHON_PATH"),
 #'        c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
-#'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -4055,7 +4118,7 @@ catandcapt <- function( comm, argss, log_file = NULL, docat = TRUE ) {
 
     # on.exit(  )
 
-    if('error' %in% class(out)){
+    if( any(c('error', 'simpleError') %in% is(out) )){
       try(close(log_con), silent = TRUE)
       out <- readLines(log_file)
     }
@@ -4082,8 +4145,10 @@ catandcapt <- function( comm, argss, log_file = NULL, docat = TRUE ) {
 #' @param outshp String. Output full shapefile name
 #' @param spatresinmeters String. Raster resolution in meters of the Kernel density estimation (KDE)
 #' @param dokde Integer. Calculate density kernel raster?  1: yes, 0: no
+#' @param show_cml Logical. Print the back-end command line? Default TRUE
+#' @param show_result Logical. Print the command line result? Default TRUE
+#' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return List with log slot. The resulting layer will be saved in the outdir
-#' @examples
 #' @author Courtney Marneweck <courtney@@giraffeconservation.org>
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>

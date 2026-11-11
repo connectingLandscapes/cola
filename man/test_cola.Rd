@@ -20,8 +20,9 @@ Text "Test finished"
 Run the main geospatial CoLa tools: Suitability to Resistance, Kernels, Corridors
 }
 \examples{
-library(cola)
-test_cola(run = TRUE )
+if (FALSE){
+    test_cola(run = TRUE )
+}
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

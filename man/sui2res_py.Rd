@@ -55,7 +55,8 @@ Transforms suitability to resistance surface
 }
 \examples{
 hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1, maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
+sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1,
+    maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 hs_rast <- terra::rast(sr$file)
 plot(hs_rast, main = 'Surface Resistance')
 }

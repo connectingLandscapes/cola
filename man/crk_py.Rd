@@ -26,6 +26,8 @@ crk_py(
 
 \item{intif}{String. Surface resistance File path to the input raster. Requires a GeoTIFF file with square pixels}
 
+\item{outtif}{String. Path output GeoTIFF file name.}
+
 \item{maxdist}{Numeric. This is the maximum distance to consider when calculating kernels and should correspond to the maximum dispersal distance of the focal species. Values greater than this will be converted to 0 before summing kernels.}
 
 \item{shape}{String This determines how the probability of dispersal declines with distance from the focal point.
@@ -52,10 +54,6 @@ determined by the equation `kVol X 3/(pi X dThreshold^2)` where kVol is the kern
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{outif}{String. Path output GeoTIFF file name.}
-
-\item{maxram}{Numeric. RAM to use in GB}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac

@@ -29,13 +29,17 @@ cdpop_mapdensity(
 
 \item{method}{String. Method for interpolation. Options are: 'isj', 'silvermans', 'scotts', 'average', 'cv', 'user'}
 
+\item{bandwidths}{String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer}
+
 \item{type}{String. Specify whether count per cell or count per km2 should be returned. Options are: 'count', 'density'}
 
 \item{crs}{String. User provided CRS as EPSG or ESRI string. Can also be 'None' in which case the CRS will be extracted from the template raster.}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
-\item{bandwiths}{String. Bandwidth value, either 'None' (default) or a list of user supplied bandwidths that can be converted from string to float or integer}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
+
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 }
 \value{
 List with three slots: a) file, with NA if no result given or a single file if function was successful, b) newFiles, string vector with resulting files, c)log, string with the message obtained from the console execution. 0 indicates success.

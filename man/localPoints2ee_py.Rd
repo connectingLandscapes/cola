@@ -2,7 +2,7 @@
 % Please edit documentation in R/cola_fun.R
 \name{localPoints2ee_py}
 \alias{localPoints2ee_py}
-\title{Ulpoad local point layer to EE assets}
+\title{Upload local point layer to EE assets}
 \usage{
 localPoints2ee_py(
   py = Sys.getenv("COLA_PYTHON_PATH"),
@@ -13,59 +13,42 @@ localPoints2ee_py(
   presence_col = NULL,
   num_abs = 0,
   abs_meth = "background",
+  block_size = NULL,
   show_cml = TRUE,
   show_result = TRUE,
   dry_run = FALSE
 )
 }
 \arguments{
-\item{py}{String. Python executable location. No spaces allowed.}
+\item{py}{String. Python executable location. No spaces allowed}
 
-\item{pyscript}{String. Python script location. No spaces allowed.}
+\item{pyscript}{String. Python script location. No spaces allowed}
 
 \item{ee_project}{String. Google Earth Engine project or username}
+
+\item{point_path}{String. Local path of the point layer}
+
+\item{ee_layer}{String. EE layer to be created. Use the full EE path}
+
+\item{presence_col}{String. Column containing the presences [1] and absences [0]}
+
+\item{num_abs}{String. Number of total absences or percentage of presences in the dataset. Could be 50, or 100[percent symbol] for using the same amount of point in the layer}
+
+\item{abs_meth}{String. If num_abs different to 0 or 0[percent symbol], method to calculate the absences}
+
+\item{block_size}{Float. Block size in meters to create the absences}
 
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
-
-\item{species}{String. Species name, e.g. puma}
-
-\item{model_id}{String. Unique model run ID, e.g. puma_modis_m2}
-
-\item{target_year.}{Integer. Year to map — must match sdm_modis_export.py}
-
-\item{run_mode}{String. Execution mode, 'test', 'full'}
-
-\item{max_concurrent}{Integer. Max concurrent GEE batch tasks. Leave headroom for other work (default 3).}
-
-\item{crs}{String. Year for single-batch test run}
-
-\item{scale}{Integer. Pixel size in meters. Default is 250m}
-
-\item{min_year}{Integer. Default is 2000.}
-
-\item{max_year}{Integer. Default is 2025.}
-
-\item{tile_degrees}{Integer.  Path/filename of a template raster used for interpolation}
-
-\item{gee_assets}{String. EE path to}
-
-\item{range_asset}{String. EE path for the feature collection with the spatial extent}
 }
 \value{
-List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER "[GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]"
 }
 \description{
-Use local points file and submitt an upload task to EE
-Usage:
-  python cml_uploadFeature.py --species puma --model_id puma_modis_m2 \
-  --target_year 2025 [--run_mode full] [--ee_project geersprocessing] ...
-
-This function requires the inputs of sdm_modis_export_py( ) {Metrics} and
-sdm_model_fitting_py( ) {Classifier} function
+Use local points file and submit an upload task to EE
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

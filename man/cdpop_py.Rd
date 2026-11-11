@@ -12,7 +12,7 @@ cdpop_py(
   cdmat = NULL,
   xy = NULL,
   tempFolder,
-  prefix = paste0("cdpopout", sessionIDgen(only3 = TRUE)),
+  prefix = paste0("cdpopout", paste0(sample(LETTERS, 3), collapse = "")),
   dry_run = FALSE,
   show_cml = TRUE,
   show_result = TRUE
@@ -31,16 +31,15 @@ cdpop_py(
 
 \item{xy}{String. CSV XY coordinates file path location. Full path or relative to the CDOPOP Python script}
 
+\item{tempFolder}{String. Folder where results will be saved}
+
 \item{prefix}{String. String added to output folder}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 
-\item{show_cml}{String. Print the cola command line?. Default TRUE}
+\item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
-\item{tempfolder}{String. Folder where results will be saved}
-}
-\value{
-List with two slots: a) newFiles with generated results, b) cdpopPath, with the folder with the results
+\item{show_result}{Logical. Print the command line result? Default TRUE}
 }
 \description{
 Run CDPOP model
@@ -51,9 +50,10 @@ dir.create(out_dir)
 
 (invarfile <- file.path(out_dir, 'invars.csv'))
 (xyfile <- file.path(out_dir, 'xy.csv'))
-
+(cdmatrix <- file.path(out_dir, 'xy.csv'))
 file.copy(system.file(package = 'cola', 'sampledata/invars.csv'), invarfile)
 file.copy(system.file(package = 'cola', 'sampledata/xy.csv'), xyfile)
+file.copy(system.file(package = 'cola', 'sampledata/cdmatrix.csv'), cdmatrix)
 
 cdpop_result <- cdpop_py( cdmat = cdmatrix, inputvars = invarfile, xy = xyfile,
                           prefix = 'test', tempFolder = out_dir)

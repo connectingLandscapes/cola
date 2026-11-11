@@ -42,6 +42,8 @@ sdm_prediction_py(
 
 \item{range_asset}{String. EE path for the feature collection with the spatial extent}
 
+\item{target_year}{Integer. Year to map}
+
 \item{use_exported_metrics}{Logical. Read exported MODIS metric tiles instead
 of computing them in memory. Default FALSE}
 
@@ -62,11 +64,9 @@ the model; CRS is fixed). Accepted and ignored.}
 \item{show_result}{Logical. Print the command line result? Default TRUE}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
-
-\item{target_year.}{Integer. Year to map}
 }
 \value{
-List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER {GEE_ASSETS}/{MODEL_ID}_prediction_{TARGET_YEAR}
+List with log slot. Folder with resulting assets in GEE are created in OUTPUT_FOLDER [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]
 }
 \description{
 Applies a pre-trained RF classifier tile by tile to produce a

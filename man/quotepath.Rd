@@ -9,7 +9,7 @@ quotepath(path, quo = "\\"")
 \arguments{
 \item{path}{String. The file path to be quoted}
 
-\item{quote}{String. Character to use as quote}
+\item{quo}{String. Character to use as quote}
 }
 \description{
 This function add double quotes to the string if a space is detected

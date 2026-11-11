@@ -94,27 +94,6 @@ delFiles <- function(...){
   ))
 }
 
-## Evals if the raster is GEO or PROJ -----
-isProjected <- function(rastPath, details = FALSE){
-  #rastPath = 'C:/temp/cola/colaRKW2024081218272505//in_points_CHL2024081218292405.tif'
-
-  # cat(' +++ Evaluaring if is proj: ', rastPath, '\n')
-
-  if (require('gdalUtilities')){
-    gi <- gdalUtilities::gdalinfo(rastPath, quiet = TRUE)
-    #gi <- capture.output(gdalUtilities::gdalinfo(rastPath))
-
-    if (details){
-      print(gi)
-    }
-    g2 <- strsplit(x = gi, split = '\n')[[1]]
-    (isProj <- (length( grep('^GEOGCRS', g2) ) == 0) & any( grep('PROJCRS', g2) ))
-  } else{
-    isGEO <- terra::is.lonlat(rastPath);
-    (isProj <- !isGEO)
-  }
-  return(isProj)
-}
 
 
 ## Resample raster layer -----

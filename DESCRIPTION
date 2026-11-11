@@ -6,8 +6,50 @@ Author: Ivan.Gonzalez@nau.edu & Patrick.Jantz@nau.edu
 Maintainer: Ivan Gonzalez <gonzalezgarzonivan@gmail.com>
 Description: Set of tools for creating corridors, resistant kernels, and others landscape
     connectivity procedures. Also provides a dashboard for running all the tools under a graphical user interface.    
-License: GNU AGPLv3
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Imports: 
+    utils,
+    methods,
+    devtools,
+    reticulate,
+	processx,
+	terra,
+	sf,
+	remotes,
+	gdalUtilities,
+	raster
+Suggests: 
+    terra,
+    DT,
+    RColorBrewer,
+    bit,
+    digest,
+    dplyr,
+    gdalUtilities,
+    ggplot2,
+    highcharter,
+    htmltools,
+    htmlwidgets,
+    knitr,
+    leaflet,
+    leaflet.extras,
+    magrittr,
+    raster,
+    reshape2,
+    rmarkdown,
+    sf,
+    shiny,
+    shinyBS,
+    shinyWidgets,
+    shinyalert,
+    shinycssloaders,
+    shinydashboard,
+    shinydashboardPlus,
+    shinyjs,
+    tibble,
+    viridis
+Depends: 
+    R (>= 3.5)

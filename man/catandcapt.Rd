@@ -7,13 +7,13 @@
 catandcapt(comm, argss, log_file = NULL, docat = TRUE)
 }
 \arguments{
-\item{dots}{Mix. Other arguments to be passed to}
+\item{comm}{String. Path of the executable. No spaces allowed.}
 
-\item{delay}{Numeric. Seconds to wait in each query}
+\item{argss}{String. Vector of arguments to pass. No spaces allowed.}
 
-\item{stepp}{String. Separator for each line}
+\item{log_file}{String. File with the log}
 
-\item{logfile}{String. Separator for each line}
+\item{docat}{Logical. Print live result?. Default TRUE}
 }
 \value{
 List with log slot
@@ -22,9 +22,8 @@ List with log slot
 Submit a console task printing report and saving it. Requires processx library
 }
 \examples{
-catandcapt( Sys.getenv("COLA_PYTHON_PATH"),
+catandcapt( comm = Sys.getenv("COLA_PYTHON_PATH"),
        c('-u', system.file(package = 'cola', 'ee/sat_ts_fusion/fusion/tenseconds.py')) )
-
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

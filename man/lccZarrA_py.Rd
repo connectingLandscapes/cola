@@ -14,8 +14,8 @@ lccZarrA_py(
   tempFolder = NULL,
   pairzarr = NULL,
   distzarr = NULL,
-  reOrderFile = NULL,
-  nodeidsFile = NULL,
+  nodeOrderFile,
+  nodeIdsFile,
   py = Sys.getenv("COLA_PYTHON_PATH"),
   pyscript = system.file(package = "cola", "python/lcc_hpc1_zarr.py"),
   dry_run = FALSE,
@@ -38,6 +38,14 @@ lccZarrA_py(
 
 \item{tempFolder}{String. Path to the temporal folder where intermediate zarr files will be saved.}
 
+\item{pairzarr}{String. H5 file to store point pairs rasters. Created in temporal folder if not provided}
+
+\item{distzarr}{String. H5 file to store point distance rasters. Created in temporal folder if not provided}
+
+\item{nodeOrderFile}{String. Path to the output csv file with nodes order}
+
+\item{nodeIdsFile}{String. Path to the output csv file with nodes IDs}
+
 \item{py}{Python executable location. Default is obtained from `Sys.getenv("COLA_PYTHON_PATH")`}
 
 \item{pyscript}{Python script location. Default is obtained from `system.file(package = 'cola', 'python/lcc_hpc1_zarr.py')`}
@@ -47,16 +55,6 @@ lccZarrA_py(
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
-
-\item{outif}{String. Path output GeoTIFF file name.}
-
-\item{tolerance}{Numeric. This is the distance beyond the least-cost path that an animal might traverse when moving between source points. Larger values result in wider corridors.}
-
-\item{smooth}{Numeric. The width of the window, in the number of cells, is used to smooth the output corridor surface. If no smoothing is desired, set it to 0. This parameter allows backward compatibility with the original UNICOR functionality, which runs a smoothing window over the least-cost path surface.}
-
-\item{sci}{Numeric. Default is 'None'. Start corridor index. For now, these should be zero indexed python style. E.g. for a landscape with 10,000 corridors a first batch of corridors could be 0-500. Python range is such that this would process corridors 0-499. Then next batch would be 500-1000, which would process corridors 500-999. The next batch would be 1000-1500, and so on.}
-
-\item{eci}{Numeric. End corridor index. Default is 'None'}
 }
 \value{
 Path with factorial least cost corridors. Each pixel show the number of corridors that connects eac
