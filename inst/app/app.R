@@ -7483,11 +7483,11 @@ server <- function(input, output, session) {
   output$tabee <- renderMenu({
     #print(rv$eecola)
     #print('rv$eecola == 1')
-    if(rv$eecola & (!COLA_SERVER & COLA_DEBUG)){
+    #if(rv$eecola & (!COLA_SERVER | COLA_DEBUG)){
       #print( ' rv$eecola == 1 ')
       menuItem("GEE Suitability", tabName = "tabee", icon = icon("map")
       )
-    }
+    #}
   })
 
 

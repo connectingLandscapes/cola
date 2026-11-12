@@ -918,7 +918,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
         pos <- grep('COLA_ER', Renviron)
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
-        Renviron[pos] <- paste0('COLA_ER="', py_er, '"')
+        Renviron[pos] <- paste0('COLA_ER=', 1)
 
         posA <- grep('ER_PYTHON_PATH', Renviron)
         (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
