@@ -163,6 +163,20 @@
 
   ## Showcase -----
   sh_object <- base::paste0(rootPath, '/docs/showcase/showcase.RData')
+
+
+  get_roots <- function() {
+    roots <- c(Home = path.expand("~"))
+    if (.Platform$OS.type == "windows") {
+      drives <- paste0(LETTERS, ":/")
+      drives <- drives[dir.exists(drives)]
+      roots <- c(roots, setNames(drives, sub("/$", "", drives)))
+    } else {
+      roots <- c(roots, Root = "/")
+    }
+    roots
+  }
+
 }
 
 ## Init B
@@ -7271,7 +7285,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$folderer, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'folderer', roots=volumes, filetypes=c('', 'tif'))
         inpf <- input$folderer
         #
@@ -7734,7 +7748,7 @@ server <- function(input, output, session) {
   observeEvent(
     input$filein, {
       shinyjs::enable('ee_fcupload')
-      volumes <- getVolumes()() # this makes the directory at the base of your computer.
+      volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
       shinyFileChoose(input, "filein", roots = volumes, session = session,
                       filetypes = c('shp', 'gpkg', 'csv'))
       inpf <- input$filein
@@ -7853,7 +7867,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$folderext, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'folderext', roots=volumes, filetypes=c('', 'xyz'))
         inpf <- input$folderext
         #
@@ -8280,7 +8294,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$foldertra, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'foldertra', roots=volumes, filetypes=c('', 'xyz'))
         inpf <- input$foldertra
         #
@@ -8366,7 +8380,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$folderpre, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'folderpre', roots=volumes, filetypes=c('', 'xyz'))
         inpf <- input$folderpre
         #
@@ -8555,7 +8569,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$folderfull, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'folderfull', roots=volumes)
         inpf <- input$folderfull
         #
@@ -9336,7 +9350,7 @@ server <- function(input, output, session) {
   isolate({
     observeEvent(
       input$foldermos, {
-        volumes <- getVolumes()() # this makes the directory at the base of your computer.
+        volumes <- get_roots() # getVolumes()() # this makes the directory at the base of your computer.
         shinyDirChoose(input, 'foldermos', roots=volumes, filetypes=c('', 'xyz'))
         inpf <- input$foldermos
         #

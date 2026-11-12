@@ -23,7 +23,6 @@
 #' @param COLA_VIZ_THRES_PIX Integer. Max number of pixels in your raster before resampling it in the CoLa DSS. Raster bellow this number of pixels are shown as they are in the geovisor
 #' @param COLA_VIZ_RES_NCOL Integer. Number of columns to resample the raster to be displayed in the cola DSS.
 #' @param COLA_VIZ_RES_NROW Integer. Number of rows  to resample the raster to be displayed in the cola DSS.
-#' @import reticulate
 #' @importFrom methods is
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
@@ -36,7 +35,7 @@
 setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
                         libs2Install =  c(
-                          'geopandas',
+                          'geopandas', # 'osgeo', 
                           'gdal', 'h5py', 'numexpr', 'rasterio',
                           'pytables', 'pandas',  'cython', 'numba' ,
                           'networkit==11.0', 'fiona', 'shapely',
@@ -59,7 +58,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
                         COLA_VIZ_RES_NCOL=1000,
                         COLA_VIZ_RES_NROW=1000
 ){
-  #
   # envName = 'cola'; nSteps = 5; force = FALSE; yml = FALSE; onlyIndividual = F; ask = FALSE; dss = TRUE; zarr = T; spyder = TRUE; cola2 = FALSE; oldestPyVer = '3.11'; pyVer = "3.12.11"; updateCola = FALSE
 
   if(zarr){
@@ -99,7 +97,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       utils::install.packages('reticulate')
     } else {
       message("You should run `install.packages(c('reticulate', 'processx')` before using this package")
-      stop()
+      stop(" Error installing CoLa. Check the log")
     }
 
   } else {
@@ -162,7 +160,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       } else {
         cat ('  Try forcing miniconda reinstalling: \n\t\t reticulate::install_miniconda(force = TRUE) \n' )
       }
-      stop()
+      stop(" Error installing CoLa. Check the log")
     }
   }
 
@@ -186,7 +184,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
     } else {
       message("You should run `reticulate::install_miniconda()` before using this package")
-      stop()
+      stop(" Error installing CoLa. Check the log")
     }
   } else {
     cat(sep = '', '    miniconda found at ', miniPath, '!\n')
@@ -230,7 +228,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     message('We can`t check Python version for base conda environment.')
     ## List conda after instaling
     diagnose_cola()
-    stop()
+    stop(" Error installing CoLa. Check the log")
   } else {
 
     ## Check base conda base version, update if older than 3.11
@@ -313,7 +311,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       } else {
         message(paste0('You need to run `reticulate::conda_create("', envName,'", python_version = "',
                        pyVer,'")` before using this package'))
-        stop()
+        stop(" Error installing CoLa. Check the log")
       }
 
     } else {
@@ -367,20 +365,17 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       }
     }
   }
-
-
-
+  
   ## List conda after instaling
   (condaLists <- tryCatch(reticulate::conda_list(), error = function (e) NULL))
-
-
+  
   ## Confirm env name
   # (pyCola <- tryCatch( subset(condaLists, name == envName)$python, error = function (e) NULL) )
   (pyCola <- tryCatch( condaLists$python[grep(x = condaLists[, 'name'], envName)], 
                        error = function (e) NULL)) # new fix, avoid name var
   if ( is.null(pyCola) | length(pyCola) == 0 ){
     message(paste0('You should run `reticulate::conda_create("', envName ,'")` before using this package'))
-    stop()
+    stop(" Error installing CoLa. Check the log")
   } else {
     if( is.character(pyCola) & file.exists(pyCola) ){
       cat (sep = '', '    `', envName, '` conda environment named correctly!\n')
@@ -432,7 +427,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     message('We can`t check python version.')
     ## List conda after instaling
     diagnose_cola()
-    stop()
+    stop(" Error installing CoLa. Check the log")
   } else {
     cat(sep = '', '    CoLa is using ', pyColaVersion, '\n')
   }
@@ -543,6 +538,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         # reticulate::conda_install(envname = envName, channel = "conda-forge", packages = 'numexpr')
         # -- Installing `gdal` module + "C:/Users/gonza/AppData/Local/r-miniconda/condabin/conda.bat" "install" "--yes" "--name" "cola" "-c" "conda-forge" "gdal"
 
+        logPkg2 <- NULL
         ## If there's a problem installing trought conda-forge, use PIP
         if( any(!is.null(logPkg)) ){
           cat(' + Try 2, py_install and conda-forge(',lib2inst,') \n')
@@ -615,8 +611,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
     logPkg <- tryCatch(
       reticulate::conda_install(
         envname = envName, # python_version = pyCola,
-        channel = "conda-forge", packages = c('zarr', 'psutil'),
-        error = function (e) e))
+        channel = "conda-forge", packages = c('zarr', 'psutil')),
+        error = function (e) e)
     print(logPkg)
   }
 
@@ -904,7 +900,7 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
 
         (erLibs <- c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy', 'pyogrio')) # 'pyogrio'
         (erLibs2inst <- erLibs[!erLibs %in% avLibsER$package])
-        if ( ! any(erLibs2inst %in% avLibsER$package )) {
+        if (  any( erLibs2inst ) ) {
           tryCatch(reticulate::conda_install("earthranger", packages = erLibs2inst, pip  = TRUE, error = function (e ) e ))
         }
         # if ( ! 'scipy' %in% avLibsER$package ){
@@ -914,8 +910,8 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         #   tryCatch(conda_install("er", packages = c('pyogrio'), pip  = TRUE), error = function (e ) e )
         # }
 
-        if (spyder &  (! 'spyder-kernels' %in% avLibsER$package) ){
-          tryCatch(reticulate::conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
+        if ( spyder &  !( 'spyder-kernels' %in% avLibsER$package) ){
+          spyLog <- tryCatch(reticulate::conda_install("earthranger", packages = c('spyder-kernels==3.1'), pip  = TRUE), error = function (e ) e )
         }
         # conda_create( envname = 'earthranger', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
         # conda_install( envname = 'er2', pip  = TRUE, packages = c('ecoscope', 'geopandas', 'rasterio', 'scipy', 'numpy'))
@@ -923,7 +919,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
         pos <- grep('COLA_ER', Renviron)
         (pos <- ifelse(length(pos) == 0, length(Renviron) + 1, pos))
         Renviron[pos] <- paste0('COLA_ER="', py_er, '"')
-
 
         posA <- grep('ER_PYTHON_PATH', Renviron)
         (posA <- ifelse(length(posA) == 0, length(Renviron) + 1, posA))
@@ -937,7 +932,6 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       #options('COLA_PYTHON_PATH')
 
       ## Checking gdal_calc.py
-
 
       # Sys.getenv(c("COLA_PYTHON_PATH", "COLA_SCRIPTS_PATH"))
       # Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = new)
@@ -981,12 +975,12 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
       Sys.unsetenv("COLA_PYTHON_PATH")
       cat (sep = '', "    -- Final test didn't run. System vars COLA_SCRIPTS_PATH and COLA_PYTHON_PATH removed.\n\t", intCMD)
       diagnose_cola()
-      stop()
+      stop(' Error found. Check detailed log')
     }
   }  else {
     cat (sep = '\n', "    Error: Can't load conda modules.\n\n\t Here the error: \n\t", cmdans)
     diagnose_cola()
-    stop()
+    stop(" Error installing CoLa. Check the log")
   }
 }
 
