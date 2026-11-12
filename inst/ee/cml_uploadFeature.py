@@ -60,7 +60,7 @@ number_abs = str(args.number_abs) # % of absences based of presences
 presence_col = args.presence_col
 abs_method = args.abs_method
 block_size = args.block_size
-
+percabs = number_abs
 
 # percabs 
 
@@ -75,10 +75,10 @@ def main() -> None:
 
     # INPUTS
     # Path to file holding xy coordinates
-    project_name = sys.argv[1] # project name
-    shapefile_path = sys.argv[2] # shapefile path
-    ee_layer = sys.argv[3] # ee asset
-    percabs = int(sys.argv[4]) # % of absences based of presences
+    #project_name = sys.argv[1] # project name
+    #shapefile_path = sys.argv[2] # shapefile path
+    #ee_layer = sys.argv[3] # ee asset
+    #percabs = int(sys.argv[4]) # % of absences based of presences
     try:
         eelogpath = str(sys.argv[5]) # 
         if not os.path.isdir(eelogpath):
@@ -192,13 +192,14 @@ def main() -> None:
     #create and launch the task
     task_config = {
         'collection': ee_object, 
-        'description':'Uploading shapefile ' + ee_layer, #+ hapefile_path,
+        'description':'Uploading shapefile', # + ee_layer, #+ hapefile_path,
         'assetId': ee_layer.replace('.shp', '')
     }
     #
     box_tax_config = {
         'collection': ee_box, 
-        'description':'Uploading box '+ee_layer,
+        #'description':'Uploading box '+ee_layer,
+        'description':'Uploading box',
         'assetId': ee_layer.replace('.shp', '')+'_box'
     }
     #
@@ -225,7 +226,7 @@ def main() -> None:
           ect.writeTask(taskbox, eelogpath)
     except Exception as e:
       # Handle errors (e.g., asset doesn't exist)
-      print(' ERROR, task not initialized: ')
+      print(' ERROR, box task not initialized: ')
       print(e)
       return False
     
