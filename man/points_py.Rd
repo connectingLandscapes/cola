@@ -51,6 +51,7 @@ Path with the created shapefile
 Creates a dispersal resistance matrix among a set of points. create_cdmat.py in the command line or cdmat_py( ) in R.
 }
 \examples{
+if( FALSE) {
 library(cola)
 library(terra)
 hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
@@ -59,6 +60,7 @@ hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
 pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2,
   smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 plot(vect(pts_result$file))
+}
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

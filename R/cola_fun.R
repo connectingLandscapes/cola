@@ -418,7 +418,7 @@ cdpop_py <- function(py = Sys.getenv("COLA_PYTHON_PATH"),
 #' dir.create(tempfolder)
 #'
 #' (xyfile <- shp2xy( shapefile = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
-#'         outxy = file.path(out_dir, 'out.xy'), tempDir = tempfolder))
+#'         outxy = file.path(tempfolder, 'out.xy'), tempDir = tempfolder))
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -536,12 +536,12 @@ shp2xy <- function(shapefile, outxy, tempDir,
   # print(head(xynew))
 
   # ## Write CSV
-  write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
+  utils::write.csv(x = xynew, file = outxy, row.names = FALSE, quote = FALSE)
 
   ## Write CSV as xy.csv
   # xynew[1:3, 1:3]
   xy_out <- file.path(tempDir, 'xy.csv')
-  write.csv(x = xynew, file = xy_out, row.names = FALSE, quote = FALSE)
+  utils::write.csv(x = xynew, file = xy_out, row.names = FALSE, quote = FALSE)
 
   return(xy_out)
 
@@ -793,7 +793,8 @@ sui2res_py <- function(
 #' @return Path with CDPOP results
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' newPoints <- randPtsFun(terra::rast(hs), 10, 0.2, 0.8)
+#' newPoints <- randPtsFun(rvect = terra::rast(hs), 
+#'           npts = 10, rmin = 0.2, rmax = 0.8)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -802,10 +803,10 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
   # npts = 50; rmin = .20; rmax = .5
 
   ## Only positions among range
-  newRast <- which(rvect > rmin & rvect < rmax)
+  newRast <- 1 * (rvect > rmin & rvect < rmax)
 
   ## Selected positions
-  randPos <- sample(newRast, size = npts)
+  randPos <- sample(terra::size(newRast), size = npts)
 
   ## Extracting xy from selected cells
   xyRand <- data.frame(terra::xyFromCell(rvect, cell = randPos))
@@ -834,6 +835,7 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE
 #' @return Path with the created shapefile
 #' @examples
+#' if( FALSE) {
 #' library(cola)
 #' library(terra)
 #' hs_path <- system.file(package = 'cola', 'sampledata/sampleHS.tif')
@@ -842,6 +844,7 @@ randPtsFun <- function(rvect, npts, rmin, rmax){
 #' pts_result <- points_py(intif = hs_path, outshp = points_path, smin = 0.2,
 #'   smax = 0.9, npoints = 50, issuit = 'Yes', upcrs = 'None')
 #' plot(vect(pts_result$file))
+#' }
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
@@ -1331,11 +1334,11 @@ lccJoblib_py <- function(
 #' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
 #' The function uses two separate python scripts: lcc_hpc1_zarr.py and lcc_hpc2_zarr.py
 #' Here the usage order in the backend:
-#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
-#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram
+#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 #' Here an example. Pleas provide full path to all the file arguments:
-#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr reOrderFile.csv nodeidsFile.csv 6
-#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr nodeOrderFile.csv nodeIdsFile.csv 6
+#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None nodeOrderFile.csv nodeIdsFile.csv None None
 #'
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
@@ -1383,8 +1386,8 @@ lccZarr_py <- function(
     maxram = as.numeric(Sys.getenv('COLA_RAMGB')),
     crs = 'None',
     tempFolder = NULL,
-    nodeOrderFile,
-    nodeIdsFile,
+    nodeOrderFile = NULL,
+    nodeIdsFile = NULL,
     pairzarr = NULL,
     distzarr = NULL,
     sci = 'None', eci = 'None',
@@ -1400,7 +1403,7 @@ lccZarr_py <- function(
   # tempFolder = NULL;
   # tempFolder = '/home/shiny/test/'
 
-  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
+  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram sci eci
 
 
   if( !file.exists(py)){
@@ -1422,9 +1425,12 @@ lccZarr_py <- function(
   if(is.null(distzarr)){
     (distzarr <- paste0(tempFolder, '/', tempH5, '_dist.zarr'))
   }
-  (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
-  (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
-
+  if(is.null(nodeOrderFile)){
+    (nodeOrderFile <- paste0(tempFolder, '/', tempH5, '_nodeOrderFile.csv'))
+  }
+  if(is.null(nodeIdsFile)){
+    (nodeIdsFile <- paste0(tempFolder, '/', tempH5, '_nodeIdsFile.csv'))
+  }
   # # INPUTS part A
   # # Path to file holding xy coordinates
   # xyf = sys.argv[1]  --- inshp
@@ -1453,10 +1459,10 @@ lccZarr_py <- function(
   # dazarr = sys.argv[7]
   #
   # # point pair output file name
-  # reOrderFile = sys.argv[8]
+  # nodeOrderFile = sys.argv[8]
   #
   # # Node ids output
-  # nodeidsFile = sys.argv[9]
+  # nodeIdsFile = sys.argv[9]
   #
   # # Set memory size for processing corridors
   # # I.e. set to 16 if you want to use 16GB of RAM
@@ -1500,10 +1506,10 @@ lccZarr_py <- function(
   # upCRS = sys.argv[7] # Default None
   #
   # # point pair output file name
-  # reOrderFile = sys.argv[8]
+  # nodeOrderFile = sys.argv[8]
   #
   # # nodeids file name
-  # nodeidsFile = sys.argv[9]
+  # nodeIdsFile = sys.argv[9]
   #
   # # Start corridor index
   # # For now, these should be zero indexed python style
@@ -1530,8 +1536,8 @@ lccZarr_py <- function(
 #     crs, " ",
 #     pairzarr, " ",
 #     distzarr, " ",
-#     reOrderFile, " ",
-#     nodeidsFile, " ",
+#     nodeOrderFile, " ",
+#     nodeIdsFile, " ",
 #     maxram
 #     , ' 2>&1 ' #, logname
 #   ))
@@ -1553,8 +1559,8 @@ lccZarr_py <- function(
     adaptFilePath(py), ' ', paste(aargsA, collapse = ' '), collapse = ''))
 
 
-  # A: inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
-  # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+  # A: inshp intif maxdist ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram
+  # B: intif outtif pazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
   # (cmd_lcc_zarrB <- paste0(
   #   quotepath(py), ' ',
   #   quotepath(pyscriptB), ' ',
@@ -1565,8 +1571,8 @@ lccZarr_py <- function(
   #   format(tolerance, scientific=F), " ",
   #   format(ncores, scientific=F), " ",
   #   crs, " ",
-  #   reOrderFile, " ",
-  #   nodeidsFile, " ",
+  #   nodeOrderFile, " ",
+  #   nodeIdsFile, " ",
   #   format(sci, scientific=F), " ",
   #   format(eci, scientific=F), " "
   #   , '2>&1 ' #, logname
@@ -1637,9 +1643,9 @@ lccZarr_py <- function(
 #' @title  Factorial least cost corridors on Zarr part A
 #' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
 #' The function uses :
-#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
+#'    A: python script.py inshp intif maxdist ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram
 #' Here an example. Pleas provide full path to all the file arguments:
-#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr reOrderFile.csv nodeidsFile.csv 6
+#'    /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr nodeOrderFile.csv nodeIdsFile.csv 6
 #'
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
@@ -1694,7 +1700,7 @@ lccZarrA_py <- function(inshp, intif,
   # tempFolder = NULL;
   # tempFolder = '/home/shiny/test/'
 
-  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr reOrderFile nodeidsFile maxram sci eci
+  # A: inshp intif outtif maxdist smooth tolerance ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram sci eci
 
   if( !file.exists(py)){
     stop('Python not found')
@@ -1715,11 +1721,11 @@ lccZarrA_py <- function(inshp, intif,
   if(is.null(distzarr)){
     (distzarr <- paste0(tempFolder, '/', tempH5, '_dist.zarr'))
   }
-  if(is.null( reOrderFile )){
-    (reOrderFile <- paste0(tempFolder, '/', tempH5, '_reOrderFile.csv'))
+  if(is.null( nodeOrderFile )){
+    (nodeOrderFile <- paste0(tempFolder, '/', tempH5, '_nodeOrderFile.csv'))
   }
-  if(is.null( nodeidsFile )){
-    (nodeidsFile <- paste0(tempFolder, '/', tempH5, '_nodeidsFile.csv'))
+  if(is.null( nodeIdsFile )){
+    (nodeIdsFile <- paste0(tempFolder, '/', tempH5, '_nodeIdsFile.csv'))
   }
 
   # # INPUTS part A
@@ -1750,10 +1756,10 @@ lccZarrA_py <- function(inshp, intif,
   # dazarr = sys.argv[7]
   #
   # # point pair output file name
-  # reOrderFile = sys.argv[8]
+  # nodeOrderFile = sys.argv[8]
   #
   # # Node ids output
-  # nodeidsFile = sys.argv[9]
+  # nodeIdsFile = sys.argv[9]
   #
   # # Set memory size for processing corridors
   # # I.e. set to 16 if you want to use 16GB of RAM
@@ -1776,13 +1782,13 @@ lccZarrA_py <- function(inshp, intif,
   #   crs, " ",
   #   pairzarr, " ",
   #   distzarr, " ",
-  #   reOrderFile, " ",
-  #   nodeidsFile, " ",
+  #   nodeOrderFile, " ",
+  #   nodeIdsFile, " ",
   #   maxram
   #   , ' 2>&1 ' #, logname
   # ))
 
-  # A: inshp intif maxdist ncores crs pairszarr distzarr reOrderFile nodeidsFile maxram
+  # A: inshp intif maxdist ncores crs pairszarr distzarr nodeOrderFile nodeIdsFile maxram
   aargs <- c( # script, then all
     adaptFilePath(pyscript),
     quotepath(inshp),
@@ -1812,7 +1818,7 @@ lccZarrA_py <- function(inshp, intif,
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
 
-  ans <- list(file = ifelse(file.exists(reOrderFile), reOrderFile, ''),
+  ans <- list(file = ifelse(file.exists(nodeOrderFile), nodeOrderFile, ''),
               # log =  paste0(intCMD, '-- ', read.delim(logname)) ) )
               log = paste0(" A: ", intCMD, '\n' ), cmd = cmd_ )
   #print('ANS LCC');print(ans)
@@ -1823,9 +1829,9 @@ lccZarrA_py <- function(inshp, intif,
 #' @title  Factorial least cost corridors on Zarr part B
 #' @description Run the factorial least cost corridors algorithm using the parallel computing library zarr.
 #' The function uses : lcc_hpc2_zarr.py
-#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+#'    B: python script.py intif outtif dazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 #' Here an example. Pleas provide full path to all the file arguments:
-#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+#'    /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None nodeOrderFile.csv nodeIdsFile.csv None None
 #'
 #'#' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 #' @param inshp String. Source points File path to the point layer. Spatial point layer (any ORG driver), CSV (X, Y files), or *.xy file
@@ -1884,7 +1890,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
   # tempFolder = NULL;
   # tempFolder = '/home/shiny/test/'
 
-  # B: intif outtif pazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+  # B: intif outtif pazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 
 
   if( !file.exists(py)){
@@ -1927,10 +1933,10 @@ lccZarrB_py <- function(inshp, intif, outtif,
   # upCRS = sys.argv[7] # Default None
   #
   # # point pair output file name
-  # reOrderFile = sys.argv[8]
+  # nodeOrderFile = sys.argv[8]
   #
   # # nodeids file name
-  # nodeidsFile = sys.argv[9]
+  # nodeIdsFile = sys.argv[9]
   #
   # # Start corridor index
   # # For now, these should be zero indexed python style
@@ -1948,7 +1954,7 @@ lccZarrB_py <- function(inshp, intif, outtif,
   (logname <- paste0(tools::file_path_sans_ext(outtif), '.txt'))
 
   ##
-  # B: intif outtif distzarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+  # B: intif outtif distzarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 
   ### Create CMD
   aargs <- c( # script, then all
@@ -2102,7 +2108,7 @@ crk_py <- function(inshp, intif, outtif,
                   ncores = ncores, crs = crs,
                   log = paste0(intCMD, collapse = ' - '),
                   done = ifelse(file.exists(outtif), 'yes', 'no'))
-    write.table(metaFile, logname )
+    utils::write.table(metaFile, logname )
 
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
@@ -2258,7 +2264,7 @@ crkJoblib_py <- function(
                   maxram = maxram,
                   log = paste0(intCMD, collapse = ' - '),
                   done = ifelse(file.exists(outtif), 'yes', 'no'))
-    write.table(metaFile, logname )
+    utils::write.table(metaFile, logname )
     tryCatch(file.remove(c(h5file)), error = function(e) NULL)
 
   } else {
@@ -3045,7 +3051,6 @@ replacePixels <- function(polPath, burnval = 'val2burn', rastPath, colu = FALSE,
 #' @param inrasterpath String. Path of the input raster
 #' @param outrasterpath String. Optional. Path of the fixed raster.If no provided will be
 #' same as input with the prefix out_
-#' @import terra gdalUtilities
 #' @importFrom terra res
 #' @importFrom raster raster extent
 #' @return Path of the resulting raster layer. Will be same as input if no change was made
@@ -3093,7 +3098,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
       # options(scipen = 999)
       # options(scipen = 9)
 
-      gi <- capture.output(gdalUtilities::gdalinfo(inraster))
+      gi <- utils::capture.output(gdalUtilities::gdalinfo(inraster))
       (nd0 <- as.numeric(gsub('^.+\\=', '', grep('NoData Value=', gi, value = TRUE))))
       if (length(nd0) == 0) { nd0 <- 0}
       nd <- (length(nd0) == 1) & (nd0 == -9999)
@@ -3203,7 +3208,7 @@ fitRaster2cola <- function(inrasterpath, outrasterpath = NULL){
 #' @import terra
 #' @return Path of the resulting raster layer. Same as rastPath with the '_replaced ' suffix.
 #' @examples
-#' plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+#' isProjected(system.file(package = 'cola', 'sampledata/sampleHS.tif'))
 #'
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>

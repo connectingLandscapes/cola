@@ -174,6 +174,8 @@ nodeidsFile = 'C:/cola/filea7a845ad590b_nodeidsFile.csv'
 
 # Pkg CRAN
 '
+$ grep -rnE "library\(|require\(" R/
+
 pkgs <- c("DT", "RColorBrewer", "bit", "digest", "dplyr", "gdalUtilities",
           "ggplot2", "highcharter", "htmltools", "htmlwidgets", "knitr",
           "leaflet", "leaflet.extras", "magrittr", "processx", "raster",

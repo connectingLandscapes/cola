@@ -18,8 +18,8 @@ lccZarr_py(
   maxram = as.numeric(Sys.getenv("COLA_RAMGB")),
   crs = "None",
   tempFolder = NULL,
-  nodeOrderFile,
-  nodeIdsFile,
+  nodeOrderFile = NULL,
+  nodeIdsFile = NULL,
   pairzarr = NULL,
   distzarr = NULL,
   sci = "None",
@@ -81,11 +81,11 @@ Path with factorial least cost corridors. Each pixel show the number of corridor
 Run the factorial least cost corridors algorithm using the parallel computing library zarr.
 The function uses two separate python scripts: lcc_hpc1_zarr.py and lcc_hpc2_zarr.py
 Here the usage order in the backend:
-   A: python script.py inshp intif maxdist ncores crs pazarr dazarr reOrderFile nodeidsFile maxram
-   B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+   A: python script.py inshp intif maxdist ncores crs pazarr dazarr nodeOrderFile nodeIdsFile maxram
+   B: python script.py intif outtif dazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 Here an example. Pleas provide full path to all the file arguments:
-   /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr reOrderFile.csv nodeidsFile.csv 6
-   /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+   /path/to/python /path/to/lcc_hpc1_zarr.py points.shp inputSR.tif out_lcc.tif 150000 5 None temp_pa.zarr temp_da.zarr nodeOrderFile.csv nodeIdsFile.csv 6
+   /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None nodeOrderFile.csv nodeIdsFile.csv None None
 
 #' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 }

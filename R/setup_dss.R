@@ -2,7 +2,6 @@
 #' @description Installs R packages, trying CRAN, then github.
 #' @param x String. Name of the libraries to install. 
 #' @param devt Logical. Default FALSE. Is from a developer (github)?  
-#' @import devtools
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
 #' if (FALSE){ 
@@ -16,12 +15,12 @@ instPack <- function(x, devt = FALSE){
   sapply(x, FUN = function(y){
 
     lib2inst <- ifelse(devt, basename(y), y)
-    rnIl <- rownames(installed.packages());
+    rnIl <- rownames(utils::installed.packages());
     # if( require( eval(parse(text=paste(y))) ) ){}
 
     if(!lib2inst %in% rnIl) {
       if (!devt){
-        tryCatch(install.packages(lib2inst), error = function(e) print(e))
+        tryCatch(utils::install.packages(lib2inst), error = function(e) print(e))
       } else {
         devtools::install_github(y)
       }
@@ -33,7 +32,6 @@ instPack <- function(x, devt = FALSE){
 #' @title Install  \emph{COLA} graphical user interface
 #' @description Installs cola GUI. Requires several libraries to display maps and widgets.
 #' @param libs2colaDSS String. Name of the libraries to install. 
-#' @import devtools remotes
 #' @return NULL. Prints in console logs regarding different steps
 #' @examples
 #' if (FALSE){ 
@@ -79,7 +77,7 @@ setup_cola_dss <- function(
   }
 
   if (!requireNamespace("devtools")) {
-    install.packages("devtools")
+    utils::install.packages("devtools")
   }
   requireNamespace("devtools")
 
@@ -90,7 +88,7 @@ setup_cola_dss <- function(
   }
 
   if (!requireNamespace("remotes")) {
-    install.packages("remotes")
+    utils::install.packages("remotes")
   }
 
   cola::instPack(libs2colaDSS )

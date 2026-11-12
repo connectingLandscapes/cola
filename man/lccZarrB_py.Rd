@@ -74,9 +74,9 @@ Path with factorial least cost corridors. Each pixel show the number of corridor
 \description{
 Run the factorial least cost corridors algorithm using the parallel computing library zarr.
 The function uses : lcc_hpc2_zarr.py
-   B: python script.py intif outtif dazarr smooth tolerance ncores crs reOrderFile nodeidsFile sci eci
+   B: python script.py intif outtif dazarr smooth tolerance ncores crs nodeOrderFile nodeIdsFile sci eci
 Here an example. Pleas provide full path to all the file arguments:
-   /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None reOrderFile.csv nodeidsFile.csv None None
+   /path/to/python /path/to/lcc_hpc2_zarr.py inputSR.tif out_lcc.tif temp_da.zarr 5 1 4 None nodeOrderFile.csv nodeIdsFile.csv None None
 
 #' Check more details on the user manual at https://github.com/connectingLandscapes/cola
 }

@@ -18,18 +18,16 @@ Imports:
 	processx,
 	terra,
 	sf,
-	remotes,
+	raster,
 	gdalUtilities,
-	raster
+	remotes
 Suggests: 
-    terra,
-    DT,
-    RColorBrewer,
     bit,
+	dashboardthemes,
     digest,
-    dplyr,
-    gdalUtilities,
     ggplot2,
+    dplyr,
+	DT,
     highcharter,
     htmltools,
     htmlwidgets,
@@ -37,10 +35,10 @@ Suggests:
     leaflet,
     leaflet.extras,
     magrittr,
-    raster,
     reshape2,
     rmarkdown,
-    sf,
+	RColorBrewer,
+	rstudioapi,
     shiny,
     shinyBS,
     shinyWidgets,
@@ -49,7 +47,9 @@ Suggests:
     shinydashboard,
     shinydashboardPlus,
     shinyjs,
+	shinySignals,
     tibble,
+	tidyverse,
     viridis
 Depends: 
     R (>= 3.5)

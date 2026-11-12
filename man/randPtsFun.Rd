@@ -23,7 +23,8 @@ Create random points
 }
 \examples{
 hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-newPoints <- randPtsFun(terra::rast(hs), 10, 0.2, 0.8)
+newPoints <- randPtsFun(rvect = terra::rast(hs), 
+          npts = 10, rmin = 0.2, rmax = 0.8)
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

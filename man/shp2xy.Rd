@@ -37,7 +37,7 @@ Converts Shapefile into xy file
 dir.create(tempfolder)
 
 (xyfile <- shp2xy( shapefile = system.file(package = 'cola', 'sampledata/points_sabah_50.shp'),
-        outxy = file.path(out_dir, 'out.xy'), tempDir = tempfolder))
+        outxy = file.path(tempfolder, 'out.xy'), tempDir = tempfolder))
 }
 \author{
 Ivan Gonzalez <ig299@nau.edu>

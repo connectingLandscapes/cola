@@ -19,7 +19,7 @@ Rasterize a polygon and sum it to an existing raster. Both layers need to be in 
  Not working on Windows at the moment.
 }
 \examples{
-plot(rast(replacedPol2), main = 'Replaced: Same value for all the polygons')
+isProjected(system.file(package = 'cola', 'sampledata/sampleHS.tif'))
 
 }
 \author{
