@@ -59,17 +59,10 @@ ee_layer = args.ee_layer # ee asset
 number_abs = str(args.number_abs) # % of absences based of presences
 presence_col = args.presence_col
 abs_method = args.abs_method
+block_size = args.block_size
 
 
 # percabs 
-
-EEPROJECT = args.ee_project
-EEFOLDER = args.ee_folder
-GDFOLDER = args.gd_folder
-PREFIX = args.prefix
-SCALE = args.scale
-CRS = args.crs
-REGION = args.region
 
 
 # import os
@@ -157,7 +150,7 @@ def main() -> None:
     gpdbox = gpd.GeoDataFrame(geometry=[extent_poly], crs=gdf.crs)
     #
     #
-    if percabs != 0:
+    if percabs != '0':
         # bounds = ee.Geometry.Rectangle(extents.values(["longitude_min", "latitude_min", "longitude_max", "latitude_max"]))
         # bounds = ee.Geometry.Rectangle([minx, miny, maxx, maxy])
         # refimage = ee.Image("USGS/SRTMGL1_003").clip(bounds)
@@ -166,7 +159,7 @@ def main() -> None:
         # x = 3, 4; y = -1, 1
         # s = gpd.GeoSeries([Polygon([(3, -1), (4, -1), (4, 1), (3, 1)])])
         pol = gpd.GeoSeries([Polygon([(minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)])])
-        numabs  = int((percabs/100)*gdf.size)
+        numabs  = int((float(percabs)/100)*gdf.size)
         extabs = pol.sample_points(size = numabs )
         abspts = gpd.GeoDataFrame(geometry=extabs, crs=gdf.crs).explode(index_parts=True)
         abspts = abspts.assign(preabs=0)

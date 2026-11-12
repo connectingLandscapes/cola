@@ -7691,16 +7691,18 @@ server <- function(input, output, session) {
             # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
 
             # eeproject shp eeasset %abs
-            cmdee <- paste0(cola::adaptFilePath(py), ' ',
+            cmdee <- paste(cola::adaptFilePath(py),
                             cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
                             #cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
                             #ee_scr_path,'/cml_uploadFeature.py ',
-                            input$in_ee_project, ' ',
-                            cola::adaptFilePath(file2upload), ' ', input$ee_ptspath, ' ' ,
-                            input$ee_absloc,
-                            '' #'  2>&1'
+                            '--ee_project', input$in_ee_project,
+                            '--point_path', cola::adaptFilePath(file2upload),
+                            '--ee_layer', input$ee_ptspath,
+                           '--number_abs', input$ee_absloc
+                           # , '--abs_method'
+                           # , '--block_size 1000' #'  2>&1'
             )
-            cmdee <- adaptFilePath( cmdee )
+            #cmdee <- adaptFilePath( cmdee )
             #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
             # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
             cat(' CMD Uploading points EE:\n')

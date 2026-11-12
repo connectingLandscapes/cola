@@ -18,7 +18,7 @@ if(!require(devtools)){install.packages('devtools')}
 library(devtools)
 .rs.restartR()
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')
-devtools::install('N:/My Drive/git/cola')
+# devtools::install('N:/My Drive/git/cola')
 "
 
 " # command
@@ -33,7 +33,7 @@ R -e "shinyParallel::installShinyParallel('/home/shiny/colashiny/connecting-land
 library(cola)
 cola::diagnose_cola()
 cola::setup_cola()
-cola::setup_cola(ask = FALSE, zarr = TRUE, dss = TRUE, cola2 = TRUE)
+cola::setup_cola(ask = FALSE, zarr = TRUE, dss = TRUE, cola2 = TRUE, earthranger = TRUE)
 cola::setup_cola()
 
 file.edit(file.path(Sys.getenv('HOME'), '.Renviron'))
