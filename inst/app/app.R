@@ -7483,11 +7483,11 @@ server <- function(input, output, session) {
   output$tabee <- renderMenu({
     #print(rv$eecola)
     #print('rv$eecola == 1')
-    #if(rv$eecola & (!COLA_SERVER | COLA_DEBUG)){
+    if(rv$eecola |  COLA_DEBUG){ # & (!COLA_SERVER | COLA_DEBUG)
       #print( ' rv$eecola == 1 ')
       menuItem("GEE Suitability", tabName = "tabee", icon = icon("map")
       )
-    #}
+    }
   })
 
 
@@ -7547,7 +7547,8 @@ server <- function(input, output, session) {
         cmdee <- paste0(py, ' ',
                         cola::quotepath(file.path(ee_scr_path,'cml_connectEE.py'))
                         , ' ',
-                        input$in_ee_project, ' ', tempFolder, ' ')
+                        input$in_ee_project, ' ',
+                        tempFolder, ' ')
         #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan /data/cola/colaXGY2026030209460105 2>&1'
         # cmdee <- 'C:/Users/gonza/AppData/Local/r-miniconda/envs/cola/python.exe C:/cola/cola2/cml_connectEE.py gonzalezivan C:/cola/colaIJD2026030509435605/ 2>&1'
 
@@ -7575,7 +7576,7 @@ server <- function(input, output, session) {
             )
           })
 
-          #tempFolder <- 'C:/cola/colaFLF2026072014371305/'
+          # tempFolder <- 'C:/cola/colaWTG2026111216323005/'
           eecsvOK <- FALSE
           eecsvOK <- tryCatch({
             gee_assets <- read.csv(file.path(tempFolder, 'gee_assets_inventory.csv'));
@@ -7587,11 +7588,12 @@ server <- function(input, output, session) {
           if( eecsvOK ) {
             gee_assets$ID <- 1:nrow(gee_assets)
             output$out_ee_userfiles <- DT::renderDataTable(
-              dat <- datatable(gee_assets[, c('ID', 'Type', 'Name')], editable = T,
+              datatable(gee_assets[, c('ID', 'Type', 'Name')], editable = T,
                                options = list(
                                  paging =TRUE ,
                                  pageLength = 50 # nrow(rv$data)
-                               ) ) )
+                               ) )
+              )
 
             consumption <- paste0( tail(gee_usage$Month,1), ': ',
                                    round(tail(gee_usage$eecu,1)), ' seconds')
@@ -7690,33 +7692,40 @@ server <- function(input, output, session) {
             # 3 amazon1.shp  128      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/2.shp
             # 4 amazon1.shx  108      C:\\Users\\gonza\\AppData\\Local\\Temp\\Rtmp4O0IRd/7735083a0aeddacdcb791dec/3.shx
 
-            # eeproject shp eeasset %abs
-            cmdee <- paste(cola::adaptFilePath(py),
-                            cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
-                            #cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
-                            #ee_scr_path,'/cml_uploadFeature.py ',
-                            '--ee_project', input$in_ee_project,
-                            '--point_path', cola::adaptFilePath(file2upload),
-                            '--ee_layer', input$ee_ptspath,
-                           '--number_abs', input$ee_absloc
-                           # , '--abs_method'
-                           # , '--block_size 1000' #'  2>&1'
+            intCMD <-  localPoints2ee_py(
+              ee_project = input$in_ee_project,
+              point_path = cola::adaptFilePath(file2upload),
+              ee_layer = input$ee_ptspath,
+              num_abs = input$ee_absloc,
+              # presence_col = NULL,
+              # block_size = NULL,
+              abs_meth = 'background',
             )
-            #cmdee <- adaptFilePath( cmdee )
-            #cmdee <- '/home/shiny/.local/share/r-miniconda/envs/cola/bin/python /srv/shiny-server/cola2/in_ee_connect.py gonzalezivan colaHRI2025081304123905 2>&1'
-            # C:\\Users\\gonza\\AppData\\Local\\r-miniconda\\envs\\cola\\python.exe C:\\cola\\cola2\\in_ee_connectEE.py C:\\cola\\colaHRI202508130412390.csv
-            cat(' CMD Uploading points EE:\n')
-            cat(cmdee,  '\n')
 
-            intCMD <- tryCatch(
-              capture.output(
-                system( cmdee , ignore.stdout = FALSE,
-                        ignore.stderr = FALSE, intern = TRUE)),
-              error = function(e) e$message)
+            # cmdee <- paste(cola::adaptFilePath(py),
+            #                 cola::adaptFilePath(system.file(package = 'cola', 'ee/cml_uploadFeature.py')),
+            #                 #cola::quotepath('N:/My Drive/git/cola/inst/ee/cml_uploadFeature.py'), ' ',
+            #                 #ee_scr_path,'/cml_uploadFeature.py ',
+            #                 '--ee_project', input$in_ee_project,
+            #                 '--point_path', cola::adaptFilePath(file2upload),
+            #                 '--ee_layer', input$ee_ptspath,
+            #                '--number_abs', input$ee_absloc
+            #                # , '--abs_method'
+            #                # , '--block_size 1000' #'  2>&1'
+            # )
 
-            cat(intCMD, sep = '\n')
-
-            cond <- !any(grep('ERROR', intCMD))
+            # cat(' CMD Uploading points EE:\n')
+            # cat(cmdee,  '\n')
+            #
+            # intCMD <- tryCatch(
+            #   capture.output(
+            #     system( cmdee , ignore.stdout = FALSE,
+            #             ignore.stderr = FALSE, intern = TRUE)),
+            #   error = function(e) e$message)
+            #
+            # cat(intCMD, sep = '\n')
+            #
+            # cond <- !any(grep('ERR', intCMD))
 
             if(cond){
               taskid <- grep('Upload submitted', intCMD, value = TRUE)

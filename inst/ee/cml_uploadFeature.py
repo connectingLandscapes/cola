@@ -60,7 +60,6 @@ number_abs = str(args.number_abs) # % of absences based of presences
 presence_col = args.presence_col
 abs_method = args.abs_method
 block_size = args.block_size
-percabs = number_abs
 
 # percabs 
 
@@ -150,7 +149,22 @@ def main() -> None:
     gpdbox = gpd.GeoDataFrame(geometry=[extent_poly], crs=gdf.crs)
     #
     #
-    if percabs != '0':
+    # Estimating how many absences
+    if '%' in number_abs:
+        try:
+            numabs = float(number_abs.replace("%", ""))
+            numabs  = int((float(numabs)/100)*gdf.size)
+        except:
+            print( 'No valid percentage. Skipping absences')
+    else:
+        try:
+            numabs = float(number_abs)
+        except:
+            print( 'No valid number. Skipping absences')
+        
+        
+    # Simulate abs
+    if numabs != '0':
         # bounds = ee.Geometry.Rectangle(extents.values(["longitude_min", "latitude_min", "longitude_max", "latitude_max"]))
         # bounds = ee.Geometry.Rectangle([minx, miny, maxx, maxy])
         # refimage = ee.Image("USGS/SRTMGL1_003").clip(bounds)
@@ -158,11 +172,19 @@ def main() -> None:
         from shapely.geometry import Polygon
         # x = 3, 4; y = -1, 1
         # s = gpd.GeoSeries([Polygon([(3, -1), (4, -1), (4, 1), (3, 1)])])
+        
+        if abs_method == 'background':
+            0
+        else if abs_method == 'blocks':
+            1
+        else if abs_method == 'environmental':
+            2
+        #
         pol = gpd.GeoSeries([Polygon([(minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)])])
-        numabs  = int((float(percabs)/100)*gdf.size)
         extabs = pol.sample_points(size = numabs )
         abspts = gpd.GeoDataFrame(geometry=extabs, crs=gdf.crs).explode(index_parts=True)
         abspts = abspts.assign(preabs=0)
+        
         # abspts.plot()
         print (  ' Creating ' + str(numabs ) +' absences, assigning 0 to all new features in the "preabs" column')
         gdf = pd.concat([gdf, abspts], ignore_index=True)

@@ -1,0 +1,103 @@
+---
+title: "CoLa2+EarthRanger"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CoLa2+EarthRanger
+
+This tutorial generates a species distribution model (SDM) using CoLa new modules. You will use EarthRanger API (via ecoscope Python package)
+
+
+```{r earthranger, opts.label=}
+library(cola)
+
+(wd <- file.path(Sys.getenv('COLA_DATA_PATH'), sessionIDgen(folder = TRUE)))
+dir.create(wd)
+
+erPoints <- file.path(wd, 'points.shp')
+erRaster <- file.path(wd, 'raster.tif')
+  
+ERpoints <- earthRanger_py(
+    server = 'https://twiga.pamdas.org', 
+    username = 'IGonzalez', 
+    pwd = 'temp12345',
+    datefrom = '2026-09-06',
+    dateto = '2026-12-16',
+    subject = 'NAM_test',
+    outshp = erPoints, 
+    outtif = erRaster,
+    dokde = 1,
+    spatresinmeters = 10000)
+
+```
+
+
+```{r earthrangerplot}
+library(terra)
+rastLayer <- rast( erRaster )
+plot(rastLayer, main = 'KDE')
+
+vectLayer <- vect( erPoints )
+dim(vectLayer)
+plot(vectLayer, add = TRUE)
+```
+
+## Earth ranger
+
+This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
+
+```{r upload}
+cola2Upl <- localPoints2ee_py(
+    ee_project = 'gonzalezivan',
+    point_path = erRaster,
+    ee_layer = 'projects/gonzalezivan/assets/cola2/erpoints',
+    presence_col = NULL,
+    num_abs = nrow(vectLayer))
+
+```
+
+
+## Including Code
+
+You can include R code in the document as follows:
+
+```{r extract}
+cola::sdm_extract_py(, …)
+```
+
+```{r extract}
+cola::sdm_extract_py(, …)
+```
+
+```{r extract}
+cola::sdm_extract_py(predictor_source, …)
+```
+
+```{r fitting}
+cola::sdm_model_fitting_py(predictor_source, …)
+```
+
+```{r prediction}
+cola::sdm_prediction_py(predictor_source, …)
+```
+
+```{r download}
+cola::export_ee2gd_py(username, …)
+```
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

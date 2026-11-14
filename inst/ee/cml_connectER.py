@@ -297,17 +297,33 @@ def main():
                                       SUBJECT_GROUP, DATE_FROM, DATE_TO)
     gdf_utm, epsg = reproject_utm(gdf)
     # Export CoLa-ready inputs
-    shp_path = export_points(gdf_utm, OUTPUT_SHP, safe_name)
-    if DO_KDE == 1:
-        tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_TIF, safe_name, KDE_RES_M)
-    #
     
+    # gdf_utm['year'] = df['recorded_a'].str[:4]
+    gdf_utm['year'] = df.columns.str.startswith('recorded_a').str[:4]
+    
+    try:
+        shp_path = export_points(gdf_utm, OUTPUT_SHP, safe_name)
+    except Exception as exc:  # bad path, permissions, invalid driver, disk issues...
+        print(" -- Could not save to %s (%s). Using fallback.", OUTPUT_SHP, safe_name)
+        from datetime import datetime
+        from pathlib import Path
+        safe_name = str(Path.home()) + '/er_' + datetime.now().strftime("%Y%m%d_%H%M%S") + '.gpkg'
+        gdf_utm.to_file(safe_name)  # if this fails too, the error is raised
+        print("  -- Saving layer in: %s", safe_name)
+        if DO_KDE == 1:
+            OUTPUT_TIF = str(Path.home()) + '/er_' + datetime.now().strftime("%Y%m%d_%H%M%S") + '.tif'
     print(f"""
 {"═" * 60}
   Done. CoLa inputs ready:
-  Source points shapefile    : {shp_path}""")
+  Source points shapefile    : {shp_path}""")    
     if DO_KDE == 1:
-        print(f"Habitat suitability raster : {tif_path}")
+        try:
+            tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_TIF, safe_name, KDE_RES_M)
+            print(f"Habitat suitability raster : {OUTPUT_TIF}")
+        else: 
+            print("Could not save raster to %s ", OUTPUT_TIF)
+            
+    #
     #
     print("═" * 60 + "\n")
 

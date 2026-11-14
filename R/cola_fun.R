@@ -1,3 +1,30 @@
+#' @title Initialize CoLa - Google Earth Engine
+#' @description Starts GEE connection, saving credentials locally for future usage
+#' @param py Location of python
+#' @note Please see the official website (\url{https://github.com/connectingLandscapes/cola/})
+#' @examples
+#' library(cola)
+#'   initialize_cola_ee( )
+#'
+#' @author Ivan Gonzalez <ig299@@nau.edu>
+#' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
+#' @export
+initialize_cola_ee <- function(
+    py = Sys.getenv("COLA_PYTHON_PATH"),  dry_run = FALSE)  {
+
+  message('Run this 3 commands:')
+  message('  # 1. Start Python In your system (not R) console: ')
+  message(py)
+
+  message('  # 2. In Python, load ee module: ')
+  message('import ee')
+
+  message('  # 3. In Python, initialize ee with your username. Then, finish the steps in your browser: ')
+  message('ee.Authenticate() ')
+
+}
+
+
 #' @title Launch \emph{COLA} decision support system (DSS) dashboard
 #' @description This function runs the \emph{cola} dashboard
 #' @param launch.browser Run this app on a new window? Default `TRUE`
@@ -18,8 +45,6 @@ cola_dss <- function(launch.browser = TRUE)  {
   on.exit(rm(list = setdiff(ls(envir = .GlobalEnv), preexisting_objects), envir = .GlobalEnv))
   return( shiny::runApp(dssLocation, launch.browser = launch.browser) )
 }
-
-
 
 
 
@@ -793,7 +818,7 @@ sui2res_py <- function(
 #' @return Path with CDPOP results
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' newPoints <- randPtsFun(rvect = terra::rast(hs), 
+#' newPoints <- randPtsFun(rvect = terra::rast(hs),
 #'           npts = 10, rmin = 0.2, rmax = 0.8)
 #' @author Ivan Gonzalez <ig299@@nau.edu>
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
@@ -3385,8 +3410,8 @@ localPoints2ee_py <- function(
     '--ee_project', ee_project,
     '--point_path', cola::adaptFilePath(point_path),
     '--ee_layer', ee_layer,
-    ifelse (!is.null(presence_col), '--presence_col'),
-    ifelse (!is.null(presence_col), presence_col),
+    ifelse (!is.null(presence_col), '--presence_col', NULL),
+    ifelse (!is.null(presence_col), presence_col, NULL),
     '--number_abs', num_abs,
     '--abs_method',  abs_meth,
     ifelse(!is.null(block_size), '--block_size', NULL),
@@ -4167,7 +4192,7 @@ earthRanger_py <- function(
     subject,
     outtif, outshp,
     dokde = 0,
-    spatresinmeters = 250,
+    spatresinmeters = 10000,
     show_cml = TRUE, show_result = TRUE,
     dry_run = FALSE){
 

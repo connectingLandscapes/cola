@@ -96,7 +96,7 @@ def export_csv(asset_list, output_file):
         writer.writeheader()
         for row in asset_list:
             writer.writerow(row)
-    print(f"\nInventory exported to:\n{output_file}")
+    print(f"\n Inventory exported to:\n    {output_file}")
 
 # ---------------------------------------------------------------------
 # Main
@@ -186,7 +186,7 @@ def main() -> None:
         # -----------------------------------------------------------------------------
         pathh = param2+ "/gee_tasks_eecu.csv"
         df.to_csv(pathh, index=False)
-        print(f"Tasks saved: {pathh}")
+        print(f"  Tasks saved:\n    {pathh}")
         # -----------------------------------------------------------------------------
         # Monthly EECU summary
         # -----------------------------------------------------------------------------
@@ -196,7 +196,7 @@ def main() -> None:
               .sum()        )
         monthly["Month"] = monthly["Month"].astype(str)
         monthly.to_csv(param2 + "/gee_eecu_monthly_summary.csv", index=False)
-        print("\nMonthly EECU Consumption")
+        print("\n Monthly EECU Consumption")
         print(monthly)
         # List assets
         ROOT_ASSET = "projects/" + param1 + "/assets"
@@ -204,8 +204,8 @@ def main() -> None:
         walk_assets(ROOT_ASSET, assets)
         path2 = param2 + "/gee_assets_inventory.csv"
         export_csv(assets, path2)
-        print(f"\nTotal assets found: {len(assets)}")
-        print(f"Assets saved: {pathh}")
+        print(f"\n  Total assets found: {len(assets)}")
+        print(f"  Assets saved:\n     {pathh}")
         #
     except ValueError as e:
         print('Cola 2 ERROR: ', e)

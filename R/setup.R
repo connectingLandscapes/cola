@@ -951,24 +951,28 @@ setup_cola <- function( envName = 'cola', nSteps = 5, force = FALSE,
            '  **  Please restart R to update the new settings  **\n'
       )
 
-      if (Sys.getenv("RSTUDIO") == "1"){
-        cat (sep = '', '\n',
-             '    You can run .rs.restartR() or rstudioapi::restartSession() for this\n')
+      cat (sep = '', '\n',
+           '    You can run .rs.restartR() or rstudioapi::restartSession() for this\n')
 
-        if (requireNamespace("rstudioapi", quietly = TRUE) &&
-            rstudioapi::isAvailable()) {
-          rstudioapi::restartSession()
-        }
-      }
 
-      if (Sys.getenv("RSTUDIO") == "1" & !ask){
-        cat (sep = '', '\n',
-             '    Restarting ... running .rs.restartR() or rstudioapi::restartSession() \n')
-        if (requireNamespace("rstudioapi", quietly = TRUE) &&
-            rstudioapi::isAvailable()) {
-          rstudioapi::restartSession()
-        }
-      }
+      # if (Sys.getenv("RSTUDIO") == "1"){
+      #   cat (sep = '', '\n',
+      #        '    You can run .rs.restartR() or rstudioapi::restartSession() for this\n')
+      #
+      #   # if (requireNamespace("rstudioapi", quietly = TRUE) &&
+      #   #     rstudioapi::isAvailable()) {
+      #   #   rstudioapi::restartSession()
+      #   # }
+      # }
+      #
+      # if (Sys.getenv("RSTUDIO") == "1" & !ask){
+      #   cat (sep = '', '\n',
+      #        '    Restarting ... running .rs.restartR() or rstudioapi::restartSession() \n')
+      #   if (requireNamespace("rstudioapi", quietly = TRUE) &&
+      #       rstudioapi::isAvailable()) {
+      #     rstudioapi::restartSession()
+      #   }
+      # }
 
     } else {
       Sys.unsetenv("COLA_SCRIPTS_PATH")
