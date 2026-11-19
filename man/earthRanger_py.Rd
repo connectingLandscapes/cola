@@ -16,7 +16,7 @@ earthRanger_py(
   outtif,
   outshp,
   dokde = 0,
-  spatresinmeters = 250,
+  spatresinmeters = 10000,
   show_cml = TRUE,
   show_result = TRUE,
   dry_run = FALSE

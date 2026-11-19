@@ -1,0 +1,2 @@
+id0,name,workload_tag,task_type,state,description,destination,overwrit
+HUNTS2VZKCZVAATJKV2CDQCC,projects/gonzalezivan/operations/HUNTS2VZKCZVAATJKV2CDQCC,,Type.EXPORT_TABLE,State.UNSUBMITTED,Uploading shapefile,projects/gonzalezivan/assets/demo/er_points_2024_2025,False

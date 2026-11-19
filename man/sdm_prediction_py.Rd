@@ -24,6 +24,7 @@ sdm_prediction_py(
   max_year = NULL,
   show_cml = TRUE,
   show_result = TRUE,
+  gee_plot_code = TRUE,
   dry_run = FALSE
 )
 }
@@ -62,6 +63,8 @@ the model; CRS is fixed). Accepted and ignored.}
 \item{show_cml}{Logical. Print the back-end command line? Default TRUE}
 
 \item{show_result}{Logical. Print the command line result? Default TRUE}
+
+\item{gee_plot_code}{Logical. Print the code to visualize the final raster in Google Earth Engine? Default TRUE}
 
 \item{dry_run}{Logical. Only create the command line and not run it. Default FALSE}
 }

@@ -1,0 +1,2 @@
+id0,name,workload_tag,task_type,state,description,destination,overwrit
+M3I4YPGGQEM2ZPYYZEVUAUJB,projects/gonzalezivan/operations/M3I4YPGGQEM2ZPYYZEVUAUJB,,Type.EXPORT_TABLE,State.UNSUBMITTED,Uploading shapefile,projects/gonzalezivan/assets/cola2/er_points_2024_2025,False

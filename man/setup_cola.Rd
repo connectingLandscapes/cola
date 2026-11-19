@@ -84,7 +84,7 @@ Installs cola software. Includes `reticulate` R package, miniconda, cola conda e
 and defines the ways R and python should interact
 }
 \examples{
-if (FALSE){ 
+if (FALSE){
     setup_cola( )
  }
 }

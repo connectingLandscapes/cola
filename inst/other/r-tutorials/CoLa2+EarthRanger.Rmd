@@ -1,0 +1,151 @@
+---
+title: "CoLa2+EarthRanger"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# CoLa2+EarthRanger
+
+This tutorial generates a species distribution model (SDM) using CoLa new modules. You will use EarthRanger API (via ecoscope Python package)
+
+### 1. Obtain points from EarthRanger
+
+Access and download points from EarthRanger server, using ecoscope Python package.
+
+```{r earthranger, opts.label=}
+library(cola)
+
+# (wd <- file.path(Sys.getenv('COLA_DATA_PATH'), sessionIDgen(folder = TRUE)))
+(wd <- 'C:/Cola/sessions/demo')
+dir.create(wd, showWarnings = FALSE)
+
+erPoints <- file.path(wd, 'points_2024-2025.shp')
+erRaster <- file.path(wd, 'raster_2024-2025.tif')
+```
+
+```{r earthranger, opts.label=}
+# Run if file doesn't exists
+if (!file.exists(erPoints)){
+  ERpoints <- cola::earthRanger_py(
+      server = 'https://twiga.pamdas.org', 
+      username = 'IGonzalez', 
+      pwd = 'temp12345',
+      datefrom = '2024-01-01',
+      dateto = '2025-12-31',
+      subject = 'NAM_test',
+      outshp = erPoints, 
+      outtif = erRaster,
+      dokde = 1,
+      spatresinmeters = 10000)
+}
+```
+
+
+### 2. Plot the downlodaded layers
+
+```{r earthrangerplot}
+library(terra)
+
+# rastLayer <- rast( erRaster )
+# plot(rastLayer, main = 'KDE')
+
+vectLayer <- vect( erPoints )
+dim(vectLayer)
+plot(vectLayer, main = 'Earth Ranger points')
+
+# Check year values
+range(vectLayer$year)
+```
+
+
+### 3. Start CoLa2
+
+You need to set up an GEE account before using CoLa2. Then is necessary to initialize your user account locally. Run the following R command to obtain instructions. Place your GEE account/project name as argument for `ee.Authenticate(YOUR_USER)`. This is required to run just once right after CoLa2 installation and before the first attempt to connect GEE
+
+```{r upload}
+cola::initialize_cola_ee(py = Sys.getenv("ER_PYTHON_PATH"))
+```
+
+This should authenticate you inside CoLa-GEE python streamflow.
+
+
+### 4. Upload the layer to GEE
+We dont't have absences yet, so we will ask the script to simulate the same ampunt of background points (spatial random) as the downloaded from EarthRanger.
+
+```{r upload}
+cola2Upl <- cola::localPoints2ee_py(
+    ee_project = 'gonzalezivan',
+    point_path = erPoints,
+    ee_layer = 'projects/gonzalezivan/assets/demo/er_points_2024_2025',
+    presence_col = NULL, # We dont have. CoLa2 creates 'preabs' automatically
+    num_abs = nrow(vectLayer))
+```
+
+You can visit: `https://code.earthengine.google.com/#` to check the progress in the upload task. Usually takes few minutes.
+
+### 5. Extract pixel values
+
+Collect the imagery pixel values at the points locations. This operations creates a table with `r` rows, and `b` columns, `r` x `b`. `r` is number of records and `b` is number of bands. This task 
+
+```{r extract}
+cola2Ext <- cola::sdm_extract_py(
+  ee_project = 'gonzalezivan',
+  occurrence_asset = 'projects/gonzalezivan/assets/demo/er_points_2024_2025',
+  gee_assets = 'projects/gonzalezivan/assets/demo', # Saving results here
+  species = 'species1',
+  model_id = 'model1',
+  batch_size = 5000, 
+  batch_year = min(range(vectLayer$year)),
+  working_dir = wd, # Local folder 
+  max_concurrent = 5, # Number of tiles to be executed simultanously
+  column_train = "preabs",
+  predictor_source = "modis"
+  )
+```
+
+
+### 6. Train the model
+
+Train the model by identifying which variables separates better the presences (1) and absences (0) in your dataset.
+
+```{r fitting}
+cola2Fit <- cola::sdm_model_fitting_py(
+  ee_project = 'gonzalezivan',
+  gee_assets = 'projects/gonzalezivan/assets/demo', # Saving results here
+  species = 'species1',
+  model_id = 'model1',
+  modex = 'binary',
+  target_col = "preabs",
+  predictor_source = "modis",
+  
+  working_dir = wd, # Local folder 
+  local_csv = file.path(wd, 'ee_training.csv'),
+  
+  imp_thresh = 0.2,
+  categorical_threshold = 10,
+  )
+```
+
+```{r prediction}
+cola::sdm_prediction_py(predictor_source, …)
+```
+
+```{r download}
+cola::export_ee2gd_py(username, …)
+```
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -83,14 +83,15 @@ OUTPUT_TIF = args.outtif
 KDE_RES_M = args.spatresinmeters
 DO_KDE = args.dokde
 
+# os.chdir('N:/My Drive/git/cola/inst/ee')
 # ER_USERNAME = 'IGonzalez'
 # ER_PASSWORD = 'temp12345'
 # ER_SERVER = 'https://twiga.pamdas.org'
-# DATE_FROM = '2010-01-20'
+# DATE_FROM = '2020-01-20'
 # DATE_TO = '2027-01-20'
 # SUBJECT_GROUP = 'NAM_test'
-# OUTPUT_SHP = 'C:/cola/earthranger/a1.shp'
-# OUTPUT_TIF = 'C:/cola/earthranger/a1.tif'
+# OUTPUT_SHP = 'C:/cola/earthranger/a2.shp'
+# OUTPUT_TIF = 'C:/cola/earthranger/a2.tif'
 # KDE_RES_M = 10000
 # DO_KDE = 1
 
@@ -178,7 +179,7 @@ def export_points(gdf, out_shp, name):
     pts["Y"]  = pts.geometry.y
     # print(pts.dtypes)
     keep      = ["X", "Y", "geometry"] #  
-    for col in ["subject_name", "recorded_at"]:
+    for col in ["subject_name", "recorded_at", "year"]:
         if col in pts.columns:
             keep.append(col)
     #
@@ -301,28 +302,31 @@ def main():
         gdf_utm, epsg = reproject_utm(gdf)
         # Export CoLa-ready inputs
         
-        # gdf_utm['year'] = df['recorded_a'].str[:4]
-        gdf_utm['year'] = df.columns.str.startswith('recorded_a').str[:4]
+        geocols = list(gdf_utm.columns)
+        colyy = [c for c in geocols if c.startswith("recorded_a")]
+        gdf_utm['year'] = gdf_utm[colyy].apply(lambda r: r.astype(str).str[:4].astype(int)) 
         
         try:
             shp_path = export_points(gdf_utm, OUTPUT_SHP, safe_name)
-        except Exception as exc:  # bad path, permissions, invalid driver, disk issues...
+        except Exception as exc:
             print(" -- Could not save to %s (%s). Using fallback.", OUTPUT_SHP, safe_name)
-            from datetime import datetime
             from pathlib import Path
             safe_name = str(Path.home()) + '/er_' + datetime.now().strftime("%Y%m%d_%H%M%S") + '.gpkg'
             gdf_utm.to_file(safe_name)  # if this fails too, the error is raised
             print("  -- Saving layer in: %s", safe_name)
             if DO_KDE == 1:
+                OUTPUT_TIF = args.outtif
                 OUTPUT_TIF = str(Path.home()) + '/er_' + datetime.now().strftime("%Y%m%d_%H%M%S") + '.tif'
+        
         print(f"""
-    {"═" * 60}
-      Done. CoLa inputs ready:
-      Source points shapefile    : {shp_path}""")    
+{"═" * 60}
+ Done. CoLa inputs ready:
+     Source points shapefile    : {shp_path}""")    
         if DO_KDE == 1:
             try:
+                OUTPUT_TIF = args.outtif
                 tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_TIF, safe_name, KDE_RES_M)
-                print(f"Habitat suitability raster : {OUTPUT_TIF}")
+                # print(f"Habitat suitability raster : {OUTPUT_TIF}")
             except: 
                 print("Could not save raster to %s ", OUTPUT_TIF)
                 

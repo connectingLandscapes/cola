@@ -30,8 +30,10 @@ NULL. Prints in console logs regarding different steps
 Installs `cola` conda environment
 }
 \examples{
-install_conda_env(envName = 'cola',
-    ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
+if (FALSE){
+  install_conda_env(envName = 'cola',
+      ymlFile = system.file('python/python_conda_config.yml', package = "cola"))
+}
 }
 \author{
 Ivan Gonzalez <Ivan.Gonzalez@nau.edu>

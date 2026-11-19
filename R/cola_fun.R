@@ -10,7 +10,7 @@
 #' @author Patrick Jantz <Patrick.Jantz@@gmail.com>
 #' @export
 initialize_cola_ee <- function(
-    py = Sys.getenv("COLA_PYTHON_PATH"),  dry_run = FALSE)  {
+    py = Sys.getenv("ER_PYTHON_PATH"))  {
 
   message('Run this 3 commands:')
   message('  # 1. Start Python In your system (not R) console: ')
@@ -727,7 +727,8 @@ quotepath <- function(path, quo = '"')  {
 #' @return Creates a raster layer with a minimum value of 1 and maximum value given the parameter 5. The internal R object is a list of two slots. The first one contains the path of the created raster, if any, and the second slot includes any function message or log, if any.
 #' @examples
 #' hs <- system.file(package = 'cola', 'sampledata/sampleTif.tif')
-#' sr <- sui2res_py(intif = hs, outtif = 'hs_p3_0.tif', minval = 0, maxval = 1,
+#'  out_sr <- tempfile(fileext = '.tif')
+#' sr <- sui2res_py(intif = hs, outtif = out_sr, minval = 0, maxval = 1,
 #'     maxout = 10,  shape = 1,  nodata = NULL, prj = 'None')
 #' hs_rast <- terra::rast(sr$file)
 #' plot(hs_rast, main = 'Surface Resistance')
@@ -3404,25 +3405,25 @@ localPoints2ee_py <- function(
   }
 
   ### Create CMD
-  aargs <- c(
+  aargs <- na.omit(c(
     cola::adaptFilePath(pyscript),
     '--ee_project', ee_project,
     '--point_path', cola::adaptFilePath(point_path),
     '--ee_layer', ee_layer,
-    ifelse (!is.null(presence_col), '--presence_col', NULL),
-    ifelse (!is.null(presence_col), presence_col, NULL),
+    ifelse (!is.null(presence_col), '--presence_col', NA),
+    ifelse (!is.null(presence_col), presence_col, NA),
     '--number_abs', num_abs,
     '--abs_method',  abs_meth,
-    ifelse(!is.null(block_size), '--block_size', NULL),
-    ifelse(!is.null(block_size), block_size, NULL)
-  )
+    ifelse(!is.null(block_size), '--block_size', NA),
+    ifelse(!is.null(block_size), block_size, NA)
+  ))
 
   (cmd_ <- paste0(
     adaptFilePath(py), ' ', paste(aargs, collapse = ' '), collapse = ''))
 
   cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
 
-  cat('\n   - CoLa2 Feature upload  - \n\t   Uploading points as: ', ee_layer, ' \n', sep = '')
+  cat('\n   - CoLa2 Feature upload  - \n  Uploading points as: ', ee_layer, ' \n', sep = '')
 
   if (show_cml | dry_run){
     cat('\n\t CMD Raster export: \n')
@@ -3895,6 +3896,7 @@ sdm_model_fitting_py <- function(
 #' @param estimate_only Logical. Only print the cost estimate. Default FALSE
 #' @param crs,scale,min_year,max_year No longer used (source and scale come from
 #' the model; CRS is fixed). Accepted and ignored.
+#' @param gee_plot_code Logical. Print the code to visualize the final raster in Google Earth Engine? Default TRUE
 #' @param show_cml Logical. Print the back-end command line? Default TRUE
 #' @param show_result Logical. Print the command line result? Default TRUE
 #' @param dry_run Logical. Only create the command line and not run it. Default FALSE

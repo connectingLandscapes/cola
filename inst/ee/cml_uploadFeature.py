@@ -61,8 +61,16 @@ presence_col = args.presence_col
 abs_method = args.abs_method
 block_size = args.block_size
 
-# percabs 
-
+##  Function: Create folder if doesn't exists
+def ensure_folder(path):
+    """Create an Earth Engine folder if it doesn't exist."""
+    try:
+        ee.data.getAsset(path)
+        print(f"Folder exists: {path}")
+    except ee.EEException:
+        ee.data.createAsset({"type": "FOLDER"}, path)
+        print(f"Folder created: {path}")
+        
 
 # import os
 # os.chdir('N:/My Drive/git/cola/inst/ee')
@@ -98,7 +106,7 @@ def main() -> None:
   
   # Convert distance threshold to float or integer
     try:
-      ee1 = ee.Initialize(project = project_name)
+      ee.Initialize(project = project_name)
     except:
       ee.Authenticate()
       ee.Initialize(project = project_name)
@@ -111,6 +119,10 @@ def main() -> None:
       print('\nERROR: no EE initialized\n')
       exit(1)
    
+    ## Create folder if not existing
+    ensure_folder(os.path.dirname(ee_layer))
+
+
     # try:
     #     # Attempt to get asset information
     #     info = ee.data.getInfo(ee_layer)
@@ -158,7 +170,7 @@ def main() -> None:
             print( 'No valid percentage. Skipping absences')
     else:
         try:
-            numabs = float(number_abs)
+            numabs = int(number_abs)
         except:
             print( 'No valid number. Skipping absences')
         
@@ -175,9 +187,9 @@ def main() -> None:
         
         if abs_method == 'background':
             0
-        else if abs_method == 'blocks':
+        elif abs_method == 'blocks':
             1
-        else if abs_method == 'environmental':
+        elif abs_method == 'environmental':
             2
         #
         pol = gpd.GeoSeries([Polygon([(minx, miny), (maxx, miny), (maxx, maxy), (minx, maxy)])])
@@ -189,7 +201,7 @@ def main() -> None:
         print (  ' Creating ' + str(numabs ) +' absences, assigning 0 to all new features in the "preabs" column')
         gdf = pd.concat([gdf, abspts], ignore_index=True)
         # gdf2.plot(c=gdf2['preabs']+1) 
-        gdf.to_file(shapefile_path.replace(".shp", "and" + str(percabs) + "simabs.shp") )
+        gdf.to_file(shapefile_path.replace(".shp", "and" + str(numabs) + "simabs.shp") )
         print (  ' Writing file ')
     #    
     # Convert it into geo-json 

@@ -17,6 +17,7 @@ remove.packages('cola')
 if(!require(devtools)){install.packages('devtools')}
 library(devtools)
 .rs.restartR()
+devtools::install('N:/My Drive/git/cola', dependencies = NA, upgrade = 'never') # from github
 devtools::install_github('connectingLandscapes/cola', dependencies = NA, upgrade = 'never')
 "
 

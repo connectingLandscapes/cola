@@ -1,0 +1,2 @@
+id0,name,workload_tag,task_type,state,description,destination,overwrit
+RGYTO3WCUMJLWUDIDJTS72IW,projects/gonzalezivan/operations/RGYTO3WCUMJLWUDIDJTS72IW,,Type.EXPORT_TABLE,State.UNSUBMITTED,Uploading shapefile,projects/gonzalezivan/assets/demo/er_points_2024_2025,False
