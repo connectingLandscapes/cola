@@ -15,7 +15,8 @@ This tutorial generates a species distribution model (SDM) using CoLa new module
 ```{r earthranger, opts.label=}
 library(cola)
 
-(wd <- file.path(Sys.getenv('COLA_DATA_PATH'), sessionIDgen(folder = TRUE)))
+# (wd <- file.path(Sys.getenv('COLA_DATA_PATH'), sessionIDgen(folder = TRUE)))
+(wd <- 'C:/Cola/sessions/demo')
 dir.create(wd)
 
 erPoints <- file.path(wd, 'points.shp')

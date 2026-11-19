@@ -3920,7 +3920,7 @@ sdm_prediction_py <- function(
     crs = NULL, scale = NULL,
     min_year = NULL, max_year = NULL,
     show_cml = TRUE, show_result = TRUE,
-    gee_plot_code = TRUE
+    gee_plot_code = TRUE,
     dry_run = FALSE){
 
   if( !file.exists(py)){
