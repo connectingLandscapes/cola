@@ -3920,6 +3920,7 @@ sdm_prediction_py <- function(
     crs = NULL, scale = NULL,
     min_year = NULL, max_year = NULL,
     show_cml = TRUE, show_result = TRUE,
+    gee_plot_code = TRUE
     dry_run = FALSE){
 
   if( !file.exists(py)){
@@ -3971,7 +3972,43 @@ sdm_prediction_py <- function(
   } else {
     intCMD <- 'Dry run. Only the system command is shown. Use dry_run = FALSE for executing the function'
   }
-  # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
+
+  if (gee_plot_code){
+
+    # gee_assets <- 'projects/gonzalezivan/assets/cola2'
+    # model_id <- 'A1m1'
+    # target_year <- 2025
+
+    outLayer <- paste0(gee_assets, "/", model_id, "_prediction_", target_year, "_tile_p*")
+    # [GEE_ASSETS]/[MODEL_ID]_prediction_[TARGET_YEAR]
+    # projects/gonzalezivan/assets/cola2/A1m1_prediction_2025/A1m1_suitability_2025_tile_p092_p24
+
+    gee_cmd <- paste0(' /// Check if there is tiles and adapt the path
+    var image = ee.Image("', outLayer,'");
+    var stats = image.reduceRegion({
+      reducer: ee.Reducer.percentile([1, 99]),
+      geometry: image.geometry(),
+      scale: 200,
+      maxPixels: 1e9,
+      bestEffort: true // Automatically scales up if the region is too large
+    });
+
+    var visParams = {
+      min: [val.suitability_p1],
+      max: [val.suitability_p99],
+      palette: ["00FFFF", "0000FF"]
+    }
+    Map.centerObject(image, 8);
+    Map.addLayer(image, visParams, "2-98% Percentile Stretch");
+  }')
+
+    cat(' ////   Paste in Google Earth Engine  ', paste(rep('/', 20), collapse = ''), '\n')
+    cat(gee_cmd)
+    cat(' //// End  ', paste(rep('/', 40), collapse = ''), '\n')
+
+  }
+
+    # cat('\n\n ==== CoLa START ', paste(rep('=', 40), collapse = ''), '\n')
   cat(' ==== CoLa END   ', paste(rep('=', 40), collapse = ''), '\n')
 
   return( list(log = paste0("", intCMD), cmd = cmd_ ,
