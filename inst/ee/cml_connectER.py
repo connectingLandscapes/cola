@@ -323,7 +323,7 @@ def main():
             try:
                 tif_path = export_kde_raster(gdf_utm, epsg, OUTPUT_TIF, safe_name, KDE_RES_M)
                 print(f"Habitat suitability raster : {OUTPUT_TIF}")
-            else: 
+            except: 
                 print("Could not save raster to %s ", OUTPUT_TIF)
                 
         #
