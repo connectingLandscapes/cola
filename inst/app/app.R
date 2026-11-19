@@ -367,6 +367,7 @@ server <- function(input, output, session) {
   #   tags$span(" Ready! ", style = "color: gray;")
   # })
 
+
   output$out_status <- output$out_status2 <- renderUI({
     # req(status())  # don't render anything until first click
     # cat( ' status(): ', status(), '\n')
@@ -812,8 +813,13 @@ server <- function(input, output, session) {
     showStartStop( start = FALSE ); status("finished")
   }))
 
+  ## Updates Selectize ids widgets. Used inside "updateColaLayersLists"
   colaUpdateSelectizeInput <- function(dfx = rv$layersList,
-                                       ids, typex, field, valx = NULL){  # Existing layers
+                                       ids, # widgets id to update
+                                       typex,  # type of layer
+                                       field,  # field to look in df
+                                       valx = NULL # Vall to add. If null use last
+                                       ){  # Existing layers
     # colaUpdateSelectizeInput(c('in_name_hs', 'in_name_hs'),
     #   type = 'Resistance', field = 'public', val = newOutput)
     if(is.null(dfx)){
@@ -827,6 +833,8 @@ server <- function(input, output, session) {
     #  print(ids)
     # print('valx')
     # print(valx)#
+
+    # valx must be null, so no layers outside the LayerList is used
     valx <- ifelse(is.null(valx), yes = last(valOpts), no = valx)
     # print('valx')
     # print(valx)
@@ -840,6 +848,8 @@ server <- function(input, output, session) {
     })
   }
 
+  # Update CoLa layers based on a new table.
+  # Updates widgets
   updateColaLayersLists <- function(layersList){
     # input$restoreSession
     # layersList <- read.csv(file.path(tempFolder, sessionID, 'colaLayers.csv'))
@@ -3257,19 +3267,9 @@ server <- function(input, output, session) {
             , server = TRUE
           )
 
-          newOutput <- suggestName(
-            rv$layersList, type = 'Resistance')
-
-          updateTextInput(
-            session, "out_name_sur",
-            value = newOutput
-            #, server = TRUE
-          )
-
           updateColaLayersLists(layersList = rv$layersList)
 
           params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
-          rv$newtifPath <- newtifPath
           rv$hs <- newtifPath
           rv$hsready <- TRUE
 
@@ -3458,14 +3458,14 @@ server <- function(input, output, session) {
             internal = rv$tif, public = suggestedName)
 
 
-          newOutput <- suggestName(rv$layersList, type = 'Resistance')
+          # newOutput <- suggestName(rv$layersList, type = 'Resistance')
 
           ## Inputs boxes
           colaUpdateSelectizeInput(
             ids = c('in_name_sur_edi',
                     'in_name_sur_dis', 'in_name_sur_cdp',
                     'in_name_sur_crk', 'in_name_sur_lcc'),
-            typex = 'Resistance', field = 'public', val = newOutput)
+            typex = 'Resistance', field = 'public', val = suggestedName)
 
           updateSelectizeInput( # inputsPoints
             session, "in_points_ly",
@@ -4119,7 +4119,7 @@ server <- function(input, output, session) {
 
   # > POINTS ------------------
 
-  ## Load Res tif in pts tab
+  ## Load res tif in pts tab
   observeEvent(input$in_points_tif, {
     # invisible(suppressWarnings(tryCatch(file.remove(c(rv$tifpathpts, rv$tifpathptsfix)),
     #                   error = function(e) NULL)))
@@ -5611,7 +5611,7 @@ server <- function(input, output, session) {
                 domain = rv$crk_rng + 0.01 , na.color = "transparent")
 
               if(is.null(rv$crk_quan) | !exists('crk_quan')){
-                cat(' Calculating quantiles')
+                cat(' Calculating quantiles - create Crk')
 
                 # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
 
@@ -5729,7 +5729,6 @@ server <- function(input, output, session) {
             inout = 'out', type =  'Kernels',
             internal = rv$crk, public = suggestedName)
 
-
           ## Inputs boxes
           colaUpdateSelectizeInput(
             ids = c('in_name_crk_pri'),
@@ -5808,7 +5807,7 @@ server <- function(input, output, session) {
                 domain = rv$crk_rng + 0.01 , na.color = "transparent")
 
               if(is.null(rv$crk_quan) | !exists('crk_quan')){
-                cat(' Calculating quantiles')
+                cat(' Calculating quantiles - Creating Crk Heavy')
 
                 # rv <- list(crk2s_sp = terra::rast('C:/temp/cola/colaNAZ2024111901553805/in__out_crk_fixedJVH2024111901563605.tif'))
 
@@ -6186,23 +6185,17 @@ server <- function(input, output, session) {
                                      internal = rv$crk,
                                      public = suggestedNewName)
 
-      updateSelectizeInput( # inputs
-        session, "in_name_crk_pri",
-        choices = unlist(subset(rv$layersList, type == 'Kernels')[,'public']),
-        selected = getLast(rv$layersList, 'Kernels', 'public')
-        #, server = TRUE
-      )
-
-      updateTextInput( # suggest output
-        session, "in_name_crk_pri",
-        value = suggestedNewName
-        #, server = TRUE
-      )
-
-      colaUpdateSelectizeInput(
-        ids = c('in_name_crk_pri'),
-        typex = 'Kernels', field = 'public', val = suggestedNewName)
-      #
+      # updateSelectizeInput( # inputs
+      #   session, "in_name_crk_pri",
+      #   choices = unlist(subset(rv$layersList, type == 'Kernels')[,'public']),
+      #   selected = getLast(rv$layersList, 'Kernels', 'public')
+      #   #, server = TRUE
+      # )
+#
+#       colaUpdateSelectizeInput(
+#         ids = c('in_name_crk_pri'),
+#         typex = 'Kernels', field = 'public', val = suggestedNewName)
+#       #
       updateColaLayersLists(layersList = rv$layersList)
 
       rv$crk_sp <- terra::rast(rv$crk)
@@ -6214,7 +6207,7 @@ server <- function(input, output, session) {
       ## CREATE CRK from uploaded crk
       if( ! file.exists( gsub('.tif', '_quantiles.csv', rv$crk)) ){
 
-        cat(' Calculating quantiles\n')
+        cat(' Calculating quantiles - load in prio\n')
 
         shinyalert(title = "Calculating quantiles table",
                    text = paste0("The CSV _quantiles.csv file associated to the original ",
@@ -6227,8 +6220,12 @@ server <- function(input, output, session) {
         qq0 <- global(terra::rast(rv$crk), fun=quantile, probs = seq(0.01, 1, 0.01), na.rm = TRUE)
         brks <<- as.numeric(gsub('X|\\.', '', names(qq0)))/100
         crk_quan <<- data.frame(q = brks, value = as.numeric(unlist(qq0)))
-        write.csv(crk_quan, gsub('.tif', '_quantiles.csv', rv$crk))
 
+        outcsv <- gsub('.tif', '_quantiles.csv', rv$crk)
+        write.csv(crk_quan, outcsv)
+        write.csv(crk_quan, gsub('.tif', '_quantiles.csv', incrk) )
+        cat(paste('    Saved at: ', outcsv) )
+        cat(paste('    Saved at: ', gsub('.tif', '_quantiles.csv', incrk)) )
 
       } else {
         ## LOAD CRRK
@@ -6336,7 +6333,7 @@ server <- function(input, output, session) {
             outtif = out_pri_tif,
             outtifpatch = out_pri_tif_patch,
             threshold = as.numeric(input$in_pri_5), # 0.5
-            tolerance = as.numeric(input$in_lcc_6)),
+            tolerance = as.numeric(input$in_pri_6)),
             error = function(e) list(log = as.character(e), file = '', shp = NA))
           ## missing threshold and 8 by user
           cat("\n --- Prio out:\n")
@@ -6350,7 +6347,8 @@ server <- function(input, output, session) {
           rv$pritif <- out_pri$tif
           rv$prishp <- out_pri$shp
 
-          if(!is.na(out_pri$shp)){
+          if( file.exists(out_pri_tif) ){
+
             rv$log <- paste0(rv$log, ' --- DONE: ', textElapPri);updateVTEXT(rv$log) # _______
 
             # rv$lcc <- out_lcc
@@ -6383,10 +6381,9 @@ server <- function(input, output, session) {
             rv$log <- paste0(rv$log, ' --- ERROR \n Log:', out_pri$log, '\n');updateVTEXT(rv$log) # _______
             cat(' \ == Error: \n')
             cat(out_pri$log, '\n')
-            shinyalert(html = TRUE, type = "warning",
+            shinyalert(html = TRUE, type = "error",
                        title = paste0("Prioritization not finished"),
-                       text = out_pri$log
-            )
+                       text = 'Check console log') # out_pri$log
 
             #outLL <- leafletProxy("ll_map_pri")
             #print(class(outLL))
@@ -6398,7 +6395,6 @@ server <- function(input, output, session) {
         ) #isolate
         #cat("\n ==== Prio ends\n")
       } else {
-
         shinyalert(html = TRUE, type = "warning",
                    title = paste0("Inputs not ready"),
                    text = 'Be sure to upload or generate resistance, kernels and corridors before running this tool.'
@@ -7290,7 +7286,24 @@ server <- function(input, output, session) {
       })
   }
 
-  # Earth Ranger ------
+  # Earth Ranger ----
+
+  observeEvent(input$in_er_savedir, {
+    if(input$in_er_savedir){
+      # Use default path/names
+      enable("in_er_localpath")
+      enable("in_er_localshp")
+      enable("in_er_localtif")
+      enable("folderer")
+    } else {
+      ## define path
+      disable("in_er_localpath")
+      disable("in_er_localshp")
+      disable("in_er_localtif")
+      disable("folderer")
+    }
+  })
+
   isolate({
     observeEvent(
       input$folderer, {
@@ -7360,7 +7373,24 @@ server <- function(input, output, session) {
         # )
 
         outshp <- file.path(input$in_er_localpath, input$in_er_localshp)
-        outtif <- file.path(input$in_er_localpath, input$in_er_localtif)
+        if(file.exists(outshp)){
+          outshp <- paste0(gsub('.shp$', sessionIDgen(only3 = T), outshp), '.shp')
+          shinyalert(html = TRUE, type = "warning",
+                     title = "Layer exists",
+                     text = paste0(' Point file already exists. Using this one instead:',
+                                   outshp))
+        }
+
+        if(input$in_er_dokde){
+          outtif <- file.path(input$in_er_localpath, input$in_er_localtif)
+          if(file.exists(outtif)){
+            outtif <- paste0(gsub('.tif$', sessionIDgen(only3 = T), outshp), '.tif')
+            shinyalert(html = TRUE, type = "warning",
+                       title = "Layer exists",
+                       text = paste0(' KDE raster file already exists. Using this one instead:',
+                                     outtif))
+          }
+        }
 
         rv$log <- paste0(rv$log, ' Connecting to ER ... please wait');updateVTEXT(rv$log) # _______
 
@@ -7396,9 +7426,11 @@ server <- function(input, output, session) {
                      title = paste0("Earth Ranger connected!"),
                      text = paste0(' Request finished. Check your layers in ', input$in_er_localpath)
           )
-          if(input$in_er_loadcola){
-            rv$log <- paste0(rv$log, ' Points finised: ',textElapER,' --- DONE');updateVTEXT(rv$log) # _______
 
+          ## Import layer
+          if(input$in_er_loadcola != 'No'){
+            ## Import points
+            rv$log <- paste0(rv$log, ' Points finised: ',textElapER,' --- DONE');updateVTEXT(rv$log) # _______
 
             params_txt <- updateParamsTEXT(params_txt = params_txt, pts = TRUE)
             rv$pts <- outshp
@@ -7432,38 +7464,69 @@ server <- function(input, output, session) {
 
             ###################
             if(cond2){ # kernels exists
+              ## Import raster into CoLa
 
-              #### ......
-              suggestedName <- suggestName(rv$layersList, type = 'Kernels')
-              shinyalert(html = TRUE, type = "success",
-                         title = paste0("Resistant kernels created succesfully<br>",
-                                        'Layer name: ', suggestedName)
-              )
+              ## Load KDE raster as Kernels
+              if (input$in_er_loadcola == 'Kernels'){
 
-              rv$layersList <- funLayersList(
-                df = rv$layersList, tempFolder,
-                inout = 'out', type =  'Kernels',
-                internal = outtif, public = suggestedName)
+                suggestedName <- suggestName(rv$layersList, type = input$in_er_loadcola)
+                shinyalert(html = TRUE, type = "success",
+                           title = paste0("Resistant kernels created succesfully<br>",
+                                          'Layer name: ', suggestedName)
+                )
 
-              ## Inputs boxes
-              colaUpdateSelectizeInput(
-                ids = c('in_name_crk_pri'),
-                typex = 'Kernels', field = 'public', val = suggestedName)
+                rv$layersList <- funLayersList(
+                  df = rv$layersList, tempFolder,
+                  inout = 'out', type =  'Kernels',
+                  internal = outtif, public = suggestedName)
 
-              #### ......
-              params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
+                updateColaLayersLists(layersList = rv$layersList)
 
-              # crk_quan <<- read.csv(gsub('.tif', '_quantiles.csv', out_crk$file))
-              # # crk_quan <- read.csv('C:/cola/colaTSI2024121615205905/out_crk_ACN2024121615251205_quantiles.csv')
-              # crk_quan$q <- as.numeric(substr(x = crk_quan$q, 0, 4))
-              # rv$crk_quan <- crk_quan
+                params_txt <- updateParamsTEXT(params_txt = params_txt, crk = TRUE)
 
-              rv$crkready <- TRUE
-              rv$crk <- outtif
-              rv$crk_sp <- terra::rast(outtif);
-              #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
-              rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
-              lastLLx <- 'Kernels'
+                rv$crkready <- TRUE
+                rv$crk <- outtif
+                rv$crk_sp <- terra::rast(outtif);
+                #rv$crk_rng <- rng_newtif <- range(rv$crk_sp[], na.rm = TRUE)
+                rv$crk_rng <- rng_newtif <- getMnMx(rv$crk_sp)
+                lastLLx <- 'Kernels'
+              } else {
+                ## Load KDE raster as Suitability
+                suggestedNewName <- suggestName(rv$layersList, type = 'Suitability')
+
+                shinyalert(html = TRUE, type = "success",
+                           title = paste0("Surface resistance loaded succesfully<br>",
+                                          'Layer name: ', suggestedNewName)
+                )
+
+                rv$layersList <- funLayersList(df = rv$layersList, tempFolder,
+                                               inout = 'in', type =  'Suitability',
+                                               internal = outtif, public = suggestedNewName)
+
+                updateColaLayersLists(layersList = rv$layersList)
+
+                params_txt <- updateParamsTEXT(params_txt = params_txt, hs = TRUE)
+                rv$hs <- outtif
+                rv$hsready <- TRUE
+
+                pdebug(devug=devug,sep='\n',pre='-',"tempFolder","inSurSessID",
+                       "rv$inSurSessID", "newtifPath")
+
+                rv$log <- paste0(rv$log, '--- DONE')
+                updateVTEXT(rv$log)
+
+                rv$hs_sp <- terra::rast(rv$hs)
+                rv$hs_rng <- rng_newtif <- getMnMx(rv$hs)
+
+                updateTextInput(session, inputId = "in_sur_3",
+                                value = max(rv$hs_rng[1], 0, na.rm = TRUE))
+                updateTextInput(session, inputId = "in_sur_4", value = rv$hs_rng[2])
+
+                rv$hs_pal <- hsPal <<- leaflet::colorNumeric(palette = "magma", reverse = TRUE,
+                                                             domain = rng_newtif, na.color = "transparent")
+
+                makeLL(lastLL = "Habitat suitability")
+              }
             }
             updateColaLayersLists(layersList = rv$layersList)
           }
@@ -7473,7 +7536,7 @@ server <- function(input, output, session) {
           # No worked
           shinyalert(html = TRUE, type = "error",
                      title = paste0("Earth Ranger not connected"),
-                     text = paste0(intCMD)
+                     text = paste0(earthR)
           )
 
           rv$log <- paste0(rv$log, ' --- Error creating points');updateVTEXT(rv$log) # _______
@@ -9977,7 +10040,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_edi', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_edi_tif', 'Load Resistance',
+                            shiny::fileInput('in_edi_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
@@ -10020,7 +10083,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_dst', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_dist_tif', 'Load Resistance',
+                            shiny::fileInput('in_dist_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -30px"),
@@ -10039,7 +10102,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_crk', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_cdpop_tif', 'Load Resistance',
+                            shiny::fileInput('in_cdpop_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
@@ -10060,7 +10123,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_crk', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_crk_tif', 'Load Resistance',
+                            shiny::fileInput('in_crk_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
@@ -10078,7 +10141,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_lcc', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_lcc_tif', 'Load Resistance',
+                            shiny::fileInput('in_lcc_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'), multiple=FALSE),
                             div(style = "margin-top: -50px"),
@@ -10100,7 +10163,7 @@ if (FALSE){ # if FALSE
                             div(style = "margin-top: -10px"),
                             # textInput('name_tif_pri', label = '', value = "", width = NULL, placeholder = 'Surface resistance name:'),
                             div(style = "margin-top: -10px"),
-                            shiny::fileInput('in_pri_tif', 'Load Resistance',
+                            shiny::fileInput('in_pri_tif', 'Load resistance',
                                              buttonLabel = 'Search TIF', placeholder = 'No file',
                                              accept=c('.tif'),
                                              #accept= '.zip',
@@ -10268,8 +10331,9 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'lcc', title = 'Get corridors'),
               bsTooltip(id = 'lcc2', title = 'Run memory safe corridors. Slower but safer for big landscapes'),
               bsTooltip(id = 'lccDwn', title = 'Download TIF raster layer'),
-              bsTooltip(id = 'pri_slider', title = 'Quantile to convert kernel layers into binary patches. Higher values select better quality but less area.'),
-              bsTooltip(id = 'in_pri_5', title = 'Threshold to convert kernels into patches'),
+              bsTooltip(id = 'pri_slider', title = 'Quantile to convert kernel layers into binary patches. Higher values select better quality but less area. 0.1 ignores 10% of the lowest pixels, and maintain 90% of higher pixels. 0.9 ignores 90% of the lowest pixels and keeps only 10% of the higher ones. '),
+              bsTooltip(id = 'in_pri_5', title = 'Threshold to convert kernels into patches. Must be between 0.01 and 0.99'),
+              bsTooltip(id = 'in_pri_6', title = 'Corridor tolerance for the corridors. Must be the same used for creating the corridors'),
               bsTooltip(id = 'in_name_lcc_pri', title = 'Corridor layer to use'),
               bsTooltip(id = 'in_name_crk_pri', title = 'Kernel layer to use'),
               bsTooltip(id = 'out_name_pri', title = 'New results name'),
@@ -10437,8 +10501,9 @@ if (FALSE){ # if FALSE
               bsTooltip(id = 'in_er_localshp', title = 'Filename of the point layer. Not include folder. If not provided, a automatic name is given.', placement = 'bottom'),
               bsTooltip(id = 'in_er_localtif', title = 'Filename of the raster layer. Not include folder. If not provided, a automatic name is given.', placement = 'bottom'),
               bsTooltip(id = 'in_er_resmeters', title = 'Pixel size in meters of the KDE', placement = 'bottom'),
-              bsTooltip(id = 'in_er_dokde', title = 'Create Kernel Density Estimate (KDE)?', placement = 'bottom'),
-              bsTooltip(id = 'in_er_loadcola', title = 'Load in CoLa?', placement = 'bottom'),
+              bsTooltip(id = 'in_er_dokde', title = 'Create Kernel Density Estimate (KDE)?', placement = 'bottom', trigger = "hover"),
+              bsTooltip(id = 'in_er_loadcola', title = 'Load results in CoLa? If KDE made, under which type?', placement = 'bottom'),
+              bsTooltip(id = 'in_er_savedir', title = 'Use a specific path and names for your results', placement = 'bottom', trigger = "hover"),
 
               #includeMarkdown("md_intro.md")
               tabsetPanel(
@@ -10701,25 +10766,25 @@ if (FALSE){ # if FALSE
                                     inputId = 'in_er_resmeters'))
               ),
 
-                # next row
+              # next row
               fluidRow(
                 column(1,   style = "padding-top:15px; "   # 1.5 / 12 * 100 width: 12.5%;
                        , checkboxInput(label = 'Specify folder', inputId = 'in_er_savedir', value = FALSE)),
-                column(1, style = "padding-top:25px; padding-bottom:5px;" # padding-left:5px; padding-right:5px;
+                column(1, style = "padding-top:25px; padding-bottom:5px;" # padding-:5px; padding-right:5px;
                        , shinyDirButton( id = 'folderer',
                                          label = 'Select a folder', title = 'Please select a folder',
                                          multiple = FALSE)),
-                column(2, textInput(width = "100%", value = '', placeholder = 'Local path',
+                column(2, textInput(width = "100%",  placeholder = 'Local path', value = tempFolder,
                                     label = 'Local results path:', inputId = 'in_er_localpath') ),
                 column(2, textInput(width = "100%", value = '', placeholder = 'points.shp',
                                     label = 'Point file name:', inputId = 'in_er_localshp') ),
                 column(2, textInput(width = "100%", value = '', placeholder = 'KDEraster.tif',
                                     label = 'Raster file name:', inputId = 'in_er_localtif') ),
-                column(3,   # style = "width: 12.5%;padding-top:15px; "   # 1.5 / 12 * 100
-                        radioButtons(label = 'Load to Cola?', inputId = 'in_er_loadcola',
-                                      choices  = list('No','As Resistance', 'As Kernels'),
-                                      selected = 'table1', inline = TRUE) ),
-                column(1, style = "padding-top:25px;"   # width: 12.5%;  1.5 / 12 * 100
+                column(2, style = "padding-top:15px;", # width: 12.5%  1.5 / 12 * 100
+                       radioButtons(label = 'Import KDE to CoLa as:', inputId = 'in_er_loadcola',
+                                    choices  = c('No','Resistance', 'Kernels'),
+                                    selected = 'No', inline = TRUE) ),
+                column(1, style = "padding-top:20px;"   # width: 12.5%;  1.5 / 12 * 100
                        #, style = "padding-left:-35px; padding-right:0px; padding-top:20px; padding-bottom:5px;"
                        #, style = "padding-top:10px; padding-bottom:0px;" # padding-left:10px; padding-right:10px;
                        , actionButton(width = "100%", label = 'Get data', 'in_er_go'))
@@ -12000,10 +12065,16 @@ if (FALSE){ # if FALSE
               column(1, htmlOutput(outputId = 'out_par_prioA', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioC', fill = TRUE)),
               column(1, htmlOutput(outputId = 'out_par_prioB', fill = TRUE)),
-              column(2, textInput("in_pri_5", "Threshold (quantile: 0-1)", '0.5')),
-              column(2, selectInput("in_name_sur_pri", "Source resistance:", '50', choices = '')),
-              column(2, selectInput("in_name_crk_pri", "Source kernel:", '50', choices = '')),
-              column(2, selectInput("in_name_lcc_pri", "Source corridor:", '50', choices = '')),
+              column(1, style = "width: 12.5%;",   # 1.5 / 12 * 100
+                     textInput("in_pri_5", "Quantile:", '0.5')),
+              column(1, style = "width: 12.5%;",   # 1.5 / 12 * 100
+                     numericInput("in_pri_6", "Tolerance:", 0)),
+              column(1, style = "width: 12.5%;",   # 1.5 / 12 * 100
+                     selectInput("in_name_sur_pri", "Source resistance:", '50', choices = '')),
+              column(1, style = "width: 12.5%;",   # 1.5 / 12 * 100
+                     selectInput("in_name_crk_pri", "Source kernel:", '50', choices = '')),
+              column(1, style = "width: 12.5%;",   # 1.5 / 12 * 100
+                     selectInput("in_name_lcc_pri", "Source corridor:", '50', choices = '')),
               # column(2, textInput('out_name_pri', label = 'New layer name:', value = "",
               #                     width = '100%', placeholder = 'Name new layer')),
               # column(4, textInput("in_pri_6", "Corridor tolerance:", '1000')),

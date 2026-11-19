@@ -2357,7 +2357,6 @@ prio_py <- function(
     dry_run = FALSE,
     show_cml = TRUE, show_result = TRUE){
 
-
   if( !file.exists(py)){
     stop('Python not found')
   }

@@ -291,7 +291,7 @@ def main():
     print("  EarthRanger → CoLa  |  Live Data Integration ")
     print("═" * 60 + "\n")
     
-    if !os.path.exists(OUTPUT_SHP):
+    if os.path.exists(OUTPUT_SHP):
         print(" Shapefile exists: %s \n  Use a different layer name ", safe_name)
     else:
         # er = EarthRangerIO(server=ER_SERVER, username=ER_USERNAME, password=ER_PASSWORD)

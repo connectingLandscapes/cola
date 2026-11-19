@@ -21,17 +21,19 @@ dir.create(wd)
 erPoints <- file.path(wd, 'points.shp')
 erRaster <- file.path(wd, 'raster.tif')
   
-ERpoints <- earthRanger_py(
-    server = 'https://twiga.pamdas.org', 
-    username = 'IGonzalez', 
-    pwd = 'temp12345',
-    datefrom = '2026-09-06',
-    dateto = '2026-12-16',
-    subject = 'NAM_test',
-    outshp = erPoints, 
-    outtif = erRaster,
-    dokde = 1,
-    spatresinmeters = 10000)
+if (!file.exists(erPoints)){
+  ERpoints <- earthRanger_py(
+      server = 'https://twiga.pamdas.org', 
+      username = 'IGonzalez', 
+      pwd = 'temp12345',
+      datefrom = '2026-09-06',
+      dateto = '2026-12-16',
+      subject = 'NAM_test',
+      outshp = erPoints, 
+      outtif = erRaster,
+      dokde = 1,
+      spatresinmeters = 10000)
+}
 
 ```
 
@@ -46,7 +48,7 @@ dim(vectLayer)
 plot(vectLayer, add = TRUE)
 ```
 
-## Earth ranger
+## Upload the la
 
 This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
 
